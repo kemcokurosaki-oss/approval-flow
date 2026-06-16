@@ -167,15 +167,15 @@ async function doLogin() {
         errEl.textContent = 'ログインに失敗しました。';
         return;
     }
-    // sessionStorageにトークンを保存（追跡防止回避のため自前で管理）
-    sessionStorage.setItem('ap_access_token',  data.session.access_token);
-    sessionStorage.setItem('ap_refresh_token', data.session.refresh_token);
+    // localStorageにトークンを保存（ページを閉じても自動ログイン維持）
+    localStorage.setItem('ap_access_token',  data.session.access_token);
+    localStorage.setItem('ap_refresh_token', data.session.refresh_token);
     await bootApp(data.session);
 }
 
 async function doLogout() {
-    sessionStorage.removeItem('ap_access_token');
-    sessionStorage.removeItem('ap_refresh_token');
+    localStorage.removeItem('ap_access_token');
+    localStorage.removeItem('ap_refresh_token');
     await db.auth.signOut();
     location.reload();
 }
@@ -2323,8 +2323,8 @@ db.auth.onAuthStateChange((event, session) => {
 
 // ===== ページロード時にセッションを復元 =====
 (async () => {
-    const accessToken  = sessionStorage.getItem('ap_access_token');
-    const refreshToken = sessionStorage.getItem('ap_refresh_token');
+    const accessToken  = localStorage.getItem('ap_access_token');
+    const refreshToken = localStorage.getItem('ap_refresh_token');
     if (!accessToken) return; // 未ログイン → ログイン画面のまま
 
     const { data, error } = await db.auth.setSession({
@@ -2333,8 +2333,8 @@ db.auth.onAuthStateChange((event, session) => {
     });
     if (error || !data.session) {
         // トークン期限切れなど → ログイン画面へ
-        sessionStorage.removeItem('ap_access_token');
-        sessionStorage.removeItem('ap_refresh_token');
+        localStorage.removeItem('ap_access_token');
+        localStorage.removeItem('ap_refresh_token');
         return;
     }
     await bootApp(data.session);
