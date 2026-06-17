@@ -392,13 +392,26 @@ async function main() {
       };
       const mail = buildEmail(notif.notification_type, req, toName, extra);
 
+      const attachments = [];
+      if (['simple_inspection_invite', 'simple_inspection_reschedule'].includes(notif.notification_type) && req) {
+        const icsContent = buildICS(req, mail.subject);
+        if (icsContent) {
+          attachments.push({
+            filename:    '簡易検査.ics',
+            content:     icsContent,
+            contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+          });
+        }
+      }
+
       await transporter.sendMail({
-        from:    mail.from,
-        to:      toEmail,
-        subject: TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
-        text:    TEST_MODE
+        from:        mail.from,
+        to:          toEmail,
+        subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
+        text:        TEST_MODE
           ? `【テスト送信】本来の宛先: ${actualEmail}\n\n${mail.text}`
           : mail.text,
+        attachments,
       });
 
       console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})`);
