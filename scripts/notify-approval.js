@@ -72,7 +72,7 @@ function buildICS(req, summary) {
   }
 
   const dtstamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
-  const uid     = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-si-${dateStr}@approval-flow`;
+  const uid     = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-si@approval-flow`;
   const location = (req.inspection_location || '').replace(/\n/g, '\\n');
 
   return [
