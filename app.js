@@ -2292,6 +2292,11 @@ async function recordFlowNotifications(requestId, flowType) {
             // 固定: 製管・常務・技戦
             await addP({ department: '製管', role: 'staff' });
             await addP({ role: 'assembly_director' });
+            if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            if (shiuntenOwners.length > 0) {
+                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+            }
             // 工番担当者（profiles）: 組立・操業（複数人対応）
             for (const o of kumitateOwners) await addPbyName(o);
             for (const o of shiuntenOwners) await addPbyName(o);
