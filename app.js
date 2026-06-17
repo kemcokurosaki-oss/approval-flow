@@ -1563,15 +1563,13 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     await addSekkeiSupervisors();
     await addE({ department: '技戦' });
 
-    // simple_inspection のみ: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
-    if (flowType === 'simple_inspection') {
-        if (kumitateOwners.length > 0) {
-            await addP({ role: 'assembly_manager' });
-        }
-        if (shiuntenOwnersFallback.length > 0) {
-            await addP({ role: 'operations_manager' });
-            await addP({ role: 'operations_director' });
-        }
+    // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
+    if (kumitateOwners.length > 0) {
+        await addP({ role: 'assembly_manager' });
+    }
+    if (shiuntenOwnersFallback.length > 0) {
+        await addP({ role: 'operations_manager' });
+        await addP({ role: 'operations_director' });
     }
 
     // 複数機械選択時は残りの機械の組立担当者も追加
