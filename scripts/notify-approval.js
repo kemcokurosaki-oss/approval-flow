@@ -74,7 +74,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の「${flowReq}」について承認依頼が届いています。\n` +
           `承認フロー管理システムにログインして承認をお願いします。` +
           parallelNote +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
     case 'resubmit':
@@ -86,7 +86,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の「${flowReq}」が修正のうえ再申請されました。\n` +
           `承認フロー管理システムにログインして内容をご確認のうえ承認をお願いします。` +
           parallelNote +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
     case 'approved':
@@ -123,7 +123,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           shippingDate +
           approverLine +
           ownersSection +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -135,7 +135,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${recipientName} 様\n\n` +
           `${pStr} の「${flowReq}」は他の承認者により承認完了になりました。\n` +
           `対応は不要です。` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
     case 'rejected':
@@ -146,7 +146,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${recipientName} 様\n\n` +
           `${pStr} の「${flowReq}」が却下されました。\n` +
           `承認フロー管理システムで内容を確認し、再申請してください。` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
     case 'shipping_meeting_invite': {
@@ -161,7 +161,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の出荷確認会議を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -177,7 +177,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の簡易検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -193,7 +193,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の簡易検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -209,7 +209,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の外観検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -219,7 +219,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【工程通知】${pStr}　${flow}`,
         text:
           `${recipientName} 様\n\n${pStr} に関する通知です。` +
-          `${note}\n\n※このメールは自動送信です。`,
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
   }
 }
