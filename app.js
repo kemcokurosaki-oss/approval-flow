@@ -2156,6 +2156,24 @@ async function recordFlowNotifications(requestId, flowType) {
         const { data } = await db.from('notification_recipients').select('email').eq('name', name).eq('active', true);
         (data || []).map(r => r.email).filter(Boolean).forEach(e => extEmails.add(e));
     };
+    // members テーブルから設計担当者の上長を取得
+    // 担当者不明・未登録の場合は設計全管理職にフォールバック
+    const addSekkeiSupervisors = async () => {
+        let resolved = false;
+        if (sekkeiOwners.length > 0) {
+            const { data: memberRows } = await db.from('members')
+                .select('supervisor_email1, supervisor_email_2')
+                .in('name', sekkeiOwners);
+            for (const m of (memberRows || [])) {
+                if (m.supervisor_email1)  { extEmails.add(m.supervisor_email1);  resolved = true; }
+                if (m.supervisor_email_2) { extEmails.add(m.supervisor_email_2); resolved = true; }
+            }
+        }
+        if (!resolved) {
+            await addE({ department: '設計', role: 'manager' });
+            await addE({ department: '設計', role: 'director' });
+        }
+    };
 
     let notifType = 'completed';
 
