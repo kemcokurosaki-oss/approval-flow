@@ -2217,8 +2217,8 @@ async function recordFlowNotifications(requestId, flowType) {
             for (const o of shiuntenOwners) await addPbyName(o);
             await addEbyName(salesOwner);
             for (const o of sekkeiOwners) await addEbyName(o);
-            await addE({ department: '設計', role: 'manager' });
-            await addE({ department: '設計', role: 'director' });
+            // 設計管理職: 担当者の上長を members テーブルから取得
+            await addSekkeiSupervisors();
             await addE({ department: '技戦' });
             break;
 
