@@ -7,6 +7,8 @@ const GMAIL_PASS    = process.env.GMAIL_APP_PASSWORD;
 const TEST_MODE     = process.env.TEST_MODE === 'true';
 const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
+const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
+
 const FLOW_LABELS = {
   assembly:         '組立完了通知',
   test_run:         '試運転完了通知',
