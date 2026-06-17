@@ -49,6 +49,50 @@ async function supabaseFetch(path, options = {}) {
   return res.json();
 }
 
+// ===== .ics 生成（簡易検査） =====
+function buildICS(req, summary) {
+  if (!req.inspection_date) return null;
+
+  const dateStr = req.inspection_date.replace(/-/g, ''); // YYYYMMDD
+
+  let dtStart, dtEnd;
+  if (req.inspection_time) {
+    const [hh, mm] = req.inspection_time.split(':').map(Number);
+    const endTotalMin = hh * 60 + mm + 30;
+    const endHH = String(Math.floor(endTotalMin / 60)).padStart(2, '0');
+    const endMM = String(endTotalMin % 60).padStart(2, '0');
+    dtStart = `DTSTART;TZID=Asia/Tokyo:${dateStr}T${req.inspection_time.replace(':', '')}00`;
+    dtEnd   = `DTEND;TZID=Asia/Tokyo:${dateStr}T${endHH}${endMM}00`;
+  } else {
+    // 時刻不明の場合は終日イベント
+    const [y, m, d] = req.inspection_date.split('-').map(Number);
+    const nextDay = new Date(y, m - 1, d + 1).toLocaleDateString('en-CA').replace(/-/g, '');
+    dtStart = `DTSTART;VALUE=DATE:${dateStr}`;
+    dtEnd   = `DTEND;VALUE=DATE:${nextDay}`;
+  }
+
+  const dtstamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+  const uid     = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-si-${dateStr}@approval-flow`;
+  const location = (req.inspection_location || '').replace(/\n/g, '\\n');
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//工事工程承認フロー//JP',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    dtStart,
+    dtEnd,
+    `SUMMARY:${summary}`,
+    `LOCATION:${location}`,
+    'ORGANIZER;CN=田中(孝):mailto:t-tanaka@kusakabe.com',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
 // ===== メール本文生成 =====
 function buildEmail(type, req, recipientName, extra = {}) {
   const pNum       = req?.project_number || '—';
