@@ -2264,9 +2264,8 @@ async function recordFlowNotifications(requestId, flowType) {
             await addP({ department: '製管', role: 'staff' });  // 森村・黒崎
             await addE({ department: '技戦' });                 // 小笠原
             await addE({ department: '物流' });                 // 物流課
-            // 設計部長・課長: 常に送付
-            await addE({ department: '設計', role: 'manager' });
-            await addE({ department: '設計', role: 'director' });
+            // 設計管理職: 担当者の上長を members テーブルから取得
+            await addSekkeiSupervisors();
             // 機械組立タスクがある場合: 組立課長
             if (kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });
