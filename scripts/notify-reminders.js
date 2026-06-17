@@ -13,6 +13,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 const GMAIL_USER   = process.env.GMAIL_USER;
 const GMAIL_PASS   = process.env.GMAIL_APP_PASSWORD;
 const TEST_MODE    = process.env.TEST_MODE === 'true';
+const APP_URL      = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 const TEST_EMAIL   = 'e-kurosaki@kusakabe.com';
 const TEST_PROJECT = (process.env.TEST_PROJECT || '').trim();
 
