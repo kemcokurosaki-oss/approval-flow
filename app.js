@@ -2217,6 +2217,10 @@ async function recordFlowNotifications(requestId, flowType) {
             for (const o of kumitateOwners) await addPbyName(o);
             // 試運転タスクがある場合のみ試運転担当者も追加
             for (const o of shiuntenOwners) await addPbyName(o);
+            if (shiuntenOwners.length > 0) {
+                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+            }
             // 工番担当者（外部）: 営業・設計staff
             await addEbyName(salesOwner);
             for (const o of sekkeiOwners) await addEbyName(o);
@@ -2229,6 +2233,11 @@ async function recordFlowNotifications(requestId, flowType) {
             await addP({ role: 'quality' });
             await addP({ department: '製管', role: 'staff' });
             await addP({ role: 'assembly_director' });
+            if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            if (shiuntenOwners.length > 0) {
+                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+            }
             // 工番担当者（profiles）: 組立・操業（複数人対応）
             for (const o of kumitateOwners) await addPbyName(o);
             for (const o of shiuntenOwners) await addPbyName(o);
@@ -2244,6 +2253,11 @@ async function recordFlowNotifications(requestId, flowType) {
             // 外観検査開催案内と同じ宛先
             await addP({ department: '製管', role: 'staff' });
             await addP({ role: 'assembly_director' });
+            if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            if (shiuntenOwners.length > 0) {
+                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+            }
             for (const o of kumitateOwners) await addPbyName(o);
             for (const o of shiuntenOwners) await addPbyName(o);
             await addEbyName(salesOwner);
