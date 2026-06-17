@@ -2253,9 +2253,8 @@ async function recordFlowNotifications(requestId, flowType) {
             // 工番担当者（外部）: 営業・設計staff
             await addEbyName(salesOwner);
             for (const o of sekkeiOwners) await addEbyName(o);
-            // 設計管理職・技戦は必須
-            await addE({ department: '設計', role: 'manager' });
-            await addE({ department: '設計', role: 'director' });
+            // 設計管理職: 担当者の上長を members テーブルから取得
+            await addSekkeiSupervisors();
             await addE({ department: '技戦' });
             break;
 
