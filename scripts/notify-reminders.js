@@ -154,7 +154,7 @@ async function runApprovalReminders() {
           `${pStr} の「${flow}」について、` +
           `前日に承認依頼が届いていますが、まだ承認されていません。\n` +
           `承認フロー管理システムにログインして承認をお願いします。\n\n` +
-          `※このメールは自動送信です。`;
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
         try {
           await sendEmail(approver.email, approver.name, subject, text);
@@ -279,7 +279,7 @@ async function runSubmissionReminders() {
           `${pStr} の「${flow}」について、` +
           `${bodyDetail}\n` +
           `承認フロー管理システムにログインして申請をお願いします。\n\n` +
-          `※このメールは自動送信です。`;
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
         // 担当者本人と重複しないようCCから除外
         const ccEmails = ccProfiles
@@ -390,7 +390,7 @@ async function runInvitationReminders() {
         `${pStr} について、${target.refTaskName}が ${target.refEndDate} に終了予定ですが、` +
         `簡易検査開催案内がされていません。\n` +
         `承認フロー管理システムにログインして開催案内の送付をお願いします。\n\n` +
-        `※このメールは自動送信です。`;
+        `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
       try {
         await sendEmail(profile.email, profile.name, subject, text);
