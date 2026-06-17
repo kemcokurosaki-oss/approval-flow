@@ -1559,8 +1559,8 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     for (const o of shiuntenOwnersFallback) await addPbyName(o);
     await addEbyName(salesOwner);
     for (const o of sekkeiOwnersFallback) await addEbyName(o);
-    await addE({ department: '設計', role: 'manager' });
-    await addE({ department: '設計', role: 'director' });
+    // 設計管理職: 担当者の上長を members テーブルから取得
+    await addSekkeiSupervisors();
     await addE({ department: '技戦' });
 
     // simple_inspection のみ: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
