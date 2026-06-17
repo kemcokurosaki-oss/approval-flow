@@ -1520,6 +1520,37 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
             if (key && !extEmails.has(key)) { extEmails.add(key); extList.push(r); }
         });
     };
+    // members テーブルから設計担当者の上長を取得（プレビュー用）
+    // 担当者不明・未登録の場合は設計全管理職にフォールバック
+    const addSekkeiSupervisors = async () => {
+        let resolved = false;
+        if (sekkeiOwnersFallback.length > 0) {
+            const { data: memberRows } = await db.from('members')
+                .select('supervisor_email1, supervisor_email_2')
+                .in('name', sekkeiOwnersFallback);
+            const supEmails = [];
+            for (const m of (memberRows || [])) {
+                if (m.supervisor_email1)  supEmails.push(m.supervisor_email1);
+                if (m.supervisor_email_2) supEmails.push(m.supervisor_email_2);
+            }
+            if (supEmails.length > 0) {
+                resolved = true;
+                const { data: supRecips } = await db.from('notification_recipients')
+                    .select('name, email, department, role').in('email', supEmails).eq('active', true);
+                const supMap = Object.fromEntries((supRecips || []).map(r => [r.email, r]));
+                for (const email of supEmails) {
+                    if (!extEmails.has(email)) {
+                        extEmails.add(email);
+                        extList.push(supMap[email] || { name: email, email, department: '設計', role: '' });
+                    }
+                }
+            }
+        }
+        if (!resolved) {
+            await addE({ department: '設計', role: 'manager' });
+            await addE({ department: '設計', role: 'director' });
+        }
+    };
 
     // 全開催案内共通
     await addP({ department: '製管', role: 'staff' });
