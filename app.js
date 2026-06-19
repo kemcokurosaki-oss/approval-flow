@@ -781,32 +781,11 @@ async function loadProgress() {
             </div>`;
         }).join('');
 
-        // サマリー（完了機械数 / 全機械数）
-        const totalMachines    = machines.length;
-        const completedMachines = machines.filter(m => {
-            const flows = projectData[num][m].flows;
-            return !!flows['shipping'] && flows['shipping'].status === 'approved';
-        }).length;
-        const inProgressMachines = machines.filter(m => {
-            const flows = Object.values(projectData[num][m].flows);
-            return flows.some(f => f.status !== 'approved') || flows.length === 0;
-        }).length - (totalMachines - completedMachines - machines.filter(m =>
-            Object.values(projectData[num][m].flows).some(f => f.status === 'submitted' || f.status === 'in_review')
-        ).length);
-
-        const hasShippingInProgress = machines.some(m => {
-            const shipping = projectData[num][m].flows['shipping'];
-            return shipping && (shipping.status === 'submitted' || shipping.status === 'in_review');
-        });
-        const summaryColor = completedMachines === totalMachines ? '#27ae60' : hasShippingInProgress ? '#f39c12' : '#aaa';
-        let summaryText;
-        if (completedMachines === totalMachines) {
-            summaryText = '✅ 出荷日確定';
-        } else if (hasShippingInProgress) {
-            summaryText = '⏳ 出荷日未定　承認中';
-        } else {
-            summaryText = '出荷日未定';
-        }
+        // 全機械の現在工程段階を評価し、最低進捗のものをサマリーに採用
+        const stages   = machines.map(m => getMachineStage(num, m, projectData[num][m].flows));
+        const minStage = stages.reduce((a, b) => a.rank <= b.rank ? a : b);
+        const summaryText  = minStage.text;
+        const summaryColor = minStage.color;
 
         return `<div class="progress-card" onclick="toggleProgressCard(this)">
             <div class="progress-card-header">
