@@ -710,7 +710,18 @@ async function loadProgress() {
         projectData[num][machine].flows[req.flow_type] = req;
     });
 
-    const allNums = Object.keys(projectData).filter(num => !is2000sSeries(num) && !isTInspectionSeries(num) && projectsMap[num] !== undefined).sort();
+    const allNums = Object.keys(projectData).filter(num => {
+        if (projectsMap[num] === undefined) return false;
+        if (is2000sSeries(num))       return false;
+        if (isTInspectionSeries(num)) return false;
+        if (is5or7Series(num))        return false;
+        if (isDSeries(num)) {
+            // テンプレートcまたはt+cのみ表示（機械組立タスクの有無で判定）
+            const machines = Object.keys(projectData[num]);
+            return machines.some(m => hasTask(num, m, '機械組立'));
+        }
+        return true;
+    }).sort();
     if (allNums.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">承認フローの記録がありません</div></div>';
         return;
