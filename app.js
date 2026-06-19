@@ -24,6 +24,10 @@ const is2000sSeries = num => { const n = parseInt(num, 10); return n >= 2000 && 
 const isTemplateC = num => /^[34]C/i.test(num);
 // 点検系（3T/4T）の工番判定（承認フロー対象外）
 const isTInspectionSeries = num => /^[34]T/i.test(num);
+// 5番台・7番台の工番判定（承認フロー対象外）
+const is5or7Series = num => /^[57]/.test(num);
+// D番工事の工番判定
+const isDSeries = num => /^D/i.test(num);
 
 // ===== UI State（XStateの代わりにシンプルな状態管理） =====
 const ui = {
