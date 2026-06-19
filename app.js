@@ -715,7 +715,7 @@ async function loadProgress() {
     const FLOW_DEFS = [
         { type: 'assembly',          label: '組立完了申請',        alwaysShow: true },
         { type: 'test_run',          label: '試運転完了申請',       alwaysShow: false },
-        { type: 'simple_inspection', label: '簡易検査',             alwaysShow: false },
+        { type: 'simple_inspection', label: '簡易検査開催案内',       alwaysShow: false },
         { type: 'inspection',        label: '外観検査開催案内',     alwaysShow: false },
         { type: 'shipping_meeting',  label: '出荷確認会議開催案内', alwaysShow: false },
         { type: 'shipping',          label: '出荷確定申請',          alwaysShow: true }
