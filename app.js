@@ -20,6 +20,10 @@ const db = supabase.createClient(S_URL, S_KEY, {
 
 // 2000番台（2000〜2999）の工番判定（現在は承認フロー対象外）
 const is2000sSeries = num => { const n = parseInt(num, 10); return n >= 2000 && n <= 2999; };
+// テンプレートC（3C/4C）の工番判定
+const isTemplateC = num => /^[34]C/i.test(num);
+// 点検系（3T/4T）の工番判定（承認フロー対象外）
+const isTInspectionSeries = num => /^[34]T/i.test(num);
 
 // ===== UI State（XStateの代わりにシンプルな状態管理） =====
 const ui = {
