@@ -642,6 +642,49 @@ async function loadProgress() {
     );
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
 
+    const getMachineStage = (num, machine, flows) => {
+        const tplC     = isTemplateC(num);
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        const ship = flows['shipping'];
+        if (ship?.status === 'approved')
+            return { rank: 8, text: '✅ 出荷日確定', color: '#27ae60' };
+        if (ship?.status === 'submitted' || ship?.status === 'in_review')
+            return { rank: 7, text: '⏳ 出荷確定申請中', color: '#f39c12' };
+
+        if (tplC) {
+            const si = flows['simple_inspection'];
+            if (si?.status === 'approved') {
+                if (si.inspection_date && si.inspection_date > todayStr)
+                    return { rank: 5, text: `📅 簡易検査 ${fmtDate(si.inspection_date)} 開催予定`, color: '#2980b9' };
+                return { rank: 6, text: '簡易検査済み', color: '#27ae60' };
+            }
+        } else {
+            const insp = flows['inspection'];
+            if (insp?.status === 'approved') {
+                if (insp.inspection_date && insp.inspection_date > todayStr)
+                    return { rank: 5, text: `📅 外観検査 ${fmtDate(insp.inspection_date)} 開催予定`, color: '#2980b9' };
+                return { rank: 6, text: '外観検査済み', color: '#27ae60' };
+            }
+            const tr = flows['test_run'];
+            if (tr?.status === 'submitted' || tr?.status === 'in_review')
+                return { rank: 3, text: '⏳ 試運転完了申請中', color: '#f39c12' };
+            if (tr?.status === 'approved')
+                return { rank: 4, text: '試運転完了', color: '#27ae60' };
+        }
+
+        const asm = flows['assembly'];
+        if (asm?.status === 'approved') {
+            if (!tplC && hasTask(num, machine, '試運転'))
+                return { rank: 2, text: '試運転中', color: '#444' };
+            return { rank: 2, text: '組立完了', color: '#27ae60' };
+        }
+        if (asm?.status === 'submitted' || asm?.status === 'in_review')
+            return { rank: 1, text: '⏳ 組立完了申請中', color: '#f39c12' };
+
+        return { rank: 0, text: '製作中', color: '#aaa' };
+    };
+
     // projectNum → machine → { flows, ... }
     const projectData = {};
 
