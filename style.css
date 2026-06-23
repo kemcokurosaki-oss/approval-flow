@@ -102,7 +102,7 @@
             position: fixed;
             top: 44px;
             right: 0;
-            width: 300px;
+            width: 360px;
             height: calc(100vh - 44px);
             background: #fff;
             box-shadow: -4px 0 20px rgba(0,0,0,0.18);
