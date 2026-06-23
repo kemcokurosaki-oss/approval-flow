@@ -676,10 +676,16 @@ async function loadProgress() {
     renderProgressCards();
 }
 
+function _syncProgressControls() {
+    document.getElementById('psort_job')?.classList.toggle('active', progressSort === 'job');
+    document.getElementById('psort_shipping')?.classList.toggle('active', progressSort === 'shipping');
+    const cb = document.getElementById('pfilter_mine');
+    if (cb) cb.checked = progressFilterMine;
+}
+
 function setProgressSort(order) {
     progressSort = order;
-    document.getElementById('psort_job')?.classList.toggle('active', order === 'job');
-    document.getElementById('psort_shipping')?.classList.toggle('active', order === 'shipping');
+    _syncProgressControls();
     renderProgressCards();
 }
 
