@@ -45,8 +45,8 @@
         .dev-bar select option { color: #333; background: #fff; }
 
         /* ===== Main ===== */
-        .main { margin: 0; padding: 0; height: calc(100vh - 44px); overflow: hidden; position: relative; }
-        #app.has-dev-bar .main { height: calc(100vh - 72px); }
+        .main { margin: 0; padding: 0; height: calc(100vh - 72px); overflow: hidden; position: relative; }
+        #app.has-dev-bar .main { height: calc(100vh - 100px); }
 
         /* ===== New Main Layout ===== */
         .main-layout {
