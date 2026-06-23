@@ -49,38 +49,54 @@
     </div>
 
     <div class="main">
-        <div class="cols-layout">
-            <!-- 左カラム：自分の申請 + 承認待ち（タブ切り替え） -->
-            <div class="col-left">
-                <div class="col-sticky">
-                    <div class="col-tabs">
-                        <button class="col-tab active" id="ctab_mine" onclick="switchTab('mine')">自分の申請</button>
-                        <button class="col-tab" id="ctab_pending" onclick="switchTab('pending')">
-                            承認待ち <span id="pending_badge" class="badge" style="display:none;"></span>
-                        </button>
-                    </div>
-                    <div class="new-btn-area" id="new_btn_area" style="display:none; padding: 8px 0 4px;">
-                        <button class="btn btn-primary" id="btn_assembly"   onclick="openSubmitModal('assembly')"  style="display:none;">＋ 組立完了通知を申請</button>
-                        <button class="btn btn-primary" id="btn_test_run"   onclick="openSubmitModal('test_run')"  style="display:none; margin-left:8px;">＋ 試運転完了通知を申請</button>
-                        <button class="btn btn-primary" id="btn_simple_inspection" onclick="openSimpleInspectionModal()" style="display:none; margin-left:8px;">＋ 簡易検査開催案内を作成</button>
-                        <button class="btn btn-primary" id="btn_inspection"       onclick="openInspectionModal()"       style="display:none; margin-left:8px;">＋ 外観検査開催案内を作成</button>
-                        <button class="btn btn-primary" id="btn_shipping_meeting" onclick="openShippingMeetingModal()"  style="display:none; margin-left:8px;">＋ 出荷確認会議開催案内を作成</button>
-                        <button class="btn btn-primary" id="btn_shipping"         onclick="openShippingModal()"         style="display:none; margin-left:8px;">＋ 出荷確定申請</button>
-                    </div>
+        <div class="main-layout">
+            <!-- メイン：進捗一覧 -->
+            <div class="main-content">
+                <div class="new-btn-area" id="new_btn_area" style="display:none; padding: 10px 0 8px;">
+                    <button class="btn btn-primary btn-sm" id="btn_assembly"   onclick="openSubmitModal('assembly')"        style="display:none;">＋ 組立完了通知</button>
+                    <button class="btn btn-primary btn-sm" id="btn_test_run"   onclick="openSubmitModal('test_run')"        style="display:none; margin-left:8px;">＋ 試運転完了通知</button>
+                    <button class="btn btn-primary btn-sm" id="btn_simple_inspection" onclick="openSimpleInspectionModal()" style="display:none; margin-left:8px;">＋ 簡易検査案内</button>
+                    <button class="btn btn-primary btn-sm" id="btn_inspection"       onclick="openInspectionModal()"        style="display:none; margin-left:8px;">＋ 外観検査案内</button>
+                    <button class="btn btn-primary btn-sm" id="btn_shipping_meeting" onclick="openShippingMeetingModal()"   style="display:none; margin-left:8px;">＋ 出荷確認会議案内</button>
+                    <button class="btn btn-primary btn-sm" id="btn_shipping"         onclick="openShippingModal()"          style="display:none; margin-left:8px;">＋ 出荷確定申請</button>
                 </div>
-                <div class="col-content">
-                    <div id="tab_content_mine"><div class="loading-indicator">読み込み中...</div></div>
-                    <div id="tab_content_pending" style="display:none;"><div class="loading-indicator">読み込み中...</div></div>
+                <div id="tab_content_progress"><div class="loading-indicator">読み込み中...</div></div>
+            </div>
+            <!-- サイドタブ（閉じた状態） -->
+            <div id="side_tab" class="side-tab" onclick="toggleSidePanel()">
+                <div class="side-tab-item">
+                    <span class="side-tab-text">申請</span>
+                    <span id="side_badge_mine" class="badge" style="display:none;"></span>
+                </div>
+                <div class="side-tab-divider"></div>
+                <div class="side-tab-item">
+                    <span class="side-tab-text">承認</span>
+                    <span id="side_badge_pending" class="badge" style="display:none;"></span>
                 </div>
             </div>
-
-            <!-- 右カラム：進捗一覧（固定） -->
-            <div class="col-right">
-                <div class="col-sticky">
-                    <div class="col-header">進捗一覧</div>
+        </div>
+        <!-- サイドパネル本体 -->
+        <div id="side_panel" class="side-panel">
+            <div class="side-panel-header">
+                <span style="font-size:13px; font-weight:bold; color:#1e3a5f;">マイページ</span>
+                <button class="side-panel-close-btn" onclick="closeSidePanel()">✕</button>
+            </div>
+            <div class="side-half">
+                <div class="side-half-header">
+                    自分の申請
+                    <span id="side_mine_count" class="badge" style="display:none;"></span>
                 </div>
-                <div class="col-content">
-                    <div id="tab_content_progress"><div class="loading-indicator">読み込み中...</div></div>
+                <div class="side-half-content" id="side_content_mine">
+                    <div class="loading-indicator">読み込み中...</div>
+                </div>
+            </div>
+            <div class="side-half">
+                <div class="side-half-header">
+                    承認待ち
+                    <span id="side_pending_count" class="badge" style="display:none;"></span>
+                </div>
+                <div class="side-half-content" id="side_content_pending">
+                    <div class="loading-indicator">読み込み中...</div>
                 </div>
             </div>
         </div>

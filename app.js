@@ -56,7 +56,8 @@ const DEV_ROLE_MAP = {
     quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping'] }
 };
 let devFlowTypes    = []; // デモ用: 自分の申請タブのフロー絞り込み
-let userIsApplicant = false; // 申請権限フラグ（switchTab で参照）
+let userIsApplicant  = false; // 申請権限フラグ
+let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal から参照）
 
 function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
 function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
@@ -65,26 +66,23 @@ function getEffectiveDept() { return devDept || currentProfile?.department || ''
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
 function applyRoleLayout(role) {
-    const dept              = getEffectiveDept();
-    const isApprover        = APPROVER_ROLES.includes(role);
-    // 品証、および品証代理の製管スタッフは同一権限
-    const isQualityOrSeikan = role === 'quality' || (role === 'staff' && dept === '製管');
+    const dept        = getEffectiveDept();
+    const isApprover  = APPROVER_ROLES.includes(role);
+    // 品証、および品証代理の製管スタッフは同一権限（グローバル変数に保存）
+    isQualityOrSeikan = role === 'quality' || (role === 'staff' && dept === '製管');
     // 組立・操業 staff + 組立課長 + 操業課長 が申請可
-    const isApplicant       = (role === 'staff' && (dept === '組立' || dept === '操業'))
-                           || role === 'assembly_manager'
-                           || role === 'operations_manager';
-    const isViewOnly        = role === 'staff' && !isApplicant && dept !== '製管';
+    const isApplicant = (role === 'staff' && (dept === '組立' || dept === '操業'))
+                      || role === 'assembly_manager'
+                      || role === 'operations_manager';
+    const isViewOnly  = role === 'staff' && !isApplicant && dept !== '製管';
 
-    // 申請権限フラグをモジュール変数に保存（switchTab から参照）
+    // 申請権限フラグをモジュール変数に保存
     userIsApplicant = isApplicant || isQualityOrSeikan;
 
-    // 左カラムのタブ表示制御
-    const ctabPending = document.getElementById('ctab_pending');
-    const ctabMine    = document.getElementById('ctab_mine');
-    if (ctabPending) ctabPending.style.display = isApprover ? '' : 'none';
-    if (ctabMine)    ctabMine.style.display    = userIsApplicant ? '' : 'none';
+    // 申請ボタンは申請権限がある場合のみ表示
+    const newBtnArea = document.getElementById('new_btn_area');
+    if (newBtnArea) newBtnArea.style.display = userIsApplicant ? 'block' : 'none';
 
-    // 申請ボタンは申請権限がある場合のみ表示（表示タブは switchTab が管理）
     if (userIsApplicant) {
         document.getElementById('btn_assembly').style.display          = (!isQualityOrSeikan && (dept === '組立' || role === 'assembly_manager'))  ? '' : 'none';
         document.getElementById('btn_test_run').style.display          = (!isQualityOrSeikan && (dept === '操業' || role === 'operations_manager')) ? '' : 'none';
@@ -94,15 +92,25 @@ function applyRoleLayout(role) {
         document.getElementById('btn_shipping').style.display          = isQualityOrSeikan ? '' : 'none';
     }
 
-    // 権限のないカラムのローディング表示を消去
-    if (!isApprover) document.getElementById('tab_content_pending').innerHTML = '';
-    if (!userIsApplicant) document.getElementById('tab_content_mine').innerHTML = '';
+    // サイドパネルの表示制御：権限のないセクションは空にする
+    if (!isApprover) {
+        const pendingEl = document.getElementById('side_content_pending');
+        if (pendingEl) pendingEl.innerHTML = '';
+        const badgePending = document.getElementById('side_badge_pending');
+        if (badgePending) badgePending.style.display = 'none';
+        const countPending = document.getElementById('side_pending_count');
+        if (countPending) countPending.style.display = 'none';
+    }
+    if (!userIsApplicant) {
+        const mineEl = document.getElementById('side_content_mine');
+        if (mineEl) mineEl.innerHTML = '';
+        const badgeMine = document.getElementById('side_badge_mine');
+        if (badgeMine) badgeMine.style.display = 'none';
+        const countMine = document.getElementById('side_mine_count');
+        if (countMine) countMine.style.display = 'none';
+    }
 
-    // 表示タブの初期設定
-    if (isApprover && !userIsApplicant) switchTab('pending');
-    else                                switchTab('mine');
-
-    // 進捗一覧のみモード（左カラムをCSS非表示）
+    // 進捗一覧のみモード（申請ボタンをCSS非表示）
     const appEl = document.getElementById('app');
     appEl.classList.toggle('is-view-only', isViewOnly);
 }
@@ -431,23 +439,24 @@ async function onMachineChange() {
 
 // ===== Data Loading =====
 async function refreshAll() {
-    const role              = getEffectiveRole();
-    const dept              = getEffectiveDept();
-    const isApprover        = APPROVER_ROLES.includes(role);
-    const isQualityOrSeikan = role === 'quality' || (role === 'staff' && dept === '製管');
-    const isApplicant       = role === 'staff' && (dept === '組立' || dept === '操業');
+    const role        = getEffectiveRole();
+    const dept        = getEffectiveDept();
+    const isApprover  = APPROVER_ROLES.includes(role);
+    const isQorS      = role === 'quality' || (role === 'staff' && dept === '製管');
+    const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業');
 
     const loads = [];
     loads.push(loadProgress());
-    if (isApprover) loads.push(loadPending());
-    if (isApplicant || isQualityOrSeikan) loads.push(loadMine());
+    if (isApprover) loads.push(loadPendingSide());
+    if (isApplicant || isQorS || role === 'assembly_manager' || role === 'operations_manager') loads.push(loadMineSide());
 
     await Promise.all(loads);
 }
 
-async function loadPending() {
+async function loadPendingSide() {
     const role = getEffectiveRole();
-    const el   = document.getElementById('tab_content_pending');
+    const el   = document.getElementById('side_content_pending');
+    if (!el) return;
 
     // 承認ステップが自分のロールで pending のものを取得
     const { data: steps, error } = await db
@@ -474,10 +483,16 @@ async function loadPending() {
         return false;
     });
 
-    // バッジ更新
-    const badge = document.getElementById('pending_badge');
-    badge.style.display = actionable.length > 0 ? 'inline-flex' : 'none';
-    badge.textContent   = actionable.length;
+    // バッジ更新（side_badge_pending と side_pending_count 両方）
+    const badgePending = document.getElementById('side_badge_pending');
+    const countPending = document.getElementById('side_pending_count');
+    if (actionable.length > 0) {
+        if (badgePending) { badgePending.style.display = 'inline-flex'; badgePending.textContent = actionable.length; }
+        if (countPending) { countPending.style.display = 'inline-flex'; countPending.textContent = actionable.length; }
+    } else {
+        if (badgePending) badgePending.style.display = 'none';
+        if (countPending) countPending.style.display = 'none';
+    }
 
     if (actionable.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">承認待ちの案件はありません</div></div>';
@@ -493,26 +508,25 @@ async function loadPending() {
     }
 
     el.innerHTML = actionable.map(s => {
-        const req    = s.approval_requests;
-        const pNum   = req.project_number || '—';
-        const pInfo  = projectsMap[pNum]  || {};
-        const label  = pInfo.customer_name || pInfo.project_details || '';
-        const date   = fmtDate(req.created_at);
-        const poster = requesterMap[req.requester_id] || '—';
+        const req         = s.approval_requests;
+        const pNum        = req.project_number || '—';
+        const pInfo       = projectsMap[pNum]  || {};
+        const label       = pInfo.customer_name || pInfo.project_details || '';
+        const date        = fmtDate(req.created_at);
+        const machineName = req.machine_name ? `【${esc(req.machine_name)}】` : '';
         return `
-        <div class="card" onclick="openDetailModal('${req.id}')">
-            <div class="card-header">
-                <div class="card-title">${pNum}${label ? '  ' + label : ''}</div>
-                <span class="status-badge s-pending">承認依頼</span>
-            </div>
-            <div class="card-meta">${FLOW_LABELS[req.flow_type] || req.flow_type}${req.machine_name ? `　【${esc(req.machine_name)}】` : ''}　|　申請者: ${poster}　|　${date}</div>
-            ${req.note ? `<div class="card-note">${esc(req.note)}</div>` : ''}
+        <div class="side-card is-pending-action" onclick="openDetailModal('${req.id}')">
+            <div class="side-card-title">${esc(pNum)}${label ? '　' + esc(label) : ''}</div>
+            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${machineName} | ${date}</div>
+            <div class="side-card-status">🔴 あなたの番</div>
         </div>`;
     }).join('');
 }
 
-async function loadMine() {
-    const el = document.getElementById('tab_content_mine');
+async function loadMineSide() {
+    const el = document.getElementById('side_content_mine');
+    if (!el) return;
+
     let query = db
         .from('approval_requests')
         .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, approval_steps(id, step_order, approver_role, status, decided_at)')
@@ -528,86 +542,46 @@ async function loadMine() {
     // 完了済み工番（projectsMapに存在しない）は非表示
     const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined);
 
+    // バッジ更新（side_badge_mine と side_mine_count 両方）
+    const badgeMine = document.getElementById('side_badge_mine');
+    const countMine = document.getElementById('side_mine_count');
+    if (reqs.length > 0) {
+        if (badgeMine) { badgeMine.style.display = 'inline-flex'; badgeMine.textContent = reqs.length; }
+        if (countMine) { countMine.style.display = 'inline-flex'; countMine.textContent = reqs.length; }
+    } else {
+        if (badgeMine) badgeMine.style.display = 'none';
+        if (countMine) countMine.style.display = 'none';
+    }
+
     if (reqs.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">申請中の案件はありません</div></div>';
         return;
     }
 
-    const STEP_ROLE_LABELS = {
-        assembly_manager: '課長', assembly_director: '部長',
-        operations_manager: '操業課長', operations_director: '操業部長',
-        quality: '品保'
-    };
-
     el.innerHTML = reqs.map(req => {
-        const pNum  = req.project_number || '—';
-        const pInfo = projectsMap[pNum]  || {};
-        const label = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
-        const steps = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
+        const pNum        = req.project_number || '—';
+        const pInfo       = projectsMap[pNum]  || {};
+        const label       = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
+        const machineLabel = req.machine_name ? `【${esc(req.machine_name)}】` : '';
+        const date        = fmtDate(req.created_at);
 
-        // ステップ進捗ノードを構築
-        const nodes = [{ label: '申請', done: true, rejected: false }];
-        if (steps.length > 0) {
-            if (req.flow_type === 'assembly' || req.flow_type === 'test_run') {
-                // assembly/test_run: 課長・部長をまとめて単一の「承認」ノードで表示
-                const approvedStep = steps.find(s => s.status === 'approved');
-                const rejectedStep = steps.find(s => s.status === 'rejected');
-                nodes.push({
-                    label:    '承認',
-                    done:     !!approvedStep,
-                    active:   !approvedStep && !rejectedStep && req.status === 'submitted',
-                    rejected: !!rejectedStep
-                });
-            } else if (req.flow_type === 'shipping') {
-                // shipping: 常務承認の単一ノード
-                const approvedStep = steps.find(s => s.status === 'approved');
-                const rejectedStep = steps.find(s => s.status === 'rejected');
-                nodes.push({
-                    label:    '常務承認',
-                    done:     !!approvedStep,
-                    active:   !approvedStep && !rejectedStep && req.status === 'submitted',
-                    rejected: !!rejectedStep
-                });
-            } else {
-                steps.forEach(s => {
-                    const isActive = s.status === 'pending' &&
-                        ((s.step_order === 1 && req.status === 'submitted') ||
-                         (s.step_order === 2 && req.status === 'in_review'));
-                    nodes.push({
-                        label:    STEP_ROLE_LABELS[s.approver_role] || s.approver_role,
-                        done:     s.status === 'approved',
-                        active:   isActive,
-                        rejected: s.status === 'rejected'
-                    });
-                });
-            }
-            nodes.push({ label: '完了', done: req.status === 'approved', rejected: false });
+        let statusText;
+        if (req.status === 'submitted' || req.status === 'in_review') {
+            statusText = '⏳ 承認中';
+        } else if (req.status === 'approved') {
+            statusText = '✅ 完了';
+        } else if (req.status === 'rejected') {
+            statusText = '❌ 却下';
         } else {
-            // 開催案内系（承認ステップなし）
-            nodes.push({ label: '送信済み', done: req.status === 'approved', rejected: false });
+            statusText = req.status;
         }
 
-        const progressHtml = nodes.map((n, i) => {
-            const cls  = n.rejected ? 'sc-rejected' : n.done ? 'sc-done' : n.active ? 'sc-active' : 'sc-empty';
-            const icon = n.rejected ? '✗' : n.done ? '✓' : n.active ? '…' : '○';
-            const line = i < nodes.length - 1
-                ? `<div class="step-connector ${(n.done && !n.rejected) ? 'sc-line-done' : 'sc-line-pending'}"></div>`
-                : '';
-            return `<div class="step-node"><div class="step-circle ${cls}">${icon}</div><div class="step-label">${esc(n.label)}</div></div>${line}`;
-        }).join('');
-
-        const resubmitBadge = req.is_resubmit
-            ? `<span style="font-size:11px; padding:1px 7px; border-radius:10px; background:#fff3cd; color:#856404; font-weight:bold; margin-left:6px;">再申請</span>`
-            : '';
-        const machineLabel = req.machine_name ? `　<span style="font-size:12px; color:#666; font-weight:normal;">【${esc(req.machine_name)}】</span>` : '';
+        const resubmitBadge = req.is_resubmit ? ' 【再申請】' : '';
         return `
-        <div class="card" onclick="openDetailModal('${req.id}')">
-            <div class="card-header">
-                <div class="card-title">${esc(pNum)}${label ? '　' + esc(label) : ''}${machineLabel}${resubmitBadge}</div>
-            </div>
-            <div class="card-meta">${FLOW_LABELS[req.flow_type] || req.flow_type}　|　${fmtDate(req.created_at)}</div>
-            <div class="step-progress">${progressHtml}</div>
-            ${req.note ? `<div class="card-note">${esc(req.note)}</div>` : ''}
+        <div class="side-card" onclick="openDetailModal('${req.id}')">
+            <div class="side-card-title">${esc(pNum)}${label ? '　' + esc(label) : ''} ${machineLabel}${resubmitBadge}</div>
+            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}</div>
+            <div class="side-card-status">${statusText}</div>
         </div>`;
     }).join('');
 }
@@ -645,49 +619,6 @@ async function loadProgress() {
         (machineTasks || []).map(t => `${t.project_number}__${t.machine}__${t.text}`)
     );
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
-
-    const getMachineStage = (num, machine, flows) => {
-        const tplC     = isTemplateC(num);
-        const todayStr = new Date().toISOString().slice(0, 10);
-
-        const ship = flows['shipping'];
-        if (ship?.status === 'approved')
-            return { rank: 8, text: '✅ 出荷日確定', color: '#27ae60' };
-        if (ship?.status === 'submitted' || ship?.status === 'in_review')
-            return { rank: 7, text: '⏳ 出荷確定申請中', color: '#f39c12' };
-
-        if (tplC) {
-            const si = flows['simple_inspection'];
-            if (si?.status === 'approved') {
-                if (si.inspection_date && si.inspection_date > todayStr)
-                    return { rank: 5, text: `📅 簡易検査 ${fmtDate(si.inspection_date)} 開催予定`, color: '#2980b9' };
-                return { rank: 6, text: '簡易検査済み', color: '#27ae60' };
-            }
-        } else {
-            const insp = flows['inspection'];
-            if (insp?.status === 'approved') {
-                if (insp.inspection_date && insp.inspection_date > todayStr)
-                    return { rank: 5, text: `📅 外観検査 ${fmtDate(insp.inspection_date)} 開催予定`, color: '#2980b9' };
-                return { rank: 6, text: '外観検査済み', color: '#27ae60' };
-            }
-            const tr = flows['test_run'];
-            if (tr?.status === 'submitted' || tr?.status === 'in_review')
-                return { rank: 3, text: '⏳ 試運転完了申請中', color: '#f39c12' };
-            if (tr?.status === 'approved')
-                return { rank: 4, text: '試運転完了', color: '#27ae60' };
-        }
-
-        const asm = flows['assembly'];
-        if (asm?.status === 'approved') {
-            if (!tplC && hasTask(num, machine, '試運転'))
-                return { rank: 2, text: '試運転中', color: '#444' };
-            return { rank: 2, text: '組立完了', color: '#27ae60' };
-        }
-        if (asm?.status === 'submitted' || asm?.status === 'in_review')
-            return { rank: 1, text: '⏳ 組立完了申請中', color: '#f39c12' };
-
-        return { rank: 0, text: '製作中', color: '#aaa' };
-    };
 
     // projectNum → machine → { flows, ... }
     const projectData = {};
@@ -728,12 +659,12 @@ async function loadProgress() {
     }
 
     const FLOW_DEFS = [
-        { type: 'assembly',          label: '組立完了申請',        alwaysShow: true },
-        { type: 'test_run',          label: '試運転完了申請',       alwaysShow: false },
-        { type: 'simple_inspection', label: '簡易検査開催案内',       alwaysShow: false },
-        { type: 'inspection',        label: '外観検査開催案内',     alwaysShow: false },
-        { type: 'shipping_meeting',  label: '出荷確認会議開催案内', alwaysShow: false },
-        { type: 'shipping',          label: '出荷確定申請',          alwaysShow: true }
+        { type: 'assembly',          label: '組立完了申請',   alwaysShow: true },
+        { type: 'test_run',          label: '試運転完了申請', alwaysShow: false },
+        { type: 'simple_inspection', label: '簡易検査',       alwaysShow: false },
+        { type: 'inspection',        label: '外観検査',       alwaysShow: false },
+        { type: 'shipping_meeting',  label: '出荷会議',       alwaysShow: false },
+        { type: 'shipping',          label: '出荷確定申請',   alwaysShow: true }
     ];
 
     const html = allNums.map(num => {
@@ -741,97 +672,75 @@ async function loadProgress() {
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
 
-        const machineSections = machines.map((machine, idx) => {
+        const machineRows = machines.map(machine => {
             const mData = projectData[num][machine];
+            const tplC  = isTemplateC(num);
 
             const applicable = FLOW_DEFS.filter(f => {
                 if (f.alwaysShow) return true;
-                if (f.type === 'test_run')          return hasTask(num, machine, '試運転')      || !!mData.flows['test_run'];
-                if (f.type === 'simple_inspection') return !is2000sSeries(num) && !!mData.flows['simple_inspection'];
-                if (f.type === 'inspection')        return hasTask(num, machine, '外観検査')    || !!mData.flows['inspection'];
+                if (f.type === 'test_run')          return hasTask(num, machine, '試運転')       || !!mData.flows['test_run'];
+                if (f.type === 'simple_inspection') return tplC && (!is2000sSeries(num));
+                if (f.type === 'inspection')        return !tplC && (hasTask(num, machine, '外観検査') || !!mData.flows['inspection']);
                 if (f.type === 'shipping_meeting')  return hasTask(num, machine, '出荷確認会議') || !!mData.flows['shipping_meeting'];
                 return false;
             });
 
-            const flowRows = applicable.map(f => {
+            const nodes = applicable.map((f, i) => {
                 const req = mData.flows[f.type];
-                let icon, color, dateStr, extraLine = '';
-                if (!req)                           { icon = '──'; color = '#ccc';     dateStr = '未'; }
-                else if (req.status === 'approved') {
-                    if (f.type === 'simple_inspection') {
-                        if (req.inspection_date) {
-                            const todayStr = new Date().toISOString().slice(0, 10);
-                            const isPast   = req.inspection_date <= todayStr;
-                            const dateLabel = fmtDate(req.inspection_date);
-                            const timeLabel = req.inspection_time ? ` ${req.inspection_time}` : '';
-                            if (isPast) {
-                                icon = '✅'; color = '#27ae60'; dateStr = `開催済み (${dateLabel})`;
-                            } else {
-                                icon = '📅'; color = '#2980b9'; dateStr = `開催予定: ${dateLabel}${timeLabel}`;
-                            }
-                        } else {
-                            icon = '✅'; color = '#27ae60'; dateStr = fmtDate(req.updated_at);
-                        }
-                    } else {
-                        icon = '✅'; color = '#27ae60'; dateStr = fmtDate(req.updated_at);
-                        if (f.type === 'shipping') {
-                            const approvedStep = (req.approval_steps || []).find(s => s.status === 'approved');
-                            const approverName = approvedStep?.approver_id ? shippingApproverNameMap[approvedStep.approver_id] : null;
-                            if (approverName) extraLine = `<div style="font-size:11px; color:#888; padding-left:30px;">承認: ${esc(approverName)}（常務）</div>`;
-                        }
-                    }
+                let fcClass, icon, clickAttr = '';
+
+                if (!req) {
+                    fcClass = 'fc-empty'; icon = '○';
+                } else if (req.status === 'approved') {
+                    fcClass = 'fc-done'; icon = '✓';
+                } else if (req.status === 'rejected') {
+                    fcClass = 'fc-rejected'; icon = '✗';
+                } else {
+                    fcClass = 'fc-active'; icon = '…';
                 }
-                else if (req.status === 'rejected') { icon = '❌'; color = '#e74c3c'; dateStr = '却下'; }
-                else                                { icon = '⏳'; color = '#f39c12'; dateStr = '承認中'; }
-                return `<div class="progress-flow-row">
-                    <span style="color:${color}; width:22px; text-align:center; flex-shrink:0;">${icon}</span>
-                    <span class="progress-flow-label" style="color:${color === '#ccc' ? '#bbb' : '#444'};">${esc(f.label)}</span>
-                    <span class="progress-flow-date">${dateStr}</span>
-                </div>${extraLine}`;
+
+                if (req) {
+                    clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
+                }
+                const clickable = req ? ' clickable' : '';
+                const connector = i < applicable.length - 1
+                    ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
+                    : '';
+                return `<div class="flow-node${clickable}" ${clickAttr}>
+                    <div class="flow-circle ${fcClass}">${icon}</div>
+                    <div class="flow-label">${esc(f.label)}</div>
+                </div>${connector}`;
             }).join('');
 
-            return `<div class="machine-section">
-                <div class="machine-label">【${esc(machine)}】</div>
-                ${flowRows}
+            return `<div class="prog-machine-row">
+                <div class="prog-machine-label">【${esc(machine)}】</div>
+                <div class="flow-steps">${nodes}</div>
             </div>`;
         }).join('');
 
-        // 全機械の現在工程段階を評価し、最低進捗のものをサマリーに採用
-        const stages   = machines.map(m => getMachineStage(num, m, projectData[num][m].flows));
-        const minStage = stages.reduce((a, b) => a.rank <= b.rank ? a : b);
-        const summaryText  = minStage.text;
-        const summaryColor = minStage.color;
-
-        return `<div class="progress-card" onclick="toggleProgressCard(this)">
-            <div class="progress-card-header">
-                <div class="progress-card-title">${esc(num)}</div>
-                <span class="progress-card-arrow">▶</span>
+        return `<div class="prog-card">
+            <div class="prog-card-header">
+                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
             </div>
-            <div class="progress-card-summary" style="color:${summaryColor};">${summaryText}</div>
-            <div class="progress-card-machines">${label ? `<div class="progress-card-project-label">${esc(label)}</div>` : ''}${machineSections}</div>
+            ${machineRows}
         </div>`;
     }).join('');
 
     el.innerHTML = html;
 }
 
-function toggleProgressCard(el) {
-    el.classList.toggle('expanded');
+// ===== Tab Switch（廃止済み・後方互換用スタブ） =====
+function switchTab(tab) {
+    // 新レイアウトではサイドパネルを使用するため、この関数は何もしない
+    currentTab = tab;
 }
 
-// ===== Tab Switch =====
-function switchTab(tab) {
-    currentTab = tab;
-    // 左カラム内のタブ切り替え（mine / pending）
-    ['mine', 'pending'].forEach(t => {
-        const tabEl     = document.getElementById(`ctab_${t}`);
-        const contentEl = document.getElementById(`tab_content_${t}`);
-        if (tabEl)     tabEl.classList.toggle('active', t === tab);
-        if (contentEl) contentEl.style.display = t === tab ? '' : 'none';
-    });
-    // 申請ボタンは「自分の申請」タブのときのみ表示
-    const newBtnArea = document.getElementById('new_btn_area');
-    if (newBtnArea) newBtnArea.style.display = (tab === 'mine' && userIsApplicant) ? 'block' : 'none';
+// ===== Side Panel =====
+function toggleSidePanel() {
+    document.getElementById('side_panel').classList.toggle('open');
+}
+function closeSidePanel() {
+    document.getElementById('side_panel').classList.remove('open');
 }
 
 // ===== Submit Modal =====
@@ -950,7 +859,6 @@ async function submitRequest() {
 
         closeSubmitModal();
         await refreshAll();
-        switchTab('mine');
         ui.send('SAVED');
         const count = machineNums.length;
         const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
@@ -2159,7 +2067,6 @@ async function submitShipping() {
         }
         closeShippingModal();
         await refreshAll();
-        switchTab('mine');
         alert(`${machines.length}機械の申請をしました。\n常務に承認依頼が届きます。`);
     } catch (e) {
         alert('申請に失敗しました: ' + e.message);

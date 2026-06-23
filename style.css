@@ -43,59 +43,220 @@
         .dev-bar select option { color: #333; background: #fff; }
 
         /* ===== Main ===== */
-        .main { margin: 0; padding: 0; height: calc(100vh - 44px); overflow: hidden; }
+        .main { margin: 0; padding: 0; height: calc(100vh - 44px); overflow: hidden; position: relative; }
         #app.has-dev-bar .main { height: calc(100vh - 72px); }
 
-        /* ===== 2-column Layout ===== */
-        .cols-layout { display: flex; gap: 0; height: 100%; }
-        .col-left  { flex: 3; min-width: 0; overflow-y: auto; background: #f4f6fb; }
-        .col-right { flex: 2; min-width: 0; overflow-y: auto; background: #e8edf2; border-left: 2px solid #c0cad4; }
+        /* ===== New Main Layout ===== */
+        .main-layout {
+            display: flex;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-y: auto;
+            background: #f4f6fb;
+            padding: 12px 16px 40px;
+        }
 
-        /* 各カラム内スティッキーヘッダー */
-        .col-sticky { position: sticky; top: 0; z-index: 100; }
-        .col-left  .col-sticky { background: #f4f6fb; padding: 12px 12px 0; border-bottom: 1px solid #dde2ef; }
-        .col-right .col-sticky { background: #e8edf2; padding: 12px 12px 8px; border-bottom: 1px solid #c0cad4; }
-
-        /* 左カラムのタブ */
-        .col-tabs { display: flex; border-bottom: 2px solid #e0e0e0; gap: 0; }
-        .col-tab {
-            padding: 8px 18px;
+        /* ===== サイドタブ（閉じた状態） ===== */
+        .side-tab {
+            width: 72px;
+            background: #1e3a5f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-size: 13px;
-            border: none;
-            background: none;
-            color: #aaa;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
+            flex-shrink: 0;
+            border-left: 2px solid #152c4a;
+            gap: 8px;
+            padding: 16px 4px;
+        }
+        .side-tab:hover { background: #2a5080; }
+        .side-tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #fff;
+        }
+        .side-tab-text {
+            font-size: 11px;
+            font-weight: bold;
+            writing-mode: horizontal-tb;
+            letter-spacing: 0.5px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .side-tab-divider {
+            width: 48px;
+            height: 1px;
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* ===== サイドパネル本体 ===== */
+        .side-panel {
+            position: fixed;
+            top: 44px;
+            right: 0;
+            width: 300px;
+            height: calc(100vh - 44px);
+            background: #fff;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+            transform: translateX(100%);
+            transition: transform 0.28s ease;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .side-panel.open { transform: translateX(0); }
+        #app.has-dev-bar .side-panel { top: 72px; height: calc(100vh - 72px); }
+
+        .side-panel-header {
+            padding: 10px 14px;
+            background: #f4f6fb;
+            border-bottom: 1px solid #e0e4ec;
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-weight: bold;
-            transition: color 0.15s;
+            justify-content: space-between;
+            flex-shrink: 0;
         }
-        .col-tab.active { color: #1976d2; border-bottom-color: #1976d2; }
-        .col-tab:hover:not(.active) { color: #666; }
+        .side-panel-close-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .side-panel-close-btn:hover { background: #eee; color: #333; }
 
-        /* 右カラムのヘッダー */
-        .col-header {
-            font-size: 14px;
+        /* 上下半分 */
+        .side-half {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-bottom: 2px solid #e0e4ec;
+        }
+        .side-half:last-child { border-bottom: none; }
+        .side-half-header {
+            padding: 8px 14px;
+            font-size: 13px;
             font-weight: bold;
-            color: #607080;
-            padding: 8px 0 10px;
-            border-bottom: 2px solid #9aa8b5;
+            color: #1e3a5f;
+            background: #f4f6fb;
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #e0e4ec;
+        }
+        .side-half-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 10px;
         }
 
-        /* コンテンツ領域のパディング */
-        .col-content { padding: 12px 20px 40px; }
-
-        @media (max-width: 900px) {
-            .main { height: auto; overflow: visible; }
-            .cols-layout { flex-direction: column; height: auto; }
-            .col-left, .col-right { overflow-y: visible; height: auto; }
+        /* サイドパネル内カード */
+        .side-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 11px;
+            margin-bottom: 6px;
+            border: 1px solid #e0e4ec;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
         }
+        .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
+        .side-card-title { font-size: 12px; font-weight: bold; color: #1e3a5f; }
+        .side-card-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .side-card-status { font-size: 11px; margin-top: 4px; }
+        .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
+        .side-card.is-pending-action .side-card-title { color: #c0392b; }
+
+        /* ===== 進捗カード（新デザイン） ===== */
+        .prog-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 10px 14px 12px;
+            margin-bottom: 10px;
+            border: 1px solid #e4e8f0;
+            box-shadow: 0 1px 4px rgba(30,58,95,0.07);
+        }
+        .prog-card-header { margin-bottom: 4px; }
+        .prog-card-num { font-size: 14px; font-weight: bold; color: #1e3a5f; }
+        .prog-card-label { font-size: 12px; color: #888; margin-left: 8px; }
+
+        .prog-machine-row {
+            margin-top: 8px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 8px;
+        }
+        .prog-machine-row:first-of-type { border-top: none; padding-top: 4px; }
+        .prog-machine-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #5a7080;
+            margin-bottom: 6px;
+        }
+
+        /* フロー横並びステップ */
+        .flow-steps {
+            display: flex;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+        .flow-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            min-width: 52px;
+        }
+        .flow-node.clickable { cursor: pointer; }
+        .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
+        .flow-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            transition: transform 0.12s, opacity 0.12s;
+        }
+        .fc-done     { background: #27ae60; color: #fff; }
+        .fc-active   { background: #f39c12; color: #fff; }
+        .fc-rejected { background: #e74c3c; color: #fff; }
+        .fc-empty    { background: #e0e0e0; color: #aaa; }
+        .flow-label {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            line-height: 1.3;
+            max-width: 52px;
+            word-break: keep-all;
+        }
+        .flow-connector {
+            flex: 1;
+            height: 2px;
+            margin-top: 13px;
+            min-width: 8px;
+        }
+        .fc-line-done    { background: #27ae60; }
+        .fc-line-pending { background: #e0e0e0; }
+
+        /* view-only: サイドタブのみ表示（申請ボタンなし） */
+        .is-view-only #new_btn_area { display: none !important; }
 
         /* ===== Tabs ===== */
         .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 0; gap: 0; }
@@ -370,7 +531,7 @@
         #login_dialog .login-btn:hover { background: #2a5080; }
 
         /* ===== View-Only Mode（製管など進捗一覧のみ） ===== */
-        .is-view-only .col-left { display: none !important; }
+        /* .is-view-only handled by new layout rules above */
 
         /* ===== Empty / Loading ===== */
         .empty { text-align: center; padding: 48px 20px; color: #bbb; }
@@ -442,20 +603,7 @@
         .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
         .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; }
 
-        /* ===== Accordion Progress ===== */
-        .progress-card { cursor: pointer; user-select: none; }
-        .progress-card-header { display: flex; justify-content: space-between; align-items: center; }
-        .progress-card-arrow { font-size: 11px; color: #9aa8b5; transition: transform 0.2s; }
-        .progress-card.expanded .progress-card-arrow { transform: rotate(90deg); }
-        .progress-card-summary { font-size: 12px; color: #888; margin-top: 4px; }
-        .progress-card-machines { display: none; margin-top: 10px; border-top: 1px solid #c8d0da; padding-top: 8px; }
-        .progress-card.expanded .progress-card-machines { display: block; }
-        .progress-card-project-label { font-size: 12px; color: #7a8fa0; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #c8d0da; }
-
-        /* ===== Progress List ===== */
-        .progress-card { background: #f0f3f6; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #c8d0da; box-shadow: none; }
-        .progress-card:hover { background: #e0e8f0; border-color: #9aa8b5; }
-        .progress-card-title { font-size: 14px; font-weight: bold; color: #3d5268; margin-bottom: 10px; }
+        /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
         .progress-flow-label { flex: 1; color: #607080; }
         .progress-flow-date { font-size: 11px; color: #aaa; min-width: 60px; text-align: right; }
