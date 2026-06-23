@@ -340,7 +340,7 @@
             background: #e74c3c;
             color: #fff;
             border-radius: 9px;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
         }
 
@@ -607,7 +607,7 @@
         .sc-active   { background: #f39c12; color: #fff; }
         .sc-rejected { background: #e74c3c; color: #fff; }
         .sc-empty    { background: #e0e0e0; color: #aaa; }
-        .step-label  { font-size: 10px; color: #999; white-space: nowrap; text-align: center; }
+        .step-label  { font-size: 12px; color: #999; white-space: nowrap; text-align: center; }
         .step-connector {
             flex: 1; height: 2px; margin-top: 13px; min-width: 16px;
         }
@@ -653,7 +653,7 @@
         .recipient-item:last-child { border-bottom: none; }
         .recipient-name { font-weight: bold; min-width: 80px; }
         .recipient-email { color: #888; flex: 1; }
-        .recipient-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: #e8f0fe; color: #1e3a5f; }
+        .recipient-tag { font-size: 12px; padding: 1px 6px; border-radius: 8px; background: #e8f0fe; color: #1e3a5f; }
         .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 17px; }
 
