@@ -39,7 +39,7 @@
             gap: 10px;
         }
         .dev-bar select {
-            font-size: 13px;
+            font-size: 11.0px;
             padding: 2px 6px;
             border-radius: 3px;
             border: none;
@@ -235,7 +235,7 @@
             position: absolute;
             top: 11px;
             right: 18px;
-            font-size: 13px;
+            font-size: 11.0px;
             color: #5a7080;
             background: #f0f4fa;
             border: 1px solid #d0dae8;
@@ -293,7 +293,7 @@
         .fc-rejected { background: #e74c3c; color: #fff; }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
         .flow-label {
-            font-size: 13px;
+            font-size: 11.0px;
             color: #999;
             text-align: center;
             line-height: 1.3;
@@ -363,7 +363,7 @@
 
         /* ===== Status Badges ===== */
         .status-badge {
-            font-size: 13px;
+            font-size: 11.0px;
             padding: 2px 9px;
             border-radius: 10px;
             font-weight: bold;
@@ -451,7 +451,7 @@
         .form-group { margin-bottom: 14px; }
         .form-group label {
             display: block;
-            font-size: 13px;
+            font-size: 11.0px;
             color: #666;
             margin-bottom: 4px;
             font-weight: bold;
@@ -472,7 +472,7 @@
         .form-group input[type="text"]:focus,
         .form-group textarea:focus { border-color: #1e3a5f; outline: none; }
         .form-group textarea { resize: vertical; min-height: 80px; }
-        .form-hint { font-size: 13px; color: #aaa; margin-top: 3px; }
+        .form-hint { font-size: 11.0px; color: #aaa; margin-top: 3px; }
         .project-info-box {
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
@@ -501,7 +501,7 @@
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
         .info-table td { padding: 5px 0; vertical-align: top; }
         .info-table td:first-child {
-            font-size: 13px;
+            font-size: 11.0px;
             color: #999;
             width: 80px;
             font-weight: bold;
@@ -509,7 +509,7 @@
         }
         .info-table td:last-child { font-size: 13.0px; color: #333; font-weight: bold; }
         .section-divider { border: none; border-top: 1px solid #eee; margin: 14px 0; }
-        .section-title { font-size: 13px; color: #999; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .section-title { font-size: 11.0px; color: #999; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 
         /* ===== Approval Steps ===== */
         .steps-list { display: flex; flex-direction: column; gap: 0; }
@@ -537,10 +537,10 @@
         .sc-rejected { background: #f8d7da; color: #721c24; }
         .sc-waiting  { background: #e9ecef; color: #6c757d; }
         .step-detail { flex: 1; }
-        .step-label { font-size: 13px; color: #aaa; }
+        .step-label { font-size: 11.0px; color: #aaa; }
         .step-name  { font-size: 13.0px; font-weight: bold; margin-top: 1px; }
-        .step-comment { font-size: 13px; color: #888; margin-top: 2px; font-style: italic; }
-        .step-date  { font-size: 13px; color: #bbb; margin-top: 1px; }
+        .step-comment { font-size: 11.0px; color: #888; margin-top: 2px; font-style: italic; }
+        .step-date  { font-size: 11.0px; color: #bbb; margin-top: 1px; }
 
         /* ===== Login ===== */
         #login_overlay {
@@ -633,7 +633,7 @@
         }
         .machine-checkbox-list input[type="checkbox"] { cursor: pointer; }
         .machine-checkbox-bar { display: flex; gap: 6px; margin-bottom: 4px; }
-        .btn-xs { padding: 2px 8px; font-size: 13px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
+        .btn-xs { padding: 2px 8px; font-size: 11.0px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
         .btn-xs:hover { background: #e8e8e8; }
         /* モーダルサイズ固定 */
         #submit_modal .modal,
@@ -660,4 +660,4 @@
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12.0px; }
         .progress-flow-label { flex: 1; color: #607080; }
-        .progress-flow-date { font-size: 13px; color: #aaa; min-width: 60px; text-align: right; }
+        .progress-flow-date { font-size: 11.0px; color: #aaa; min-width: 60px; text-align: right; }
