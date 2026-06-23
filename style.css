@@ -589,7 +589,7 @@
 
         /* ===== Empty / Loading ===== */
         .empty { text-align: center; padding: 48px 20px; color: #bbb; }
-        .empty-icon { font-size: 36px; margin-bottom: 8px; }
+        .empty-icon { font-size: 44px; margin-bottom: 8px; }
         .empty-text { font-size: 15px; }
         .loading-indicator { text-align: center; padding: 32px; color: #aaa; font-size: 15px; }
 
