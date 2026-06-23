@@ -187,17 +187,15 @@
         .prog-card {
             background: #fff;
             border-radius: 8px;
-            padding: 10px 14px 12px;
+            padding: 12px 18px 14px 22px;
             margin-bottom: 10px;
             border: 1px solid #e4e8f0;
             box-shadow: 0 1px 4px rgba(30,58,95,0.07);
-            width: fit-content;
-            min-width: 400px;
-            max-width: 800px;
+            width: 900px;
         }
         .prog-card-header { margin-bottom: 4px; }
-        .prog-card-num { font-size: 14px; font-weight: bold; color: #1e3a5f; }
-        .prog-card-label { font-size: 12px; color: #888; margin-left: 8px; }
+        .prog-card-num { font-size: 15px; font-weight: bold; color: #1e3a5f; }
+        .prog-card-label { font-size: 13px; color: #888; margin-left: 8px; }
 
         .prog-machine-row {
             margin-top: 8px;
@@ -206,7 +204,7 @@
         }
         .prog-machine-row:first-of-type { border-top: none; padding-top: 4px; }
         .prog-machine-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #5a7080;
             margin-bottom: 6px;
@@ -223,19 +221,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
-            min-width: 52px;
+            gap: 4px;
+            min-width: 60px;
         }
         .flow-node.clickable { cursor: pointer; }
         .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
         .flow-circle {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             flex-shrink: 0;
             transition: transform 0.12s, opacity 0.12s;
@@ -245,11 +243,11 @@
         .fc-rejected { background: #e74c3c; color: #fff; }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
         .flow-label {
-            font-size: 10px;
+            font-size: 11px;
             color: #999;
             text-align: center;
             line-height: 1.3;
-            max-width: 52px;
+            max-width: 60px;
             word-break: keep-all;
         }
         .flow-connector {
