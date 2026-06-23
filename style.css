@@ -221,10 +221,23 @@
             border: 1px solid #e4e8f0;
             box-shadow: 0 1px 4px rgba(30,58,95,0.07);
             width: 900px;
+            position: relative;
         }
-        .prog-card-header { margin-bottom: 4px; }
+        .prog-card-header { margin-bottom: 4px; padding-right: 110px; }
         .prog-card-num { font-size: 15px; font-weight: bold; color: #1e3a5f; }
         .prog-card-label { font-size: 13px; color: #888; margin-left: 8px; }
+        .prog-card-date {
+            position: absolute;
+            top: 11px;
+            right: 18px;
+            font-size: 11px;
+            color: #5a7080;
+            background: #f0f4fa;
+            border: 1px solid #d0dae8;
+            border-radius: 3px;
+            padding: 2px 7px;
+            white-space: nowrap;
+        }
 
         .prog-machine-row {
             margin-top: 8px;
