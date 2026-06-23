@@ -1,6 +1,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; overflow: hidden; }
-        body { font-family: 'Segoe UI', 'Noto Sans JP', sans-serif; background: #edf1f7; color: #333; font-size: 17px; }
+        body { font-family: 'Segoe UI', 'Noto Sans JP', sans-serif; background: #edf1f7; color: #333; font-size: 14.0px; }
 
         /* ===== Header ===== */
         .header {
@@ -94,7 +94,7 @@
             color: #fff;
         }
         .side-tab-text {
-            font-size: 17px;
+            font-size: 14.0px;
             font-weight: bold;
             writing-mode: horizontal-tb;
             letter-spacing: 0.5px;
@@ -185,7 +185,7 @@
             transition: background 0.15s, border-color 0.15s;
         }
         .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
-        .side-card-title { font-size: 17px; font-weight: bold; color: #1e3a5f; }
+        .side-card-title { font-size: 14.0px; font-weight: bold; color: #1e3a5f; }
         .side-card-sub { font-size: 15px; color: #888; margin-top: 3px; }
         .side-card-status { font-size: 15px; margin-top: 5px; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
@@ -283,7 +283,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 17px;
+            font-size: 14.0px;
             font-weight: bold;
             flex-shrink: 0;
             transition: transform 0.12s, opacity 0.12s;
@@ -357,7 +357,7 @@
         }
         .card:hover { box-shadow: 0 4px 14px rgba(30,58,95,0.13); border-color: #b0c4de; }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-        .card-title { font-size: 17px; font-weight: bold; color: #1e3a5f; }
+        .card-title { font-size: 14.0px; font-weight: bold; color: #1e3a5f; }
         .card-meta { font-size: 14px; color: #999; margin-top: 3px; }
         .card-note { font-size: 14px; color: #666; margin-top: 7px; padding-top: 7px; border-top: 1px solid #f5f5f5; }
 
@@ -435,7 +435,7 @@
             border-radius: 8px 8px 0 0;
             flex-shrink: 0;
         }
-        .modal-header h2 { font-size: 17px; font-weight: bold; }
+        .modal-header h2 { font-size: 14.0px; font-weight: bold; }
         .modal-close { background: none; border: none; color: #fff; font-size: 20.0px; cursor: pointer; line-height: 1; padding: 0 2px; }
         .modal-body { padding: 18px; flex: 1; overflow-y: auto; }
         .modal-footer {
@@ -579,7 +579,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 17px;
+            font-size: 14.0px;
             font-weight: bold;
         }
         #login_dialog .login-btn:hover { background: #2a5080; }
@@ -655,7 +655,7 @@
         .recipient-email { color: #888; flex: 1; }
         .recipient-tag { font-size: 12px; padding: 1px 6px; border-radius: 8px; background: #e8f0fe; color: #1e3a5f; }
         .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
-        .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 17px; }
+        .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14.0px; }
 
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
