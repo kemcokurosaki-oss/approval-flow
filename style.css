@@ -26,7 +26,7 @@
             border-bottom: 1.5px solid #c4cedd;
         }
         .header h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
-        .header-user { font-size: 12px; display: flex; align-items: center; gap: 12px; }
+        .header-user { font-size: 14px; display: flex; align-items: center; gap: 12px; }
 
         /* ===== Dev Role Switcher ===== */
         .dev-bar {
@@ -199,7 +199,7 @@
             border-radius: 4px;
             background: #e8eef8;
             color: #1e3a5f;
-            font-size: 12px;
+            font-size: 14px;
             cursor: pointer;
             transition: background 0.12s, border-color 0.12s;
         }
@@ -209,7 +209,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: 14px;
             color: #3a5070;
             cursor: pointer;
             user-select: none;
@@ -251,7 +251,7 @@
         }
         .prog-machine-row:first-of-type { border-top: none; padding-top: 4px; }
         .prog-machine-label {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             color: #5a7080;
             margin-bottom: 6px;
@@ -358,8 +358,8 @@
         .card:hover { box-shadow: 0 4px 14px rgba(30,58,95,0.13); border-color: #b0c4de; }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
         .card-title { font-size: 17px; font-weight: bold; color: #1e3a5f; }
-        .card-meta { font-size: 12px; color: #999; margin-top: 3px; }
-        .card-note { font-size: 12px; color: #666; margin-top: 7px; padding-top: 7px; border-top: 1px solid #f5f5f5; }
+        .card-meta { font-size: 14px; color: #999; margin-top: 3px; }
+        .card-note { font-size: 14px; color: #666; margin-top: 7px; padding-top: 7px; border-top: 1px solid #f5f5f5; }
 
         /* ===== Status Badges ===== */
         .status-badge {
@@ -395,7 +395,7 @@
         .btn-danger:hover:not(:disabled)   { background: #c0392b; }
         .btn-secondary { background: #95a5a6; color: #fff; }
         .btn-secondary:hover:not(:disabled){ background: #7f8c8d; }
-        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-sm { padding: 4px 10px; font-size: 14px; }
         .approver-btn { background: #f0f0f0; color: #555; border: 2px solid #ddd; }
         .approver-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
         .approver-btn:hover:not(.active) { background: #e0e0e0; }
@@ -561,7 +561,7 @@
             box-shadow: 0 12px 40px rgba(0,0,0,0.3);
         }
         #login_dialog h2 { font-size: 20px; margin-bottom: 6px; text-align: center; color: #1e3a5f; }
-        #login_dialog p { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 20px; }
+        #login_dialog p { font-size: 14px; color: #aaa; text-align: center; margin-bottom: 20px; }
         #login_dialog input {
             width: 100%;
             padding: 9px 12px;
@@ -570,7 +570,7 @@
             border-radius: 5px;
             font-size: 15px;
         }
-        #login_error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; min-height: 16px; }
+        #login_error { color: #e74c3c; font-size: 14px; margin-bottom: 10px; min-height: 16px; }
         #login_dialog .login-btn {
             width: 100%;
             padding: 10px;
@@ -601,7 +601,7 @@
         .step-circle {
             width: 26px; height: 26px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; flex-shrink: 0;
+            font-size: 14px; font-weight: bold; flex-shrink: 0;
         }
         .sc-done     { background: #27ae60; color: #fff; }
         .sc-active   { background: #f39c12; color: #fff; }
@@ -617,7 +617,7 @@
         /* ===== Machine Progress ===== */
         .machine-section { border-top: 1px solid #f0f0f0; padding-top: 8px; margin-top: 8px; }
         .machine-section:first-child { border-top: none; padding-top: 0; margin-top: 0; }
-        .machine-label { font-size: 12px; font-weight: bold; color: #1e3a5f; margin-bottom: 4px; }
+        .machine-label { font-size: 14px; font-weight: bold; color: #1e3a5f; margin-bottom: 4px; }
 
         /* ===== Machine Checkbox ===== */
         .machine-checkbox-list {
@@ -649,15 +649,15 @@
 
         /* ===== Recipients Preview ===== */
         .recipient-list { max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 10px; background: #fafafa; }
-        .recipient-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
+        .recipient-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
         .recipient-item:last-child { border-bottom: none; }
         .recipient-name { font-weight: bold; min-width: 80px; }
         .recipient-email { color: #888; flex: 1; }
         .recipient-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: #e8f0fe; color: #1e3a5f; }
-        .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
+        .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 17px; }
 
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
-        .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
+        .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .progress-flow-label { flex: 1; color: #607080; }
         .progress-flow-date { font-size: 11px; color: #aaa; min-width: 60px; text-align: right; }
