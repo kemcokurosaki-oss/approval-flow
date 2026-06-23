@@ -25,7 +25,7 @@
             gap: 16px;
             border-bottom: 1.5px solid #c4cedd;
         }
-        .header h1 { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+        .header h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
         .header-user { font-size: 12px; display: flex; align-items: center; gap: 12px; }
 
         /* ===== Dev Role Switcher ===== */
@@ -229,7 +229,7 @@
             position: relative;
         }
         .prog-card-header { margin-bottom: 4px; padding-right: 110px; }
-        .prog-card-num { font-size: 15px; font-weight: bold; color: #1e3a5f; }
+        .prog-card-num { font-size: 18px; font-weight: bold; color: #1e3a5f; }
         .prog-card-label { font-size: 13px; color: #888; margin-left: 8px; }
         .prog-card-date {
             position: absolute;
