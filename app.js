@@ -79,19 +79,6 @@ function applyRoleLayout(role) {
     // 申請権限フラグをモジュール変数に保存
     userIsApplicant = isApplicant || isQualityOrSeikan;
 
-    // 申請ボタンは申請権限がある場合のみ表示
-    const newBtnArea = document.getElementById('new_btn_area');
-    if (newBtnArea) newBtnArea.style.display = userIsApplicant ? 'block' : 'none';
-
-    if (userIsApplicant) {
-        document.getElementById('btn_assembly').style.display          = (!isQualityOrSeikan && (dept === '組立' || role === 'assembly_manager'))  ? '' : 'none';
-        document.getElementById('btn_test_run').style.display          = (!isQualityOrSeikan && (dept === '操業' || role === 'operations_manager')) ? '' : 'none';
-        document.getElementById('btn_simple_inspection').style.display = isQualityOrSeikan ? '' : 'none';
-        document.getElementById('btn_inspection').style.display        = 'none'; // 2000番台のみ・現在無効
-        document.getElementById('btn_shipping_meeting').style.display  = 'none'; // 2000番台のみ・現在無効
-        document.getElementById('btn_shipping').style.display          = isQualityOrSeikan ? '' : 'none';
-    }
-
     // サイドパネルの表示制御：権限のないセクションは空にする
     if (!isApprover) {
         const pendingEl = document.getElementById('side_content_pending');
