@@ -117,7 +117,7 @@
             overflow: hidden;
         }
         .side-panel.open { transform: translateX(0); }
-        .main:has(.side-panel.open) .main-content { padding-right: calc(450px + 16px); }
+        .main:has(.side-panel.open) .main-content { margin-right: 450px; }
         #app.has-dev-bar .side-panel { top: 72px; height: calc(100vh - 72px); }
 
         .side-panel-header {
