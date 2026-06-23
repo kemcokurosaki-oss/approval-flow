@@ -744,6 +744,48 @@ function switchTab(tab) {
     currentTab = tab;
 }
 
+// ===== Flow Modal Preset（カードのステップサークルクリックで工番・機械をプリセット） =====
+async function openFlowModalPreset(el) {
+    const flowType   = el.dataset.flowType;
+    const projectNum = el.dataset.num;
+    const machineName = el.dataset.machine;
+
+    const findCb = (listId) =>
+        [...document.querySelectorAll(`#${listId} input[type="checkbox"]`)].find(c => c.value === machineName);
+
+    if (flowType === 'assembly' || flowType === 'test_run') {
+        openSubmitModal(flowType);
+        document.getElementById('submit_project').value = projectNum;
+        await onProjectChange();
+        const cb = findCb('submit_machine_list');
+        if (cb) { cb.checked = true; await onMachineChange(); }
+    } else if (flowType === 'simple_inspection') {
+        openSimpleInspectionModal();
+        document.getElementById('si_project').value = projectNum;
+        await onSiProjectChange();
+        const cb = findCb('si_machine_list');
+        if (cb) { cb.checked = true; await onSiMachineChange(); }
+    } else if (flowType === 'inspection') {
+        openInspectionModal();
+        document.getElementById('inspection_project').value = projectNum;
+        await onInspectionProjectChange();
+        const cb = findCb('inspection_machine_list');
+        if (cb) { cb.checked = true; await onInspectionMachineChange(); }
+    } else if (flowType === 'shipping_meeting') {
+        openShippingMeetingModal();
+        document.getElementById('sm_project').value = projectNum;
+        await onSmProjectChange();
+        const cb = findCb('sm_machine_list');
+        if (cb) { cb.checked = true; await onSmMachineChange(); }
+    } else if (flowType === 'shipping') {
+        openShippingModal();
+        document.getElementById('shipping_project').value = projectNum;
+        await onShippingProjectChange();
+        const cb = findCb('shipping_machine_list');
+        if (cb) { cb.checked = true; await onShippingMachineChange(); }
+    }
+}
+
 // ===== Side Panel =====
 function toggleSidePanel() {
     document.getElementById('side_panel').classList.toggle('open');
