@@ -33,7 +33,7 @@
             background: #7d3c98;
             color: #fff;
             padding: 5px 20px;
-            font-size: 15px;
+            font-size: 13.0px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -158,7 +158,7 @@
         .side-half:last-child { border-bottom: none; }
         .side-half-header {
             padding: 8px 14px;
-            font-size: 15px;
+            font-size: 13.0px;
             font-weight: bold;
             color: #1e3a5f;
             background: #f4f6fb;
@@ -186,8 +186,8 @@
         }
         .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
         .side-card-title { font-size: 14.0px; font-weight: bold; color: #1e3a5f; }
-        .side-card-sub { font-size: 15px; color: #888; margin-top: 3px; }
-        .side-card-status { font-size: 15px; margin-top: 5px; }
+        .side-card-sub { font-size: 13.0px; color: #888; margin-top: 3px; }
+        .side-card-status { font-size: 13.0px; margin-top: 5px; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
 
@@ -230,7 +230,7 @@
         }
         .prog-card-header { margin-bottom: 4px; padding-right: 110px; }
         .prog-card-num { font-size: 15.0px; font-weight: bold; color: #1e3a5f; }
-        .prog-card-label { font-size: 15px; color: #888; margin-left: 8px; }
+        .prog-card-label { font-size: 13.0px; color: #888; margin-left: 8px; }
         .prog-card-date {
             position: absolute;
             top: 11px;
@@ -317,7 +317,7 @@
         .tab {
             padding: 9px 22px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 13.0px;
             border: none;
             background: none;
             color: #888;
@@ -382,7 +382,7 @@
             border-radius: 4px;
             border: none;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 13.0px;
             font-weight: bold;
             transition: opacity 0.15s;
         }
@@ -465,7 +465,7 @@
             padding: 8px 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 15px;
+            font-size: 13.0px;
             transition: border-color 0.15s;
         }
         .form-group select:focus,
@@ -478,7 +478,7 @@
             border: 1px solid #e0e0e0;
             border-radius: 4px;
             padding: 8px 10px;
-            font-size: 15px;
+            font-size: 13.0px;
             color: #333;
         }
 
@@ -489,7 +489,7 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 13.0px;
             color: #333;
             font-weight: normal;
             text-transform: none;
@@ -507,7 +507,7 @@
             font-weight: bold;
             padding-right: 8px;
         }
-        .info-table td:last-child { font-size: 15px; color: #333; font-weight: bold; }
+        .info-table td:last-child { font-size: 13.0px; color: #333; font-weight: bold; }
         .section-divider { border: none; border-top: 1px solid #eee; margin: 14px 0; }
         .section-title { font-size: 13px; color: #999; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 
@@ -528,7 +528,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 13.0px;
             flex-shrink: 0;
             margin-top: 1px;
         }
@@ -538,7 +538,7 @@
         .sc-waiting  { background: #e9ecef; color: #6c757d; }
         .step-detail { flex: 1; }
         .step-label { font-size: 13px; color: #aaa; }
-        .step-name  { font-size: 15px; font-weight: bold; margin-top: 1px; }
+        .step-name  { font-size: 13.0px; font-weight: bold; margin-top: 1px; }
         .step-comment { font-size: 13px; color: #888; margin-top: 2px; font-style: italic; }
         .step-date  { font-size: 13px; color: #bbb; margin-top: 1px; }
 
@@ -568,7 +568,7 @@
             margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 15px;
+            font-size: 13.0px;
         }
         #login_error { color: #e74c3c; font-size: 14px; margin-bottom: 10px; min-height: 16px; }
         #login_dialog .login-btn {
@@ -590,8 +590,8 @@
         /* ===== Empty / Loading ===== */
         .empty { text-align: center; padding: 48px 20px; color: #bbb; }
         .empty-icon { font-size: 36.0px; margin-bottom: 8px; }
-        .empty-text { font-size: 15px; }
-        .loading-indicator { text-align: center; padding: 32px; color: #aaa; font-size: 15px; }
+        .empty-text { font-size: 13.0px; }
+        .loading-indicator { text-align: center; padding: 32px; color: #aaa; font-size: 13.0px; }
 
         /* ===== Step Progress ===== */
         .step-progress { display: flex; align-items: flex-start; margin-top: 10px; }
@@ -628,7 +628,7 @@
         }
         .machine-checkbox-list label {
             display: flex; align-items: center; gap: 6px;
-            padding: 2px 0; cursor: pointer; font-size: 15px;
+            padding: 2px 0; cursor: pointer; font-size: 13.0px;
             color: #333; font-weight: normal; text-transform: none; letter-spacing: 0;
         }
         .machine-checkbox-list input[type="checkbox"] { cursor: pointer; }
