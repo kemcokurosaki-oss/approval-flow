@@ -214,6 +214,7 @@
         .flow-steps {
             display: flex;
             align-items: flex-start;
+            width: 100%;
             overflow-x: auto;
             padding-bottom: 2px;
         }
