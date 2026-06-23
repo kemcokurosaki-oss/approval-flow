@@ -685,7 +685,7 @@ async function loadProgress() {
 
             const nodes = applicable.map((f, i) => {
                 const req = mData.flows[f.type];
-                let fcClass, icon, clickAttr = '';
+                let fcClass, icon, clickAttr = '', clickable = '';
 
                 if (!req) {
                     fcClass = 'fc-empty'; icon = '○';
@@ -697,14 +697,25 @@ async function loadProgress() {
                     fcClass = 'fc-active'; icon = '…';
                 }
 
-                if (req) {
+                const canApply = canApplyFlow(f.type);
+
+                if ((!req || req.status === 'rejected') && canApply) {
+                    // 未申請 or 却下 + 申請権限あり → 申請モーダルを開く
+                    clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
+                    clickable = ' clickable can-apply';
+                } else if (req) {
+                    // 申請済み（submitted/in_review/approved）→ 詳細のみ
                     clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
+                    clickable = ' clickable';
                 }
-                const clickable = req ? ' clickable' : '';
+
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
-                return `<div class="flow-node${clickable}" ${clickAttr}>
+                return `<div class="flow-node${clickable}" ${clickAttr}
+                    data-flow-type="${f.type}"
+                    data-num="${esc(num)}"
+                    data-machine="${esc(machine)}">
                     <div class="flow-circle ${fcClass}">${icon}</div>
                     <div class="flow-label">${esc(f.label)}</div>
                 </div>${connector}`;
