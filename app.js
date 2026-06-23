@@ -563,12 +563,10 @@ async function loadMineSide() {
 
         const isNotifFlow = ['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type);
         let statusText;
-        if (req.status === 'submitted') {
+        if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '⏳ 承認待ち';
-        } else if (req.status === 'in_review') {
-            statusText = '⏳ 承認中';
         } else if (req.status === 'approved') {
-            statusText = isNotifFlow ? '✅ 案内送信済み' : '✅ 承認完了';
+            statusText = isNotifFlow ? '✅ 案内済み' : '✅ 完了';
         } else if (req.status === 'rejected') {
             statusText = '❌ 却下';
         } else {
