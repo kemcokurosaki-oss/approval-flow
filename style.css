@@ -33,13 +33,10 @@
             background: #7d3c98;
             color: #fff;
             padding: 5px 20px;
-            font-size: 11px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             gap: 10px;
-            position: sticky;
-            top: 80px;
-            z-index: 299;
         }
         .dev-bar select {
             font-size: 11px;
