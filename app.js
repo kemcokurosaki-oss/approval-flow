@@ -598,6 +598,7 @@ async function loadMineSide() {
 
 async function loadProgress() {
     const el = document.getElementById('tab_content_progress');
+    el.innerHTML = '<div class="loading-indicator">読み込み中...</div>';
 
     // 全申請レコードを機械名付きで取得（shippingの承認者名表示のためapproval_stepsも含む）
     const { data: allReqs } = await db
@@ -651,20 +652,85 @@ async function loadProgress() {
         projectData[num][machine].flows[req.flow_type] = req;
     });
 
-    const allNums = Object.keys(projectData).filter(num => {
+    const baseNums = Object.keys(projectData).filter(num => {
         if (projectsMap[num] === undefined) return false;
         if (is2000sSeries(num))       return false;
         if (isTInspectionSeries(num)) return false;
         if (is5or7Series(num))        return false;
         if (isDSeries(num)) {
-            // テンプレートcまたはt+cのみ表示（機械組立タスクの有無で判定）
             const machines = Object.keys(projectData[num]);
             return machines.some(m => hasTask(num, m, '機械組立'));
         }
         return true;
     }).sort();
-    if (allNums.length === 0) {
+
+    if (baseNums.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">承認フローの記録がありません</div></div>';
+        return;
+    }
+
+    progressCachedData = { baseNums, projectData, machineTaskSet, shippingApproverNameMap };
+
+    el.innerHTML = `
+        <div class="progress-controls">
+            <div class="psort-group">
+                <button id="psort_job"      class="psort-btn${progressSort === 'job'      ? ' active' : ''}" onclick="setProgressSort('job')">工番順</button>
+                <button id="psort_shipping" class="psort-btn${progressSort === 'shipping' ? ' active' : ''}" onclick="setProgressSort('shipping')">出荷日順</button>
+            </div>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_mine" ${progressFilterMine ? 'checked' : ''} onchange="setProgressFilter(this.checked)">
+                <span>自分の工番のみ</span>
+            </label>
+        </div>
+        <div id="progress_cards_wrap"></div>
+    `;
+    renderProgressCards();
+}
+
+function setProgressSort(order) {
+    progressSort = order;
+    document.getElementById('psort_job')?.classList.toggle('active', order === 'job');
+    document.getElementById('psort_shipping')?.classList.toggle('active', order === 'shipping');
+    renderProgressCards();
+}
+
+function setProgressFilter(mine) {
+    progressFilterMine = mine;
+    renderProgressCards();
+}
+
+function renderProgressCards() {
+    const wrap = document.getElementById('progress_cards_wrap');
+    if (!wrap || !progressCachedData) return;
+
+    const { baseNums, projectData, machineTaskSet, shippingApproverNameMap } = progressCachedData;
+    const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
+
+    // 並び替え
+    let nums = [...baseNums];
+    if (progressSort === 'shipping') {
+        nums.sort((a, b) => {
+            const da = projectsMap[a]?.shipping_date || '9999-12-31';
+            const db2 = projectsMap[b]?.shipping_date || '9999-12-31';
+            if (da < db2) return -1;
+            if (da > db2) return 1;
+            return a < b ? -1 : a > b ? 1 : 0;
+        });
+    }
+
+    // 自分の工番フィルタ
+    if (progressFilterMine) {
+        const myName = currentProfile?.name;
+        if (myName) {
+            nums = nums.filter(num => {
+                const owners = projectsMap[num]?.owners;
+                return owners && owners.has(myName);
+            });
+        }
+    }
+
+    if (nums.length === 0) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">該当する工番がありません</div></div>';
         return;
     }
 
@@ -677,10 +743,13 @@ async function loadProgress() {
         { type: 'shipping',          label: '出荷確定申請',   alwaysShow: true }
     ];
 
-    const html = allNums.map(num => {
+    const html = nums.map(num => {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
+        const shippingDateLabel = pInfo.shipping_date
+            ? `<span class="prog-card-date">出荷 ${fmtDate(pInfo.shipping_date)}</span>`
+            : '';
 
         const machineRows = machines.map(machine => {
             const mData = projectData[num][machine];
@@ -712,11 +781,9 @@ async function loadProgress() {
                 const canApply = canApplyFlow(f.type);
 
                 if ((!req || req.status === 'rejected') && canApply) {
-                    // 未申請 or 却下 + 申請権限あり → 申請モーダルを開く
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req) {
-                    // 申請済み（submitted/in_review/approved）→ 詳細のみ
                     clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
                     clickable = ' clickable';
                 }
@@ -741,13 +808,13 @@ async function loadProgress() {
 
         return `<div class="prog-card">
             <div class="prog-card-header">
-                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
+                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}${shippingDateLabel}
             </div>
             ${machineRows}
         </div>`;
     }).join('');
 
-    el.innerHTML = html;
+    wrap.innerHTML = html;
 }
 
 // ===== Tab Switch（廃止済み・後方互換用スタブ） =====
