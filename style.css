@@ -252,11 +252,10 @@
             word-break: keep-all;
         }
         .flow-connector {
-            flex: 0 0 80px;
+            flex: 1;
             height: 2px;
-            margin-top: 13px;
-            min-width: 80px;
-            max-width: 80px;
+            margin-top: 16px;
+            min-width: 24px;
         }
         .fc-line-done    { background: #27ae60; }
         .fc-line-pending { background: #e0e0e0; }
