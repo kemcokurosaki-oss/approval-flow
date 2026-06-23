@@ -228,6 +228,8 @@
         }
         .flow-node.clickable { cursor: pointer; }
         .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
+        .flow-node.can-apply .flow-circle { border: 2px dashed #1e3a5f; }
+        .flow-node.can-apply:hover .flow-circle { background: #dbe8f8; border-color: #1e3a5f; color: #1e3a5f; opacity: 1; transform: scale(1.12); }
         .flow-circle {
             width: 32px;
             height: 32px;
