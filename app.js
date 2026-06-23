@@ -292,6 +292,16 @@ async function loadProjects() {
         if (taskText === '試運転')     testRunProjectNums.add(num);
         if (taskText === '出荷確認会議') shippingMeetingProjectNums.add(num);
         if (taskText === '工場出荷')   shippingProjectNums.add(num);
+        // 工場出荷タスクの end_date を出荷日として保存（複数機械がある場合は最も早い日付）
+        if (taskText === '工場出荷' && t.end_date) {
+            const existing = projectsMap[num].shipping_date;
+            if (!existing || t.end_date < existing) projectsMap[num].shipping_date = t.end_date;
+        }
+        // タスクオーナーを収集（自分の工番フィルタ用）
+        if (t.owner) {
+            if (!projectsMap[num].owners) projectsMap[num].owners = new Set();
+            projectsMap[num].owners.add(t.owner);
+        }
     });
 
     // 工程表のサイドバーと同じ並び順（辞書順）でプルダウンを作成
