@@ -1,6 +1,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; overflow: hidden; }
-        body { font-family: 'Segoe UI', 'Noto Sans JP', sans-serif; background: #edf1f7; color: #333; font-size: 14px; }
+        html { zoom: 1.2; height: 100%; overflow: hidden; }
+        body { height: 100%; overflow: hidden; font-family: 'Segoe UI', 'Noto Sans JP', sans-serif; background: #edf1f7; color: #333; font-size: 14px; }
 
         /* ===== Header ===== */
         .header {
