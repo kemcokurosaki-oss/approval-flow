@@ -671,19 +671,8 @@ async function loadProgress() {
 
     progressCachedData = { baseNums, projectData, machineTaskSet, shippingApproverNameMap };
 
-    el.innerHTML = `
-        <div class="progress-controls">
-            <div class="psort-group">
-                <button id="psort_job"      class="psort-btn${progressSort === 'job'      ? ' active' : ''}" onclick="setProgressSort('job')">工番順</button>
-                <button id="psort_shipping" class="psort-btn${progressSort === 'shipping' ? ' active' : ''}" onclick="setProgressSort('shipping')">出荷日順</button>
-            </div>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_mine" ${progressFilterMine ? 'checked' : ''} onchange="setProgressFilter(this.checked)">
-                <span>自分の工番のみ</span>
-            </label>
-        </div>
-        <div id="progress_cards_wrap"></div>
-    `;
+    el.innerHTML = '<div id="progress_cards_wrap"></div>';
+    _syncProgressControls();
     renderProgressCards();
 }
 
