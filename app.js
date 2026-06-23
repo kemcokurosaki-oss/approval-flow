@@ -506,17 +506,15 @@ async function loadPendingSide() {
     }
 
     el.innerHTML = actionable.map(s => {
-        const req         = s.approval_requests;
-        const pNum        = req.project_number || '—';
-        const pInfo       = projectsMap[pNum]  || {};
-        const label       = pInfo.customer_name || pInfo.project_details || '';
-        const date        = fmtDate(req.created_at);
-        const machineName = req.machine_name ? `【${esc(req.machine_name)}】` : '';
+        const req          = s.approval_requests;
+        const pNum         = req.project_number || '—';
+        const machineLabel = req.machine_name ? `【${esc(req.machine_name)}】` : '';
+        const date         = fmtDate(req.created_at);
         return `
         <div class="side-card is-pending-action" onclick="openDetailModal('${req.id}')">
-            <div class="side-card-title">${esc(pNum)}${label ? '　' + esc(label) : ''}</div>
-            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${machineName} | ${date}</div>
-            <div class="side-card-status">🔴 あなたの番</div>
+            <div class="side-card-title">${esc(pNum)}${machineLabel}</div>
+            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}</div>
+            <div class="side-card-status">🔴 要承認</div>
         </div>`;
     }).join('');
 }
