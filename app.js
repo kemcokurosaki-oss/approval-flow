@@ -580,8 +580,6 @@ async function loadMineSide() {
         return `
         <div class="side-card" onclick="openDetailModal('${req.id}')">
             <div class="side-card-title">${esc(pNum)}${machineLabel ? '　' + machineLabel : ''}${resubmitBadge}</div>
-            ${pInfo.customer_name ? `<div class="side-card-sub">${esc(pInfo.customer_name)}</div>` : ''}
-            ${pInfo.project_details ? `<div class="side-card-sub">${esc(pInfo.project_details)}</div>` : ''}
             <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}</div>
             <div class="side-card-status">${statusText}</div>
         </div>`;
