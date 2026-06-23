@@ -113,10 +113,10 @@
         /* ===== サイドパネル本体 ===== */
         .side-panel {
             position: fixed;
-            top: 72px;
+            top: 80px;
             right: 0;
             width: 450px;
-            height: calc(100vh - 72px);
+            height: calc(100vh - 80px);
             background: #fff;
             box-shadow: -4px 0 20px rgba(0,0,0,0.18);
             transform: translateX(100%);
@@ -128,7 +128,7 @@
         }
         .side-panel.open { transform: translateX(0); }
         .main:has(.side-panel.open) .main-content { margin-right: calc(450px - 130px); }
-        #app.has-dev-bar .side-panel { top: 100px; height: calc(100vh - 100px); }
+        #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
             padding: 10px 14px;
