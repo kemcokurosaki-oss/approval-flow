@@ -270,7 +270,7 @@ async function loadProjects() {
     // sort_order付きでタスクを取得（工程表と同じ並び順にするため）
     const { data: tasks } = await db
         .from('tasks')
-        .select('project_number, customer_name, project_details, text, sort_order')
+        .select('project_number, customer_name, project_details, text, sort_order, end_date, owner')
         .not('project_number', 'is', null)
         .order('sort_order', { ascending: true });
 
