@@ -62,6 +62,17 @@ let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal か
 function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
 function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
 
+function canApplyFlow(flowType) {
+    const role  = getEffectiveRole();
+    const dept  = getEffectiveDept();
+    const isQorS = role === 'quality' || (role === 'staff' && dept === '製管');
+    if (flowType === 'assembly')         return (role === 'staff' && dept === '組立') || role === 'assembly_manager';
+    if (flowType === 'test_run')         return (role === 'staff' && dept === '操業') || role === 'operations_manager';
+    if (flowType === 'simple_inspection' || flowType === 'inspection' ||
+        flowType === 'shipping_meeting'  || flowType === 'shipping')  return isQorS;
+    return false;
+}
+
 // 承認者ロール一覧
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
