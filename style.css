@@ -184,6 +184,54 @@
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
 
+        /* ===== 進捗コントロールバー ===== */
+        .progress-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 8px 4px 12px;
+            flex-wrap: wrap;
+        }
+        .psort-group {
+            display: flex;
+            gap: 4px;
+        }
+        .psort-btn {
+            padding: 5px 14px;
+            border: 1px solid #c5d0de;
+            border-radius: 4px;
+            background: #f4f6fa;
+            color: #4a6080;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+        }
+        .psort-btn:hover { background: #e4eaf4; border-color: #a0b4cc; }
+        .psort-btn.active {
+            background: #1e3a5f;
+            color: #fff;
+            border-color: #1e3a5f;
+        }
+        .pfilter-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #4a6080;
+            cursor: pointer;
+            user-select: none;
+        }
+        .pfilter-label input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
+        .prog-card-date {
+            font-size: 11px;
+            color: #5a7080;
+            margin-left: 10px;
+            background: #f0f4fa;
+            border: 1px solid #d0dae8;
+            border-radius: 3px;
+            padding: 1px 6px;
+        }
+
         /* ===== 進捗カード（新デザイン） ===== */
         .prog-card {
             background: #fff;
