@@ -186,53 +186,31 @@
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
 
-        /* ===== 進捗コントロールバー ===== */
-        .progress-controls {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 8px 4px 12px;
-            flex-wrap: wrap;
-        }
-        .psort-group {
-            display: flex;
-            gap: 4px;
-        }
+        /* ===== ヘッダー内コントロール（並び替え・フィルタ） ===== */
+        .psort-group { display: flex; gap: 4px; }
         .psort-btn {
-            padding: 5px 14px;
-            border: 1px solid #c5d0de;
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.25);
             border-radius: 4px;
-            background: #f4f6fa;
-            color: #4a6080;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.75);
             font-size: 12px;
             cursor: pointer;
             transition: background 0.12s, color 0.12s, border-color 0.12s;
         }
-        .psort-btn:hover { background: #e4eaf4; border-color: #a0b4cc; }
-        .psort-btn.active {
-            background: #1e3a5f;
-            color: #fff;
-            border-color: #1e3a5f;
-        }
+        .psort-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); color: #fff; }
+        .psort-btn.active { background: rgba(255,255,255,0.28); color: #fff; border-color: rgba(255,255,255,0.6); font-weight: bold; }
         .pfilter-label {
             display: flex;
             align-items: center;
             gap: 6px;
             font-size: 12px;
-            color: #4a6080;
+            color: rgba(255,255,255,0.75);
             cursor: pointer;
             user-select: none;
         }
-        .pfilter-label input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
-        .prog-card-date {
-            font-size: 11px;
-            color: #5a7080;
-            margin-left: 10px;
-            background: #f0f4fa;
-            border: 1px solid #d0dae8;
-            border-radius: 3px;
-            padding: 1px 6px;
-        }
+        .pfilter-label input[type="checkbox"] { cursor: pointer; accent-color: #fff; }
+        .pfilter-label:hover { color: #fff; }
 
         /* ===== 進捗カード（新デザイン） ===== */
         .prog-card {
