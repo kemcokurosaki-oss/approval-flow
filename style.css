@@ -177,9 +177,9 @@
             transition: background 0.15s, border-color 0.15s;
         }
         .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
-        .side-card-title { font-size: 12px; font-weight: bold; color: #1e3a5f; }
-        .side-card-sub { font-size: 11px; color: #888; margin-top: 2px; }
-        .side-card-status { font-size: 11px; margin-top: 4px; }
+        .side-card-title { font-size: 14px; font-weight: bold; color: #1e3a5f; }
+        .side-card-sub { font-size: 13px; color: #888; margin-top: 3px; }
+        .side-card-status { font-size: 13px; margin-top: 5px; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
 
