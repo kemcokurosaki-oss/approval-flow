@@ -104,6 +104,10 @@ function applyRoleLayout(role) {
     if (tabMine)     tabMine.style.display     = userIsApplicant ? '' : 'none';
     if (tabPending)  tabPending.style.display  = isApprover      ? '' : 'none';
 
+    // 両方のセクションがある人だけ折りたたみ機能を有効化
+    const sidePanel = document.getElementById('side_panel');
+    if (sidePanel) sidePanel.classList.toggle('has-both', userIsApplicant && isApprover);
+
     if (!isApprover) {
         const badgePending = document.getElementById('side_badge_pending');
         if (badgePending) badgePending.style.display = 'none';
