@@ -169,7 +169,19 @@
             gap: 8px;
             flex-shrink: 0;
             border-bottom: 1px solid #e0e4ec;
+            cursor: pointer;
+            user-select: none;
         }
+        .side-half-header:hover { background: #e8ecf5; }
+        .side-half-arrow {
+            margin-left: auto;
+            font-size: 13px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        .side-half.collapsed .side-half-arrow { transform: rotate(-90deg); }
+        .side-half.collapsed .side-half-content { display: none; }
+        .side-half.collapsed { flex: 0; }
         .side-half-content {
             flex: 1;
             overflow-y: auto;
