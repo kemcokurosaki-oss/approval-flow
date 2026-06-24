@@ -878,11 +878,20 @@ async function openFlowModalPreset(el) {
 }
 
 // ===== Side Panel =====
-function toggleSidePanel() {
-    document.getElementById('side_panel').classList.toggle('open');
+function openSidePanelTo(section) {
+    document.getElementById('side_panel').classList.add('open');
+    // 折りたたまれていたら展開
+    const half = document.getElementById('side_half_' + section);
+    if (half && half.classList.contains('collapsed')) {
+        half.classList.remove('collapsed');
+    }
 }
 function closeSidePanel() {
     document.getElementById('side_panel').classList.remove('open');
+}
+function toggleSideHalf(which) {
+    const half = document.getElementById('side_half_' + which);
+    if (half) half.classList.toggle('collapsed');
 }
 
 // ===== Submit Modal =====
