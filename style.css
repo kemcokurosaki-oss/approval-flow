@@ -270,7 +270,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            min-width: 82px;
+            min-width: 70px;
         }
         .flow-node.clickable { cursor: pointer; }
         .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
