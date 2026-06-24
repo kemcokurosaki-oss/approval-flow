@@ -112,7 +112,7 @@
             position: fixed;
             top: 80px;
             right: 0;
-            width: 450px;
+            width: 550px;
             height: calc(100vh - 80px);
             background: #fff;
             box-shadow: -4px 0 20px rgba(0,0,0,0.18);
@@ -124,7 +124,7 @@
             overflow: hidden;
         }
         .side-panel.open { transform: translateX(0); }
-        .main:has(.side-panel.open) .main-content { margin-right: calc(450px - 130px); }
+        .main:has(.side-panel.open) .main-content { margin-right: calc(550px - 130px); }
         #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
