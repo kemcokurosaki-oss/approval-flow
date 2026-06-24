@@ -93,18 +93,27 @@ function applyRoleLayout(role) {
     // 申請権限フラグをモジュール変数に保存
     userIsApplicant = isApplicant || isQualityOrSeikan;
 
-    // サイドパネルの表示制御：権限のないセクションは空にする
+    // サイドパネル：権限のないセクションをまるごと非表示
+    const halfMine    = document.getElementById('side_half_mine');
+    const halfPending = document.getElementById('side_half_pending');
+    const tabMine     = document.getElementById('side_tab_mine');
+    const tabPending  = document.getElementById('side_tab_pending');
+    const tabDivider  = document.getElementById('side_tab_divider');
+
+    if (halfMine)    halfMine.style.display    = userIsApplicant ? '' : 'none';
+    if (halfPending) halfPending.style.display = isApprover      ? '' : 'none';
+    if (tabMine)     tabMine.style.display     = userIsApplicant ? '' : 'none';
+    if (tabPending)  tabPending.style.display  = isApprover      ? '' : 'none';
+    // 両方表示する場合のみ区切り線を表示
+    if (tabDivider)  tabDivider.style.display  = (userIsApplicant && isApprover) ? '' : 'none';
+
     if (!isApprover) {
-        const pendingEl = document.getElementById('side_content_pending');
-        if (pendingEl) pendingEl.innerHTML = '';
         const badgePending = document.getElementById('side_badge_pending');
         if (badgePending) badgePending.style.display = 'none';
         const countPending = document.getElementById('side_pending_count');
         if (countPending) countPending.style.display = 'none';
     }
     if (!userIsApplicant) {
-        const mineEl = document.getElementById('side_content_mine');
-        if (mineEl) mineEl.innerHTML = '';
         const badgeMine = document.getElementById('side_badge_mine');
         if (badgeMine) badgeMine.style.display = 'none';
         const countMine = document.getElementById('side_mine_count');
