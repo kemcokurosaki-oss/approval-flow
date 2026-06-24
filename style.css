@@ -169,19 +169,24 @@
             gap: 8px;
             flex-shrink: 0;
             border-bottom: 1px solid #e0e4ec;
+        }
+        /* 折りたたみ機能：両方のセクションがある場合のみ有効 */
+        .side-panel.has-both .side-half-header {
             cursor: pointer;
             user-select: none;
         }
-        .side-half-header:hover { background: #e8ecf5; }
+        .side-panel.has-both .side-half-header:hover { background: #e8ecf5; }
         .side-half-arrow {
+            display: none;
             margin-left: auto;
             font-size: 13px;
             transition: transform 0.2s ease;
             flex-shrink: 0;
         }
-        .side-half.collapsed .side-half-arrow { transform: rotate(-90deg); }
-        .side-half.collapsed .side-half-content { display: none; }
-        .side-half.collapsed { flex: 0; }
+        .side-panel.has-both .side-half-arrow { display: block; }
+        .side-panel.has-both .side-half.collapsed .side-half-arrow { transform: rotate(-90deg); }
+        .side-panel.has-both .side-half.collapsed .side-half-content { display: none; }
+        .side-panel.has-both .side-half.collapsed { flex: none; }
         .side-half-content {
             flex: 1;
             overflow-y: auto;
