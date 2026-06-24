@@ -225,7 +225,7 @@
             margin-bottom: 10px;
             border: 1px solid #e4e8f0;
             box-shadow: 0 1px 4px rgba(30,58,95,0.07);
-            width: min(900px, 100%);
+            width: min(1100px, 100%);
             position: relative;
         }
         .prog-card-header { margin-bottom: 4px; padding-right: 110px; }
