@@ -883,11 +883,22 @@ async function openFlowModalPreset(el) {
 
 // ===== Side Panel =====
 function openSidePanelTo(section) {
-    document.getElementById('side_panel').classList.add('open');
-    // 折りたたまれていたら展開
-    const half = document.getElementById('side_half_' + section);
-    if (half && half.classList.contains('collapsed')) {
-        half.classList.remove('collapsed');
+    const panel = document.getElementById('side_panel');
+    panel.classList.add('open');
+
+    if (panel.classList.contains('has-both')) {
+        // 両方ある場合：クリックした方を展開、もう一方を折りたたむ
+        const OTHER = { mine: 'pending', pending: 'mine' };
+        const target = document.getElementById('side_half_' + section);
+        const other  = document.getElementById('side_half_' + OTHER[section]);
+        if (target) target.classList.remove('collapsed');
+        if (other)  other.classList.add('collapsed');
+    } else {
+        // 片方だけの場合：折りたたまれていたら展開
+        const half = document.getElementById('side_half_' + section);
+        if (half && half.classList.contains('collapsed')) {
+            half.classList.remove('collapsed');
+        }
     }
 }
 function closeSidePanel() {
