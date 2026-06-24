@@ -894,6 +894,8 @@ function closeSidePanel() {
     document.getElementById('side_panel').classList.remove('open');
 }
 function toggleSideHalf(which) {
+    const panel = document.getElementById('side_panel');
+    if (!panel || !panel.classList.contains('has-both')) return;
     const half = document.getElementById('side_half_' + which);
     if (half) half.classList.toggle('collapsed');
 }
