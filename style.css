@@ -74,22 +74,22 @@
         /* ===== サイドタブ（閉じた状態） ===== */
         .side-tab {
             width: 130px;
-            background: #1e3a5f;
+            background: #f4f6fb;
             display: flex;
             flex-direction: column;
             align-items: stretch;
             flex-shrink: 0;
-            border-left: 2px solid #152c4a;
+            border-left: 2px solid #dce1ec;
         }
         .side-tab-header {
-            background: #4a7ab5;
+            background: #1e3a5f;
             color: #fff;
             font-size: 12px;
             font-weight: bold;
             text-align: center;
             padding: 9px 4px;
             letter-spacing: 1.5px;
-            border-bottom: 1px solid #3a6a9f;
+            border-bottom: 1px solid #152c4a;
             flex-shrink: 0;
         }
         .side-tab-row {
@@ -98,11 +98,11 @@
             justify-content: space-between;
             padding: 11px 10px;
             cursor: pointer;
-            color: #fff;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #1e3a5f;
+            border-top: 1px solid #e0e4ec;
             gap: 6px;
         }
-        .side-tab-row:hover { background: #2a5080; }
+        .side-tab-row:hover { background: #e8ecf5; }
         .side-tab-row-text {
             font-size: 13px;
             font-weight: bold;
