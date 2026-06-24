@@ -77,34 +77,36 @@
             background: #1e3a5f;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            align-items: stretch;
             flex-shrink: 0;
             border-left: 2px solid #152c4a;
-            gap: 8px;
-            padding: 16px 4px;
         }
-        .side-tab:hover { background: #2a5080; }
-        .side-tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+        .side-tab-header {
+            background: #4a7ab5;
             color: #fff;
-        }
-        .side-tab-text {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            writing-mode: horizontal-tb;
-            letter-spacing: 0.5px;
             text-align: center;
-            white-space: nowrap;
+            padding: 9px 4px;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #3a6a9f;
+            flex-shrink: 0;
         }
-        .side-tab-divider {
-            width: 48px;
-            height: 1px;
-            background: rgba(255,255,255,0.25);
+        .side-tab-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 10px;
+            cursor: pointer;
+            color: #fff;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            gap: 6px;
+        }
+        .side-tab-row:hover { background: #2a5080; }
+        .side-tab-row-text {
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
         }
 
         /* ===== サイドパネル本体 ===== */
