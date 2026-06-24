@@ -783,6 +783,15 @@ function renderProgressCards() {
                     clickable = ' clickable';
                 }
 
+                let flowDateStr = '';
+                if (req) {
+                    const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
+                    if (dateIso) {
+                        const d = new Date(dateIso);
+                        flowDateStr = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}`;
+                    }
+                }
+
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
@@ -792,6 +801,7 @@ function renderProgressCards() {
                     data-machine="${esc(machine)}">
                     <div class="flow-circle ${fcClass}">${icon}</div>
                     <div class="flow-label">${esc(f.label)}</div>
+                    ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
                 </div>${connector}`;
             }).join('');
 
