@@ -788,7 +788,8 @@ function renderProgressCards() {
                     const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
                     if (dateIso) {
                         const d = new Date(dateIso);
-                        flowDateStr = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}`;
+                        const prefix = req.status === 'approved' ? '完了' : req.status === 'rejected' ? '却下' : '申請';
+                        flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
                     }
                 }
 
