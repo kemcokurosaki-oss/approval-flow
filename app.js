@@ -98,14 +98,11 @@ function applyRoleLayout(role) {
     const halfPending = document.getElementById('side_half_pending');
     const tabMine     = document.getElementById('side_tab_mine');
     const tabPending  = document.getElementById('side_tab_pending');
-    const tabDivider  = document.getElementById('side_tab_divider');
 
     if (halfMine)    halfMine.style.display    = userIsApplicant ? '' : 'none';
     if (halfPending) halfPending.style.display = isApprover      ? '' : 'none';
     if (tabMine)     tabMine.style.display     = userIsApplicant ? '' : 'none';
     if (tabPending)  tabPending.style.display  = isApprover      ? '' : 'none';
-    // 両方表示する場合のみ区切り線を表示
-    if (tabDivider)  tabDivider.style.display  = (userIsApplicant && isApprover) ? '' : 'none';
 
     if (!isApprover) {
         const badgePending = document.getElementById('side_badge_pending');
