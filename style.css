@@ -148,7 +148,6 @@
             border-radius: 3px;
         }
         .side-panel-close-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .side-panel-close-btn:hover { background: #eee; color: #333; }
 
         /* 上下半分 */
         .side-half {
