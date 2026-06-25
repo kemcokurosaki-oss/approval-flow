@@ -471,20 +471,27 @@ async function main() {
       const icsFilenames = {
         'simple_inspection_invite':     '簡易検査.ics',
         'simple_inspection_reschedule': '簡易検査.ics',
+        'simple_inspection_cancel':     '簡易検査キャンセル.ics',
         'inspection_invite':            '外観検査.ics',
         'shipping_meeting_invite':      '出荷確認会議.ics',
+        'shipping_meeting_reschedule':  '出荷確認会議.ics',
+        'shipping_meeting_cancel':      '出荷確認会議キャンセル.ics',
       };
       const icsFilename = icsFilenames[notif.notification_type];
       if (icsFilename && req) {
-        const roomEmail = notif.notification_type === 'shipping_meeting_invite'
-          ? (ROOM_EMAILS[req.inspection_location] || null)
-          : null;
-        const icsContent = buildICS(req, mail.subject, roomEmail);
+        const isCancel     = notif.notification_type.endsWith('_cancel');
+        const isReschedule = notif.notification_type.endsWith('_reschedule');
+        const icsMethod    = isCancel ? 'CANCEL' : 'REQUEST';
+        const icsSeq       = (isCancel || isReschedule) ? (icsSequenceMap[notif.request_id] || 1) : 0;
+        const isSmMeeting  = ['shipping_meeting_invite','shipping_meeting_reschedule','shipping_meeting_cancel']
+          .includes(notif.notification_type);
+        const roomEmail    = isSmMeeting ? (ROOM_EMAILS[req.inspection_location] || null) : null;
+        const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq);
         if (icsContent) {
           attachments.push({
             filename:    icsFilename,
             content:     icsContent,
-            contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+            contentType: `text/calendar; charset=utf-8; method=${icsMethod}`,
           });
         }
       }
