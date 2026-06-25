@@ -1369,6 +1369,51 @@ async function saveReschedule(requestId) {
     }
 }
 
+// ===== キャンセル（簡易検査・出荷確認会議） =====
+async function cancelMeeting(requestId, flowType) {
+    const label = flowType === 'shipping_meeting' ? '出荷確認会議' : '簡易検査';
+    if (!confirm(`${label}の開催をキャンセルします。\n参加者にキャンセル通知を送ります。よろしいですか？`)) return;
+
+    try {
+        await db.from('approval_requests')
+            .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+            .eq('id', requestId);
+
+        const { data: existingNotifs } = await db.from('approval_notifications')
+            .select('recipient_id, recipient_email')
+            .eq('request_id', requestId)
+            .not('emailed_at', 'is', null);
+
+        const cancelType = flowType === 'shipping_meeting'
+            ? 'shipping_meeting_cancel'
+            : 'simple_inspection_cancel';
+
+        if (existingNotifs?.length > 0) {
+            const seen = new Set();
+            const notifs = [];
+            for (const n of existingNotifs) {
+                const key = n.recipient_id || n.recipient_email;
+                if (key && !seen.has(key)) {
+                    seen.add(key);
+                    notifs.push({
+                        request_id:        requestId,
+                        recipient_id:      n.recipient_id    || null,
+                        recipient_email:   n.recipient_email || null,
+                        notification_type: cancelType
+                    });
+                }
+            }
+            if (notifs.length > 0) await db.from('approval_notifications').insert(notifs);
+        }
+
+        closeDetailModal();
+        await refreshAll();
+        alert(`${label}をキャンセルしました。関係者にキャンセル通知を送ります。`);
+    } catch (e) {
+        alert('エラーが発生しました: ' + e.message);
+    }
+}
+
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
