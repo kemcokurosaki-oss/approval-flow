@@ -49,7 +49,7 @@ async function supabaseFetch(path, options = {}) {
   return res.json();
 }
 
-// ===== .ics 生成（簡易検査） =====
+// ===== .ics 生成（簡易検査・外観検査・出荷確認会議） =====
 function buildICS(req, summary) {
   if (!req.inspection_date) return null;
 
@@ -71,8 +71,9 @@ function buildICS(req, summary) {
     dtEnd   = `DTEND;VALUE=DATE:${nextDay}`;
   }
 
-  const dtstamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
-  const uid     = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-si@approval-flow`;
+  const flowSuffix = { simple_inspection: 'si', inspection: 'insp', shipping_meeting: 'sm' }[req.flow_type] || req.flow_type;
+  const dtstamp  = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+  const uid      = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-${flowSuffix}@approval-flow`;
   const location = (req.inspection_location || '').replace(/\n/g, '\\n');
 
   return [
