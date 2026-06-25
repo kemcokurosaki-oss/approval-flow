@@ -684,50 +684,73 @@
         .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
         .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; }
 
-        /* ===== Location Checkbox Area ===== */
-        .location-checkbox-area {
-            border: 1px solid #e0e0e0;
+        /* ===== Location Dropdown ===== */
+        .location-checkbox-area { position: relative; }
+        .loc-dd-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 10px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 4px 8px;
-            background: #fafafa;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-        .loc-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0;
-            padding: 3px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .loc-row:last-child { border-bottom: none; }
-        .loc-group-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #555;
-            background: #e8e8e8;
-            border-radius: 3px;
-            padding: 1px 5px;
-            margin-right: 8px;
-            white-space: nowrap;
-            min-width: 28px;
-            text-align: center;
-        }
-        .loc-item {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            font-size: 12px;
-            color: #333;
+            background: #fff;
             cursor: pointer;
-            padding: 2px 8px 2px 0;
+            font-size: 13px;
+            user-select: none;
+            min-height: 34px;
+        }
+        .loc-dd-trigger:hover { border-color: #1e3a5f; }
+        .loc-dd-text {
+            flex: 1;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .loc-dd-text.placeholder { color: #aaa; }
+        .loc-dd-arrow { color: #888; font-size: 11px; margin-left: 6px; flex-shrink: 0; }
+        .loc-dd-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 2px);
+            left: 0;
+            right: 0;
+            z-index: 600;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 240px;
+            overflow-y: auto;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+        }
+        .loc-dd-panel.open { display: block; }
+        .loc-dd-group {
+            padding: 5px 10px 3px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #888;
+            background: #f5f5f5;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #ececec;
+            position: sticky;
+            top: 0;
+        }
+        .loc-dd-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
             font-weight: normal;
             text-transform: none;
             letter-spacing: 0;
+            border-bottom: 1px solid #f5f5f5;
         }
-        .loc-item input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; margin: 0; }
-        .loc-item:hover { color: #1e3a5f; }
+        .loc-dd-item:last-child { border-bottom: none; }
+        .loc-dd-item:hover { background: #f0f4fc; }
+        .loc-dd-item input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; flex-shrink: 0; }
 
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
