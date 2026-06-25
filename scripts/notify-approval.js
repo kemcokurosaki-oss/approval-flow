@@ -346,6 +346,26 @@ async function main() {
   );
   const reqMap = Object.fromEntries(requests.map(r => [r.id, r]));
 
+  // 日程変更・キャンセル通知のICSシーケンス番号を事前計算
+  const icsSeqTypes = [
+    'simple_inspection_reschedule', 'simple_inspection_cancel',
+    'shipping_meeting_reschedule',  'shipping_meeting_cancel',
+  ];
+  const icsSeqReqIds = [...new Set(
+    notifications.filter(n => icsSeqTypes.includes(n.notification_type)).map(n => n.request_id)
+  )];
+  const icsSequenceMap = {};
+  for (const reqId of icsSeqReqIds) {
+    const req = reqMap[reqId];
+    if (!req) continue;
+    const reschedType = req.flow_type === 'shipping_meeting' ? 'shipping_meeting_reschedule' : 'simple_inspection_reschedule';
+    const cancelType  = req.flow_type === 'shipping_meeting' ? 'shipping_meeting_cancel'     : 'simple_inspection_cancel';
+    const prev = await supabaseFetch(
+      `approval_notifications?request_id=eq.${reqId}&notification_type=in.(${reschedType},${cancelType})&emailed_at=not.is.null&select=id`
+    );
+    icsSequenceMap[reqId] = (prev?.length || 0) + 1;
+  }
+
   // profiles のメールアドレスを一括取得（recipient_idがある場合のみ）
   const recipientIds = [...new Set(
     notifications.map(n => n.recipient_id).filter(Boolean)
