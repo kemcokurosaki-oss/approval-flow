@@ -2393,23 +2393,17 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'inspection':
             notifType = 'inspection_invite';
-            // 固定: 製管・常務・技戦
-            await addP({ department: '製管', role: 'staff' });
-            await addP({ role: 'assembly_director' });
-            if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            await addP({ role: 'assembly_director' });              // 常務
+            await addP({ department: '製管', role: 'staff' });      // 森村・黒崎
+            for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
+            await addEbyName(salesOwner);                           // 営業担当者
+            for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
+            await addSekkeiSupervisors();                           // 設計課長・部長
             if (shiuntenOwners.length > 0) {
-                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
-                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+                await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
-            // 工番担当者（profiles）: 組立・操業（複数人対応）
-            for (const o of kumitateOwners) await addPbyName(o);
-            for (const o of shiuntenOwners) await addPbyName(o);
-            // 工番担当者（外部）: 営業・設計staff
-            await addEbyName(salesOwner);
-            for (const o of sekkeiOwners) await addEbyName(o);
-            // 設計管理職: 担当者の上長を members テーブルから取得
-            await addSekkeiSupervisors();
-            await addE({ department: '技戦' });
             break;
 
         case 'shipping':
