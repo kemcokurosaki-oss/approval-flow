@@ -9,6 +9,14 @@ const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 
+const ROOM_EMAILS = {
+  '第1会議室': 'Room01@kusakabe.com',
+  '第2会議室': 'Room02@kusakabe.com',
+  '第3会議室': 'Room03@kusakabe.com',
+  '第4会議室': 'Room04@kusakabe.com',
+  '第5会議室': 'Room05@kusakabe.com',
+};
+
 const FLOW_LABELS = {
   assembly:         '組立完了通知',
   test_run:         '試運転完了通知',
