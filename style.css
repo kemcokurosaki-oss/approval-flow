@@ -313,7 +313,7 @@
         .fc-rejected { background: #e74c3c; color: #fff; }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
         .flow-label {
-            font-size: 14px;
+            font-size: 16px;
             color: #666;
             text-align: center;
             line-height: 1.3;
