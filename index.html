@@ -62,6 +62,16 @@
 
     <div class="main">
         <div class="main-layout">
+            <!-- 工番種別パネル（左サイド） -->
+            <div id="prefix_panel" class="prefix-panel">
+                <div class="prefix-panel-header">工番種別</div>
+                <button class="prefix-btn active" data-prefix="" onclick="setProgressPrefix('')">全て</button>
+                <button class="prefix-btn" data-prefix="3" onclick="setProgressPrefix('3')">3～</button>
+                <button class="prefix-btn" data-prefix="4" onclick="setProgressPrefix('4')">4～</button>
+                <button class="prefix-btn" data-prefix="3C" onclick="setProgressPrefix('3C')">3C～</button>
+                <button class="prefix-btn" data-prefix="4C" onclick="setProgressPrefix('4C')">4C～</button>
+                <button class="prefix-btn" data-prefix="D" onclick="setProgressPrefix('D')">D～</button>
+            </div>
             <!-- メイン：進捗一覧 -->
             <div class="main-content">
                 <div id="tab_content_progress"><div class="loading-indicator">読み込み中...</div></div>
