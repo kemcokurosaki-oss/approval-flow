@@ -88,18 +88,23 @@ function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence =
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//工事工程承認フロー//JP',
-    'METHOD:REQUEST',
+    `METHOD:${method}`,
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${dtstamp}`,
+    `SEQUENCE:${sequence}`,
     dtStart,
     dtEnd,
     `SUMMARY:${summary}`,
     `LOCATION:${location}`,
     `ORGANIZER;CN=工事工程通知:mailto:${GMAIL_USER}`,
   ];
+  if (method === 'CANCEL') {
+    lines.push('STATUS:CANCELLED');
+  }
   if (roomEmail) {
-    lines.push(`ATTENDEE;CUTYPE=ROOM;ROLE=NON-PARTICIPANT;RSVP=TRUE;CN=${location}:mailto:${roomEmail}`);
+    const rsvp = method === 'CANCEL' ? 'FALSE' : 'TRUE';
+    lines.push(`ATTENDEE;CUTYPE=ROOM;ROLE=NON-PARTICIPANT;RSVP=${rsvp};CN=${location}:mailto:${roomEmail}`);
   }
   lines.push('END:VEVENT', 'END:VCALENDAR');
   return lines.join('\r\n');
