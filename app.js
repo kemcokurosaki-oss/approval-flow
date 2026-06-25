@@ -1378,6 +1378,8 @@ async function cancelMeeting(requestId, flowType) {
 
         const cancelType = flowType === 'shipping_meeting'
             ? 'shipping_meeting_cancel'
+            : flowType === 'inspection'
+            ? 'inspection_cancel'
             : 'simple_inspection_cancel';
 
         if (existingNotifs?.length > 0) {
