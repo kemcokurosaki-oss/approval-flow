@@ -753,6 +753,6 @@
         .loc-dd-item input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; flex-shrink: 0; }
 
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
-        .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
+        .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .progress-flow-label { flex: 1; color: #607080; }
-        .progress-flow-date { font-size: 11px; color: #aaa; min-width: 60px; text-align: right; }
+        .progress-flow-date { font-size: 13px; color: #aaa; min-width: 60px; text-align: right; }
