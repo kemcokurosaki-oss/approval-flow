@@ -258,6 +258,33 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
+    case 'inspection_reschedule': {
+      const date     = req?.inspection_date     || '未定';
+      const time     = req?.inspection_time     ? ` ${req.inspection_time}` : '';
+      const location = req?.inspection_location || '未定';
+      return {
+        from,
+        subject: `【外観検査 日程変更】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の外観検査の日程が変更されました。\n\n` +
+          `日時: ${date}${time}\n` +
+          `場所: ${location}` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+    }
+
+    case 'inspection_cancel':
+      return {
+        from,
+        subject: `【外観検査 キャンセル】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の外観検査はキャンセルになりました。\n` +
+          `カレンダーの予定を削除してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'simple_inspection_cancel':
       return {
         from,
