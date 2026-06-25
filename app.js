@@ -1772,8 +1772,7 @@ function openSimpleInspectionModal() {
 
     if (!siProjectsLoaded) {
         const sel = document.getElementById('si_project');
-        Object.keys(projectsMap).sort().forEach(num => {
-            if (is2000sSeries(num)) return;
+        Object.keys(projectsMap).filter(num => simpleInspectionProjectNums.has(num)).forEach(num => {
             const opt = document.createElement('option');
             opt.value = num;
             const p   = projectsMap[num];
