@@ -1100,7 +1100,7 @@ async function openDetailModal(requestId) {
         )
     );
     const isMyRequest   = req.requester_id === currentUser.id;
-    const canReschedule = ['simple_inspection', 'shipping_meeting'].includes(req.flow_type)
+    const canReschedule = ['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type)
         && (isMyRequest || isQualityOrSeikan)
         && req.status !== 'cancelled';
 
