@@ -1901,7 +1901,7 @@ async function submitSimpleInspection() {
     const _th = document.getElementById('si_time_hour').value;
     const _tm = document.getElementById('si_time_min').value;
     const timeVal  = (_th && _tm) ? `${_th}:${_tm}` : null;
-    const location = document.getElementById('si_location_input').value.trim();
+    const location = getLocationValue('si_location_input');
     const note     = document.getElementById('si_note_input').value.trim();
 
     if (!num)              { alert('工事番号を選択してください'); return; }
