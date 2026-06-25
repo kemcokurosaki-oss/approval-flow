@@ -1264,16 +1264,6 @@ async function openDetailModal(requestId) {
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label>場所</label>
-                ${req.flow_type === 'shipping_meeting' ? `
-                <select id="detail_new_location" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px; width:100%;">
-                    <option value="">選択してください</option>
-                    ${['第1会議室','第2会議室','第3会議室','第4会議室','第5会議室'].map(r =>
-                        `<option value="${r}"${req.inspection_location === r ? ' selected' : ''}>${r}</option>`).join('')}
-                </select>` : `
-                <input type="text" id="detail_new_location" value="${esc(req.inspection_location || '')}" placeholder="例: 第1組立工場">`}
-            </div>
         </div>` : ''}
     `;
 
