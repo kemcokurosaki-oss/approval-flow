@@ -1293,6 +1293,7 @@ async function openDetailModal(requestId) {
     } else if (canReschedule) {
         footer.innerHTML = `
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-danger"    onclick="cancelMeeting('${req.id}', '${req.flow_type}')">キャンセル</button>
             <button class="btn btn-primary"   id="btn_show_reschedule" onclick="showRescheduleForm()">日程変更</button>
             <button class="btn btn-success"   id="btn_save_reschedule" style="display:none;" onclick="saveReschedule('${req.id}')">保存して通知</button>
         `;
