@@ -676,7 +676,7 @@
 
         /* ===== Recipients Preview ===== */
         .recipient-list { max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 10px; background: #fafafa; }
-        .recipient-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
+        .recipient-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
         .recipient-item:last-child { border-bottom: none; }
         .recipient-name { font-weight: bold; min-width: 80px; }
         .recipient-email { color: #888; flex: 1; }
