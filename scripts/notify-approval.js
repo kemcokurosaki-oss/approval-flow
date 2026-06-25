@@ -84,7 +84,7 @@ function buildICS(req, summary, roomEmail = null) {
   const uid      = `${req.project_number}-${(req.machine_name || '').replace(/\s/g, '')}-${flowSuffix}@approval-flow`;
   const location = (req.inspection_location || '').replace(/\n/g, '\\n');
 
-  return [
+  const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//工事工程承認フロー//JP',
@@ -96,10 +96,13 @@ function buildICS(req, summary, roomEmail = null) {
     dtEnd,
     `SUMMARY:${summary}`,
     `LOCATION:${location}`,
-    'ORGANIZER;CN=田中(孝):mailto:t-tanaka@kusakabe.com',
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
+    `ORGANIZER;CN=工事工程通知:mailto:${GMAIL_USER}`,
+  ];
+  if (roomEmail) {
+    lines.push(`ATTENDEE;CUTYPE=ROOM;ROLE=NON-PARTICIPANT;RSVP=TRUE;CN=${location}:mailto:${roomEmail}`);
+  }
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.join('\r\n');
 }
 
 // ===== メール本文生成 =====
