@@ -241,40 +241,40 @@
         .prog-card {
             background: #fff;
             border-radius: 8px;
-            padding: 12px 18px 14px 22px;
-            margin-bottom: 10px;
+            padding: 16px 23px 18px 29px;
+            margin-bottom: 13px;
             border: 1px solid #e4e8f0;
             box-shadow: 0 1px 4px rgba(30,58,95,0.07);
             width: min(1100px, 100%);
             position: relative;
         }
-        .prog-card-header { margin-bottom: 4px; padding-right: 110px; }
-        .prog-card-num { font-size: 16px; font-weight: bold; color: #1e3a5f; }
-        .prog-card-label { font-size: 14px; color: #888; margin-left: 8px; }
+        .prog-card-header { margin-bottom: 5px; padding-right: 143px; }
+        .prog-card-num { font-size: 21px; font-weight: bold; color: #1e3a5f; }
+        .prog-card-label { font-size: 18px; color: #888; margin-left: 10px; }
         .prog-card-date {
             position: absolute;
-            top: 11px;
-            right: 18px;
-            font-size: 13px;
+            top: 14px;
+            right: 23px;
+            font-size: 16px;
             color: #5a7080;
             background: #f0f4fa;
             border: 1px solid #d0dae8;
             border-radius: 3px;
-            padding: 2px 7px;
+            padding: 3px 9px;
             white-space: nowrap;
         }
 
         .prog-machine-row {
-            margin-top: 8px;
+            margin-top: 10px;
             border-top: 1px solid #f0f0f0;
-            padding-top: 8px;
+            padding-top: 10px;
         }
-        .prog-machine-row:first-of-type { border-top: none; padding-top: 4px; }
+        .prog-machine-row:first-of-type { border-top: none; padding-top: 5px; }
         .prog-machine-label {
-            font-size: 13px;
+            font-size: 17px;
             font-weight: bold;
             color: #5a7080;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         /* フロー横並びステップ */
@@ -289,21 +289,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            min-width: 70px;
+            gap: 5px;
+            min-width: 91px;
         }
         .flow-node.clickable { cursor: pointer; }
         .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
         .flow-node.can-apply .flow-circle { border: 2px dashed #1e3a5f; }
         .flow-node.can-apply:hover .flow-circle { background: #dbe8f8; border-color: #1e3a5f; color: #1e3a5f; opacity: 1; transform: scale(1.12); }
         .flow-circle {
-            width: 32px;
-            height: 32px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 20px;
             font-weight: bold;
             flex-shrink: 0;
             transition: transform 0.12s, opacity 0.12s;
@@ -313,15 +313,15 @@
         .fc-rejected { background: #e74c3c; color: #fff; }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
         .flow-label {
-            font-size: 13px;
+            font-size: 15px;
             color: #666;
             text-align: center;
             line-height: 1.3;
-            max-width: 70px;
+            max-width: 91px;
             word-break: keep-all;
         }
         .flow-date {
-            font-size: 12px;
+            font-size: 14px;
             color: #888;
             text-align: center;
             line-height: 1.2;
@@ -330,8 +330,8 @@
         .flow-connector {
             flex: 1;
             height: 2px;
-            margin-top: 16px;
-            min-width: 24px;
+            margin-top: 21px;
+            min-width: 31px;
         }
         .fc-line-done    { background: #27ae60; }
         .fc-line-pending { background: #e0e0e0; }
