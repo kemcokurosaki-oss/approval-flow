@@ -298,6 +298,7 @@ async function loadProjects() {
         // タスク名でフロー対象工番を収集
         const taskText = (t.text || '').trim();
         if (taskText === '機械組立')   assemblyProjectNums.add(num);
+        if (taskText === '簡易検査')   simpleInspectionProjectNums.add(num);
         if (taskText === '外観検査')   inspectionProjectNums.add(num);
         if (taskText === '試運転')     testRunProjectNums.add(num);
         if (taskText === '出荷確認会議') shippingMeetingProjectNums.add(num);
