@@ -844,6 +844,11 @@ function renderProgressCards() {
         }
     }
 
+    // 工番種別フィルタ
+    if (progressFilterPrefix) {
+        nums = nums.filter(num => matchesPrefix(num, progressFilterPrefix));
+    }
+
     if (nums.length === 0) {
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">該当する工番がありません</div></div>';
         return;
