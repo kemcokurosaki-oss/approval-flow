@@ -280,8 +280,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【外観検査 キャンセル】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の外観検査はキャンセルになりました。\n` +
-          `` +
+          `${pStr} の外観検査はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -291,8 +290,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【簡易検査 キャンセル】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の簡易検査はキャンセルになりました。\n` +
-          `` +
+          `${pStr} の簡易検査はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -302,8 +300,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【出荷確認会議 キャンセル】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の出荷確認会議はキャンセルになりました。\n` +
-          `会議室の予約も自動的に解放されます。` +
+          `${pStr} の出荷確認会議はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
