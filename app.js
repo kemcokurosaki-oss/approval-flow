@@ -1307,7 +1307,6 @@ async function saveReschedule(requestId) {
     const newDate = document.getElementById('detail_new_date').value;
     const newHour = document.getElementById('detail_new_time_hour').value;
     const newMin  = document.getElementById('detail_new_time_min').value;
-    const newLoc  = document.getElementById('detail_new_location').value.trim();
     if (!newDate) { alert('開催日を入力してください'); return; }
     const newTime = (newHour && newMin) ? `${newHour}:${newMin}` : null;
 
@@ -1316,10 +1315,9 @@ async function saveReschedule(requestId) {
 
     try {
         await db.from('approval_requests').update({
-            inspection_date:     newDate,
-            inspection_time:     newTime,
-            inspection_location: newLoc || null,
-            updated_at:          new Date().toISOString()
+            inspection_date: newDate,
+            inspection_time: newTime,
+            updated_at:      new Date().toISOString()
         }).eq('id', requestId);
 
         // 元の送信済み通知の宛先に変更通知を再送
@@ -1330,6 +1328,8 @@ async function saveReschedule(requestId) {
 
         const rescheduleType = currentDetailFlowType === 'shipping_meeting'
             ? 'shipping_meeting_reschedule'
+            : currentDetailFlowType === 'inspection'
+            ? 'inspection_reschedule'
             : 'simple_inspection_reschedule';
 
         if (existingNotifs?.length > 0) {
