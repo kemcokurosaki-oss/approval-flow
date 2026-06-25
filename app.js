@@ -1100,7 +1100,9 @@ async function openDetailModal(requestId) {
         )
     );
     const isMyRequest   = req.requester_id === currentUser.id;
-    const canReschedule = req.flow_type === 'simple_inspection' && (isMyRequest || isQualityOrSeikan);
+    const canReschedule = ['simple_inspection', 'shipping_meeting'].includes(req.flow_type)
+        && (isMyRequest || isQualityOrSeikan)
+        && req.status !== 'cancelled';
 
     // プロフィール名を取得
     const approverIds = steps.filter(s => s.approver_id).map(s => s.approver_id);
