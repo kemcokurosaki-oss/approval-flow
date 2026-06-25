@@ -1338,6 +1338,10 @@ async function saveReschedule(requestId) {
             .eq('request_id', requestId)
             .not('emailed_at', 'is', null);
 
+        const rescheduleType = currentDetailFlowType === 'shipping_meeting'
+            ? 'shipping_meeting_reschedule'
+            : 'simple_inspection_reschedule';
+
         if (existingNotifs?.length > 0) {
             const seen = new Set();
             const notifs = [];
@@ -1349,7 +1353,7 @@ async function saveReschedule(requestId) {
                         request_id:        requestId,
                         recipient_id:      n.recipient_id    || null,
                         recipient_email:   n.recipient_email || null,
-                        notification_type: 'simple_inspection_reschedule'
+                        notification_type: rescheduleType
                     });
                 }
             }
