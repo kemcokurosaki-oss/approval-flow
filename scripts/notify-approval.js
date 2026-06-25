@@ -376,6 +376,7 @@ async function main() {
   // 日程変更・キャンセル通知のICSシーケンス番号を事前計算
   const icsSeqTypes = [
     'simple_inspection_reschedule', 'simple_inspection_cancel',
+    'inspection_reschedule',        'inspection_cancel',
     'shipping_meeting_reschedule',  'shipping_meeting_cancel',
   ];
   const icsSeqReqIds = [...new Set(
