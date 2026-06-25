@@ -31,14 +31,42 @@ const LOCATION_GROUPS = [
 function buildLocationCheckboxes(id) {
     const container = document.getElementById(id);
     if (!container) return;
-    container.innerHTML = LOCATION_GROUPS.map(group =>
-        `<div class="loc-row">
-            <span class="loc-group-label">${group.label}</span>
-            ${group.items.map(item =>
-                `<label class="loc-item"><input type="checkbox" value="${item}"> ${item}</label>`
+    container.innerHTML =
+        `<div class="loc-dd-trigger" onclick="toggleLocDropdown('${id}')">
+            <span class="loc-dd-text placeholder">選択してください</span>
+            <span class="loc-dd-arrow">▾</span>
+        </div>
+        <div class="loc-dd-panel">
+            ${LOCATION_GROUPS.map(group =>
+                `<div class="loc-dd-group">${group.label}</div>` +
+                group.items.map(item =>
+                    `<label class="loc-dd-item">
+                        <input type="checkbox" value="${item}" onchange="updateLocText('${id}')"> ${item}
+                    </label>`
+                ).join('')
             ).join('')}
-        </div>`
-    ).join('');
+        </div>`;
+}
+
+function toggleLocDropdown(id) {
+    const container = document.getElementById(id);
+    const panel = container.querySelector('.loc-dd-panel');
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.loc-dd-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
+function updateLocText(id) {
+    const container = document.getElementById(id);
+    const checked = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    const textEl = container.querySelector('.loc-dd-text');
+    if (checked.length) {
+        textEl.textContent = checked.join('・');
+        textEl.classList.remove('placeholder');
+    } else {
+        textEl.textContent = '選択してください';
+        textEl.classList.add('placeholder');
+    }
 }
 
 function getLocationValue(id) {
@@ -52,7 +80,18 @@ function resetLocationSelect(id) {
     const container = document.getElementById(id);
     if (!container) return;
     container.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    const textEl = container.querySelector('.loc-dd-text');
+    if (textEl) { textEl.textContent = '選択してください'; textEl.classList.add('placeholder'); }
+    const panel = container.querySelector('.loc-dd-panel');
+    if (panel) panel.classList.remove('open');
 }
+
+// 場所ドロップダウン外クリックで閉じる
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.location-checkbox-area')) {
+        document.querySelectorAll('.loc-dd-panel.open').forEach(p => p.classList.remove('open'));
+    }
+});
 
 const ROOM_EMAILS = {
     '第1会議室': 'Room01@kusakabe.com',
