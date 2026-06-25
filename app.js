@@ -18,15 +18,40 @@ const db = supabase.createClient(S_URL, S_KEY, {
     }
 });
 
+const LOCATION_GROUPS = [
+    { label: 'A',  items: ['A0','A1','A2','A3','A4','A5','A6','A7'] },
+    { label: 'B',  items: ['B0','B1','B2','B3','B4','B5','B6','B7'] },
+    { label: 'C',  items: ['C0','C1','C2','C3','C4','C5','C6','C7'] },
+    { label: 'D',  items: ['D0','D1','D2','D3','D4','D5','D6','D7'] },
+    { label: 'E1', items: ['E1-0','E1-1','E1-2','E1-3','E1-4','E1-5','E1-6','E1-7'] },
+    { label: 'E2', items: ['E2-0','E2-1','E2-2','E2-3','E2-4','E2-5','E2-6','E2-7'] },
+    { label: 'E3', items: ['E3-0','E3-1','E3-2','E3-3','E3-4','E3-5','E3-6','E3-7'] },
+];
+
+function buildLocationCheckboxes(id) {
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.innerHTML = LOCATION_GROUPS.map(group =>
+        `<div class="loc-row">
+            <span class="loc-group-label">${group.label}</span>
+            ${group.items.map(item =>
+                `<label class="loc-item"><input type="checkbox" value="${item}"> ${item}</label>`
+            ).join('')}
+        </div>`
+    ).join('');
+}
+
 function getLocationValue(id) {
-    const el = document.getElementById(id);
-    if (!el) return '';
-    return Array.from(el.selectedOptions).map(o => o.value).filter(Boolean).join('・');
+    const container = document.getElementById(id);
+    if (!container) return '';
+    return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb => cb.value).join('・');
 }
 
 function resetLocationSelect(id) {
-    const el = document.getElementById(id);
-    if (el) Array.from(el.options).forEach(o => { o.selected = false; });
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
 }
 
 const ROOM_EMAILS = {
