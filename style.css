@@ -787,6 +787,60 @@
         .loc-dd-item:hover { background: #f0f4fc; }
         .loc-dd-item input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; flex-shrink: 0; }
 
+        /* ===== デザインテーマ A: 白背景 + 左アクセントライン ===== */
+        #prefix_panel.theme-a {
+            background: #fff;
+            border-right: 1px solid #e8ecf4;
+        }
+        #prefix_panel.theme-a .prefix-btn {
+            color: #555;
+            font-weight: normal;
+            border-bottom: 1px solid #f2f2f2;
+            border-left: 3px solid transparent;
+            text-align: left;
+            padding-left: 12px;
+        }
+        #prefix_panel.theme-a .prefix-btn:hover { background: #f5f7fc; color: #1e3a5f; }
+        #prefix_panel.theme-a .prefix-btn.active {
+            background: #f0f4fa;
+            color: #1e3a5f;
+            font-weight: bold;
+            border-left-color: #1e3a5f;
+        }
+
+        /* ===== デザインテーマ B: グリーン ===== */
+        #prefix_panel.theme-b {
+            background: #1a5a3a;
+            border-right: none;
+        }
+        #prefix_panel.theme-b .prefix-btn {
+            color: rgba(255,255,255,0.72);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        #prefix_panel.theme-b .prefix-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        #prefix_panel.theme-b .prefix-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+        /* ===== デザインテーマ C: 白地 + 枠線ボタン ===== */
+        #prefix_panel.theme-c {
+            background: #fff;
+            border-right: 2px solid #e0e4ec;
+            padding: 6px 4px 0;
+        }
+        #prefix_panel.theme-c .prefix-btn {
+            color: #1e3a5f;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            border-bottom: 1px solid transparent;
+            margin-bottom: 3px;
+        }
+        #prefix_panel.theme-c .prefix-btn:hover { background: #f0f4fa; border-color: #c0d0e8; }
+        #prefix_panel.theme-c .prefix-btn.active {
+            background: #dbe8f8;
+            border-color: #1e3a5f;
+            color: #1e3a5f;
+            font-weight: bold;
+        }
+
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .progress-flow-label { flex: 1; color: #607080; }
