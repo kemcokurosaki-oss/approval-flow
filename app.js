@@ -1942,10 +1942,10 @@ function openInspectionModal() {
     extraRecipients.inspection = [];
     document.getElementById('inspection_extra_list').innerHTML = '';
     document.getElementById('inspection_date_input').value     = '';
-    document.getElementById('inspection_time_hour').value = '';
-    document.getElementById('inspection_time_min').value  = '';
-    cdropReset('inspection_location_input');
-    document.getElementById('inspection_note_input').value = '';
+    document.getElementById('inspection_time_hour').value      = '';
+    document.getElementById('inspection_time_min').value       = '';
+    document.getElementById('inspection_location_input').value = '';
+    document.getElementById('inspection_note_input').value     = '';
 
     // 外観検査タスクがある工番のみプルダウンに表示
     if (!inspectionProjectsLoaded) {
