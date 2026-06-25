@@ -1865,7 +1865,7 @@ function openSimpleInspectionModal() {
     document.getElementById('si_date_input').value     = '';
     document.getElementById('si_time_hour').value = '';
     document.getElementById('si_time_min').value  = '';
-    resetLocationSelect('si_location_input');
+    buildLocationCheckboxes('si_location_input');
     document.getElementById('si_note_input').value = '';
 
     if (!siProjectsLoaded) {
