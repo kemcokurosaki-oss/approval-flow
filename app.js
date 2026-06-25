@@ -794,6 +794,23 @@ function setProgressFilter(mine) {
     renderProgressCards();
 }
 
+function matchesPrefix(num, prefix) {
+    if (prefix === '3')  return /^3\d/.test(num);
+    if (prefix === '4')  return /^4\d/.test(num);
+    if (prefix === '3C') return /^3C/i.test(num);
+    if (prefix === '4C') return /^4C/i.test(num);
+    if (prefix === 'D')  return /^D/i.test(num);
+    return true;
+}
+
+function setProgressPrefix(prefix) {
+    progressFilterPrefix = prefix;
+    document.querySelectorAll('.prefix-btn').forEach(btn => {
+        btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === prefix);
+    });
+    renderProgressCards();
+}
+
 function renderProgressCards() {
     const wrap = document.getElementById('progress_cards_wrap');
     if (!wrap || !progressCachedData) return;
