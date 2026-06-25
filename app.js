@@ -2419,7 +2419,7 @@ async function recordFlowNotifications(requestId, flowType) {
         case 'inspection':
             notifType = 'inspection_invite';
             await addP({ role: 'assembly_director' });              // 常務
-            await addP({ department: '製管', role: 'staff' });      // 森村・黒崎
+            await addSeikanOrQuality();                             // 森村・黒崎 or 品証（申請者に応じて）
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             await addEbyName(salesOwner);                           // 営業担当者
