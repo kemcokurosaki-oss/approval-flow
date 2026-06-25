@@ -406,14 +406,17 @@ async function main() {
 
       const attachments = [];
       const icsFilenames = {
-        'simple_inspection_invite':    '簡易検査.ics',
+        'simple_inspection_invite':     '簡易検査.ics',
         'simple_inspection_reschedule': '簡易検査.ics',
-        'inspection_invite':           '外観検査.ics',
-        'shipping_meeting_invite':     '出荷確認会議.ics',
+        'inspection_invite':            '外観検査.ics',
+        'shipping_meeting_invite':      '出荷確認会議.ics',
       };
       const icsFilename = icsFilenames[notif.notification_type];
       if (icsFilename && req) {
-        const icsContent = buildICS(req, mail.subject);
+        const roomEmail = notif.notification_type === 'shipping_meeting_invite'
+          ? (ROOM_EMAILS[req.inspection_location] || null)
+          : null;
+        const icsContent = buildICS(req, mail.subject, roomEmail);
         if (icsContent) {
           attachments.push({
             filename:    icsFilename,
