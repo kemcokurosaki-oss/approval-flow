@@ -307,13 +307,13 @@ async function runInvitationReminders() {
   const [y, m, d] = todayStr.split('-').map(Number);
   const threeDaysLater = new Date(y, m - 1, d + 3).toLocaleDateString('en-CA');
 
-  // 簡易検査申請済みの (工番__機械) セット（rejected以外）
+  // 申請済みの (工番__機械__フロー種別) セット（rejected以外）
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=eq.simple_inspection&status=neq.rejected` +
-    `&select=project_number,machine_name`
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=neq.rejected` +
+    `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
-    (submitted || []).map(r => `${r.project_number}__${r.machine_name}`)
+    (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
   );
 
   // 品証・製管スタッフを取得
@@ -343,7 +343,20 @@ async function runInvitationReminders() {
     `&select=project_number,machine,end_date,is_completed`
   );
 
-  // 通知対象リストを構築
+  // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築
+  const hasInspectionTask = new Set();
+  const hasSimpleInspectionTask = new Set();
+  const hasShippingMeetingTask = new Set();
+  const [inspRows, siRows, smRows] = await Promise.all([
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('簡易検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷確認会議')}&select=project_number,machine`),
+  ]);
+  for (const r of (inspRows || [])) hasInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
+
+  // 通知対象リストを構築（機械ごと）
   // - 試運転あり → 試運転終了3日前にトリガー（機械組立のタイミングは使わない）
   // - 試運転なし → 機械組立終了3日前にトリガー
   const targets = [];
@@ -367,37 +380,74 @@ async function runInvitationReminders() {
     targets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '機械組立', refEndDate: t.end_date });
   }
 
+  // 案内催促の対象フロー定義
+  const inviteFlows = [
+    {
+      flowType: 'simple_inspection',
+      label:    '簡易検査開催案内',
+      hasTask:  (key) => hasSimpleInspectionTask.has(key),
+      // 簡易検査：機械組立終了3日前のみ（試運転タイミングは使わない）
+      skipTestRunTrigger: true,
+    },
+    {
+      flowType: 'inspection',
+      label:    '外観検査開催案内',
+      hasTask:  (key) => hasInspectionTask.has(key),
+      // 外観検査：機械組立終了3日前
+      skipTestRunTrigger: true,
+    },
+    {
+      flowType: 'shipping_meeting',
+      label:    '出荷確認会議開催案内',
+      hasTask:  (key) => hasShippingMeetingTask.has(key),
+      // 出荷確認会議：試運転あり→試運転終了3日前、なし→機械組立終了3日前
+      skipTestRunTrigger: false,
+    },
+  ];
+
+  // 簡易検査と外観検査は機械組立終了3日前のみ対象（試運転タイミングのtargetを除外）
   const sentThisRun = new Set();
   let count = 0;
 
-  for (const target of targets) {
-    if (completedProjectsSet.has(String(target.project_number).trim())) continue;
-    if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
+  for (const flow of inviteFlows) {
+    for (const target of targets) {
+      // skipTestRunTrigger=true のフローは試運転タイミングのtargetをスキップ
+      if (flow.skipTestRunTrigger && target.refTaskName === '試運転') continue;
 
-    const taskKey = `${target.project_number}__${target.machine}`;
-    if (submittedSet.has(taskKey)) continue;
+      if (completedProjectsSet.has(String(target.project_number).trim())) continue;
+      if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
 
-    const pStr = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
-    const subject = `【案内催促】${pStr}　簡易検査開催案内`;
+      const taskKey = `${target.project_number}__${target.machine}`;
 
-    for (const profile of recipients) {
-      if (!profile.email) continue;
-      const dedupKey = `${taskKey}__simple_inspection__${profile.id}`;
-      if (sentThisRun.has(dedupKey)) continue;
+      // 対象フローのタスクが存在しない工番_機械はスキップ
+      if (!flow.hasTask(taskKey)) continue;
 
-      const text =
-        `${profile.name} 様\n\n` +
-        `${pStr} について、${target.refTaskName}が ${target.refEndDate} に終了予定ですが、` +
-        `簡易検査開催案内がされていません。\n` +
-        `承認フロー管理システムにログインして開催案内の送付をお願いします。\n\n` +
-        `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+      // 簡易検査・外観検査は機械組立3日前にのみ送る（出荷確認会議は試運転タイミングでも送る）
+      const submitKey = `${taskKey}__${flow.flowType}`;
+      if (submittedSet.has(submitKey)) continue;
 
-      try {
-        await sendEmail(profile.email, profile.name, subject, text);
-        sentThisRun.add(dedupKey);
-        count++;
-      } catch (e) {
-        console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+      const pStr   = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
+      const subject = `【案内催促】${pStr}　${flow.label}`;
+
+      for (const profile of recipients) {
+        if (!profile.email) continue;
+        const dedupKey = `${submitKey}__${profile.id}`;
+        if (sentThisRun.has(dedupKey)) continue;
+
+        const text =
+          `${profile.name} 様\n\n` +
+          `${pStr} について、${target.refTaskName}が ${target.refEndDate} に終了予定ですが、` +
+          `${flow.label}がされていません。\n` +
+          `承認フロー管理システムにログインして開催案内の送付をお願いします。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(profile.email, profile.name, subject, text);
+          sentThisRun.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+        }
       }
     }
   }
