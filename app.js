@@ -18,6 +18,84 @@ const db = supabase.createClient(S_URL, S_KEY, {
     }
 });
 
+// ===== 折りたたみ式場所ドロップダウン =====
+const LOCATION_OPTIONS = [
+    { group: 'A',  items: ['A0','A1','A2','A3','A4','A5','A6','A7'] },
+    { group: 'B',  items: ['B0','B1','B2','B3','B4','B5','B6','B7'] },
+    { group: 'C',  items: ['C0','C1','C2','C3','C4','C5','C6','C7'] },
+    { group: 'D',  items: ['D0','D1','D2','D3','D4','D5','D6','D7'] },
+    { group: 'E1', items: ['E1-0','E1-1','E1-2','E1-3','E1-4','E1-5','E1-6','E1-7'] },
+    { group: 'E2', items: ['E2-0','E2-1','E2-2','E2-3','E2-4','E2-5','E2-6','E2-7'] },
+    { group: 'E3', items: ['E3-0','E3-1','E3-2','E3-3','E3-4','E3-5','E3-6','E3-7'] },
+];
+
+function buildLocationDropdown(id) {
+    const groupsHtml = LOCATION_OPTIONS.map(g => `
+        <div class="cdrop-group">
+            <div class="cdrop-group-hd" onclick="cdropGroupToggle(this)">
+                <span>${g.group}</span><span class="cdrop-group-caret">▾</span>
+            </div>
+            <div class="cdrop-group-items">
+                ${g.items.map(v => `<div class="cdrop-item" data-value="${v}" onclick="cdropSelect('${id}','${v}')">${v}</div>`).join('')}
+            </div>
+        </div>`).join('');
+
+    const container = document.getElementById(id + '_container');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="cdrop" id="${id}_cdrop">
+            <button type="button" class="cdrop-trigger" onclick="cdropToggle('${id}')">
+                <span id="${id}_label" class="cdrop-label" style="color:#999;">選択してください</span>
+                <span class="cdrop-trigger-caret">▾</span>
+            </button>
+            <div class="cdrop-panel" id="${id}_panel">${groupsHtml}</div>
+            <input type="hidden" id="${id}" value="">
+        </div>`;
+}
+
+function cdropToggle(id) {
+    const panel = document.getElementById(id + '_panel');
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.cdrop-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
+function cdropGroupToggle(hd) {
+    const items = hd.nextElementSibling;
+    const caret = hd.querySelector('.cdrop-group-caret');
+    const isOpen = items.classList.contains('open');
+    items.classList.toggle('open');
+    caret.textContent = isOpen ? '▾' : '▴';
+}
+
+function cdropSelect(id, value) {
+    document.getElementById(id).value = value;
+    const label = document.getElementById(id + '_label');
+    label.textContent = value;
+    label.style.color = '#333';
+    document.getElementById(id + '_panel').classList.remove('open');
+    document.querySelectorAll(`#${id}_panel .cdrop-item`).forEach(el =>
+        el.classList.toggle('selected', el.dataset.value === value));
+}
+
+function cdropReset(id) {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+    const label = document.getElementById(id + '_label');
+    if (label) { label.textContent = '選択してください'; label.style.color = '#999'; }
+    document.querySelectorAll(`#${id}_panel .cdrop-item`).forEach(el => el.classList.remove('selected'));
+}
+
+function initLocationDropdowns() {
+    buildLocationDropdown('si_location_input');
+    buildLocationDropdown('inspection_location_input');
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.cdrop'))
+            document.querySelectorAll('.cdrop-panel.open').forEach(p => p.classList.remove('open'));
+    });
+}
+initLocationDropdowns();
+
 const ROOM_EMAILS = {
     '第1会議室': 'Room01@kusakabe.com',
     '第2会議室': 'Room02@kusakabe.com',
