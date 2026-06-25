@@ -2017,7 +2017,7 @@ async function submitInspection() {
     const _th = document.getElementById('inspection_time_hour').value;
     const _tm = document.getElementById('inspection_time_min').value;
     const timeVal  = (_th && _tm) ? `${_th}:${_tm}` : null;
-    const location = document.getElementById('inspection_location_input').value.trim();
+    const location = getLocationValue('inspection_location_input');
     const note     = document.getElementById('inspection_note_input').value.trim();
 
     if (!num)              { alert('工事番号を選択してください'); return; }
