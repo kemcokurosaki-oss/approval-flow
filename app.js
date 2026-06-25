@@ -2092,6 +2092,12 @@ async function submitShippingMeeting() {
                     extraRecipients.sm.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'shipping_meeting_invite' }))
                 );
             }
+            const roomEmail = ROOM_EMAILS[location];
+            if (roomEmail) {
+                await db.from('approval_notifications').insert({
+                    request_id: req.id, recipient_email: roomEmail, notification_type: 'shipping_meeting_invite'
+                });
+            }
         }
         closeShippingMeetingModal();
         await refreshAll();
