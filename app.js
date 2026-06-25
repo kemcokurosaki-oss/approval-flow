@@ -18,6 +18,17 @@ const db = supabase.createClient(S_URL, S_KEY, {
     }
 });
 
+function getLocationValue(id) {
+    const el = document.getElementById(id);
+    if (!el) return '';
+    return Array.from(el.selectedOptions).map(o => o.value).filter(Boolean).join('・');
+}
+
+function resetLocationSelect(id) {
+    const el = document.getElementById(id);
+    if (el) Array.from(el.options).forEach(o => { o.selected = false; });
+}
+
 const ROOM_EMAILS = {
     '第1会議室': 'Room01@kusakabe.com',
     '第2会議室': 'Room02@kusakabe.com',
