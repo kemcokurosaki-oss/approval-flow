@@ -684,6 +684,51 @@
         .extra-recipient-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
         .extra-recipient-item button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; }
 
+        /* ===== Location Checkbox Area ===== */
+        .location-checkbox-area {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            background: #fafafa;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .loc-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .loc-row:last-child { border-bottom: none; }
+        .loc-group-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #555;
+            background: #e8e8e8;
+            border-radius: 3px;
+            padding: 1px 5px;
+            margin-right: 8px;
+            white-space: nowrap;
+            min-width: 28px;
+            text-align: center;
+        }
+        .loc-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 12px;
+            color: #333;
+            cursor: pointer;
+            padding: 2px 8px 2px 0;
+            font-weight: normal;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .loc-item input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; margin: 0; }
+        .loc-item:hover { color: #1e3a5f; }
+
         /* ===== Progress List (旧スタイル・後方互換用) ===== */
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
         .progress-flow-label { flex: 1; color: #607080; }
