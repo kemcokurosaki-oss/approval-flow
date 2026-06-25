@@ -177,17 +177,19 @@ const ROLE_LABELS = {
 };
 
 const STATUS_LABELS = {
-    submitted: '課長承認待ち',
-    in_review: '部長承認待ち',
-    approved:  '承認完了',
-    rejected:  '却下'
+    submitted:  '課長承認待ち',
+    in_review:  '部長承認待ち',
+    approved:   '承認完了',
+    rejected:   '却下',
+    cancelled:  'キャンセル'
 };
 
 const STATUS_CLASSES = {
-    submitted: 's-submitted',
-    in_review: 's-in_review',
-    approved:  's-approved',
-    rejected:  's-rejected'
+    submitted:  's-submitted',
+    in_review:  's-in_review',
+    approved:   's-approved',
+    rejected:   's-rejected',
+    cancelled:  's-rejected'
 };
 
 // ===== Auth =====
