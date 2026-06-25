@@ -781,6 +781,9 @@ function _syncProgressControls() {
     document.getElementById('psort_shipping')?.classList.toggle('active', progressSort === 'shipping');
     const cb = document.getElementById('pfilter_mine');
     if (cb) cb.checked = progressFilterMine;
+    document.querySelectorAll('.prefix-btn').forEach(btn => {
+        btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === progressFilterPrefix);
+    });
 }
 
 function setProgressSort(order) {
