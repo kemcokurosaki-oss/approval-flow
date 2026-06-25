@@ -806,6 +806,13 @@ function matchesPrefix(num, prefix) {
     return true;
 }
 
+function setDesignTheme(theme) {
+    const panel = document.getElementById('prefix_panel');
+    if (!panel) return;
+    panel.classList.remove('theme-a', 'theme-b', 'theme-c');
+    if (theme) panel.classList.add(theme);
+}
+
 function setProgressPrefix(prefix) {
     progressFilterPrefix = prefix;
     document.querySelectorAll('.prefix-btn').forEach(btn => {
