@@ -505,6 +505,8 @@ async function main() {
         'simple_inspection_reschedule': '簡易検査.ics',
         'simple_inspection_cancel':     '簡易検査キャンセル.ics',
         'inspection_invite':            '外観検査.ics',
+        'inspection_reschedule':        '外観検査.ics',
+        'inspection_cancel':            '外観検査キャンセル.ics',
         'shipping_meeting_invite':      '出荷確認会議.ics',
         'shipping_meeting_reschedule':  '出荷確認会議.ics',
         'shipping_meeting_cancel':      '出荷確認会議キャンセル.ics',
