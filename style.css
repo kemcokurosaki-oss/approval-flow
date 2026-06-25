@@ -564,10 +564,10 @@
         .sc-rejected { background: #f8d7da; color: #721c24; }
         .sc-waiting  { background: #e9ecef; color: #6c757d; }
         .step-detail { flex: 1; }
-        .step-label { font-size: 11px; color: #aaa; }
-        .step-name  { font-size: 13px; font-weight: bold; margin-top: 1px; }
-        .step-comment { font-size: 11px; color: #888; margin-top: 2px; font-style: italic; }
-        .step-date  { font-size: 11px; color: #bbb; margin-top: 1px; }
+        .step-label { font-size: 13px; color: #aaa; }
+        .step-name  { font-size: 15px; font-weight: bold; margin-top: 1px; }
+        .step-comment { font-size: 13px; color: #888; margin-top: 2px; font-style: italic; }
+        .step-date  { font-size: 13px; color: #bbb; margin-top: 1px; }
 
         /* ===== Login ===== */
         #login_overlay {
