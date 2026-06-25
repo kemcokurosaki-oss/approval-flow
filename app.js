@@ -618,11 +618,13 @@ async function loadPendingSide() {
     el.innerHTML = actionable.map(s => {
         const req          = s.approval_requests;
         const pNum         = req.project_number || '—';
+        const pInfo        = projectsMap[pNum] || {};
+        const customerName = pInfo.customer_name || '';
         const machineLabel = req.machine_name ? `【${esc(req.machine_name)}】` : '';
         const date         = fmtDate(req.created_at);
         return `
         <div class="side-card is-pending-action" onclick="openDetailModal('${req.id}')">
-            <div class="side-card-title">${esc(pNum)}${machineLabel}</div>
+            <div class="side-card-title">${esc(pNum)}${machineLabel}${customerName ? `<span class="side-card-customer">${esc(customerName)}</span>` : ''}</div>
             <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}</div>
             <div class="side-card-status">🔴 要承認</div>
         </div>`;
