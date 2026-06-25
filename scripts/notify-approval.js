@@ -58,7 +58,7 @@ async function supabaseFetch(path, options = {}) {
 }
 
 // ===== .ics 生成（簡易検査・外観検査・出荷確認会議） =====
-function buildICS(req, summary) {
+function buildICS(req, summary, roomEmail = null) {
   if (!req.inspection_date) return null;
 
   const dateStr = req.inspection_date.replace(/-/g, ''); // YYYYMMDD
