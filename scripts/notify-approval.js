@@ -281,7 +281,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         text:
           `${recipientName} 様\n\n` +
           `${pStr} の外観検査はキャンセルになりました。\n` +
-          `添付ファイルを開くとカレンダーから自動的に削除されます。` +
+          `` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -292,7 +292,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         text:
           `${recipientName} 様\n\n` +
           `${pStr} の簡易検査はキャンセルになりました。\n` +
-          `添付ファイルを開くとカレンダーから自動的に削除されます。` +
+          `` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
