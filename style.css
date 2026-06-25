@@ -499,7 +499,7 @@
         .form-group input[type="text"]:focus,
         .form-group textarea:focus { border-color: #1e3a5f; outline: none; }
         .form-group textarea { resize: vertical; min-height: 80px; }
-        .form-hint { font-size: 11px; color: #aaa; margin-top: 3px; }
+        .form-hint { font-size: 13px; color: #aaa; margin-top: 3px; }
         .project-info-box {
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
