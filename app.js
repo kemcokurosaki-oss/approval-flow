@@ -125,6 +125,7 @@ let projectsMap    = {}; // project_number → { customer_name, project_details 
 let currentTab          = 'pending';
 let progressSort         = 'job';   // 'job' | 'shipping'
 let progressFilterMine   = false;
+let progressFilterPrefix = '';
 let progressCachedData   = null;
 let devRole = ''; // 開発用ロール上書き
 let devDept = ''; // 開発用部署上書き
