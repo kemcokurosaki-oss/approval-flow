@@ -2390,6 +2390,7 @@ async function recordFlowNotifications(requestId, flowType) {
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
             await addSekkeiSupervisors();                           // 設計課長・部長
+            await addE({ department: '技戦' });                     // 技戦
             if (kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
