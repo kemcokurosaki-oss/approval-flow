@@ -1089,7 +1089,7 @@ async function submitRequest() {
     const projectNum = document.getElementById('submit_project').value;
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
-    if (machineNums.length === 0) { alert('機械を選択してください'); return; }
+    if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
 
     const note    = document.getElementById('submit_note').value.trim();
     const btn     = document.getElementById('submit_btn');
@@ -1742,7 +1742,7 @@ async function showRecipientsStep(type) {
     const dateVal    = document.getElementById(`${prefix}_date_input`).value;
 
     if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
-    if (machines.length === 0) { alert('機械を選択してください'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)             { alert('開催日を入力してください'); return; }
 
     const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection' };
@@ -2020,7 +2020,7 @@ async function submitSimpleInspection() {
     const note     = document.getElementById('si_note_input').value.trim();
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
-    if (machines.length === 0) { alert('機械を選択してください'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { alert('簡易検査日を入力してください'); return; }
 
     const btn = document.getElementById('si_submit_btn');
@@ -2136,7 +2136,7 @@ async function submitInspection() {
     const note     = document.getElementById('inspection_note_input').value.trim();
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
-    if (machines.length === 0) { alert('機械を選択してください'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { alert('外観検査日を入力してください'); return; }
 
     const btn = document.getElementById('inspection_submit_btn');
@@ -2252,7 +2252,7 @@ async function submitShippingMeeting() {
     const note     = document.getElementById('sm_note_input').value.trim();
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
-    if (machines.length === 0) { alert('機械を選択してください'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { alert('開催日を入力してください'); return; }
 
     const btn = document.getElementById('sm_submit_btn');
@@ -2399,7 +2399,7 @@ async function submitShipping() {
     const note     = document.getElementById('shipping_note_input').value.trim();
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
-    if (machines.length === 0) { alert('機械を選択してください'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { alert('確定出荷日を入力してください'); return; }
 
     const btn = document.getElementById('shipping_submit_btn');
