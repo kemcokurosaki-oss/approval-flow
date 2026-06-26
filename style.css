@@ -904,3 +904,29 @@
         .toast.toast-show { opacity: 1; transform: translateY(0); }
         .toast-success { background: #2e7d32; }
         .toast-error   { background: #c62828; }
+
+        /* ===== Loading Overlay（全体工程表と同デザイン） ===== */
+        #app-loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.6); z-index: 99999;
+            flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+        }
+        #app-loading-overlay.visible { display: flex; }
+        .app-loading-spinner { position: relative; width: 64px; height: 64px; }
+        .app-loading-spinner div {
+            position: absolute; top: 0; left: 50%;
+            width: 7px; height: 20px; margin-left: -3.5px;
+            border-radius: 4px; background: #555555;
+            transform-origin: 3.5px 32px;
+            animation: als-fade 0.8s linear infinite;
+        }
+        .app-loading-spinner div:nth-child(1) { transform: rotate(0deg);   animation-delay: -0.700s; }
+        .app-loading-spinner div:nth-child(2) { transform: rotate(45deg);  animation-delay: -0.600s; }
+        .app-loading-spinner div:nth-child(3) { transform: rotate(90deg);  animation-delay: -0.500s; }
+        .app-loading-spinner div:nth-child(4) { transform: rotate(135deg); animation-delay: -0.400s; }
+        .app-loading-spinner div:nth-child(5) { transform: rotate(180deg); animation-delay: -0.300s; }
+        .app-loading-spinner div:nth-child(6) { transform: rotate(225deg); animation-delay: -0.200s; }
+        .app-loading-spinner div:nth-child(7) { transform: rotate(270deg); animation-delay: -0.100s; }
+        .app-loading-spinner div:nth-child(8) { transform: rotate(315deg); animation-delay:  0.000s; }
+        @keyframes als-fade { 0% { opacity: 1; } 100% { opacity: 0.12; } }
+        .app-loading-label { font-size: 15px; color: #555555; letter-spacing: 0.12em; }
