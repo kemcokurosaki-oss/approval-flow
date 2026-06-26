@@ -184,7 +184,7 @@
             overflow: hidden;
         }
         .side-panel.open { transform: translateX(0); }
-        .main:has(.side-panel.open) .main-content { margin-right: calc(550px - 130px); }
+        .main:has(.side-panel.open) .main-content { margin-right: calc(550px - 145px); }
         #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
