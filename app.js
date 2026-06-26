@@ -2405,7 +2405,8 @@ async function onShippingMachineChange() {
     if (machines.length === 0) return;
 
     const machine = machines[0];
-
+    showLoading('読み込み中...');
+    try {
     // 担当者確認: tasks から設計・組立・操業 owner を取得
     const { data: taskRows } = await db.from('tasks')
         .select('text, owner, major_item')
