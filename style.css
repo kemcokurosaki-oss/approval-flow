@@ -382,7 +382,7 @@
         }
         .fc-done     { background: #27ae60; color: #fff; }
         .fc-active   { background: #f39c12; color: #fff; }
-        .fc-rejected { background: #e74c3c; color: #fff; font-size: 20px; }
+        .fc-rejected { background: #e74c3c; color: #fff; font-size: 21px; }
         .fc-play-icon { font-size: 15px; display: inline-block; transform: translate(1px, -1px); }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
         .flow-label {
