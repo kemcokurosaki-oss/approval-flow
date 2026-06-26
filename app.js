@@ -1656,7 +1656,7 @@ async function rejectStep(requestId, stepId) {
         ui.send('SAVED');
         showToast('却下しました。申請者に通知されます。', 'success');
     } catch (e) {
-        alert('処理に失敗しました: ' + e.message);
+        showToast('処理に失敗しました: ' + e.message, 'error');
     }
 }
 
