@@ -1114,6 +1114,7 @@ async function submitRequest() {
     const btn     = document.getElementById('submit_btn');
     btn.disabled  = true;
     btn.textContent = '申請中...';
+    showLoading('処理中...');
 
     try {
         const submitterRole = getEffectiveRole();
