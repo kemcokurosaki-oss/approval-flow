@@ -2021,7 +2021,7 @@ async function submitSimpleInspection() {
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (!dateVal)          { alert('簡易検査日を入力してください'); return; }
+    if (!dateVal)          { showToast('簡易検査日を入力してください', 'error'); return; }
 
     const btn = document.getElementById('si_submit_btn');
     btn.disabled = true;
