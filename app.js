@@ -2098,6 +2098,7 @@ async function submitSimpleInspection() {
     } finally {
         btn.disabled    = false;
         btn.textContent = '案内を送信';
+        hideLoading();
     }
 }
 
