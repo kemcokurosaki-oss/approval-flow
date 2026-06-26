@@ -1691,7 +1691,7 @@ async function resubmit(requestId) {
 
         closeDetailModal();
         await refreshAll();
-        alert('再申請しました。承認者に通知されます。');
+        showToast('再申請しました。承認者に通知されます。', 'success');
     } catch (e) {
         alert('再申請に失敗しました: ' + e.message);
     }
