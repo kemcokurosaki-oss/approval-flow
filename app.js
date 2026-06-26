@@ -1693,7 +1693,7 @@ async function resubmit(requestId) {
         await refreshAll();
         showToast('再申請しました。承認者に通知されます。', 'success');
     } catch (e) {
-        alert('再申請に失敗しました: ' + e.message);
+        showToast('再申請に失敗しました: ' + e.message, 'error');
     }
 }
 
