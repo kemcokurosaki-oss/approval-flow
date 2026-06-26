@@ -1528,7 +1528,7 @@ async function cancelMeeting(requestId, flowType) {
 
         closeDetailModal();
         await refreshAll();
-        alert(`${label}をキャンセルしました。関係者にキャンセル通知を送ります。`);
+        showToast(`${label}をキャンセルしました。関係者にキャンセル通知を送ります。`, 'success');
     } catch (e) {
         alert('エラーが発生しました: ' + e.message);
     }
