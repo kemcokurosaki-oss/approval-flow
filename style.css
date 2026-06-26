@@ -74,7 +74,7 @@
         /* ===== 工番種別パネル（左サイド） ===== */
         .prefix-panel {
             width: 90px;
-            background: #fff;
+            background: #f4f6fb;
             border-right: 1px solid #e8ecf4;
             display: flex;
             flex-direction: column;
@@ -98,8 +98,8 @@
             transition: background 0.12s, border-color 0.12s, transform 0.08s;
         }
         .prefix-btn:hover { background: #e8eef8; }
-        .prefix-btn:active { transform: translateY(1px); background: #d8e4f4; border-left-color: #1e3a5f; }
-        .prefix-btn.active { background: #d0e2f8; border-left-color: #1e3a5f; color: #1e3a5f; }
+        .prefix-btn:active { transform: translateY(1px); background: #1e3a5f; color: #fff; border-left-color: transparent; }
+        .prefix-btn.active { background: #1e3a5f; color: #fff; border-left-color: transparent; }
         /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
         .prefix-btn[data-prefix=""] { font-size: 14px; }
 
