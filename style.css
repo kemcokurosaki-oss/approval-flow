@@ -874,3 +874,31 @@
         .progress-flow-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; }
         .progress-flow-label { flex: 1; color: #607080; }
         .progress-flow-date { font-size: 13px; color: #aaa; min-width: 60px; text-align: right; }
+
+        /* ===== Toast Notifications ===== */
+        #toast_container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #fff;
+            max-width: 340px;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: auto;
+            white-space: pre-line;
+        }
+        .toast.toast-show { opacity: 1; transform: translateY(0); }
+        .toast-success { background: #2e7d32; }
+        .toast-error   { background: #c62828; }
