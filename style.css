@@ -273,6 +273,7 @@
         .side-card-sub { font-size: 14px; color: #888; margin-top: 3px; }
         .side-card-status { font-size: 14px; margin-top: 5px; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
+        .side-card.is-pending-action:hover { background: #fde8e8; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
         .side-card.is-waiting { border-left: 3px solid #e67e22; background: #fffaf5; }
         .side-card.is-waiting:hover { background: #fef0e0; }
