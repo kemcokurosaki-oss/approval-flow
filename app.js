@@ -2276,7 +2276,13 @@ async function onSmMachineChange() {
     const machines = getSelectedMachines('sm_machine_list');
     if (machines.length === 0) { document.getElementById('sm_flow_box').style.display = 'none'; return; }
     const machine = machines[0];
-    const doneFlows = await _getMachineDoneFlows(num, machine);
+    showLoading('読み込み中...');
+    let doneFlows;
+    try {
+        doneFlows = await _getMachineDoneFlows(num, machine);
+    } finally {
+        hideLoading();
+    }
     document.getElementById('sm_flow_list').innerHTML = [
         { type: 'assembly',          label: '組立完了通知' },
         { type: 'test_run',          label: '試運転完了通知' },
