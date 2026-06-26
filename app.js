@@ -499,6 +499,8 @@ async function onMachineChange() {
         return;
     }
 
+    showLoading('読み込み中...');
+    try {
     if (machines.length > 1) {
         // 複数選択: 全選択機械のタスクを集めて後続フローを表示
         const { data: allTasks } = await db.from('tasks')
