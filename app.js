@@ -580,6 +580,9 @@ async function onMachineChange() {
             <div style="margin-top:4px;"><span style="color:#1e3a5f;font-weight:bold;">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span></div>
         </div>${upcomingHtml}`;
     flowEl.style.display = 'block';
+    } finally {
+        hideLoading();
+    }
 }
 
 // ===== Data Loading =====
