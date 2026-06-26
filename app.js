@@ -2202,6 +2202,7 @@ async function submitInspection() {
     const btn = document.getElementById('inspection_submit_btn');
     btn.disabled = true;
     btn.textContent = '送信中...';
+    showLoading('処理中...');
 
     try {
         // 機械ごとに登録
