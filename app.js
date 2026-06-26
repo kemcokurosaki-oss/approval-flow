@@ -2330,6 +2330,7 @@ async function submitShippingMeeting() {
 
     const btn = document.getElementById('sm_submit_btn');
     btn.disabled = true; btn.textContent = '送信中...';
+    showLoading('処理中...');
 
     try {
         for (const machine of machines) {
