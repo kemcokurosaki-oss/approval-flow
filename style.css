@@ -809,20 +809,12 @@
             border-right: 1px solid #e8ecf4;
         }
         #prefix_panel.theme-a .prefix-btn {
-            color: #555;
-            font-weight: normal;
-            border-bottom: 1px solid #f2f2f2;
-            border-left: 3px solid transparent;
-            text-align: left;
-            padding-left: 12px;
-        }
-        #prefix_panel.theme-a .prefix-btn:hover { background: #f5f7fc; color: #1e3a5f; }
-        #prefix_panel.theme-a .prefix-btn.active {
-            background: #f0f4fa;
             color: #1e3a5f;
             font-weight: bold;
-            border-left-color: #1e3a5f;
+            font-size: 16px;
         }
+        #prefix_panel.theme-a .prefix-btn:hover { background: #f0f4fa; }
+        #prefix_panel.theme-a .prefix-btn.active { background: #f0f4fa; border-left-color: #1e3a5f; }
 
         /* ===== デザインテーマ B: グリーン ===== */
         #prefix_panel.theme-b {
