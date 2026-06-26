@@ -187,14 +187,16 @@
         #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
-            height: 42px;
-            padding: 0 14px;
+            padding: 10px 14px;
             background: #1e3a5f;
             border-bottom: 1px solid #152c4a;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+        }
+        .side-panel-header > span {
+            margin-top: 2px;
         }
         .side-panel-close-btn {
             background: none;
