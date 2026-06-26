@@ -991,8 +991,8 @@
         /* ===== テーマ切替: サイドバー C（境界線＋影強調） ===== */
         #app[data-sidebar-theme="c"] .prefix-panel {
             background: #f4f6fb;
-            border-right: 3px solid #b0bfd4;
-            box-shadow: 3px 0 10px rgba(30,58,95,0.15);
+            border-right: 2px solid #dce1ec;
+            box-shadow: 2px 0 6px rgba(30,58,95,0.10);
         }
         #app[data-sidebar-theme="c"] .prefix-btn {
             color: #1e3a5f;
