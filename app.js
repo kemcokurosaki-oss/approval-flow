@@ -935,7 +935,7 @@ function renderProgressCards() {
                 } else if (req.status === 'approved') {
                     fcClass = 'fc-done'; icon = '✓';
                 } else if (req.status === 'rejected') {
-                    fcClass = 'fc-rejected'; icon = '✗';
+                    fcClass = 'fc-rejected'; icon = '×';
                 } else {
                     fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
                 }
@@ -1288,7 +1288,7 @@ async function openDetailModal(requestId) {
         const activeStep   = approvedStep || rejectedStep;
         let icon, sc;
         if      (approvedStep)                          { icon = '✓'; sc = 'sc-approved'; }
-        else if (rejectedStep)                          { icon = '✗'; sc = 'sc-rejected'; }
+        else if (rejectedStep)                          { icon = '×'; sc = 'sc-rejected'; }
         else if (req.status === 'submitted')            { icon = '⏳'; sc = 'sc-pending'; }
         else                                            { icon = '—';  sc = 'sc-waiting'; }
         const who      = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
@@ -1310,7 +1310,7 @@ async function openDetailModal(requestId) {
         const step = steps[0];
         let icon, sc;
         if      (step?.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
-        else if (step?.status === 'rejected') { icon = '✗'; sc = 'sc-rejected'; }
+        else if (step?.status === 'rejected') { icon = '×'; sc = 'sc-rejected'; }
         else if (req.status === 'submitted')  { icon = '⏳'; sc = 'sc-pending'; }
         else                                  { icon = '—';  sc = 'sc-waiting'; }
         const who  = step?.approver_id ? (approverNames[step.approver_id] || '—') : null;
@@ -1342,7 +1342,7 @@ async function openDetailModal(requestId) {
         stepsHtml = steps.map(s => {
             let icon, sc;
             if      (s.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
-            else if (s.status === 'rejected') { icon = '✗'; sc = 'sc-rejected'; }
+            else if (s.status === 'rejected') { icon = '×'; sc = 'sc-rejected'; }
             else if (s.status === 'pending' &&
                      ((s.step_order === 1 && req.status === 'submitted') ||
                       (s.step_order === 2 && req.status === 'in_review')))
