@@ -270,7 +270,7 @@
         }
         .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
         .side-card-title { font-size: 16px; font-weight: bold; color: #1e3a5f; }
-        .side-card-sub { font-size: 14px; color: #888; margin-top: 3px; }
+        .side-card-sub { font-size: 14px; color: #888; margin-top: 3px; display: flex; align-items: center; flex-wrap: wrap; }
         .side-card-status { font-size: 14px; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
         .si-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: bold; flex-shrink: 0; }
         .si-orange { background: #f39c12; color: #fff; }
