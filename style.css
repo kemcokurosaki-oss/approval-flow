@@ -842,8 +842,8 @@
             font-weight: bold;
             font-size: 16px;
         }
-        #prefix_panel.theme-a .prefix-btn:hover { background: #f0f4fa; }
-        #prefix_panel.theme-a .prefix-btn.active { background: #f0f4fa; border-left-color: #1e3a5f; }
+        #prefix_panel.theme-a .prefix-btn:hover { background: #e8eef8; }
+        #prefix_panel.theme-a .prefix-btn.active { background: #d0e2f8; border-left-color: #1e3a5f; }
 
         /* ===== デザインテーマ B: グリーン ===== */
         #prefix_panel.theme-b {
