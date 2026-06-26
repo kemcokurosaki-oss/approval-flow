@@ -2400,7 +2400,7 @@ async function submitShipping() {
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (!dateVal)          { alert('確定出荷日を入力してください'); return; }
+    if (!dateVal)          { showToast('確定出荷日を入力してください', 'error'); return; }
 
     const btn = document.getElementById('shipping_submit_btn');
     btn.disabled    = true;
