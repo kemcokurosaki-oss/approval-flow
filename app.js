@@ -2262,8 +2262,13 @@ async function onSmProjectChange() {
     document.getElementById('sm_project_detail').innerHTML =
         `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
     document.getElementById('sm_project_info').style.display = 'block';
-    await _loadMachineCheckboxes(num, 'sm_machine_list', 'onSmMachineChange');
-    document.getElementById('sm_machine_group').style.display = 'block';
+    showLoading('読み込み中...');
+    try {
+        await _loadMachineCheckboxes(num, 'sm_machine_list', 'onSmMachineChange');
+        document.getElementById('sm_machine_group').style.display = 'block';
+    } finally {
+        hideLoading();
+    }
 }
 
 async function onSmMachineChange() {
