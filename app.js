@@ -1480,7 +1480,7 @@ async function saveReschedule(requestId) {
         await refreshAll();
         showToast('日程を変更しました。関係者に変更通知を送ります。', 'success');
     } catch (e) {
-        alert('保存に失敗しました: ' + e.message);
+        showToast('保存に失敗しました: ' + e.message, 'error');
         btn.disabled = false; btn.textContent = '保存して通知';
     }
 }
