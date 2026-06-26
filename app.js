@@ -2152,7 +2152,13 @@ async function onInspectionMachineChange() {
     const machines = getSelectedMachines('inspection_machine_list');
     if (machines.length === 0) { document.getElementById('inspection_flow_box').style.display = 'none'; return; }
     const machine = machines[0]; // フロー状況は1台目で代表
-    const doneFlows = await _getMachineDoneFlows(num, machine);
+    showLoading('読み込み中...');
+    let doneFlows;
+    try {
+        doneFlows = await _getMachineDoneFlows(num, machine);
+    } finally {
+        hideLoading();
+    }
     const assemblyDone = doneFlows.has('assembly');
     document.getElementById('inspection_flow_list').innerHTML =
         `<div style="padding:2px 0; color:${assemblyDone ? '#27ae60' : '#e74c3c'};">${assemblyDone ? '✅' : '⚠'}　組立完了通知　${assemblyDone ? '承認済み' : '未承認'}</div>
