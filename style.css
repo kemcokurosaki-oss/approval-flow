@@ -187,7 +187,8 @@
         #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
-            padding: 10px 14px;
+            height: 42px;
+            padding: 0 14px;
             background: #1e3a5f;
             border-bottom: 1px solid #152c4a;
             display: flex;
