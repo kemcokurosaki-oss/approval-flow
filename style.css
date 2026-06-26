@@ -277,6 +277,7 @@
         .side-card.is-waiting { border-left: 3px solid #e67e22; background: #fffaf5; }
         .side-card.is-waiting:hover { background: #fef0e0; }
         .side-card.is-rejected { border-left: 3px solid #e74c3c; background: #fff8f7; }
+        .side-card.is-rejected:hover { background: #fde8e8; }
 
         /* ===== ヘッダー2行目コントロール（並び替え・フィルタ） ===== */
         .psort-group { display: flex; gap: 4px; }
