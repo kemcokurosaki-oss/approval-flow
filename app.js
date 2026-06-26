@@ -2073,6 +2073,7 @@ async function submitSimpleInspection() {
     const btn = document.getElementById('si_submit_btn');
     btn.disabled = true;
     btn.textContent = '送信中...';
+    showLoading('処理中...');
 
     try {
         for (const machine of machines) {
