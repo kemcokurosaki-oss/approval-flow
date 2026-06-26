@@ -2448,6 +2448,9 @@ async function onShippingMachineChange() {
         </div>`).join('') +
         `<div style="padding:2px 0; color:#1e3a5f; font-weight:bold; margin-top:4px;">▶　出荷確定通知（今回）</div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
+    } finally {
+        hideLoading();
+    }
 }
 
 async function submitShipping() {
