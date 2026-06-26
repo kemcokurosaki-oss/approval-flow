@@ -811,7 +811,7 @@
         #prefix_panel.theme-a .prefix-btn {
             color: #1e3a5f;
             font-weight: bold;
-            font-size: 19px;
+            font-size: 16px;
         }
         #prefix_panel.theme-a .prefix-btn:hover { background: #f0f4fa; }
         #prefix_panel.theme-a .prefix-btn.active { background: #f0f4fa; border-left-color: #1e3a5f; }
