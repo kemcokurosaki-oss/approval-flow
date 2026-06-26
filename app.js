@@ -1174,7 +1174,7 @@ async function submitRequest() {
             : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
         alert(`${count}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`);
     } catch (e) {
-        alert('申請に失敗しました: ' + e.message);
+        showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
         btn.textContent = '申請する';
@@ -2432,7 +2432,7 @@ async function submitShipping() {
         await refreshAll();
         alert(`${machines.length}機械の申請をしました。\n常務に承認依頼が届きます。`);
     } catch (e) {
-        alert('申請に失敗しました: ' + e.message);
+        showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
         btn.textContent = '申請する';
