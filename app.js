@@ -688,8 +688,11 @@ async function loadMineSide() {
         }
 
         const resubmitBadge = req.is_resubmit ? '<span class="resubmit-badge">再申請</span>' : '';
+        const cardClass = (req.status === 'submitted' || req.status === 'in_review') ? 'is-waiting'
+                        : req.status === 'rejected' ? 'is-rejected'
+                        : '';
         return `
-        <div class="side-card" onclick="openDetailModal('${req.id}')">
+        <div class="side-card ${cardClass}" onclick="openDetailModal('${req.id}')">
             <div class="side-card-title">${esc(pNum)}${machineLabel ? machineLabel : ''}${pInfo.customer_name ? `<span class="side-card-customer">${esc(pInfo.customer_name)}</span>` : ''}</div>
             <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}${resubmitBadge}</div>
             <div class="side-card-status">${statusText}</div>
