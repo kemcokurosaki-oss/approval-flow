@@ -75,7 +75,8 @@
         .prefix-panel {
             width: 90px;
             background: #f4f6fb;
-            border-right: 1px solid #e8ecf4;
+            border-right: 2px solid #dce1ec;
+            box-shadow: 2px 0 6px rgba(30,58,95,0.10);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
