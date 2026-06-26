@@ -6,6 +6,8 @@ function showToast(message, type = 'success') {
         container.id = 'toast_container';
         document.body.appendChild(container);
     }
+    const existing = [...container.querySelectorAll('.toast')].find(t => t.textContent === message);
+    if (existing) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
