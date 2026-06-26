@@ -2281,7 +2281,7 @@ async function submitShippingMeeting() {
         }
         closeShippingMeetingModal();
         await refreshAll();
-        alert(`出荷確認会議開催案内を送信しました。（${machines.length}機械）`);
+        showToast(`出荷確認会議開催案内を送信しました。（${machines.length}機械）`, 'success');
     } catch (e) {
         showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
