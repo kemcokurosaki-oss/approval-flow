@@ -2430,7 +2430,7 @@ async function submitShipping() {
         }
         closeShippingModal();
         await refreshAll();
-        alert(`${machines.length}機械の申請をしました。\n常務に承認依頼が届きます。`);
+        showToast(`${machines.length}機械の申請をしました。\n常務に承認依頼が届きます。`, 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
