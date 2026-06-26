@@ -1690,6 +1690,7 @@ async function rejectStep(requestId, stepId) {
 // ===== Resubmit =====
 async function resubmit(requestId) {
     if (!confirm('再申請しますか？承認ステップがリセットされます。')) return;
+    showLoading('処理中...');
     try {
         await db.from('approval_steps').update({
             status:      'pending',
