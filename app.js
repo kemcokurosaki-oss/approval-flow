@@ -1530,7 +1530,7 @@ async function cancelMeeting(requestId, flowType) {
         await refreshAll();
         showToast(`${label}をキャンセルしました。関係者にキャンセル通知を送ります。`, 'success');
     } catch (e) {
-        alert('エラーが発生しました: ' + e.message);
+        showToast('エラーが発生しました: ' + e.message, 'error');
     }
 }
 
