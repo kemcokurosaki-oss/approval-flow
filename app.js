@@ -1088,7 +1088,7 @@ function closeSubmitModal() {
 async function submitRequest() {
     const projectNum = document.getElementById('submit_project').value;
     const machineNums = getSelectedMachines('submit_machine_list');
-    if (!projectNum)          { alert('工事番号を選択してください'); return; }
+    if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { alert('機械を選択してください'); return; }
 
     const note    = document.getElementById('submit_note').value.trim();
@@ -1741,7 +1741,7 @@ async function showRecipientsStep(type) {
     const machines   = getSelectedMachines(`${prefix}_machine_list`);
     const dateVal    = document.getElementById(`${prefix}_date_input`).value;
 
-    if (!projectNum)          { alert('工事番号を選択してください'); return; }
+    if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { alert('機械を選択してください'); return; }
     if (!dateVal)             { alert('開催日を入力してください'); return; }
 
@@ -2019,7 +2019,7 @@ async function submitSimpleInspection() {
     const location = getLocationValue('si_location_input');
     const note     = document.getElementById('si_note_input').value.trim();
 
-    if (!num)              { alert('工事番号を選択してください'); return; }
+    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { alert('機械を選択してください'); return; }
     if (!dateVal)          { alert('簡易検査日を入力してください'); return; }
 
@@ -2135,7 +2135,7 @@ async function submitInspection() {
     const location = getLocationValue('inspection_location_input');
     const note     = document.getElementById('inspection_note_input').value.trim();
 
-    if (!num)              { alert('工事番号を選択してください'); return; }
+    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { alert('機械を選択してください'); return; }
     if (!dateVal)          { alert('外観検査日を入力してください'); return; }
 
@@ -2251,7 +2251,7 @@ async function submitShippingMeeting() {
     const location = document.getElementById('sm_location_input').value.trim();
     const note     = document.getElementById('sm_note_input').value.trim();
 
-    if (!num)              { alert('工事番号を選択してください'); return; }
+    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { alert('機械を選択してください'); return; }
     if (!dateVal)          { alert('開催日を入力してください'); return; }
 
@@ -2398,7 +2398,7 @@ async function submitShipping() {
     const dateVal  = document.getElementById('shipping_date_input').value;
     const note     = document.getElementById('shipping_note_input').value.trim();
 
-    if (!num)              { alert('工事番号を選択してください'); return; }
+    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { alert('機械を選択してください'); return; }
     if (!dateVal)          { alert('確定出荷日を入力してください'); return; }
 
