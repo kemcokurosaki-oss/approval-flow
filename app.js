@@ -1654,7 +1654,7 @@ async function rejectStep(requestId, stepId) {
         closeDetailModal();
         await refreshAll();
         ui.send('SAVED');
-        alert('却下しました。申請者に通知されます。');
+        showToast('却下しました。申請者に通知されます。', 'success');
     } catch (e) {
         alert('処理に失敗しました: ' + e.message);
     }
