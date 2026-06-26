@@ -2163,7 +2163,7 @@ async function submitInspection() {
 
         closeInspectionModal();
         await refreshAll();
-        alert(`外観検査開催案内を送信しました。（${machines.length}機械）`);
+        showToast(`外観検査開催案内を送信しました。（${machines.length}機械）`, 'success');
     } catch (e) {
         showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
