@@ -937,7 +937,7 @@ function renderProgressCards() {
                 } else if (req.status === 'rejected') {
                     fcClass = 'fc-rejected'; icon = '✗';
                 } else {
-                    fcClass = 'fc-active'; icon = '▶';
+                    fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
                 }
 
                 const canApply = canApplyFlow(f.type);
