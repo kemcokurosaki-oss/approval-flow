@@ -89,7 +89,7 @@
             border: none;
             border-bottom: 1px solid #d8dde8;
             border-left: 4px solid transparent;
-            background: none;
+            background: #fff;
             cursor: pointer;
             font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
             font-size: 16px;
@@ -98,9 +98,9 @@
             text-align: left;
             transition: background 0.12s, border-color 0.12s, transform 0.08s;
         }
-        .prefix-btn:hover { background: #e8eef8; }
-        .prefix-btn:active { transform: translateY(1px); background: #1e3a5f; color: #fff; border-left-color: transparent; }
-        .prefix-btn.active { background: #1e3a5f; color: #fff; border-left-color: transparent; }
+        .prefix-btn:hover { background: #edf2fc; }
+        .prefix-btn:active { transform: translateY(1px); background: #e0eaf8; border-left-color: #1e3a5f; }
+        .prefix-btn.active { background: #fff; border-left-color: #1e3a5f; color: #1e3a5f; }
         /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
         .prefix-btn[data-prefix=""] { font-size: 14px; }
 
