@@ -1433,7 +1433,7 @@ async function saveReschedule(requestId) {
     const newDate = document.getElementById('detail_new_date').value;
     const newHour = document.getElementById('detail_new_time_hour').value;
     const newMin  = document.getElementById('detail_new_time_min').value;
-    if (!newDate) { alert('開催日を入力してください'); return; }
+    if (!newDate) { showToast('開催日を入力してください', 'error'); return; }
     const newTime = (newHour && newMin) ? `${newHour}:${newMin}` : null;
 
     const btn = document.getElementById('btn_save_reschedule');
@@ -1743,7 +1743,7 @@ async function showRecipientsStep(type) {
 
     if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (!dateVal)             { alert('開催日を入力してください'); return; }
+    if (!dateVal)             { showToast('開催日を入力してください', 'error'); return; }
 
     const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection' };
     const recipients = await _fetchFlowRecipients(projectNum, machines, flowTypeMap[prefix] || prefix);
@@ -2253,7 +2253,7 @@ async function submitShippingMeeting() {
 
     if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (!dateVal)          { alert('開催日を入力してください'); return; }
+    if (!dateVal)          { showToast('開催日を入力してください', 'error'); return; }
 
     const btn = document.getElementById('sm_submit_btn');
     btn.disabled = true; btn.textContent = '送信中...';
