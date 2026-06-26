@@ -1722,6 +1722,8 @@ async function resubmit(requestId) {
         showToast('再申請しました。承認者に通知されます。', 'success');
     } catch (e) {
         showToast('再申請に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
     }
 }
 
