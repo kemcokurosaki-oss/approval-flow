@@ -100,6 +100,8 @@
         .prefix-btn:hover { background: #f0f4fa; }
         .prefix-btn:active { transform: translateY(1px); background: #e8eef5; border-left-color: #1e3a5f; }
         .prefix-btn.active { background: #f0f4fa; border-left-color: #1e3a5f; }
+        /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
+        .prefix-btn[data-prefix=""] { font-size: 14px; }
 
         /* 再申請バッジ */
         .resubmit-badge {
