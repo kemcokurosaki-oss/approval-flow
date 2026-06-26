@@ -128,21 +128,21 @@
 
         /* ===== サイドタブ（閉じた状態） ===== */
         .side-tab {
-            width: 130px;
-            background: #f4f6fb;
+            width: 145px;
+            background: #dde4f0;
             display: flex;
             flex-direction: column;
             align-items: stretch;
             flex-shrink: 0;
-            border-left: 2px solid #dce1ec;
+            border-left: 2px solid #b8c8dc;
         }
         .side-tab-header {
             background: #1e3a5f;
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
             text-align: center;
-            padding: 9px 4px;
+            padding: 10px 4px;
             letter-spacing: 1.5px;
             border-bottom: 1px solid #152c4a;
             flex-shrink: 0;
@@ -151,18 +151,18 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 11px 10px;
+            padding: 13px 12px;
             cursor: pointer;
             color: #1e3a5f;
-            border-top: 1px solid #e8ecf4;
+            border-top: 1px solid #c8d4e8;
             gap: 6px;
             transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
             box-shadow: inset 0 -1px 0 rgba(0,0,0,0.04);
         }
-        .side-tab-row:hover { background: #e8ecf5; }
-        .side-tab-row:active { transform: translateY(2px); box-shadow: inset 0 0 0 rgba(0,0,0,0); background: #dce4f0; }
+        .side-tab-row:hover { background: #ccd6ea; }
+        .side-tab-row:active { transform: translateY(2px); box-shadow: inset 0 0 0 rgba(0,0,0,0); background: #bfcce0; }
         .side-tab-row-text {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             white-space: nowrap;
         }
