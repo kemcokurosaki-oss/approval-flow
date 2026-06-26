@@ -243,6 +243,18 @@ function applyRoleLayout(role) {
     appEl.classList.toggle('is-view-only', isViewOnly);
 }
 
+function switchSidebarTheme(value) {
+    const app = document.getElementById('app');
+    if (value) app.setAttribute('data-sidebar-theme', value);
+    else       app.removeAttribute('data-sidebar-theme');
+}
+
+function switchHeaderTheme(value) {
+    const app = document.getElementById('app');
+    if (value === 'white') app.setAttribute('data-header-theme', 'white');
+    else                   app.removeAttribute('data-header-theme');
+}
+
 async function switchDevRole(value) {
     const map    = DEV_ROLE_MAP[value];
     devRole      = map ? map.role       : '';
