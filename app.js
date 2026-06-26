@@ -1620,7 +1620,7 @@ async function approveStep(requestId, stepId, stepOrder) {
             : '全承認が完了しました。関係者に通知が送られます。';
         showToast(msg, 'success');
     } catch (e) {
-        alert('承認処理に失敗しました: ' + e.message);
+        showToast('承認処理に失敗しました: ' + e.message, 'error');
     }
 }
 
