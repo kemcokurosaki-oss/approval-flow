@@ -1627,7 +1627,7 @@ async function approveStep(requestId, stepId, stepOrder) {
 // ===== Reject =====
 async function rejectStep(requestId, stepId) {
     const comment = (document.getElementById('approval_comment')?.value || '').trim();
-    if (!comment) { alert('却下する場合はコメントを入力してください。'); return; }
+    if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
 
     try {
         await db.from('approval_steps').update({
