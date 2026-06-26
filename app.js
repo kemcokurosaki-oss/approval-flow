@@ -476,15 +476,20 @@ async function onProjectChange() {
         `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
     infoEl.style.display = 'block';
 
-    // この工番の機械一覧を取得（機械組立タスクがある機械のみ）
-    const { data: machineTasks } = await db.from('tasks')
-        .select('machine').eq('project_number', num).eq('text', '機械組立').not('machine', 'is', null);
-    const machines = [...new Set((machineTasks || []).map(t => t.machine).filter(Boolean))].sort();
+    showLoading('読み込み中...');
+    try {
+        // この工番の機械一覧を取得（機械組立タスクがある機械のみ）
+        const { data: machineTasks } = await db.from('tasks')
+            .select('machine').eq('project_number', num).eq('text', '機械組立').not('machine', 'is', null);
+        const machines = [...new Set((machineTasks || []).map(t => t.machine).filter(Boolean))].sort();
 
-    await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange');
-    machineGroup.style.display = 'block';
-    flowEl.style.display       = 'none';
-    detectedFlows = { inspection: false, test_run: false, shippingMeeting: false };
+        await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange');
+        machineGroup.style.display = 'block';
+        flowEl.style.display       = 'none';
+        detectedFlows = { inspection: false, test_run: false, shippingMeeting: false };
+    } finally {
+        hideLoading();
+    }
 }
 
 async function onMachineChange() {
