@@ -690,12 +690,13 @@ async function loadMineSide() {
     // 完了済み工番（projectsMapに存在しない）は非表示
     const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined);
 
-    // バッジ更新（side_badge_mine と side_mine_count 両方）
+    // バッジ更新（承認待ち・却下のみカウント、完了済みは除外）
+    const badgeCount = reqs.filter(r => ['submitted', 'in_review', 'rejected'].includes(r.status)).length;
     const badgeMine = document.getElementById('side_badge_mine');
     const countMine = document.getElementById('side_mine_count');
-    if (reqs.length > 0) {
-        if (badgeMine) { badgeMine.style.display = 'inline-flex'; badgeMine.textContent = reqs.length; }
-        if (countMine) { countMine.style.display = 'inline-flex'; countMine.textContent = reqs.length; }
+    if (badgeCount > 0) {
+        if (badgeMine) { badgeMine.style.display = 'inline-flex'; badgeMine.textContent = badgeCount; }
+        if (countMine) { countMine.style.display = 'inline-flex'; countMine.textContent = badgeCount; }
     } else {
         if (badgeMine) badgeMine.style.display = 'none';
         if (countMine) countMine.style.display = 'none';
