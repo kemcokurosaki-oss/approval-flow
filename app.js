@@ -1556,6 +1556,8 @@ async function cancelMeeting(requestId, flowType) {
         showToast(`${label}をキャンセルしました。関係者にキャンセル通知を送ります。`, 'success');
     } catch (e) {
         showToast('エラーが発生しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
     }
 }
 
