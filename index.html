@@ -39,6 +39,19 @@
                 <option value="quality">品質保証課</option>
             </select>
             <span id="dev_role_label" style="font-weight:bold;"></span>
+            <span style="margin-left:14px; padding-left:14px; border-left:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; gap:8px;">
+                🎨
+                <select id="sidebar_theme_select" onchange="switchSidebarTheme(this.value)">
+                    <option value="">サイドバー現在</option>
+                    <option value="a">A: ダーク（ネイビー）</option>
+                    <option value="b">B: 枠線ボタン</option>
+                    <option value="c">C: 境界線強調</option>
+                </select>
+                <select id="header_theme_select" onchange="switchHeaderTheme(this.value)">
+                    <option value="">ヘッダー現在（濃紺）</option>
+                    <option value="white">ヘッダー白</option>
+                </select>
+            </span>
         </div>
         <div class="header-row1">
             <h1>承認フロー管理</h1>
