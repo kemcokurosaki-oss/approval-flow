@@ -1198,6 +1198,7 @@ async function submitRequest() {
     } finally {
         btn.disabled    = false;
         btn.textContent = '申請する';
+        hideLoading();
     }
 }
 
