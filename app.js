@@ -1561,6 +1561,7 @@ async function approveStep(requestId, stepId, stepOrder) {
 
     // assembly は並列承認（どちらかが承認した時点で即完了）、test_run は直列
     const isParallel = currentDetailFlowType === 'assembly' || currentDetailFlowType === 'test_run';
+    showLoading('処理中...');
     let nextStatus;
     if (isParallel) {
         nextStatus = 'approved';
