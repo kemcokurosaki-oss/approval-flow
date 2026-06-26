@@ -271,7 +271,10 @@
         .side-card:hover { background: #edf0f7; border-color: #b0c4de; }
         .side-card-title { font-size: 16px; font-weight: bold; color: #1e3a5f; }
         .side-card-sub { font-size: 14px; color: #888; margin-top: 3px; }
-        .side-card-status { font-size: 14px; margin-top: 5px; }
+        .side-card-status { font-size: 14px; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .si-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: bold; flex-shrink: 0; }
+        .si-orange { background: #f39c12; color: #fff; }
+        .si-red    { background: #e74c3c; color: #fff; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action:hover { background: #fde8e8; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
