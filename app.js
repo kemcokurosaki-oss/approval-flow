@@ -1504,6 +1504,8 @@ async function saveReschedule(requestId) {
     } catch (e) {
         showToast('保存に失敗しました: ' + e.message, 'error');
         btn.disabled = false; btn.textContent = '保存して通知';
+    } finally {
+        hideLoading();
     }
 }
 
