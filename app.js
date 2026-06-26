@@ -2521,6 +2521,7 @@ async function submitShipping() {
     } finally {
         btn.disabled    = false;
         btn.textContent = '申請する';
+        hideLoading();
     }
 }
 
