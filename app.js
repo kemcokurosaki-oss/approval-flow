@@ -1459,6 +1459,7 @@ async function saveReschedule(requestId) {
 
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = true; btn.textContent = '保存中...';
+    showLoading('処理中...');
 
     try {
         await db.from('approval_requests').update({
