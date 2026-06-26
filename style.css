@@ -896,7 +896,7 @@
             max-width: 340px;
             line-height: 1.5;
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(-8px);
             transition: opacity 0.25s ease, transform 0.25s ease;
             pointer-events: auto;
             white-space: pre-line;
