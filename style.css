@@ -100,7 +100,7 @@
         }
         .prefix-btn:hover { background: #edf2fc; }
         .prefix-btn:active { transform: translateY(1px); background: #e0eaf8; border-left-color: #1e3a5f; }
-        .prefix-btn.active { background: #fff; border-left-color: #1e3a5f; color: #1e3a5f; }
+        .prefix-btn.active { background: #1e3a5f; border-left-color: transparent; color: #fff; }
         /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
         .prefix-btn[data-prefix=""] { font-size: 14px; }
 
