@@ -105,8 +105,9 @@
 
         /* 再申請バッジ */
         .resubmit-badge {
-            display: inline-block;
-            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 12px;
             padding: 1px 6px;
             border-radius: 3px;
             background: #fff3cd;
@@ -114,7 +115,7 @@
             border: 1px solid #ffc107;
             font-weight: bold;
             margin-left: 6px;
-            vertical-align: middle;
+            flex-shrink: 0;
         }
 
         /* サイドカード内客先名 */
