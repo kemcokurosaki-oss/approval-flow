@@ -198,7 +198,7 @@
         }
         .side-panel-header > span,
         .side-panel-close-btn {
-            margin-top: 8px;
+            margin-top: 0;
         }
         .side-panel-close-btn {
             background: none;
