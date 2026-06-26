@@ -2388,8 +2388,13 @@ async function onShippingProjectChange() {
     document.getElementById('shipping_project_detail').innerHTML =
         `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
     document.getElementById('shipping_project_info').style.display = 'block';
-    await _loadMachineCheckboxes(num, 'shipping_machine_list', 'onShippingMachineChange');
-    document.getElementById('shipping_machine_group').style.display = 'block';
+    showLoading('読み込み中...');
+    try {
+        await _loadMachineCheckboxes(num, 'shipping_machine_list', 'onShippingMachineChange');
+        document.getElementById('shipping_machine_group').style.display = 'block';
+    } finally {
+        hideLoading();
+    }
 }
 
 async function onShippingMachineChange() {
