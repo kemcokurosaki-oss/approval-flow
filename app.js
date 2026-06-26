@@ -1516,6 +1516,7 @@ async function cancelMeeting(requestId, flowType) {
         : '簡易検査';
     if (!confirm(`${label}の開催をキャンセルします。\n参加者にキャンセル通知を送ります。よろしいですか？`)) return;
 
+    showLoading('処理中...');
     try {
         await db.from('approval_requests')
             .update({ status: 'cancelled', updated_at: new Date().toISOString() })
