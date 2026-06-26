@@ -287,6 +287,7 @@ async function doLogin() {
 }
 
 async function doLogout() {
+    if (!confirm('ログアウトしますか？')) return;
     localStorage.removeItem('ap_access_token');
     localStorage.removeItem('ap_refresh_token');
     await db.auth.signOut();
