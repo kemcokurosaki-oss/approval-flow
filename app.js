@@ -1341,7 +1341,7 @@ async function openDetailModal(requestId) {
             ${['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type) && req.inspection_location
                 ? `<tr><td>場所</td><td>${esc(req.inspection_location)}</td></tr>` : ''}
             <tr><td>申請日</td><td>${fmtDate(req.created_at)}</td></tr>
-            <tr><td>状態</td><td><span class="status-badge ${cls}">${slbl}</span></td></tr>
+            <tr><td>状態</td><td><span class="status-badge ${cls}">${slbl}</span>${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}</td></tr>
         </table>
         ${req.note ? `<div style="background:#f8f9fa; border-radius:4px; padding:10px 12px; font-size:13px; color:#555; margin-bottom:14px;">${esc(req.note)}</div>` : ''}
         ${!['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type)
