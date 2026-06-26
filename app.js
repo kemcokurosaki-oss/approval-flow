@@ -1916,7 +1916,7 @@ function addExtraRecipient(prefix) {
     const emailEl = document.getElementById(`${prefix}_extra_email`);
     const name  = nameEl.value.trim();
     const email = emailEl.value.trim();
-    if (!email) { alert('メールアドレスを入力してください'); return; }
+    if (!email) { showToast('メールアドレスを入力してください', 'error'); return; }
 
     extraRecipients[prefix].push({ name: name || email, email });
     nameEl.value = ''; emailEl.value = '';
