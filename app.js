@@ -2046,7 +2046,7 @@ async function submitSimpleInspection() {
         await refreshAll();
         alert(`簡易検査開催案内を送信しました。（${machines.length}機械）`);
     } catch (e) {
-        alert('送信に失敗しました: ' + e.message);
+        showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
         btn.textContent = '案内を送信';
@@ -2165,7 +2165,7 @@ async function submitInspection() {
         await refreshAll();
         alert(`外観検査開催案内を送信しました。（${machines.length}機械）`);
     } catch (e) {
-        alert('送信に失敗しました: ' + e.message);
+        showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
         btn.textContent = '案内を送信';
@@ -2283,7 +2283,7 @@ async function submitShippingMeeting() {
         await refreshAll();
         alert(`出荷確認会議開催案内を送信しました。（${machines.length}機械）`);
     } catch (e) {
-        alert('送信に失敗しました: ' + e.message);
+        showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled = false; btn.textContent = '案内を送信';
     }
