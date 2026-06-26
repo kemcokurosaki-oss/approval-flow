@@ -878,7 +878,7 @@
         /* ===== Toast Notifications ===== */
         #toast_container {
             position: fixed;
-            top: 105px;
+            top: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 9999;
