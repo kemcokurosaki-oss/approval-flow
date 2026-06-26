@@ -1618,7 +1618,7 @@ async function approveStep(requestId, stepId, stepOrder) {
         const msg = nextStatus === 'in_review'
             ? `承認しました。${nextLabel}に通知されます。`
             : '全承認が完了しました。関係者に通知が送られます。';
-        alert(msg);
+        showToast(msg, 'success');
     } catch (e) {
         alert('承認処理に失敗しました: ' + e.message);
     }
