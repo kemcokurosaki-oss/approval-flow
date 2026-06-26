@@ -2008,8 +2008,13 @@ async function onSiProjectChange() {
     document.getElementById('si_project_detail').innerHTML =
         `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
     document.getElementById('si_project_info').style.display = 'block';
-    await _loadMachineCheckboxes(num, 'si_machine_list', 'onSiMachineChange');
-    document.getElementById('si_machine_group').style.display = 'block';
+    showLoading('読み込み中...');
+    try {
+        await _loadMachineCheckboxes(num, 'si_machine_list', 'onSiMachineChange');
+        document.getElementById('si_machine_group').style.display = 'block';
+    } finally {
+        hideLoading();
+    }
 }
 
 async function onSiMachineChange() {
