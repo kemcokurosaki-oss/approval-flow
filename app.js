@@ -2360,6 +2360,7 @@ async function submitShippingMeeting() {
         showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled = false; btn.textContent = '案内を送信';
+        hideLoading();
     }
 }
 
