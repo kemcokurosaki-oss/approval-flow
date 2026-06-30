@@ -1008,7 +1008,10 @@ async function openFlowModalPreset(el) {
 
     if (flowType === 'assembly' || flowType === 'test_run') {
         openSubmitModal(flowType);
-        document.getElementById('submit_project').value = projectNum;
+        currentProjectNum = projectNum;
+        const p = projectsMap[projectNum] || {};
+        const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+        document.getElementById('submit_project_display').textContent = projectNum + (label ? `　${label}` : '');
         await onProjectChange();
         const cb = findCb('submit_machine_list');
         if (cb) { cb.checked = true; await onMachineChange(); }
