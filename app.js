@@ -2537,11 +2537,11 @@ async function onShippingMachineChange() {
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
     const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[num] || 'なし';
 
-    document.getElementById('shipping_approver_list').innerHTML =
-        `<div><span style="color:#888;font-size:11px;width:40px;display:inline-block;">設計</span>${esc(sekkeiOwner)}</div>` +
-        `<div><span style="color:#888;font-size:11px;width:40px;display:inline-block;">組立</span>${esc(kumitateOwner)}</div>` +
-        `<div><span style="color:#888;font-size:11px;width:40px;display:inline-block;">操業</span>${esc(shiuntenOwner)}</div>` +
-        `<div><span style="color:#888;font-size:11px;width:40px;display:inline-block;">営業</span>${esc(salesOwner)}</div>`;
+    document.getElementById('shipping_approver_list').innerHTML = [
+        ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner]
+    ].map(([role, name]) =>
+        `<div class="flow-info-item"><span style="width:32px;font-size:11px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
+    ).join('');
     document.getElementById('shipping_approver_box').style.display = 'block';
 
     // フロー状況
