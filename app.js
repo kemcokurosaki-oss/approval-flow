@@ -25,8 +25,8 @@ function showLoading(label = '処理中...') {
     const el = document.getElementById('app-loading-overlay');
     if (!el) return;
     document.getElementById('app-loading-label').textContent = label;
-    // 200ms以内に終わる処理はオーバーレイを表示しない（短時間フラッシュ防止）
-    _loadingTimer = setTimeout(() => { el.classList.add('visible'); }, 200);
+    // 500ms以内に終わる処理はオーバーレイを表示しない（短時間フラッシュ防止）
+    _loadingTimer = setTimeout(() => { el.classList.add('visible'); }, 500);
 }
 function hideLoading() {
     if (_loadingTimer) { clearTimeout(_loadingTimer); _loadingTimer = null; }
