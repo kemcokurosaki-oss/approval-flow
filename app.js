@@ -1119,27 +1119,26 @@ function openSubmitModal(flowType = 'assembly') {
     // 承認者選択グループは非表示（assembly は課長・部長両方に通知するため選択不要）
     document.getElementById('submit_approver_group').style.display = 'none';
 
-    // チェックシートリセット（組立フローのみ）
+    // チェックシートリセット
+    sheetChecks = {};
+    pendingItems = [];
     if (flowType === 'assembly') {
-        sheetChecks = {};
-        pendingItems = [];
-        document.querySelectorAll('#submit_step2 .sheet-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('#submit_step2 .sheet-note').forEach(n => { n.value = ''; });
+        document.querySelectorAll('#sheet_modal .sheet-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#sheet_modal .sheet-note').forEach(n => { n.value = ''; });
         renderPendingItems();
+        const indicator = document.getElementById('sheet_entry_indicator');
+        if (indicator) indicator.style.display = 'none';
     }
 
-    // Step 1を表示、Step 2を非表示
-    document.getElementById('submit_step1').style.display = '';
-    document.getElementById('submit_step2').style.display = 'none';
-
-    // 試運転はStep 2なし → フッターボタンを「申請する」に
-    const step1NextBtn = document.querySelector('#submit_step1 .modal-footer .btn-primary');
-    if (step1NextBtn) {
-        if (flowType === 'assembly') {
-            step1NextBtn.textContent = '次へ（自主点検シート）→';
-        } else {
-            step1NextBtn.textContent = '申請する';
-        }
+    // フッターボタン切り替え（組立: 次へ→、試運転: 申請する）
+    const btnGoSheet = document.getElementById('btn_go_sheet');
+    const btnSubmit  = document.getElementById('submit_btn');
+    if (flowType === 'assembly') {
+        if (btnGoSheet) btnGoSheet.style.display = '';
+        if (btnSubmit)  btnSubmit.style.display  = 'none';
+    } else {
+        if (btnGoSheet) btnGoSheet.style.display = 'none';
+        if (btnSubmit)  btnSubmit.style.display  = '';
     }
 
     document.getElementById('submit_modal').classList.add('open');
@@ -1157,15 +1156,34 @@ function goToSheetStep() {
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)           { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    // 試運転は後でシート追加予定（現時点では直接申請）
     if (currentFlowType !== 'assembly') { submitRequest(); return; }
-    document.getElementById('submit_step1').style.display = 'none';
-    document.getElementById('submit_step2').style.display = '';
+    // sheet_modal を全画面モーダルとして開く
+    document.getElementById('submit_modal').classList.remove('open');
+    document.getElementById('sheet_modal').classList.add('open');
 }
 
-function backToFormStep() {
-    document.getElementById('submit_step2').style.display = 'none';
-    document.getElementById('submit_step1').style.display = '';
+function backFromSheetModal() {
+    document.getElementById('sheet_modal').classList.remove('open');
+    document.getElementById('submit_modal').classList.add('open');
+}
+
+function finishSheetEntry() {
+    // 入力済みバッジを更新
+    const checkedCount = Object.values(sheetChecks).filter(v => v).length;
+    const indicator = document.getElementById('sheet_entry_indicator');
+    if (indicator) indicator.style.display = checkedCount > 0 ? '' : 'none';
+    // sheet_modal を閉じて申請画面へ戻り、申請ボタンを表示
+    document.getElementById('sheet_modal').classList.remove('open');
+    document.getElementById('submit_modal').classList.add('open');
+    const btnGoSheet = document.getElementById('btn_go_sheet');
+    const btnSubmit  = document.getElementById('submit_btn');
+    if (btnGoSheet) btnGoSheet.style.display = 'none';
+    if (btnSubmit)  btnSubmit.style.display  = '';
+}
+
+function reopenSheetModal() {
+    document.getElementById('submit_modal').classList.remove('open');
+    document.getElementById('sheet_modal').classList.add('open');
 }
 
 // ===== チェックシート 項目選択 =====
@@ -2452,20 +2470,6 @@ function openShippingModal() {
     document.getElementById('shipping_flow_box').style.display      = 'none';
     document.getElementById('shipping_date_input').value  = '';
     document.getElementById('shipping_note_input').value  = '';
-
-    if (!shippingProjectsLoaded) {
-        const sel  = document.getElementById('shipping_project');
-        // 工場出荷タスクがある工番を表示
-        Object.keys(projectsMap).sort().forEach(num => {
-            const opt = document.createElement('option');
-            opt.value = num;
-            const p   = projectsMap[num];
-            const lbl = [p.customer_name, p.project_details].filter(Boolean).join('　');
-            opt.textContent = num + (lbl ? `　${lbl}` : '');
-            sel.appendChild(opt);
-        });
-        shippingProjectsLoaded = true;
-    }
 
     document.getElementById('shipping_modal').classList.add('open');
 }
