@@ -633,6 +633,14 @@
         .flow-info-upcoming{ color: #bbb; }
         .flow-info-note    { font-size: 12px; color: #999; margin-left: 4px; }
 
+        /* 工事情報内の「客先」「工事名」などの小ラベル */
+        .info-tag-sm {
+            font-size: 11px;
+            color: #999;
+            font-weight: bold;
+            margin-right: 2px;
+        }
+
         /* ===== Radio ===== */
         .radio-group { display: flex; gap: 24px; margin-top: 4px; }
         .radio-group label {
