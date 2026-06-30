@@ -488,7 +488,7 @@ async function onProjectChange() {
 }
 
 async function onMachineChange() {
-    const num      = document.getElementById('submit_project').value;
+    const num      = currentProjectNum;
     const machines = getSelectedMachines('submit_machine_list');
     const flowEl   = document.getElementById('flow_detect_group');
 
