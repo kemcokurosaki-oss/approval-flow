@@ -2384,8 +2384,8 @@ async function onSmProjectChange() {
     document.getElementById('sm_flow_box').style.display      = 'none';
     if (!num) return;
     const p = projectsMap[num] || {};
-    document.getElementById('sm_project_detail').innerHTML =
-        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
+    document.getElementById('sm_customer_display').textContent = p.customer_name || '—';
+    document.getElementById('sm_project_name_display').textContent = p.project_details || '—';
     document.getElementById('sm_project_info').style.display = 'block';
     showLoading('読み込み中...');
     try {
