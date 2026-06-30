@@ -1021,7 +1021,7 @@ async function openFlowModalPreset(el) {
         currentSiProjectNum = projectNum;
         const pSi = projectsMap[projectNum] || {};
         const lblSi = [pSi.customer_name, pSi.project_details].filter(Boolean).join('　');
-        document.getElementById('si_project_display').textContent = projectNum + (lblSi ? `　${lblSi}` : '');
+        document.getElementById('si_project_display').textContent = projectNum;
         await onSiProjectChange();
         const cb = findCb('si_machine_list');
         if (cb) { cb.checked = true; await onSiMachineChange(); }
