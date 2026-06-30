@@ -2342,18 +2342,6 @@ function openShippingMeetingModal() {
     document.getElementById('sm_location_input').value = '';
     document.getElementById('sm_note_input').value     = '';
 
-    if (!smProjectsLoaded) {
-        const sel = document.getElementById('sm_project');
-        Object.keys(projectsMap).filter(num => shippingMeetingProjectNums.has(num)).forEach(num => {
-            const opt = document.createElement('option');
-            opt.value = num;
-            const p = projectsMap[num];
-            const lbl = [p.customer_name, p.project_details].filter(Boolean).join('　');
-            opt.textContent = num + (lbl ? `　${lbl}` : '');
-            sel.appendChild(opt);
-        });
-        smProjectsLoaded = true;
-    }
     document.getElementById('shipping_meeting_modal').classList.add('open');
 }
 
