@@ -20,13 +20,16 @@ function showToast(message, type = 'success') {
 }
 
 // ===== Loading Overlay =====
+let _loadingTimer = null;
 function showLoading(label = '処理中...') {
     const el = document.getElementById('app-loading-overlay');
     if (!el) return;
     document.getElementById('app-loading-label').textContent = label;
-    el.classList.add('visible');
+    // 200ms以内に終わる処理はオーバーレイを表示しない（短時間フラッシュ防止）
+    _loadingTimer = setTimeout(() => { el.classList.add('visible'); }, 200);
 }
 function hideLoading() {
+    if (_loadingTimer) { clearTimeout(_loadingTimer); _loadingTimer = null; }
     const el = document.getElementById('app-loading-overlay');
     if (el) el.classList.remove('visible');
 }
