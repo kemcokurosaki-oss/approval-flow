@@ -1223,6 +1223,8 @@ async function submitRequest() {
                 .select('text').eq('project_number', projectNum).eq('machine', machineNum);
             const mNames = (mTasks || []).map(t => t.text);
 
+            const sheetData = currentFlowType === 'assembly' ? collectSheetData() : null;
+
             const { data: req, error: e1 } = await db.from('approval_requests').insert({
                 project_number: projectNum,
                 machine_name:   machineNum,
@@ -1231,7 +1233,8 @@ async function submitRequest() {
                 requester_id:   currentUser.id,
                 note:           note || null,
                 test_run:       mNames.includes('試運転'),
-                has_inspection: mNames.includes('外観検査')
+                has_inspection: mNames.includes('外観検査'),
+                sheet_data:     sheetData
             }).select().single();
             if (e1) throw e1;
 
