@@ -169,6 +169,12 @@
                         <button type="button" id="btn_approver_director" class="btn approver-btn" onclick="selectApprover('assembly_director')">組立部長（課長不在時）</button>
                     </div>
                 </div>
+                <div id="sheet_entry_indicator" style="display:none;" class="form-group">
+                    <div class="sheet-done-badge">
+                        <span class="sheet-done-text">✓ 自主点検シート入力済み</span>
+                        <button type="button" class="btn-link-sm" onclick="reopenSheetModal()">変更する</button>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>コメント（任意）</label>
                     <textarea id="submit_note" placeholder="特記事項があれば記入してください"></textarea>
@@ -176,7 +182,8 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeSubmitModal()">キャンセル</button>
-                <button class="btn btn-primary" onclick="goToSheetStep()">次へ（自主点検シート）→</button>
+                <button class="btn btn-primary" id="btn_go_sheet" onclick="goToSheetStep()">次へ（自主点検シート）→</button>
+                <button class="btn btn-primary" id="submit_btn" style="display:none;" onclick="submitRequest()">申請する</button>
             </div>
         </div>
 
