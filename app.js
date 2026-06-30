@@ -2275,7 +2275,7 @@ async function onInspectionMachineChange() {
 }
 
 async function submitInspection() {
-    const num      = document.getElementById('inspection_project').value;
+    const num      = currentInspectionProjectNum;
     const machines = getSelectedMachines('inspection_machine_list');
     const dateVal  = document.getElementById('inspection_date_input').value;
     const _th = document.getElementById('inspection_time_hour').value;
@@ -2284,7 +2284,7 @@ async function submitInspection() {
     const location = getLocationValue('inspection_location_input');
     const note     = document.getElementById('inspection_note_input').value.trim();
 
-    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
+    if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('外観検査日を入力してください', 'error'); return; }
 
