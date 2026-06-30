@@ -1087,7 +1087,8 @@ function selectApprover(role) {
 
 function openSubmitModal(flowType = 'assembly') {
     currentFlowType = flowType;
-    document.getElementById('submit_project').value = '';
+    currentProjectNum = '';
+    document.getElementById('submit_project_display').textContent = '';
     document.getElementById('submit_project_info').style.display = 'none';
     document.getElementById('submit_machine_group').style.display = 'none';
     document.getElementById('submit_machine_list').innerHTML = '';
