@@ -2409,9 +2409,11 @@ async function onSmMachineChange() {
         { type: 'assembly',          label: '組立完了通知' },
         { type: 'test_run',          label: '試運転完了通知' },
         { type: 'simple_inspection', label: '簡易検査開催案内' }
-    ].map(f => `<div style="padding:2px 0; color:${doneFlows.has(f.type) ? '#27ae60' : '#bbb'};">
-        ${doneFlows.has(f.type) ? '✅' : '──'}　${esc(f.label)}　${doneFlows.has(f.type) ? '承認済み' : ''}
-    </div>`).join('') + `<div style="padding:2px 0; color:#1e3a5f; font-weight:bold;">▶　出荷確認会議開催案内（今回）</div>`;
+    ].map(f => `<div class="flow-info-item">
+        <span class="flow-info-icon">${doneFlows.has(f.type) ? '✅' : '──'}</span>
+        <span class="${doneFlows.has(f.type) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(f.label)}</span>
+        ${doneFlows.has(f.type) ? '<span class="flow-info-note">承認済み</span>' : ''}
+    </div>`).join('') + `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 出荷確認会議開催案内（今回）</span></div>`;
     document.getElementById('sm_flow_box').style.display = 'block';
 }
 
