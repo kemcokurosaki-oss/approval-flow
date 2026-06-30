@@ -555,39 +555,83 @@
         }
 
         /* ===== Form ===== */
-        .form-group { margin-bottom: 14px; }
+        .form-group { margin-bottom: 12px; }
         .form-group label {
             display: block;
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
             font-weight: bold;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
         .form-group select,
         .form-group input[type="text"],
+        .form-group input[type="date"],
         .form-group textarea {
             width: 100%;
             padding: 8px 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #d0d4dc;
             border-radius: 4px;
-            font-size: 15px;
-            transition: border-color 0.15s;
+            font-size: 14px;
+            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .form-group select:focus,
         .form-group input[type="text"]:focus,
-        .form-group textarea:focus { border-color: #1e3a5f; outline: none; }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .form-hint { font-size: 13px; color: #aaa; margin-top: 3px; }
-        .project-info-box {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 8px 10px;
-            font-size: 15px;
-            color: #333;
+        .form-group input[type="date"]:focus,
+        .form-group textarea:focus {
+            border-color: #1e3a5f;
+            box-shadow: 0 0 0 2px rgba(30,58,95,0.10);
+            outline: none;
         }
+        .form-group textarea { resize: vertical; min-height: 64px; }
+        .form-hint { font-size: 12px; color: #bbb; margin-top: 4px; }
+        .project-info-box {
+            background: #f4f6fb;
+            border: 1px solid #dce1ec;
+            border-radius: 4px;
+            padding: 9px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.55;
+        }
+
+        /* ===== フロー情報ボックス（申請モーダル内） ===== */
+        .flow-info-box {
+            background: #f4f6fb;
+            border: 1px solid #dce1ec;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .flow-info-section { padding: 3px 0; }
+        .flow-info-section + .flow-info-section {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e4e8f0;
+        }
+        .flow-info-tag {
+            font-size: 11px;
+            color: #999;
+            font-weight: bold;
+            letter-spacing: 0.3px;
+            margin-bottom: 5px;
+        }
+        .flow-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 0;
+        }
+        .flow-info-icon { width: 22px; text-align: center; flex-shrink: 0; color: #bbb; font-size: 12px; }
+        .flow-info-current { color: #1e3a5f; font-weight: bold; font-size: 14px; }
+        .flow-info-done    { color: #27ae60; }
+        .flow-info-upcoming{ color: #bbb; }
+        .flow-info-note    { font-size: 12px; color: #999; margin-left: 4px; }
 
         /* ===== Radio ===== */
         .radio-group { display: flex; gap: 24px; margin-top: 4px; }
