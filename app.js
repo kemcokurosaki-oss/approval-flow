@@ -2369,7 +2369,7 @@ async function onSmProjectChange() {
 }
 
 async function onSmMachineChange() {
-    const num      = document.getElementById('sm_project').value;
+    const num      = currentSmProjectNum;
     const machines = getSelectedMachines('sm_machine_list');
     if (machines.length === 0) { document.getElementById('sm_flow_box').style.display = 'none'; return; }
     const machine = machines[0];
