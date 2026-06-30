@@ -1039,7 +1039,7 @@ async function openFlowModalPreset(el) {
         currentSmProjectNum = projectNum;
         const pSm = projectsMap[projectNum] || {};
         const lblSm = [pSm.customer_name, pSm.project_details].filter(Boolean).join('　');
-        document.getElementById('sm_project_display').textContent = projectNum + (lblSm ? `　${lblSm}` : '');
+        document.getElementById('sm_project_display').textContent = projectNum;
         await onSmProjectChange();
         const cb = findCb('sm_machine_list');
         if (cb) { cb.checked = true; await onSmMachineChange(); }
