@@ -2290,8 +2290,12 @@ async function onInspectionMachineChange() {
     }
     const assemblyDone = doneFlows.has('assembly');
     document.getElementById('inspection_flow_list').innerHTML =
-        `<div style="padding:2px 0; color:${assemblyDone ? '#27ae60' : '#e74c3c'};">${assemblyDone ? '✅' : '⚠'}　組立完了通知　${assemblyDone ? '承認済み' : '未承認'}</div>
-        <div style="padding:2px 0; color:#1e3a5f; font-weight:bold;">▶　外観検査開催案内（今回）</div>`;
+        `<div class="flow-info-item">
+            <span class="flow-info-icon">${assemblyDone ? '✅' : '⚠'}</span>
+            <span class="${assemblyDone ? 'flow-info-done' : ''}" style="${assemblyDone ? '' : 'color:#e74c3c;'}">組立完了通知</span>
+            <span class="flow-info-note">${assemblyDone ? '承認済み' : '未承認'}</span>
+        </div>
+        <div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 外観検査開催案内（今回）</span></div>`;
     document.getElementById('inspection_flow_box').style.display = 'block';
 }
 
