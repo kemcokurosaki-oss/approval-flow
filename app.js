@@ -2227,22 +2227,6 @@ function openInspectionModal() {
     buildLocationCheckboxes('inspection_location_input');
     document.getElementById('inspection_note_input').value = '';
 
-    // 外観検査タスクがある工番のみプルダウンに表示
-    if (!inspectionProjectsLoaded) {
-        const sel = document.getElementById('inspection_project');
-        Object.keys(projectsMap)
-            .filter(num => inspectionProjectNums.has(num))
-            .forEach(num => {
-                const opt = document.createElement('option');
-                opt.value = num;
-                const p   = projectsMap[num];
-                const lbl = [p.customer_name, p.project_details].filter(Boolean).join('　');
-                opt.textContent = num + (lbl ? `　${lbl}` : '');
-                sel.appendChild(opt);
-            });
-        inspectionProjectsLoaded = true;
-    }
-
     document.getElementById('inspection_modal').classList.add('open');
 }
 
