@@ -1030,7 +1030,7 @@ async function openFlowModalPreset(el) {
         currentInspectionProjectNum = projectNum;
         const pIn = projectsMap[projectNum] || {};
         const lblIn = [pIn.customer_name, pIn.project_details].filter(Boolean).join('　');
-        document.getElementById('inspection_project_display').textContent = projectNum + (lblIn ? `　${lblIn}` : '');
+        document.getElementById('inspection_project_display').textContent = projectNum;
         await onInspectionProjectChange();
         const cb = findCb('inspection_machine_list');
         if (cb) { cb.checked = true; await onInspectionMachineChange(); }
