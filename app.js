@@ -2256,7 +2256,7 @@ async function onInspectionProjectChange() {
 }
 
 async function onInspectionMachineChange() {
-    const num      = document.getElementById('inspection_project').value;
+    const num      = currentInspectionProjectNum;
     const machines = getSelectedMachines('inspection_machine_list');
     if (machines.length === 0) { document.getElementById('inspection_flow_box').style.display = 'none'; return; }
     const machine = machines[0]; // フロー状況は1台目で代表
