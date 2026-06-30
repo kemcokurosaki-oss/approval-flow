@@ -2556,12 +2556,12 @@ async function onShippingMachineChange() {
 }
 
 async function submitShipping() {
-    const num      = document.getElementById('shipping_project').value;
+    const num      = currentShippingProjectNum;
     const machines = getSelectedMachines('shipping_machine_list');
     const dateVal  = document.getElementById('shipping_date_input').value;
     const note     = document.getElementById('shipping_note_input').value.trim();
 
-    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
+    if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('確定出荷日を入力してください', 'error'); return; }
 
