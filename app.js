@@ -2121,7 +2121,7 @@ function closeSimpleInspectionModal() {
 }
 
 async function onSiProjectChange() {
-    const num = document.getElementById('si_project').value;
+    const num = currentSiProjectNum;
     document.getElementById('si_project_info').style.display  = 'none';
     document.getElementById('si_machine_group').style.display = 'none';
     document.getElementById('si_flow_box').style.display      = 'none';
