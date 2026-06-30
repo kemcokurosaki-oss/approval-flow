@@ -2095,10 +2095,9 @@ function renderExtraList(prefix) {
 }
 
 // ===== 簡易検査開催案内 =====
-let siProjectsLoaded = false;
-
 function openSimpleInspectionModal() {
-    document.getElementById('si_project').value = '';
+    currentSiProjectNum = '';
+    document.getElementById('si_project_display').textContent = '';
     document.getElementById('si_project_info').style.display  = 'none';
     document.getElementById('si_machine_group').style.display = 'none';
     document.getElementById('si_machine_list').innerHTML      = '';
