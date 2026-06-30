@@ -2209,10 +2209,9 @@ async function submitSimpleInspection() {
 }
 
 // ===== 外観検査開催案内 =====
-let inspectionProjectsLoaded = false;
-
 function openInspectionModal() {
-    document.getElementById('inspection_project').value = '';
+    currentInspectionProjectNum = '';
+    document.getElementById('inspection_project_display').textContent = '';
     document.getElementById('inspection_project_info').style.display  = 'none';
     document.getElementById('inspection_machine_group').style.display = 'none';
     document.getElementById('inspection_machine_list').innerHTML      = '';
