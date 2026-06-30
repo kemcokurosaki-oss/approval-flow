@@ -2391,7 +2391,7 @@ async function onSmMachineChange() {
 }
 
 async function submitShippingMeeting() {
-    const num      = document.getElementById('sm_project').value;
+    const num      = currentSmProjectNum;
     const machines = getSelectedMachines('sm_machine_list');
     const dateVal  = document.getElementById('sm_date_input').value;
     const _th = document.getElementById('sm_time_hour').value;
@@ -2400,7 +2400,7 @@ async function submitShippingMeeting() {
     const location = document.getElementById('sm_location_input').value.trim();
     const note     = document.getElementById('sm_note_input').value.trim();
 
-    if (!num)              { showToast('工事番号を選択してください', 'error'); return; }
+    if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('開催日を入力してください', 'error'); return; }
 
