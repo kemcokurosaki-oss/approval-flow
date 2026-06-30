@@ -1084,6 +1084,8 @@ function toggleSideHalf(which) {
 // ===== Submit Modal =====
 let currentFlowType = 'assembly';
 let selectedApproverRole = 'assembly_manager';
+let sheetChecks = {};
+let pendingItems = [];
 
 function selectApprover(role) {
     selectedApproverRole = role;
@@ -1102,11 +1104,24 @@ function openSubmitModal(flowType = 'assembly') {
     detectedFlows = { inspection: false, test_run: false, shippingMeeting: false };
 
     // モーダルタイトルをフロー種別で切り替え
-    const titleEl = document.querySelector('#submit_modal .modal-header h2');
-    titleEl.textContent = flowType === 'test_run' ? '試運転完了通知 — 申請' : '組立完了通知 — 申請';
+    document.getElementById('submit_modal_title').textContent =
+        flowType === 'test_run' ? '試運転完了通知 — 申請' : '組立完了通知 — 申請';
 
     // 承認者選択グループは非表示（assembly は課長・部長両方に通知するため選択不要）
     document.getElementById('submit_approver_group').style.display = 'none';
+
+    // チェックシートリセット（組立フローのみ）
+    if (flowType === 'assembly') {
+        sheetChecks = {};
+        pendingItems = [];
+        document.querySelectorAll('#submit_step2 .sheet-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#submit_step2 .sheet-note').forEach(n => { n.value = ''; });
+        renderPendingItems();
+    }
+
+    // Step 1を表示、Step 2を非表示
+    document.getElementById('submit_step1').style.display = '';
+    document.getElementById('submit_step2').style.display = 'none';
 
     document.getElementById('submit_modal').classList.add('open');
     ui.send('OPEN_SUBMIT');
@@ -1115,6 +1130,74 @@ function openSubmitModal(flowType = 'assembly') {
 function closeSubmitModal() {
     document.getElementById('submit_modal').classList.remove('open');
     ui.send('CLOSE');
+}
+
+// ===== チェックシート ステップ切替 =====
+function goToSheetStep() {
+    const projectNum = document.getElementById('submit_project').value;
+    const machineNums = getSelectedMachines('submit_machine_list');
+    if (!projectNum)           { showToast('工事番号を選択してください', 'error'); return; }
+    if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    document.getElementById('submit_step1').style.display = 'none';
+    document.getElementById('submit_step2').style.display = '';
+}
+
+function backToFormStep() {
+    document.getElementById('submit_step2').style.display = 'none';
+    document.getElementById('submit_step1').style.display = '';
+}
+
+// ===== チェックシート 項目選択 =====
+function setSheetCheck(itemId, val, btn) {
+    const already = sheetChecks[itemId] === val;
+    sheetChecks[itemId] = already ? null : val;
+    const siblings = btn.parentElement.querySelectorAll('.sheet-btn');
+    siblings.forEach(b => b.classList.remove('active'));
+    if (!already) btn.classList.add('active');
+}
+
+// ===== ペンディングリスト =====
+function addPendingItem() {
+    pendingItems.push({ machine: '', content: '', due: '' });
+    renderPendingItems();
+}
+
+function removePendingItem(idx) {
+    pendingItems.splice(idx, 1);
+    renderPendingItems();
+}
+
+function renderPendingItems() {
+    const c = document.getElementById('pending_items_container');
+    if (!c) return;
+    if (pendingItems.length === 0) {
+        c.innerHTML = '<div style="color:#999;font-size:12px;padding:4px 0;">ペンディング項目はありません</div>';
+        return;
+    }
+    c.innerHTML = pendingItems.map((item, i) => `
+        <div class="pending-row">
+            <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                   oninput="pendingItems[${i}].machine=this.value">
+            <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                   oninput="pendingItems[${i}].content=this.value">
+            <input type="date" class="pending-due" value="${esc(item.due)}"
+                   onchange="pendingItems[${i}].due=this.value">
+            <button type="button" class="btn-xs btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+        </div>
+    `).join('');
+}
+
+// ===== チェックシートデータ収集 =====
+function collectSheetData() {
+    const checks = {};
+    Object.entries(sheetChecks).forEach(([k, v]) => {
+        if (v) {
+            const noteEl = document.getElementById('sn_' + k);
+            checks[k] = { result: v, note: noteEl ? noteEl.value.trim() : '' };
+        }
+    });
+    const pending = pendingItems.filter(p => p.content || p.machine);
+    return { check_items: checks, pending_items: pending };
 }
 
 async function submitRequest() {
