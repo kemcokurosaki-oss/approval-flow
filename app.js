@@ -399,6 +399,7 @@ async function bootApp(session) {
 
     // データ読み込み後にレイアウトを適用（タブ・ボタンが確実に正しい状態になる）
     applyRoleLayout(profile.role);
+    setupSheetChannel();
     ui.send('READY');
 }
 
@@ -695,7 +696,7 @@ async function loadMineSide() {
     const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined);
 
     // バッジ更新（承認待ち・却下のみカウント、完了済みは除外）
-    const badgeCount = reqs.filter(r => ['submitted', 'in_review', 'rejected'].includes(r.status)).length;
+    const badgeCount = reqs.filter(r => ['submitted', 'in_review', 'rejected', 'draft'].includes(r.status)).length;
     const badgeMine = document.getElementById('side_badge_mine');
     const countMine = document.getElementById('side_mine_count');
     if (badgeCount > 0) {
@@ -720,7 +721,9 @@ async function loadMineSide() {
 
         const isNotifFlow = ['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type);
         let statusText;
-        if (req.status === 'submitted' || req.status === 'in_review') {
+        if (req.status === 'draft') {
+            statusText = '<span class="si-badge si-gray">✏</span> 入力中';
+        } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
             statusText = isNotifFlow ? '<span class="si-badge si-green">✓</span> 案内済み' : '<span class="si-badge si-green">✓</span> 完了';
@@ -733,9 +736,13 @@ async function loadMineSide() {
         const resubmitBadge = req.is_resubmit ? '<span class="resubmit-badge">再申請</span>' : '';
         const cardClass = (req.status === 'submitted' || req.status === 'in_review') ? 'is-waiting'
                         : req.status === 'rejected' ? 'is-rejected'
+                        : req.status === 'draft' ? 'is-draft'
                         : '';
+        const cardClick = req.status === 'draft'
+            ? `openDraftInSubmitModal('${req.id}')`
+            : `openDetailModal('${req.id}')`;
         return `
-        <div class="side-card ${cardClass}" onclick="openDetailModal('${req.id}')">
+        <div class="side-card ${cardClass}" onclick="${cardClick}">
             <div class="side-card-title">${esc(pNum)}${machineLabel ? machineLabel : ''}${pInfo.customer_name ? `<span class="side-card-customer">${esc(pInfo.customer_name)}</span>` : ''}</div>
             <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}${resubmitBadge}</div>
             <div class="side-card-status">${statusText}</div>
@@ -1098,6 +1105,7 @@ let currentShippingProjectNum = '';
 let selectedApproverRole = 'assembly_manager';
 let sheetChecks = {};
 let pendingItems = [];
+let currentDraftId = null;
 
 function selectApprover(role) {
     selectedApproverRole = role;
@@ -1154,40 +1162,154 @@ function closeSubmitModal() {
     ui.send('CLOSE');
 }
 
-// ===== チェックシート ステップ切替 =====
-function goToSheetStep() {
+// ===== 自主点検シート（別タブ） =====
+async function goToSheetStep() {
     const projectNum = currentProjectNum;
     const machineNums = getSelectedMachines('submit_machine_list');
-    if (!projectNum)           { showToast('工事番号を選択してください', 'error'); return; }
+    if (!projectNum)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (currentFlowType !== 'assembly') { submitRequest(); return; }
-    // sheet_modal を全画面モーダルとして開く
-    document.getElementById('submit_modal').classList.remove('open');
-    document.getElementById('sheet_modal').classList.add('open');
+    if (machineNums.length > 1) {
+        showToast('点検シートは1台ずつ申請してください', 'error');
+        return;
+    }
+
+    showLoading('下書きを保存中...');
+    try {
+        const machine = machineNums[0];
+        const note = document.getElementById('submit_note').value.trim();
+
+        // 既存の下書きを確認して再利用
+        const { data: existing } = await db.from('approval_requests')
+            .select('id')
+            .eq('project_number', projectNum)
+            .eq('machine_name', machine)
+            .eq('flow_type', 'assembly')
+            .eq('status', 'draft')
+            .eq('requester_id', currentUser.id)
+            .maybeSingle();
+
+        if (existing) {
+            currentDraftId = existing.id;
+            await db.from('approval_requests')
+                .update({ note: note || null })
+                .eq('id', existing.id);
+        } else {
+            const { data: newDraft, error } = await db.from('approval_requests').insert({
+                project_number: projectNum,
+                machine_name:   machine,
+                flow_type:      'assembly',
+                status:         'draft',
+                requester_id:   currentUser.id,
+                note:           note || null
+            }).select().single();
+            if (error) throw error;
+            currentDraftId = newDraft.id;
+        }
+
+        window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
+        await loadMineSide();
+    } catch (e) {
+        showToast('下書きの保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
-function backFromSheetModal() {
-    document.getElementById('sheet_modal').classList.remove('open');
-    document.getElementById('submit_modal').classList.add('open');
+// 「変更する」ボタン: 既存の下書きをsheet.htmlで再度開く
+function reopenSheetTab() {
+    if (!currentDraftId) { showToast('下書きIDが不明です。再度「次へ」を押してください', 'error'); return; }
+    window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
 }
 
-function finishSheetEntry() {
-    // 入力済みバッジを更新
-    const checkedCount = Object.values(sheetChecks).filter(v => v).length;
-    const indicator = document.getElementById('sheet_entry_indicator');
-    if (indicator) indicator.style.display = checkedCount > 0 ? '' : 'none';
-    // sheet_modal を閉じて申請画面へ戻り、申請ボタンを表示
-    document.getElementById('sheet_modal').classList.remove('open');
-    document.getElementById('submit_modal').classList.add('open');
-    const btnGoSheet = document.getElementById('btn_go_sheet');
-    const btnSubmit  = document.getElementById('submit_btn');
-    if (btnGoSheet) btnGoSheet.style.display = 'none';
-    if (btnSubmit)  btnSubmit.style.display  = '';
+// サイドバーの下書きカードをクリックして申請モーダルを復元
+async function openDraftInSubmitModal(draftId) {
+    showLoading('読み込み中...');
+    try {
+        const { data: draft } = await db.from('approval_requests')
+            .select('*')
+            .eq('id', draftId)
+            .single();
+        if (!draft) { showToast('下書きが見つかりません', 'error'); return; }
+
+        currentDraftId   = draftId;
+        currentFlowType  = draft.flow_type;
+        currentProjectNum = draft.project_number;
+
+        document.getElementById('submit_modal_title').textContent = '組立完了通知 — 申請';
+        document.getElementById('submit_approver_group').style.display = 'none';
+
+        const p = projectsMap[draft.project_number] || {};
+        const infoLabel = [p.customer_name, p.project_details].filter(Boolean).join('　');
+        document.getElementById('submit_project_display').textContent =
+            draft.project_number + (infoLabel ? `　${infoLabel}` : '');
+        document.getElementById('submit_project_detail').innerHTML =
+            `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        document.getElementById('submit_project_info').style.display = 'block';
+        document.getElementById('submit_note').value = draft.note || '';
+        document.getElementById('submit_machine_group').style.display = 'block';
+        document.getElementById('flow_detect_group').style.display = 'none';
+
+        await _loadMachineCheckboxes(draft.project_number, 'submit_machine_list', 'onMachineChange');
+        const cb = [...document.querySelectorAll('#submit_machine_list input[type="checkbox"]')]
+            .find(c => c.value === draft.machine_name);
+        if (cb) { cb.checked = true; await onMachineChange(); }
+
+        const btnGoSheet = document.getElementById('btn_go_sheet');
+        const btnSubmit  = document.getElementById('submit_btn');
+        const indicator  = document.getElementById('sheet_entry_indicator');
+
+        if (draft.sheet_data) {
+            sheetChecks  = draft.sheet_data.check_items  || {};
+            pendingItems = draft.sheet_data.pending_items || [];
+            if (indicator) indicator.style.display = '';
+            if (btnGoSheet) btnGoSheet.style.display = 'none';
+            if (btnSubmit)  btnSubmit.style.display  = '';
+        } else {
+            sheetChecks  = {};
+            pendingItems = [];
+            if (indicator) indicator.style.display = 'none';
+            if (btnGoSheet) { btnGoSheet.style.display = ''; btnGoSheet.textContent = '次へ（自主点検シートを入力する）→'; }
+            if (btnSubmit)  btnSubmit.style.display  = 'none';
+        }
+
+        document.getElementById('submit_modal').classList.add('open');
+    } catch (e) {
+        showToast('読み込みに失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
-function reopenSheetModal() {
-    document.getElementById('submit_modal').classList.remove('open');
-    document.getElementById('sheet_modal').classList.add('open');
+// BroadcastChannel: sheet.htmlから「完了」を受け取る
+function setupSheetChannel() {
+    const ch = new BroadcastChannel('approval_sheet');
+    ch.addEventListener('message', async (event) => {
+        const { type, draftId } = event.data;
+        if (type !== 'sheet_complete') return;
+        await loadMineSide();
+        const submitModal = document.getElementById('submit_modal');
+        if (submitModal.classList.contains('open') && currentDraftId === draftId) {
+            // 申請モーダルが開いていて同じ下書きなら入力済みバッジを更新
+            const { data } = await db.from('approval_requests')
+                .select('sheet_data').eq('id', draftId).single();
+            if (data?.sheet_data) {
+                sheetChecks  = data.sheet_data.check_items  || {};
+                pendingItems = data.sheet_data.pending_items || [];
+                const indicator = document.getElementById('sheet_entry_indicator');
+                if (indicator) indicator.style.display = '';
+                const btnGoSheet = document.getElementById('btn_go_sheet');
+                const btnSubmit  = document.getElementById('submit_btn');
+                if (btnGoSheet) btnGoSheet.style.display = 'none';
+                if (btnSubmit)  btnSubmit.style.display  = '';
+            }
+            showToast('点検シートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
+        } else {
+            // モーダルが閉じていれば自動で開く
+            await openDraftInSubmitModal(draftId);
+            showToast('点検シートの入力が完了しました。内容を確認して申請してください。', 'success');
+        }
+    });
 }
 
 // ===== チェックシート 項目選択 =====
@@ -1266,19 +1388,29 @@ async function submitRequest() {
                 .select('text').eq('project_number', projectNum).eq('machine', machineNum);
             const mNames = (mTasks || []).map(t => t.text);
 
-            const sheetData = currentFlowType === 'assembly' ? collectSheetData() : null;
-
-            const { data: req, error: e1 } = await db.from('approval_requests').insert({
-                project_number: projectNum,
-                machine_name:   machineNum,
-                flow_type:      currentFlowType,
-                status:         'submitted',
-                requester_id:   currentUser.id,
-                note:           note || null,
-                test_run:       mNames.includes('試運転'),
-                has_inspection: mNames.includes('外観検査'),
-                sheet_data:     sheetData
-            }).select().single();
+            let req, e1;
+            if (currentDraftId && machineNum === machineNums[0]) {
+                // 下書きを更新して提出（sheet_data は sheet.html で保存済み）
+                ({ data: req, error: e1 } = await db.from('approval_requests').update({
+                    status:         'submitted',
+                    note:           note || null,
+                    test_run:       mNames.includes('試運転'),
+                    has_inspection: mNames.includes('外観検査')
+                }).eq('id', currentDraftId).select().single());
+            } else {
+                const sheetData = currentFlowType === 'assembly' ? collectSheetData() : null;
+                ({ data: req, error: e1 } = await db.from('approval_requests').insert({
+                    project_number: projectNum,
+                    machine_name:   machineNum,
+                    flow_type:      currentFlowType,
+                    status:         'submitted',
+                    requester_id:   currentUser.id,
+                    note:           note || null,
+                    test_run:       mNames.includes('試運転'),
+                    has_inspection: mNames.includes('外観検査'),
+                    sheet_data:     sheetData
+                }).select().single());
+            }
             if (e1) throw e1;
 
             // 承認ステップ設定
@@ -1325,6 +1457,7 @@ async function submitRequest() {
             }
         }
 
+        currentDraftId = null;
         closeSubmitModal();
         await refreshAll();
         ui.send('SAVED');
