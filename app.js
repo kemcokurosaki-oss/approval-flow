@@ -1048,7 +1048,7 @@ async function openFlowModalPreset(el) {
         currentShippingProjectNum = projectNum;
         const pSh = projectsMap[projectNum] || {};
         const lblSh = [pSh.customer_name, pSh.project_details].filter(Boolean).join('　');
-        document.getElementById('shipping_project_display').textContent = projectNum + (lblSh ? `　${lblSh}` : '');
+        document.getElementById('shipping_project_display').textContent = projectNum;
         await onShippingProjectChange();
         const cb = findCb('shipping_machine_list');
         if (cb) { cb.checked = true; await onShippingMachineChange(); }
