@@ -2500,7 +2500,7 @@ async function onShippingProjectChange() {
 }
 
 async function onShippingMachineChange() {
-    const num      = document.getElementById('shipping_project').value;
+    const num      = currentShippingProjectNum;
     const machines = getSelectedMachines('shipping_machine_list');
     document.getElementById('shipping_approver_box').style.display = 'none';
     document.getElementById('shipping_flow_box').style.display     = 'none';
