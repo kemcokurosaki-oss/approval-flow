@@ -447,18 +447,6 @@ async function loadProjects() {
         }
     });
 
-    // 工程表のサイドバーと同じ並び順（辞書順）でプルダウンを作成
-    const sel  = document.getElementById('submit_project');
-    const nums = Object.keys(projectsMap).sort();
-
-    nums.forEach(num => {
-        const opt   = document.createElement('option');
-        opt.value   = num;
-        const p     = projectsMap[num];
-        const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-        opt.textContent = num + (label ? `　${label}` : '');
-        sel.appendChild(opt);
-    });
 }
 
 let detectedFlows = { inspection: false, test_run: false, shippingMeeting: false }; // 自動検出結果
