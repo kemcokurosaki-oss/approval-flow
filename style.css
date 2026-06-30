@@ -277,6 +277,9 @@
         .si-orange { background: #f39c12; color: #fff; }
         .si-red    { background: #e74c3c; color: #fff; }
         .si-green  { background: #27ae60; color: #fff; }
+        .si-gray   { background: #7f8c8d; color: #fff; }
+        .side-card.is-draft { border-left: 3px solid #7f8c8d; background: #f8f9fa; }
+        .side-card.is-draft:hover { background: #eef0f2; }
         .side-card.is-pending-action { border-left: 3px solid #e74c3c; background: #fff8f7; }
         .side-card.is-pending-action:hover { background: #fde8e8; }
         .side-card.is-pending-action .side-card-title { color: #c0392b; }
