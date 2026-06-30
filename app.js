@@ -2141,7 +2141,7 @@ async function onSiProjectChange() {
 }
 
 async function onSiMachineChange() {
-    const num      = document.getElementById('si_project').value;
+    const num      = currentSiProjectNum;
     const machines = getSelectedMachines('si_machine_list');
     if (machines.length === 0) { document.getElementById('si_flow_box').style.display = 'none'; return; }
     const machine   = machines[0];
