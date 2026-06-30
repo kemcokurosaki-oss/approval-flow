@@ -2113,19 +2113,6 @@ function openSimpleInspectionModal() {
     buildLocationCheckboxes('si_location_input');
     document.getElementById('si_note_input').value = '';
 
-    if (!siProjectsLoaded) {
-        const sel = document.getElementById('si_project');
-        Object.keys(projectsMap).filter(num => simpleInspectionProjectNums.has(num)).forEach(num => {
-            const opt = document.createElement('option');
-            opt.value = num;
-            const p   = projectsMap[num];
-            const lbl = [p.customer_name, p.project_details].filter(Boolean).join('　');
-            opt.textContent = num + (lbl ? `　${lbl}` : '');
-            sel.appendChild(opt);
-        });
-        siProjectsLoaded = true;
-    }
-
     document.getElementById('simple_inspection_modal').classList.add('open');
 }
 
