@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>組立完了自主点検シート</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f4f6fb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ===== Header ===== */
+        .sheet-header {
+            background: #1e3a5f;
+            color: #fff;
+            padding: 11px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .sheet-header h1 { font-size: 16px; font-weight: bold; }
+        .sheet-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.75);
+            margin-top: 3px;
+        }
+        .save-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            white-space: nowrap;
+        }
+        .save-status.saving { color: #ffd700; }
+        .save-status.error  { color: #ff7675; }
+
+        /* ===== Content ===== */
+        .sheet-content {
+            flex: 1;
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 18px 16px 90px;
+        }
+        .sheet-legend {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 14px;
+            padding: 9px 14px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e0e5f0;
+        }
+
+        /* ===== Groups ===== */
+        .sheet-group {
+            margin-bottom: 12px;
+            border: 1px solid #dde3ee;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .sheet-group-label {
+            background: #eef2f8;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a5f;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sheet-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .sheet-no {
+            font-size: 12px;
+            color: #bbb;
+            width: 22px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .sheet-text {
+            font-size: 14px;
+            flex: 1;
+            line-height: 1.5;
+        }
+        .sheet-btns {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .sheet-btn {
+            width: 40px;
+            height: 34px;
+            border: 1.5px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            color: #555;
+            padding: 0;
+            transition: background 0.1s, color 0.1s, border-color 0.1s;
+        }
+        .sheet-btn-wide { width: 64px; font-size: 13px; }
+        .sheet-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+        .sheet-btn.active-maru  { background: #2a7a3a; color: #fff; border-color: #2a7a3a; }
+        .sheet-btn.active-batu  { background: #c0392b; color: #fff; border-color: #c0392b; }
+        .sheet-btn.active-dash  { background: #888;    color: #fff; border-color: #888;    }
+        .sheet-btn.active-wide1 { background: #2a7a3a; color: #fff; border-color: #2a7a3a; }
+        .sheet-btn.active-wide2 { background: #c0392b; color: #fff; border-color: #c0392b; }
+        .sheet-note {
+            font-size: 13px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            width: 130px;
+            flex-shrink: 0;
+            color: #555;
+            height: 32px;
+        }
+        .sheet-note:focus { outline: none; border-color: #1e3a5f; }
+
+        /* ===== Pending ===== */
+        .pending-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .pending-machine { width: 110px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .pending-content { flex: 1; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .pending-due     { width: 135px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-danger-xs {
+            padding: 4px 10px; font-size: 12px;
+            background: #fff; border: 1px solid #e74c3c; color: #e74c3c;
+            border-radius: 4px; cursor: pointer; flex-shrink: 0;
+        }
+        .btn-danger-xs:hover { background: #e74c3c; color: #fff; }
+        .pending-empty { color: #999; font-size: 13px; padding: 8px 14px; }
+
+        /* ===== Footer ===== */
+        .sheet-footer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #fff;
+            border-top: 1px solid #dde3ee;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+        .btn {
+            padding: 9px 22px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .btn-secondary { background: #f0f2f6; color: #555; border: 1px solid #ccc; }
+        .btn-secondary:hover { background: #e4e8f0; }
+        .btn-primary { background: #1e3a5f; color: #fff; }
+        .btn-primary:hover { background: #2a4f7f; }
+        .btn:disabled { opacity: 0.6; cursor: default; }
+
+        /* ===== Loading / Error ===== */
+        .loading-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #1e3a5f;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .loading-overlay.visible { display: flex; }
+        .error-screen {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+            font-size: 15px;
+            line-height: 2;
+        }
+
+        /* ===== Add button in group header ===== */
+        .btn-add-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #aab;
+            background: #fff;
+            color: #1e3a5f;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn-add-sm:hover { background: #eef2f8; }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay visible" id="loading">
+    <div>読み込み中...</div>
+</div>
+
+<header class="sheet-header">
+    <div>
+        <h1>組立完了自主点検シート</h1>
+        <div class="sheet-info" id="sheet_info">—</div>
+    </div>
+    <div class="save-status" id="save_status">保存済み ✓</div>
+</header>
+
+<main class="sheet-content" id="sheet_content">
+    <div class="sheet-legend">
+        ○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　<strong>入力内容は自動保存されます</strong>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">組立作業確認</div>
+        <div class="sheet-item"><span class="sheet-no">1</span><span class="sheet-text">Iマークは全てのボルトに付けられているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('1','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('1','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('1','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_1" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">2</span><span class="sheet-text">必要な場所に油を塗布しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('2','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('2','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('2','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_2" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">3</span><span class="sheet-text">必要な場所にグリスを充填しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('3','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('3','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('3','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_3" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">4</span><span class="sheet-text">グリスニップル口の向きは適切か？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('4','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('4','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('4','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_4" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">干渉チェック</div>
+        <div class="sheet-item"><span class="sheet-no">5</span><span class="sheet-text">グリスニップルが回転軸・ハンドル等に干渉しないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('5','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('5','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('5','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_5" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">6</span><span class="sheet-text">可動部と固定部の干渉箇所はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('6','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('6','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('6','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_6" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">動作確認</div>
+        <div class="sheet-item"><span class="sheet-no">7</span><span class="sheet-text">ハンドルはスムーズに回るか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('7','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('7','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('7','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_7" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">8</span><span class="sheet-text">その他回転物はスムーズに回るか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('8','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('8','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('8','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_8" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">9</span><span class="sheet-text">モーターは問題なく作動するか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('9','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('9','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('9','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_9" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">10</span><span class="sheet-text">空圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('10','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('10','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('10','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_10" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">11</span><span class="sheet-text">油圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('11','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('11','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('11','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_11" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">12</span><span class="sheet-text">クーラント経路をエアーで確認したか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('12','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('12','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('12','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_12" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">数値調整</div>
+        <div class="sheet-item"><span class="sheet-no">13</span><span class="sheet-text">デジタルカウンターの数値はあっているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('13','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('13','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('13','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_13" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">14</span><span class="sheet-text">通り芯は公差内に収まっていたか？（ミルの場合）</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('14','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('14','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('14','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_14" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">15</span><span class="sheet-text">組図によるストロークチェックはしたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('15','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('15','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('15','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_15" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">16</span><span class="sheet-text">組図に指定のある各種設定値は公差内に収まっているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('16','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('16','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('16','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_16" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">外観チェック</div>
+        <div class="sheet-item"><span class="sheet-no">18</span><span class="sheet-text">塗装色は社内製作仕様書と一致しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('18','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('18','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('18','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_18" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">19</span><span class="sheet-text">塗装が必要なすべての場所に塗装しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('19','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('19','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('19','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_19" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">20</span><span class="sheet-text">塗装が剥げている箇所はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('20','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('20','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('20','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_20" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">21</span><span class="sheet-text">キズ・凹みなどないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('21','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('21','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('21','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_21" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">22</span><span class="sheet-text">錆はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('22','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('22','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('22','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_22" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">据付用</div>
+        <div class="sheet-item"><span class="sheet-no">23</span><span class="sheet-text">据付水平基準マークはあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('23','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('23','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('23','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_23" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">24</span><span class="sheet-text">据付センター基準線は入っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('24','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('24','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('24','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_24" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">25</span><span class="sheet-text">据付面（機械底面）に塗装していないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('25','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('25','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('25','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_25" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">シール・銘板</div>
+        <div class="sheet-item"><span class="sheet-no">26</span><span class="sheet-text">グリスシールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('26','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('26','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('26','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_26" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">27</span><span class="sheet-text">回転シールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('27','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('27','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('27','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_27" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">28</span><span class="sheet-text">社銘板・オーダー銘板は付いているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('28','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('28','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('28','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_28" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">29</span><span class="sheet-text">空圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('29','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('29','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('29','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_29" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">30</span><span class="sheet-text">油圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('30','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('30','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('30','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_30" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">31</span><span class="sheet-text">センサーの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('31','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('31','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('31','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_31" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">32</span><span class="sheet-text">ベンディングリストは取り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('32','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('32','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('32','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_32" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">外観検査準備</div>
+        <div class="sheet-item"><span class="sheet-no">33</span><span class="sheet-text">検査のため、電源・エアー電源・油圧源を切っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('33','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('33','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('33','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_33" placeholder="備考" oninput="scheduleSave()"></div>
+        <div class="sheet-item"><span class="sheet-no">34</span><span class="sheet-text">組立で完了シールは？</span><div class="sheet-btns"><button class="sheet-btn sheet-btn-wide" onclick="setCheck('34','添付済',this,'wide1')">添付済</button><button class="sheet-btn sheet-btn-wide" onclick="setCheck('34','未添付',this,'wide2')">未添付</button></div><input class="sheet-note" id="sn_34" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">出荷準備</div>
+        <div class="sheet-item"><span class="sheet-no">36</span><span class="sheet-text">単品納入品リストの部品は揃っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('36','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('36','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('36','―',this,'dash')">―</button></div><input class="sheet-note" id="sn_36" placeholder="備考" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">
+            ペンディング項目リスト（任意）
+            <button class="btn-add-sm" onclick="addPendingItem()">＋ 追加</button>
+        </div>
+        <div id="pending_container">
+            <div class="pending-empty">ペンディング項目はありません</div>
+        </div>
+    </div>
+</main>
+
+<footer class="sheet-footer">
+    <button class="btn btn-secondary" onclick="suspendSheet()">中断（データは保存済み）</button>
+    <button class="btn btn-primary" id="btn_complete" onclick="completeSheet()">入力完了 → 申請画面へ戻る</button>
+</footer>
+
+<script>
+const S_URL = "https://dgekjzkrybrswsxlcbvh.supabase.co";
+const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU";
+
+const db = supabase.createClient(S_URL, S_KEY);
+const broadcastChannel = new BroadcastChannel('approval_sheet');
+
+let draftId = null;
+let checks = {};
+let pendingItems = [];
+let saveTimer = null;
+let isSaving = false;
+
+function esc(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+async function init() {
+    const params = new URLSearchParams(location.search);
+    draftId = params.get('draft_id');
+    if (!draftId) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">URLパラメータが不正です。<br>申請画面の「次へ（自主点検シート）」ボタンから開き直してください。</div>';
+        return;
+    }
+
+    const { data: draft, error } = await db
+        .from('approval_requests')
+        .select('project_number, machine_name, sheet_data')
+        .eq('id', draftId)
+        .single();
+
+    if (error || !draft) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">下書きデータが見つかりません。<br>申請画面から開き直してください。</div>';
+        return;
+    }
+
+    document.getElementById('sheet_info').textContent =
+        `工事番号: ${draft.project_number}　機械: ${draft.machine_name}`;
+    document.title = `点検シート - ${draft.project_number} ${draft.machine_name}`;
+
+    if (draft.sheet_data) {
+        checks = draft.sheet_data.check_items || {};
+        pendingItems = draft.sheet_data.pending_items || [];
+        restoreChecks();
+        renderPendingItems();
+    }
+
+    document.getElementById('loading').classList.remove('visible');
+}
+
+// 既存データを画面に反映
+function restoreChecks() {
+    const valToClass = {
+        '○': 'maru', '×': 'batu', '―': 'dash',
+        '添付済': 'wide1', '未添付': 'wide2'
+    };
+    Object.entries(checks).forEach(([itemId, data]) => {
+        if (!data || !data.result) return;
+        const cls = valToClass[data.result];
+        if (!cls) return;
+
+        document.querySelectorAll(`.sheet-btn[onclick*="'${itemId}',"]`).forEach(btn => {
+            if (btn.getAttribute('onclick').includes(`'${data.result}'`)) {
+                btn.classList.add(`active-${cls}`);
+            }
+        });
+
+        const noteEl = document.getElementById(`sn_${itemId}`);
+        if (noteEl && data.note) noteEl.value = data.note;
+    });
+}
+
+function setCheck(itemId, val, btn, cls) {
+    const already = checks[itemId]?.result === val;
+
+    // 同グループの全ボタンのactiveを解除
+    btn.parentElement.querySelectorAll('.sheet-btn').forEach(b => {
+        b.className = b.className.replace(/\bactive-\w+\b/g, '').trim();
+    });
+
+    if (already) {
+        checks[itemId] = null;
+    } else {
+        checks[itemId] = { result: val, note: document.getElementById(`sn_${itemId}`)?.value || '' };
+        btn.classList.add(`active-${cls}`);
+    }
+
+    scheduleSave();
+}
+
+function scheduleSave() {
+    setSaveStatus('saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 1200);
+}
+
+function setSaveStatus(state) {
+    const el = document.getElementById('save_status');
+    if (state === 'saving') { el.textContent = '保存中...';  el.className = 'save-status saving'; }
+    else if (state === 'ok') { el.textContent = '保存済み ✓'; el.className = 'save-status'; }
+    else                     { el.textContent = '保存エラー ✕'; el.className = 'save-status error'; }
+}
+
+async function saveNow() {
+    if (isSaving || !draftId) return;
+    isSaving = true;
+
+    // 最新の備考値をchecksに反映
+    Object.keys(checks).forEach(itemId => {
+        if (checks[itemId]) {
+            const noteEl = document.getElementById(`sn_${itemId}`);
+            if (noteEl) checks[itemId].note = noteEl.value.trim();
+        }
+    });
+
+    const sheetData = { check_items: checks, pending_items: pendingItems };
+    const { error } = await db.from('approval_requests')
+        .update({ sheet_data: sheetData })
+        .eq('id', draftId);
+
+    isSaving = false;
+    setSaveStatus(error ? 'error' : 'ok');
+}
+
+function addPendingItem() {
+    pendingItems.push({ machine: '', content: '', due: '' });
+    renderPendingItems();
+    scheduleSave();
+}
+
+function removePendingItem(idx) {
+    pendingItems.splice(idx, 1);
+    renderPendingItems();
+    scheduleSave();
+}
+
+function renderPendingItems() {
+    const c = document.getElementById('pending_container');
+    if (!c) return;
+    if (pendingItems.length === 0) {
+        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        return;
+    }
+    c.innerHTML = pendingItems.map((item, i) => `
+        <div class="pending-row">
+            <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                   oninput="pendingItems[${i}].machine=this.value; scheduleSave()">
+            <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                   oninput="pendingItems[${i}].content=this.value; scheduleSave()">
+            <input type="date" class="pending-due" value="${esc(item.due)}"
+                   onchange="pendingItems[${i}].due=this.value; scheduleSave()">
+            <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+        </div>
+    `).join('');
+}
+
+// 中断: 保存してタブを閉じる（申請画面には通知しない）
+function suspendSheet() {
+    clearTimeout(saveTimer);
+    saveNow().then(() => window.close());
+}
+
+// 完了: 保存 → 申請画面に通知 → タブを閉じる
+async function completeSheet() {
+    const btn = document.getElementById('btn_complete');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+    clearTimeout(saveTimer);
+    await saveNow();
+    broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
+    window.close();
+}
+
+init();
+</script>
+</body>
+</html>
