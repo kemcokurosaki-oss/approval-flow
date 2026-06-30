@@ -2479,7 +2479,7 @@ function closeShippingModal() {
 }
 
 async function onShippingProjectChange() {
-    const num = document.getElementById('shipping_project').value;
+    const num = currentShippingProjectNum;
     document.getElementById('shipping_project_info').style.display  = 'none';
     document.getElementById('shipping_machine_group').style.display = 'none';
     document.getElementById('shipping_approver_box').style.display  = 'none';
