@@ -1206,9 +1206,9 @@ function collectSheetData() {
 }
 
 async function submitRequest() {
-    const projectNum = document.getElementById('submit_project').value;
+    const projectNum = currentProjectNum;
     const machineNums = getSelectedMachines('submit_machine_list');
-    if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
+    if (!projectNum)          { showToast('工事番号が設定されていません', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
 
     const note    = document.getElementById('submit_note').value.trim();
