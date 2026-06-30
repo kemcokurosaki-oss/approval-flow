@@ -2235,7 +2235,7 @@ function closeInspectionModal() {
 }
 
 async function onInspectionProjectChange() {
-    const num = document.getElementById('inspection_project').value;
+    const num = currentInspectionProjectNum;
     document.getElementById('inspection_project_info').style.display  = 'none';
     document.getElementById('inspection_machine_group').style.display = 'none';
     document.getElementById('inspection_flow_box').style.display      = 'none';
