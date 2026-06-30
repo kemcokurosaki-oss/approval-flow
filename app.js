@@ -1075,6 +1075,10 @@ function toggleSideHalf(which) {
 // ===== Submit Modal =====
 let currentFlowType = 'assembly';
 let currentProjectNum = '';
+let currentSiProjectNum = '';
+let currentInspectionProjectNum = '';
+let currentSmProjectNum = '';
+let currentShippingProjectNum = '';
 let selectedApproverRole = 'assembly_manager';
 let sheetChecks = {};
 let pendingItems = [];
