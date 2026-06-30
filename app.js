@@ -1017,25 +1017,37 @@ async function openFlowModalPreset(el) {
         if (cb) { cb.checked = true; await onMachineChange(); }
     } else if (flowType === 'simple_inspection') {
         openSimpleInspectionModal();
-        document.getElementById('si_project').value = projectNum;
+        currentSiProjectNum = projectNum;
+        const pSi = projectsMap[projectNum] || {};
+        const lblSi = [pSi.customer_name, pSi.project_details].filter(Boolean).join('　');
+        document.getElementById('si_project_display').textContent = projectNum + (lblSi ? `　${lblSi}` : '');
         await onSiProjectChange();
         const cb = findCb('si_machine_list');
         if (cb) { cb.checked = true; await onSiMachineChange(); }
     } else if (flowType === 'inspection') {
         openInspectionModal();
-        document.getElementById('inspection_project').value = projectNum;
+        currentInspectionProjectNum = projectNum;
+        const pIn = projectsMap[projectNum] || {};
+        const lblIn = [pIn.customer_name, pIn.project_details].filter(Boolean).join('　');
+        document.getElementById('inspection_project_display').textContent = projectNum + (lblIn ? `　${lblIn}` : '');
         await onInspectionProjectChange();
         const cb = findCb('inspection_machine_list');
         if (cb) { cb.checked = true; await onInspectionMachineChange(); }
     } else if (flowType === 'shipping_meeting') {
         openShippingMeetingModal();
-        document.getElementById('sm_project').value = projectNum;
+        currentSmProjectNum = projectNum;
+        const pSm = projectsMap[projectNum] || {};
+        const lblSm = [pSm.customer_name, pSm.project_details].filter(Boolean).join('　');
+        document.getElementById('sm_project_display').textContent = projectNum + (lblSm ? `　${lblSm}` : '');
         await onSmProjectChange();
         const cb = findCb('sm_machine_list');
         if (cb) { cb.checked = true; await onSmMachineChange(); }
     } else if (flowType === 'shipping') {
         openShippingModal();
-        document.getElementById('shipping_project').value = projectNum;
+        currentShippingProjectNum = projectNum;
+        const pSh = projectsMap[projectNum] || {};
+        const lblSh = [pSh.customer_name, pSh.project_details].filter(Boolean).join('　');
+        document.getElementById('shipping_project_display').textContent = projectNum + (lblSh ? `　${lblSh}` : '');
         await onShippingProjectChange();
         const cb = findCb('shipping_machine_list');
         if (cb) { cb.checked = true; await onShippingMachineChange(); }
