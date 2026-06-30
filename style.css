@@ -1153,3 +1153,81 @@
             flex-shrink: 0;
         }
         .btn-danger-xs:hover { background: #e74c3c; color: #fff; }
+
+        /* ===== Sheet Modal (全画面) ===== */
+        .modal-sheet {
+            width: 720px;
+            max-width: 96vw;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-sheet .modal-body {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-sheet .sheet-body {
+            padding: 16px 22px;
+        }
+        .modal-sheet .sheet-legend {
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+        .modal-sheet .sheet-group-label {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+        .modal-sheet .sheet-item {
+            padding: 7px 12px;
+            gap: 8px;
+        }
+        .modal-sheet .sheet-no {
+            font-size: 13px;
+            width: 24px;
+        }
+        .modal-sheet .sheet-text {
+            font-size: 14px;
+        }
+        .modal-sheet .sheet-btn {
+            width: 36px;
+            height: 32px;
+            font-size: 15px;
+        }
+        .modal-sheet .sheet-btn-wide {
+            width: 64px;
+            font-size: 13px;
+        }
+        .modal-sheet .sheet-note {
+            font-size: 13px;
+            width: 120px;
+            padding: 4px 8px;
+        }
+        .modal-sheet .pending-machine { width: 110px; font-size: 13px; }
+        .modal-sheet .pending-content { font-size: 13px; }
+        .modal-sheet .pending-due     { width: 130px; font-size: 13px; }
+
+        /* 入力済みバッジ */
+        .sheet-done-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eafaf0;
+            border: 1px solid #a8d5b5;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+        .sheet-done-text {
+            font-size: 13px;
+            color: #2a7a3a;
+            font-weight: bold;
+        }
+        .btn-link-sm {
+            background: none;
+            border: none;
+            color: #1e3a5f;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .btn-link-sm:hover { color: #2980b9; }
