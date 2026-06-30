@@ -2499,8 +2499,8 @@ async function onShippingProjectChange() {
     document.getElementById('shipping_flow_box').style.display      = 'none';
     if (!num) return;
     const p = projectsMap[num] || {};
-    document.getElementById('shipping_project_detail').innerHTML =
-        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
+    document.getElementById('shipping_customer_display').textContent = p.customer_name || '—';
+    document.getElementById('shipping_project_name_display').textContent = p.project_details || '—';
     document.getElementById('shipping_project_info').style.display = 'block';
     showLoading('読み込み中...');
     try {
