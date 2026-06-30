@@ -2324,10 +2324,9 @@ async function submitInspection() {
 }
 
 // ===== フロー5: 出荷確認会議開催案内 =====
-let smProjectsLoaded = false;
-
 function openShippingMeetingModal() {
-    document.getElementById('sm_project').value      = '';
+    currentSmProjectNum = '';
+    document.getElementById('sm_project_display').textContent = '';
     document.getElementById('sm_project_info').style.display  = 'none';
     document.getElementById('sm_machine_group').style.display = 'none';
     document.getElementById('sm_machine_list').innerHTML      = '';
