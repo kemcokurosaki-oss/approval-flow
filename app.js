@@ -473,7 +473,7 @@ async function onProjectChange() {
     // 工事情報表示
     const p = projectsMap[num] || {};
     document.getElementById('submit_project_detail').innerHTML =
-        `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
     infoEl.style.display = 'block';
 
     showLoading('読み込み中...');
@@ -2148,7 +2148,7 @@ async function onSiProjectChange() {
 
     const p = projectsMap[num] || {};
     document.getElementById('si_project_detail').innerHTML =
-        `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
     document.getElementById('si_project_info').style.display = 'block';
     showLoading('読み込み中...');
     try {
@@ -2264,7 +2264,7 @@ async function onInspectionProjectChange() {
 
     const p = projectsMap[num] || {};
     document.getElementById('inspection_project_detail').innerHTML =
-        `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
     document.getElementById('inspection_project_info').style.display = 'block';
 
     showLoading('読み込み中...');
@@ -2382,7 +2382,7 @@ async function onSmProjectChange() {
     if (!num) return;
     const p = projectsMap[num] || {};
     document.getElementById('sm_project_detail').innerHTML =
-        `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
     document.getElementById('sm_project_info').style.display = 'block';
     showLoading('読み込み中...');
     try {
@@ -2497,7 +2497,7 @@ async function onShippingProjectChange() {
     if (!num) return;
     const p = projectsMap[num] || {};
     document.getElementById('shipping_project_detail').innerHTML =
-        `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
     document.getElementById('shipping_project_info').style.display = 'block';
     showLoading('読み込み中...');
     try {
