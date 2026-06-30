@@ -2350,7 +2350,7 @@ function closeShippingMeetingModal() {
 }
 
 async function onSmProjectChange() {
-    const num = document.getElementById('sm_project').value;
+    const num = currentSmProjectNum;
     document.getElementById('sm_project_info').style.display  = 'none';
     document.getElementById('sm_machine_group').style.display = 'none';
     document.getElementById('sm_flow_box').style.display      = 'none';
