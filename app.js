@@ -521,21 +521,19 @@ async function onMachineChange() {
         ].filter(f => f.exists && f.type !== currentFlowType);
 
         const upcomingHtml = upcomingFlows.length > 0 ? `
-            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8;">
-                <span style="font-size:11px;color:#888;font-weight:bold;">後続フロー</span>
-                <div style="margin-top:4px;">
-                    ${upcomingFlows.map(f => `<div style="padding:3px 0;color:#aaa;display:flex;gap:8px;">
-                        <span style="width:20px;text-align:center;">──</span><span>${esc(f.label)}</span>
-                    </div>`).join('')}
-                </div>
+            <div class="flow-info-section">
+                <div class="flow-info-tag">後続フロー</div>
+                ${upcomingFlows.map(f => `<div class="flow-info-item">
+                    <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(f.label)}</span>
+                </div>`).join('')}
             </div>` : '';
 
         document.getElementById('flow_detect_list').innerHTML = `
-            <div style="padding:4px 0;">
-                <span style="font-size:11px;color:#888;font-weight:bold;">今回申請</span>
-                <div style="margin-top:4px;">
-                    <span style="color:#1e3a5f;font-weight:bold;">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span>
-                    <span style="font-size:12px;color:#888;margin-left:8px;">${machines.length}機械を一括申請</span>
+            <div class="flow-info-section">
+                <div class="flow-info-tag">今回申請</div>
+                <div class="flow-info-item">
+                    <span class="flow-info-current">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span>
+                    <span class="flow-info-note">${machines.length}機械を一括申請</span>
                 </div>
             </div>${upcomingHtml}`;
         flowEl.style.display = 'block';
