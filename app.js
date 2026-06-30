@@ -1123,6 +1123,16 @@ function openSubmitModal(flowType = 'assembly') {
     document.getElementById('submit_step1').style.display = '';
     document.getElementById('submit_step2').style.display = 'none';
 
+    // 試運転はStep 2なし → フッターボタンを「申請する」に
+    const step1NextBtn = document.querySelector('#submit_step1 .modal-footer .btn-primary');
+    if (step1NextBtn) {
+        if (flowType === 'assembly') {
+            step1NextBtn.textContent = '次へ（自主点検シート）→';
+        } else {
+            step1NextBtn.textContent = '申請する';
+        }
+    }
+
     document.getElementById('submit_modal').classList.add('open');
     ui.send('OPEN_SUBMIT');
 }
