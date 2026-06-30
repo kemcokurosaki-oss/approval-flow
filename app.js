@@ -475,8 +475,8 @@ async function onProjectChange() {
 
     // 工事情報表示
     const p = projectsMap[num] || {};
-    document.getElementById('submit_project_detail').innerHTML =
-        `<span class="info-tag-sm">客先</span>${esc(p.customer_name || '—')}　<span class="info-tag-sm">工事名</span>${esc(p.project_details || '—')}`;
+    document.getElementById('submit_customer_display').textContent = p.customer_name || '—';
+    document.getElementById('submit_project_name_display').textContent = p.project_details || '—';
     infoEl.style.display = 'block';
 
     showLoading('読み込み中...');
