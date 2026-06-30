@@ -1138,6 +1138,8 @@ function goToSheetStep() {
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)           { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    // 試運転は後でシート追加予定（現時点では直接申請）
+    if (currentFlowType !== 'assembly') { submitRequest(); return; }
     document.getElementById('submit_step1').style.display = 'none';
     document.getElementById('submit_step2').style.display = '';
 }
