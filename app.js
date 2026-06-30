@@ -564,18 +564,21 @@ async function onMachineChange() {
     const doneList     = ALL_FLOWS.filter(f => f.type !== currentFlowType && doneFlows.has(f.type));
     const upcomingList = ALL_FLOWS.filter(f => f.type !== currentFlowType && !doneFlows.has(f.type));
 
-    const doneHtml = doneList.length > 0 ? `<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e8e8e8;">
-        <span style="font-size:11px;color:#888;font-weight:bold;">承認済みフロー</span>
-        <div style="margin-top:4px;">${doneList.map(f=>`<div style="padding:3px 0;color:#27ae60;display:flex;gap:8px;">
-            <span style="width:20px;text-align:center;">✅</span><span>${esc(f.label)}</span></div>`).join('')}</div></div>` : '';
-    const upcomingHtml = upcomingList.length > 0 ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e8e8e8;">
-        <span style="font-size:11px;color:#888;font-weight:bold;">後続フロー</span>
-        <div style="margin-top:4px;">${upcomingList.map(f=>`<div style="padding:3px 0;color:#aaa;display:flex;gap:8px;">
-            <span style="width:20px;text-align:center;">──</span><span>${esc(f.label)}</span></div>`).join('')}</div></div>` : '';
+    const doneHtml = doneList.length > 0 ? `<div class="flow-info-section">
+        <div class="flow-info-tag">承認済み</div>
+        ${doneList.map(f=>`<div class="flow-info-item">
+            <span class="flow-info-icon">✅</span><span class="flow-info-done">${esc(f.label)}</span></div>`).join('')}
+        </div>` : '';
+    const upcomingHtml = upcomingList.length > 0 ? `<div class="flow-info-section">
+        <div class="flow-info-tag">後続フロー</div>
+        ${upcomingList.map(f=>`<div class="flow-info-item">
+            <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(f.label)}</span></div>`).join('')}
+        </div>` : '';
 
     document.getElementById('flow_detect_list').innerHTML = `${doneHtml}
-        <div style="padding:4px 0;"><span style="font-size:11px;color:#888;font-weight:bold;">今回申請</span>
-            <div style="margin-top:4px;"><span style="color:#1e3a5f;font-weight:bold;">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span></div>
+        <div class="flow-info-section">
+            <div class="flow-info-tag">今回申請</div>
+            <div class="flow-info-item"><span class="flow-info-current">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span></div>
         </div>${upcomingHtml}`;
     flowEl.style.display = 'block';
     } finally {
