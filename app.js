@@ -2441,10 +2441,9 @@ async function submitShippingMeeting() {
 }
 
 // ===== フロー3: 出荷完了通知 =====
-let shippingProjectsLoaded = false;
-
 function openShippingModal() {
-    document.getElementById('shipping_project').value = '';
+    currentShippingProjectNum = '';
+    document.getElementById('shipping_project_display').textContent = '';
     document.getElementById('shipping_project_info').style.display  = 'none';
     document.getElementById('shipping_machine_group').style.display = 'none';
     document.getElementById('shipping_machine_list').innerHTML      = '';
