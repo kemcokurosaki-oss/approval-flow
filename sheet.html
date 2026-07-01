@@ -586,7 +586,7 @@ async function saveNow() {
         }
     });
 
-    const sheetData = { check_items: checks, pending_items: pendingItems };
+    const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
     const { error } = await db.from('approval_requests')
         .update({ sheet_data: sheetData })
         .eq('id', draftId);
