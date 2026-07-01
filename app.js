@@ -1215,8 +1215,8 @@ async function goToSheetStep() {
             currentDraftId = newDraft.id;
         }
 
+        window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
         await loadMineSide();
-        openSheetModalForDraft();
     } catch (e) {
         showToast('下書きの保存に失敗しました: ' + e.message, 'error');
     } finally {
