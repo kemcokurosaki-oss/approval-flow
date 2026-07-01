@@ -357,11 +357,6 @@ const SHEET_ITEM_GROUPS = [
         { id: '33', text: '検査のため、電源・エアー電源・油圧源を切っているか？' },
         { id: '34', text: '組立で完了シールは？' },
     ]},
-    { group: '出荷準備', items: [
-        { id: '36', text: '単品納入品リストの部品は揃っているか？' },
-    ]},
-];
-
 // ===== Auth =====
 async function doLogin() {
     const email    = document.getElementById('login_email').value.trim();
