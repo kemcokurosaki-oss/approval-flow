@@ -563,6 +563,29 @@ function renderPendingItems() {
     `).join('');
 }
 
+// ===== 未入力マーク =====
+function clearMissingMarks() {
+    document.querySelectorAll('.sheet-item-missing').forEach(el => el.remove());
+    document.querySelectorAll('.sheet-item.has-missing').forEach(el => el.classList.remove('has-missing'));
+}
+
+function markMissingItems(missingIds) {
+    clearMissingMarks();
+    missingIds.forEach(id => {
+        const btn = document.querySelector(`.sheet-btn[onclick*="setCheck('${id}',"]`);
+        if (!btn) return;
+        const item = btn.closest('.sheet-item');
+        if (!item) return;
+        item.classList.add('has-missing');
+        const warning = document.createElement('div');
+        warning.className = 'sheet-item-missing';
+        warning.textContent = '▼ 未入力です';
+        item.parentNode.insertBefore(warning, item);
+    });
+    const first = document.querySelector('.sheet-item-missing');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 // ===== 閲覧モード =====
 function setViewMode() {
     document.body.classList.add('view-mode');
