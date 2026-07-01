@@ -1783,11 +1783,8 @@ async function openDetailModal(requestId) {
         <div class="steps-list">${stepsHtml}</div>
         ${req.flow_type === 'assembly' && req.sheet_data ? `
         <hr class="section-divider">
-        <div class="section-title" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;" onclick="toggleSheetView(this)">
-            <span>組立完了自主点検シート</span>
-            <span class="sv-toggle-label" style="font-size:12px; color:#888; font-weight:normal;">▼ 展開して確認</span>
-        </div>
-        <div id="sheet_view_body" style="display:none;">${buildSheetViewHtml(req.sheet_data)}</div>` : ''}
+        <div class="section-title">組立完了自主点検シート</div>
+        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('sheet.html?view=1&id=${req.id}', '_blank')">点検シートを確認する →</button>` : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
