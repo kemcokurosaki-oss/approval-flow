@@ -1254,6 +1254,19 @@ function openSheetModalForDraft() {
 
     renderPendingItems();
     _updateSheetSaveStatus('');
+
+    // note 入力の自動保存（一度だけ委任リスナーを登録）
+    const sheetBody = document.querySelector('#sheet_modal .sheet-body');
+    if (sheetBody && !sheetBody._saveListenerAdded) {
+        sheetBody.addEventListener('input', e => {
+            if (e.target.classList.contains('sheet-note') || e.target.classList.contains('pending-machine') ||
+                e.target.classList.contains('pending-content') || e.target.classList.contains('pending-due')) {
+                scheduleSheetSave();
+            }
+        });
+        sheetBody._saveListenerAdded = true;
+    }
+
     document.getElementById('sheet_modal').classList.add('open');
 }
 
