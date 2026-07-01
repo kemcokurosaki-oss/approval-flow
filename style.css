@@ -481,6 +481,7 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
+        .s-gray      { background: #e9ecef; color: #6c757d; }
         .s-pending   { background: #fff3cd; color: #856404; }
         .s-submitted { background: #fff3cd; color: #856404; }
         .s-in_review { background: #d1ecf1; color: #0c5460; }
