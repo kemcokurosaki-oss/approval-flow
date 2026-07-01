@@ -422,7 +422,7 @@ async function init() {
         // ===== 閲覧モード =====
         const { data: req, error } = await db
             .from('approval_requests')
-            .select('project_number, machine_name, sheet_data')
+            .select('project_number, machine_name, sheet_data, requester_id')
             .eq('id', viewId)
             .single();
 
@@ -438,6 +438,17 @@ async function init() {
         document.title = `点検シート（閲覧）- ${req.project_number} ${req.machine_name}`;
         checks       = req.sheet_data.check_items   || {};
         pendingItems = req.sheet_data.pending_items || [];
+
+        // 担当者・作成日を表示（保存済みmetaを優先、なければprofile取得）
+        const meta = req.sheet_data.meta || {};
+        if (meta.author) {
+            document.getElementById('sheet_author').textContent = meta.author;
+        } else if (req.requester_id) {
+            const { data: p } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
+            if (p?.name) document.getElementById('sheet_author').textContent = p.name;
+        }
+        if (meta.date) document.getElementById('sheet_date').textContent = meta.date;
+
         restoreChecks();
         renderPendingItemsView();
         setViewMode();
@@ -455,7 +466,7 @@ async function init() {
 
     const { data: draft, error } = await db
         .from('approval_requests')
-        .select('project_number, machine_name, sheet_data')
+        .select('project_number, machine_name, sheet_data, requester_id')
         .eq('id', draftId)
         .single();
 
@@ -470,9 +481,32 @@ async function init() {
         `工事番号: ${draft.project_number}　機械: ${draft.machine_name}`;
     document.title = `点検シート - ${draft.project_number} ${draft.machine_name}`;
 
+    // 担当者名を取得（profiles から）
+    if (draft.requester_id) {
+        const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
+        if (profile?.name) {
+            sheetMeta.author = profile.name;
+            document.getElementById('sheet_author').textContent = profile.name;
+        }
+    }
+
+    // 作成日: 保存済みなら使用、なければ今日の日付
+    if (draft.sheet_data?.meta?.date) {
+        sheetMeta.date = draft.sheet_data.meta.date;
+    } else {
+        const d = new Date();
+        sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    }
+    document.getElementById('sheet_date').textContent = sheetMeta.date;
+
     if (draft.sheet_data) {
         checks       = draft.sheet_data.check_items   || {};
         pendingItems = draft.sheet_data.pending_items || [];
+        // 保存済みmetaがあれば反映（author上書き）
+        if (draft.sheet_data.meta?.author && !sheetMeta.author) {
+            sheetMeta.author = draft.sheet_data.meta.author;
+            document.getElementById('sheet_author').textContent = sheetMeta.author;
+        }
         restoreChecks();
         renderPendingItems();
     }
