@@ -276,15 +276,27 @@
 
 <header class="sheet-header">
     <div class="sheet-header-inner">
-        <h1>組立完了自主点検シート</h1>
-        <div class="sheet-info" id="sheet_info">—</div>
+        <div class="sheet-header-title">
+            <h1>組立完了自主点検シート</h1>
+            <div class="sheet-info" id="sheet_info">—</div>
+        </div>
+        <div class="save-status" id="save_status">保存済み ✓</div>
     </div>
-    <div class="save-status" id="save_status">保存済み ✓</div>
 </header>
 
 <main class="sheet-content" id="sheet_content">
     <div class="sheet-legend">
         ○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　<strong>入力内容は自動保存されます</strong>
+    </div>
+    <div class="sheet-meta-box">
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">担当者</span>
+            <span class="sheet-meta-value" id="sheet_author">—</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">作成日</span>
+            <span class="sheet-meta-value" id="sheet_date">—</span>
+        </div>
     </div>
 
     <div class="sheet-group">
