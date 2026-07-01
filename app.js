@@ -962,9 +962,13 @@ function renderProgressCards() {
                 if ((!req || req.status === 'rejected') && canApply) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
-                } else if (req && req.status === 'draft' && canApply) {
-                    clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
-                    clickable = ' clickable can-apply';
+                } else if (req && req.status === 'draft') {
+                    // 申請者本人のみクリック可能
+                    if (req.requester_id === currentUser.id) {
+                        clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
+                        clickable = ' clickable can-apply';
+                    }
+                    // 他ユーザーはクリック不可（表示のみ）
                 } else if (req) {
                     clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
                     clickable = ' clickable';
