@@ -196,6 +196,11 @@
         .btn-primary:hover { background: #2a4f7f; }
         .btn:disabled { opacity: 0.6; cursor: default; }
 
+        /* ===== View Mode ===== */
+        body.view-mode .sheet-btn  { pointer-events: none; cursor: default; }
+        body.view-mode .sheet-note { pointer-events: none; background: #f8f9fa; cursor: default; }
+        body.view-mode .btn-add-sm { display: none !important; }
+
         /* ===== Loading / Error ===== */
         .loading-overlay {
             display: none;
