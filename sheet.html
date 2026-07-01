@@ -196,6 +196,20 @@
         .btn-primary:hover { background: #2a4f7f; }
         .btn:disabled { opacity: 0.6; cursor: default; }
 
+        /* ===== 未入力警告 ===== */
+        .sheet-item-missing {
+            background: #fde8e8;
+            color: #c0392b;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 14px 4px 46px;
+            border-left: 3px solid #e74c3c;
+        }
+        .sheet-item.has-missing {
+            background: #fff8f8;
+            border-left: 3px solid #e74c3c;
+        }
+
         /* ===== View Mode ===== */
         body.view-mode .sheet-btn  { pointer-events: none; cursor: default; }
         body.view-mode .sheet-note { pointer-events: none; background: #f8f9fa; cursor: default; }
