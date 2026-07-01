@@ -1365,7 +1365,9 @@ async function openDraftInSubmitModal(draftId) {
         const btnSubmit  = document.getElementById('submit_btn');
         const indicator  = document.getElementById('sheet_entry_indicator');
 
-        if (draft.sheet_data) {
+        const isAssembly = draft.flow_type === 'assembly';
+
+        if (draft.sheet_data && isAssembly) {
             // check_items は {id: {result,note}} 形式で保存されているため sheetChecks に変換
             const savedChecks = draft.sheet_data.check_items || {};
             sheetChecks = {};
@@ -1376,12 +1378,20 @@ async function openDraftInSubmitModal(draftId) {
             if (indicator) indicator.style.display = '';
             if (btnGoSheet) btnGoSheet.style.display = 'none';
             if (btnSubmit)  btnSubmit.style.display  = '';
-        } else {
+        } else if (isAssembly) {
+            // 組立で点検シート未入力
             sheetChecks  = {};
             pendingItems = [];
             if (indicator) indicator.style.display = 'none';
             if (btnGoSheet) { btnGoSheet.style.display = ''; btnGoSheet.textContent = '次へ（自主点検シートを入力する）→'; }
             if (btnSubmit)  btnSubmit.style.display  = 'none';
+        } else {
+            // 組立以外のフロー（試運転等）は自主点検シート不要
+            sheetChecks  = {};
+            pendingItems = [];
+            if (indicator) indicator.style.display = 'none';
+            if (btnGoSheet) btnGoSheet.style.display = 'none';
+            if (btnSubmit)  btnSubmit.style.display  = '';
         }
 
         document.getElementById('submit_modal').classList.add('open');
