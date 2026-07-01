@@ -543,6 +543,32 @@ function renderPendingItems() {
     `).join('');
 }
 
+// ===== 閲覧モード =====
+function setViewMode() {
+    document.body.classList.add('view-mode');
+    document.getElementById('save_status').style.display = 'none';
+    const legend = document.querySelector('.sheet-legend');
+    if (legend) legend.textContent = '○: 確認済み　×: NG　―: 対象外';
+    const footerInner = document.querySelector('.sheet-footer-inner');
+    if (footerInner) footerInner.innerHTML = '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>';
+}
+
+function renderPendingItemsView() {
+    const c = document.getElementById('pending_container');
+    if (!c) return;
+    if (!pendingItems.length) {
+        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        return;
+    }
+    c.innerHTML = pendingItems.map(item => `
+        <div class="pending-row">
+            <span style="width:110px; font-size:13px; color:#444; padding:5px 8px;">${esc(item.machine || '—')}</span>
+            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px;">${esc(item.content || '—')}</span>
+            <span style="width:135px; font-size:13px; color:#888; padding:5px 8px;">${esc(item.due || '')}</span>
+        </div>
+    `).join('');
+}
+
 // 中断: 保存してタブを閉じる（申請画面には通知しない）
 function suspendSheet() {
     clearTimeout(saveTimer);
