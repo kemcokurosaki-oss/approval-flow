@@ -798,13 +798,11 @@
         .machine-checkbox-bar { display: flex; gap: 6px; margin-bottom: 4px; }
         .btn-xs { padding: 2px 8px; font-size: 11px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
         .btn-xs:hover { background: #e8e8e8; }
-        /* モーダルサイズ固定 */
-        #submit_modal .modal,
+        /* モーダルサイズ固定（submit_modalはコンテンツに合わせて自動調整） */
         #inspection_modal .modal,
         #simple_inspection_modal .modal,
         #shipping_meeting_modal .modal,
         #shipping_modal .modal { height: 85vh; }
-        #submit_modal .modal-body,
         #inspection_modal .modal-body,
         #simple_inspection_modal .modal-body,
         #shipping_meeting_modal .modal-body,
