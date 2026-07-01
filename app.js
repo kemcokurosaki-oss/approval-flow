@@ -963,12 +963,12 @@ function renderProgressCards() {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
-                    // 申請者本人のみクリック可能
-                    if (req.requester_id === currentUser.id) {
+                    // そのフローを申請できるロールのみクリック可能（例：組立担当者のみ assembly draft を操作可）
+                    if (canApply) {
                         clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
                         clickable = ' clickable can-apply';
                     }
-                    // 他ユーザーはクリック不可（表示のみ）
+                    // 申請権限のないロールはクリック不可（表示のみ）
                 } else if (req) {
                     clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
                     clickable = ' clickable';
