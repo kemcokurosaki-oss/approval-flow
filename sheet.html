@@ -692,6 +692,11 @@ async function completeSheet() {
     }
     clearMissingMarks();
 
+    // 提出日を確定（申請ボタンを押した日付を記録）
+    const d = new Date();
+    sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    document.getElementById('sheet_date').textContent = sheetMeta.date;
+
     const btn = document.getElementById('btn_complete');
     btn.disabled = true;
     btn.textContent = '保存中...';
