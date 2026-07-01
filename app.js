@@ -760,7 +760,7 @@ async function loadProgress() {
     // 全申請レコードを機械名付きで取得（shippingの承認者名表示のためapproval_stepsも含む）
     const { data: allReqs } = await db
         .from('approval_requests')
-        .select('id, project_number, machine_name, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, inspection_date, inspection_time, approval_steps(approver_id, status)')
+        .select('id, project_number, machine_name, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, inspection_date, inspection_time, requester_id, approval_steps(approver_id, status)')
         .order('updated_at', { ascending: false });
 
     // shipping承認済みの承認者名マップを構築
