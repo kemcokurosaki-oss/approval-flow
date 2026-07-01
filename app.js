@@ -1240,11 +1240,9 @@ async function openDraftInSubmitModal(draftId) {
         document.getElementById('submit_approver_group').style.display = 'none';
 
         const p = projectsMap[draft.project_number] || {};
-        const infoLabel = [p.customer_name, p.project_details].filter(Boolean).join('　');
-        document.getElementById('submit_project_display').textContent =
-            draft.project_number + (infoLabel ? `　${infoLabel}` : '');
-        document.getElementById('submit_project_detail').innerHTML =
-            `<span style="color:#888;font-size:11px;">客先</span> ${esc(p.customer_name || '—')}　<span style="color:#888;font-size:11px;">工事名</span> ${esc(p.project_details || '—')}`;
+        document.getElementById('submit_project_display').textContent = draft.project_number;
+        document.getElementById('submit_customer_display').textContent     = p.customer_name  || '—';
+        document.getElementById('submit_project_name_display').textContent = p.project_details || '—';
         document.getElementById('submit_project_info').style.display = 'block';
         document.getElementById('submit_note').value = draft.note || '';
         document.getElementById('submit_machine_group').style.display = 'block';
