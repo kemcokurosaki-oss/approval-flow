@@ -524,10 +524,10 @@ async function completeSheet() {
     const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]?.result);
     if (missing.length > 0) {
         const errEl = document.getElementById('sheet_error');
-        errEl.textContent = `未入力の項目があります（項目番号: ${missing.join('・')}）`;
+        errEl.innerHTML = `<strong>未入力の項目があります</strong>（項目番号: ${missing.join('・')}）`;
         errEl.style.display = '';
-        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => { errEl.style.display = 'none'; }, 8000);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => { errEl.style.display = 'none'; }, 10000);
         return;
     }
     document.getElementById('sheet_error').style.display = 'none';
