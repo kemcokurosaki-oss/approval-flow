@@ -26,6 +26,7 @@ function showLoading(label = '処理中...') {
     if (!el) return;
     document.getElementById('app-loading-label').textContent = label;
     // 500ms以内に終わる処理はオーバーレイを表示しない（短時間フラッシュ防止）
+    if (_loadingTimer) { clearTimeout(_loadingTimer); _loadingTimer = null; }
     _loadingTimer = setTimeout(() => { el.classList.add('visible'); }, 500);
 }
 function hideLoading() {
@@ -1113,6 +1114,7 @@ let selectedApproverRole = 'assembly_manager';
 let sheetChecks = {};
 let pendingItems = [];
 let currentDraftId = null;
+let sheetAutoSaveTimer = null;
 
 function selectApprover(role) {
     selectedApproverRole = role;
@@ -1169,7 +1171,7 @@ function closeSubmitModal() {
     ui.send('CLOSE');
 }
 
-// ===== 自主点検シート（別タブ） =====
+// ===== 自主点検シート =====
 async function goToSheetStep() {
     const projectNum = currentProjectNum;
     const machineNums = getSelectedMachines('submit_machine_list');
@@ -1186,7 +1188,6 @@ async function goToSheetStep() {
         const machine = machineNums[0];
         const note = document.getElementById('submit_note').value.trim();
 
-        // 既存の下書きを確認して再利用
         const { data: existing } = await db.from('approval_requests')
             .select('id')
             .eq('project_number', projectNum)
@@ -1214,8 +1215,8 @@ async function goToSheetStep() {
             currentDraftId = newDraft.id;
         }
 
-        window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
         await loadMineSide();
+        openSheetModalForDraft();
     } catch (e) {
         showToast('下書きの保存に失敗しました: ' + e.message, 'error');
     } finally {
@@ -1223,10 +1224,91 @@ async function goToSheetStep() {
     }
 }
 
-// 「変更する」ボタン: 既存の下書きをsheet.htmlで再度開く
+// 「変更する」ボタン: 既存の下書きを点検シートモーダルで再度開く
 function reopenSheetTab() {
     if (!currentDraftId) { showToast('下書きIDが不明です。再度「次へ」を押してください', 'error'); return; }
-    window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
+    openSheetModalForDraft();
+}
+
+// 点検シートモーダルを開いて保存済みデータを復元
+function openSheetModalForDraft() {
+    // チェックボタン・備考をすべてクリア
+    document.querySelectorAll('#sheet_modal .sheet-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#sheet_modal .sheet-note').forEach(n => { n.value = ''; });
+
+    // sheetChecks の内容を復元（{ itemId: '○'|'×'|'―' } or { itemId: {result,note} }）
+    Object.entries(sheetChecks).forEach(([itemId, val]) => {
+        if (!val) return;
+        const result = typeof val === 'object' ? val.result : val;
+        const note   = typeof val === 'object' ? (val.note || '') : '';
+        if (!result) return;
+        const noteEl = document.getElementById('sn_' + itemId);
+        if (noteEl && note) noteEl.value = note;
+        const allBtns = [...document.querySelectorAll('#sheet_modal .sheet-btn')];
+        const target = allBtns.find(b => {
+            const oc = b.getAttribute('onclick') || '';
+            return oc.includes("'" + itemId + "'") && oc.includes("'" + result + "'");
+        });
+        if (target) { target.classList.add('active'); sheetChecks[itemId] = result; }
+    });
+
+    renderPendingItems();
+    _updateSheetSaveStatus('');
+    document.getElementById('sheet_modal').classList.add('open');
+}
+
+// 自動保存スケジューラ
+function scheduleSheetSave() {
+    _updateSheetSaveStatus('saving');
+    clearTimeout(sheetAutoSaveTimer);
+    sheetAutoSaveTimer = setTimeout(saveSheetNow, 1200);
+}
+
+function _updateSheetSaveStatus(state) {
+    const el = document.getElementById('sheet_save_status');
+    if (!el) return;
+    if (state === 'saving') { el.textContent = '保存中...'; el.style.color = '#aaa'; }
+    else if (state === 'saved') { el.textContent = '保存済み ✓'; el.style.color = '#27ae60'; }
+    else { el.textContent = ''; }
+}
+
+async function saveSheetNow() {
+    if (!currentDraftId) return;
+    try {
+        const data = collectSheetData();
+        await db.from('approval_requests')
+            .update({ sheet_data: data })
+            .eq('id', currentDraftId);
+        _updateSheetSaveStatus('saved');
+    } catch (e) {
+        _updateSheetSaveStatus('');
+    }
+}
+
+// 一時保存して閉じる
+async function backFromSheetModal() {
+    if (currentDraftId) {
+        clearTimeout(sheetAutoSaveTimer);
+        await saveSheetNow();
+    }
+    document.getElementById('sheet_modal').classList.remove('open');
+}
+
+// 入力完了・申請へ進む
+async function finishSheetEntry() {
+    if (currentDraftId) {
+        clearTimeout(sheetAutoSaveTimer);
+        await saveSheetNow();
+    }
+    document.getElementById('sheet_modal').classList.remove('open');
+
+    // 申請モーダルの入力済みバッジと申請ボタンを更新
+    const indicator  = document.getElementById('sheet_entry_indicator');
+    const btnGoSheet = document.getElementById('btn_go_sheet');
+    const btnSubmit  = document.getElementById('submit_btn');
+    if (indicator)  indicator.style.display = '';
+    if (btnGoSheet) btnGoSheet.style.display = 'none';
+    if (btnSubmit)  btnSubmit.style.display  = '';
 }
 
 // サイドバーの下書きカードをクリックして申請モーダルを復元
@@ -1265,7 +1347,12 @@ async function openDraftInSubmitModal(draftId) {
         const indicator  = document.getElementById('sheet_entry_indicator');
 
         if (draft.sheet_data) {
-            sheetChecks  = draft.sheet_data.check_items  || {};
+            // check_items は {id: {result,note}} 形式で保存されているため sheetChecks に変換
+            const savedChecks = draft.sheet_data.check_items || {};
+            sheetChecks = {};
+            Object.entries(savedChecks).forEach(([k, v]) => {
+                sheetChecks[k] = typeof v === 'object' ? v : { result: v, note: '' };
+            });
             pendingItems = draft.sheet_data.pending_items || [];
             if (indicator) indicator.style.display = '';
             if (btnGoSheet) btnGoSheet.style.display = 'none';
@@ -1324,6 +1411,7 @@ function setSheetCheck(itemId, val, btn) {
     const siblings = btn.parentElement.querySelectorAll('.sheet-btn');
     siblings.forEach(b => b.classList.remove('active'));
     if (!already) btn.classList.add('active');
+    scheduleSheetSave();
 }
 
 // ===== ペンディングリスト =====

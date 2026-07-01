@@ -1261,6 +1261,7 @@
         .modal-sheet .pending-due     { width: 130px; font-size: 13px; }
 
         /* 入力済みバッジ */
+        .sheet-save-status { font-size: 12px; color: #aaa; margin-right: auto; }
         .sheet-done-badge {
             display: inline-flex;
             align-items: center;
