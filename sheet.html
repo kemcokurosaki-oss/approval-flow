@@ -32,7 +32,11 @@
         .sheet-header-inner {
             width: 100%;
             max-width: 820px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
+        .sheet-header-title { flex: 1; min-width: 0; }
         .sheet-header h1 { font-size: 16px; font-weight: bold; }
         .sheet-info {
             font-size: 12px;
@@ -43,13 +47,26 @@
             font-size: 12px;
             color: rgba(255,255,255,0.8);
             white-space: nowrap;
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            flex-shrink: 0;
+            margin-top: 3px;
+            margin-left: 16px;
         }
         .save-status.saving { color: #ffd700; }
         .save-status.error  { color: #ff7675; }
+
+        /* ===== Meta (担当者・作成日) ===== */
+        .sheet-meta-box {
+            display: flex;
+            gap: 28px;
+            background: #fff;
+            border: 1px solid #e0e5f0;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+        }
+        .sheet-meta-item { display: flex; align-items: center; gap: 8px; }
+        .sheet-meta-label { font-size: 12px; color: #999; }
+        .sheet-meta-value { font-size: 14px; color: #333; font-weight: bold; }
 
         /* ===== Content ===== */
         .sheet-content {
