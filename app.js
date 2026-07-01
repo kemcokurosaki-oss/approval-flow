@@ -1612,6 +1612,18 @@ async function openDetailModal(requestId) {
         .eq('id', requestId)
         .single();
 
+    // draft は申請者本人なら申請モーダルへリダイレクト
+    if (req?.status === 'draft') {
+        document.getElementById('detail_modal').classList.remove('open');
+        ui.send('CLOSE');
+        if (req.requester_id === currentUser.id) {
+            await openDraftInSubmitModal(requestId);
+        } else {
+            showToast('この申請はまだ入力中です', 'info');
+        }
+        return;
+    }
+
     // 申請者名を別途取得
     let requesterName = '—', requesterDept = '—';
     if (req?.requester_id) {
