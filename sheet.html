@@ -370,8 +370,39 @@ function esc(s) {
 }
 
 async function init() {
-    const params = new URLSearchParams(location.search);
+    const params   = new URLSearchParams(location.search);
+    const viewMode = params.get('view') === '1';
+    const viewId   = params.get('id');
     draftId = params.get('draft_id');
+
+    if (viewMode && viewId) {
+        // ===== 閲覧モード =====
+        const { data: req, error } = await db
+            .from('approval_requests')
+            .select('project_number, machine_name, sheet_data')
+            .eq('id', viewId)
+            .single();
+
+        if (error || !req || !req.sheet_data) {
+            document.getElementById('loading').classList.remove('visible');
+            document.getElementById('sheet_content').innerHTML =
+                '<div class="error-screen">点検シートデータが見つかりません。</div>';
+            return;
+        }
+
+        document.getElementById('sheet_info').textContent =
+            `工事番号: ${req.project_number}　機械: ${req.machine_name}`;
+        document.title = `点検シート（閲覧）- ${req.project_number} ${req.machine_name}`;
+        checks       = req.sheet_data.check_items   || {};
+        pendingItems = req.sheet_data.pending_items || [];
+        restoreChecks();
+        renderPendingItemsView();
+        setViewMode();
+        document.getElementById('loading').classList.remove('visible');
+        return;
+    }
+
+    // ===== 入力モード =====
     if (!draftId) {
         document.getElementById('loading').classList.remove('visible');
         document.getElementById('sheet_content').innerHTML =
@@ -397,7 +428,7 @@ async function init() {
     document.title = `点検シート - ${draft.project_number} ${draft.machine_name}`;
 
     if (draft.sheet_data) {
-        checks = draft.sheet_data.check_items || {};
+        checks       = draft.sheet_data.check_items   || {};
         pendingItems = draft.sheet_data.pending_items || [];
         restoreChecks();
         renderPendingItems();
