@@ -1654,6 +1654,49 @@ async function submitRequest() {
     }
 }
 
+// ===== 自主点検シート 閲覧用 =====
+function buildSheetViewHtml(sheetData) {
+    const checkItems = sheetData.check_items   || {};
+    const pending    = sheetData.pending_items || [];
+    const resultColor = { '○': '#2a7a3a', '×': '#c0392b', '―': '#888', '添付済': '#2a7a3a', '未添付': '#c0392b' };
+
+    let html = '<div style="font-size:12px; margin-top:6px;">';
+    for (const g of SHEET_ITEM_GROUPS) {
+        html += `<div style="font-weight:bold; color:#1e3a5f; font-size:11px; background:#eef2f8; padding:3px 8px; margin-top:8px; border-radius:3px;">${esc(g.group)}</div>`;
+        for (const item of g.items) {
+            const d      = checkItems[item.id];
+            const result = (typeof d === 'object' ? d?.result : d) || '';
+            const note   = (typeof d === 'object' ? d?.note   : '') || '';
+            const color  = resultColor[result] || '#e74c3c';
+            const label  = result || '未入力';
+            html += `<div style="display:flex; align-items:flex-start; gap:6px; padding:3px 2px; border-bottom:1px solid #f4f4f4;">
+                <span style="color:#ccc; width:20px; text-align:right; flex-shrink:0;">${item.id}</span>
+                <span style="flex:1; line-height:1.4; color:#444;">${esc(item.text)}</span>
+                <span style="font-weight:bold; color:${color}; width:44px; text-align:center; flex-shrink:0; font-size:13px;">${esc(label)}</span>
+                ${note ? `<span style="color:#888; font-size:11px; max-width:90px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;" title="${esc(note)}">${esc(note)}</span>` : ''}
+            </div>`;
+        }
+    }
+    if (pending.length > 0) {
+        html += `<div style="font-weight:bold; color:#1e3a5f; font-size:11px; background:#eef2f8; padding:3px 8px; margin-top:8px; border-radius:3px;">ペンディング項目</div>`;
+        for (const p of pending) {
+            html += `<div style="padding:3px 8px; font-size:11px; color:#555; border-bottom:1px solid #f4f4f4;">
+                ${p.machine ? `<strong>${esc(p.machine)}</strong>&nbsp;` : ''}${esc(p.content || '')}${p.due ? `&nbsp;<span style="color:#888;">期日: ${p.due}</span>` : ''}
+            </div>`;
+        }
+    }
+    html += '</div>';
+    return html;
+}
+
+function toggleSheetView(titleEl) {
+    const body = document.getElementById('sheet_view_body');
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : '';
+    titleEl.querySelector('.sv-toggle-label').textContent = isOpen ? '▼ 展開して確認' : '▲ 閉じる';
+}
+
 // ===== Detail Modal =====
 async function openDetailModal(requestId) {
     document.getElementById('detail_modal').classList.add('open');
