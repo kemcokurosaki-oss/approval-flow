@@ -590,17 +590,13 @@ function suspendSheet() {
 
 // 完了: 保存 → 申請画面に通知 → タブを閉じる
 async function completeSheet() {
-    // 未入力チェック
+    // 未入力チェック: 各項目の直前に警告を表示
     const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]?.result);
     if (missing.length > 0) {
-        const errEl = document.getElementById('sheet_error');
-        errEl.innerHTML = `<strong>未入力の項目があります</strong>（項目番号: ${missing.join('・')}）`;
-        errEl.style.display = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => { errEl.style.display = 'none'; }, 10000);
+        markMissingItems(missing);
         return;
     }
-    document.getElementById('sheet_error').style.display = 'none';
+    clearMissingMarks();
 
     const btn = document.getElementById('btn_complete');
     btn.disabled = true;
