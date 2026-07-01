@@ -1891,6 +1891,13 @@ async function openDetailModal(requestId) {
         ${!['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type)
             ? '<hr class="section-divider"><div class="section-title">承認ステップ</div>' : ''}
         <div class="steps-list">${stepsHtml}</div>
+        ${req.flow_type === 'assembly' && req.sheet_data ? `
+        <hr class="section-divider">
+        <div class="section-title" style="cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between;" onclick="toggleSheetView(this)">
+            <span>組立完了自主点検シート</span>
+            <span class="sv-toggle-label" style="font-size:12px; color:#888; font-weight:normal;">▼ 展開して確認</span>
+        </div>
+        <div id="sheet_view_body" style="display:none;">${buildSheetViewHtml(req.sheet_data)}</div>` : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
