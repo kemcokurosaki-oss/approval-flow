@@ -302,6 +302,7 @@ const ROLE_LABELS = {
 };
 
 const STATUS_LABELS = {
+    draft:      '入力中',
     submitted:  '課長承認待ち',
     in_review:  '部長承認待ち',
     approved:   '承認完了',
@@ -310,6 +311,7 @@ const STATUS_LABELS = {
 };
 
 const STATUS_CLASSES = {
+    draft:      's-gray',
     submitted:  's-submitted',
     in_review:  's-in_review',
     approved:   's-approved',
