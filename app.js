@@ -948,6 +948,8 @@ function renderProgressCards() {
                     fcClass = 'fc-done'; icon = '✓';
                 } else if (req.status === 'rejected') {
                     fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
+                } else if (req.status === 'draft') {
+                    fcClass = 'fc-draft'; icon = '✏';
                 } else {
                     fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
                 }
@@ -957,19 +959,24 @@ function renderProgressCards() {
                 if ((!req || req.status === 'rejected') && canApply) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
+                } else if (req && req.status === 'draft' && canApply) {
+                    clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
+                    clickable = ' clickable can-apply';
                 } else if (req) {
                     clickAttr = `onclick="event.stopPropagation(); openDetailModal('${req.id}')"`;
                     clickable = ' clickable';
                 }
 
                 let flowDateStr = '';
-                if (req) {
+                if (req && req.status !== 'draft') {
                     const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
                     if (dateIso) {
                         const d = new Date(dateIso);
                         const prefix = req.status === 'approved' ? '完了' : req.status === 'rejected' ? '却下' : '申請';
                         flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
                     }
+                } else if (req && req.status === 'draft') {
+                    flowDateStr = '入力中';
                 }
 
                 const connector = i < applicable.length - 1
