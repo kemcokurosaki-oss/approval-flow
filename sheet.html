@@ -485,6 +485,13 @@ function setCheck(itemId, val, btn, cls) {
     } else {
         checks[itemId] = { result: val, note: document.getElementById(`sn_${itemId}`)?.value || '' };
         btn.classList.add(`active-${cls}`);
+        // 未入力警告を消す
+        const item = btn.closest('.sheet-item');
+        if (item?.classList.contains('has-missing')) {
+            item.classList.remove('has-missing');
+            const prev = item.previousElementSibling;
+            if (prev?.classList.contains('sheet-item-missing')) prev.remove();
+        }
     }
 
     scheduleSave();
