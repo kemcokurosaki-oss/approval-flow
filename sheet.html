@@ -461,6 +461,36 @@ function esc(s) {
         .replace(/"/g, '&quot;');
 }
 
+function fmtStampDate(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers) {
+    const approverStamps = approvers.map(a => `
+        <div class="stamp-box stamp-approved">
+            <div class="stamp-role">承認者</div>
+            <div class="stamp-name">${esc(a.name)}</div>
+            <div class="stamp-date">${esc(a.date)}</div>
+        </div>`).join('');
+    return `<div class="report-info">
+        <div class="report-project-row">
+            <span class="report-project-num">${esc(projectNum)}</span>
+            <span class="report-machine-name">【${esc(machineName)}】</span>
+        </div>
+        <hr class="report-divider">
+        <div class="stamp-area">
+            <div class="stamp-box">
+                <div class="stamp-role">申請者</div>
+                <div class="stamp-name">${esc(authorName || '—')}</div>
+                <div class="stamp-date">${esc(authorDate || '—')}</div>
+            </div>
+            ${approverStamps}
+        </div>
+    </div>
+    <div class="report-section-heading">確認項目</div>`;
+}
+
 async function init() {
     const params   = new URLSearchParams(location.search);
     const viewMode = params.get('view') === '1';
