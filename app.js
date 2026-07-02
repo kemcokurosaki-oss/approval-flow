@@ -1137,19 +1137,23 @@ function openSubmitModal(flowType = 'assembly') {
     // チェックシートリセット
     sheetChecks = {};
     pendingItems = [];
-    if (flowType === 'assembly') {
+    const needsSheetModal = flowType === 'assembly' || flowType === 'test_run';
+    if (needsSheetModal) {
         document.querySelectorAll('#sheet_modal .sheet-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('#sheet_modal .sheet-note').forEach(n => { n.value = ''; });
-        renderPendingItems();
+        if (flowType === 'assembly') renderPendingItems();
         const indicator = document.getElementById('sheet_entry_indicator');
         if (indicator) indicator.style.display = 'none';
     }
 
-    // フッターボタン切り替え（組立: 次へ→、試運転: 申請する）
+    // フッターボタン切り替え（組立・試運転: 次へ→、それ以外: 申請する）
     const btnGoSheet = document.getElementById('btn_go_sheet');
     const btnSubmit  = document.getElementById('submit_btn');
-    if (flowType === 'assembly') {
-        if (btnGoSheet) btnGoSheet.style.display = '';
+    if (needsSheetModal) {
+        const sheetLabel = flowType === 'test_run'
+            ? '次へ（試運転完了報告書を入力する）→'
+            : '次へ（自主点検シートを入力する）→';
+        if (btnGoSheet) { btnGoSheet.style.display = ''; btnGoSheet.textContent = sheetLabel; }
         if (btnSubmit)  btnSubmit.style.display  = 'none';
     } else {
         if (btnGoSheet) btnGoSheet.style.display = 'none';
