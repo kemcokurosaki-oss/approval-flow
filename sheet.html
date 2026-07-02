@@ -532,14 +532,15 @@ function fmtStampDate(iso) {
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
 }
 
-function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers) {
+function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers, dateLabel) {
+    dateLabel = dateLabel || '完成年月日';
     const approverCells = approvers.length > 0
         ? approvers.map((a, i) => `
             <td class="report-stmp-tbl-td">
                 <div class="stamp-inner-name">${esc(a.name)}</div>
                 <div class="stamp-inner-date">${esc(a.date)}</div>
             </td>`).join('')
-        : `<td class="report-stmp-tbl-td" style="color:#bbb;font-size:11px;">—</td>`;
+        : `<td class="report-stmp-tbl-td"></td>`;
     const approverHeaders = approvers.length > 1
         ? approvers.map((_, i) => `<th>承認者${i+1}</th>`).join('')
         : `<th>承認者</th>`;
@@ -549,9 +550,9 @@ function buildReportHeader(projectNum, machineName, authorName, authorDate, appr
             <div class="report-doc-left">
                 <div class="report-doc-notice">下記の機械の組立が完了しましたので、報告します。</div>
                 <table class="report-info-tbl">
-                    <tr><th>工 事 番 号</th><td class="td-num">${esc(projectNum)}</td></tr>
-                    <tr><th>機 械 名</th><td class="td-mach">${esc(machineName)}</td></tr>
-                    <tr><th>完 成 年 月 日</th><td>${esc(authorDate || '—')}</td></tr>
+                    <tr><th>工事番号</th><td class="td-num">${esc(projectNum)}</td></tr>
+                    <tr><th>機械名</th><td class="td-mach">${esc(machineName)}</td></tr>
+                    <tr><th>${esc(dateLabel)}</th><td>${esc(authorDate || '—')}</td></tr>
                 </table>
             </div>
             <div class="report-doc-right">
@@ -561,7 +562,7 @@ function buildReportHeader(projectNum, machineName, authorName, authorDate, appr
                 </table>
                 <table class="report-stmp-tbl" style="margin-top:8px;">
                     <tr><th colspan="2">作業担当者</th></tr>
-                    <tr><th>氏　名</th><td style="font-weight:bold;">${esc(authorName || '—')}</td></tr>
+                    <tr><th>氏名</th><td style="font-weight:bold;">${esc(authorName || '—')}</td></tr>
                 </table>
             </div>
         </div>
