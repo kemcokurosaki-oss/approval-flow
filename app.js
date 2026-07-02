@@ -1171,9 +1171,10 @@ async function goToSheetStep() {
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (currentFlowType !== 'assembly') { submitRequest(); return; }
+    const needsSheetFlow = currentFlowType === 'assembly' || currentFlowType === 'test_run';
+    if (!needsSheetFlow) { submitRequest(); return; }
     if (machineNums.length > 1) {
-        showToast('点検シートは1台ずつ申請してください', 'error');
+        showToast('報告書は1台ずつ申請してください', 'error');
         return;
     }
 
@@ -1186,7 +1187,7 @@ async function goToSheetStep() {
             .select('id')
             .eq('project_number', projectNum)
             .eq('machine_name', machine)
-            .eq('flow_type', 'assembly')
+            .eq('flow_type', currentFlowType)
             .eq('status', 'draft')
             .eq('requester_id', currentUser.id)
             .maybeSingle();
@@ -1200,7 +1201,7 @@ async function goToSheetStep() {
             const { data: newDraft, error } = await db.from('approval_requests').insert({
                 project_number: projectNum,
                 machine_name:   machine,
-                flow_type:      'assembly',
+                flow_type:      currentFlowType,
                 status:         'draft',
                 requester_id:   currentUser.id,
                 note:           note || null
@@ -1209,7 +1210,8 @@ async function goToSheetStep() {
             currentDraftId = newDraft.id;
         }
 
-        window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
+        const sheetUrl = currentFlowType === 'test_run' ? 'test_run_sheet.html' : 'sheet.html';
+        window.open(`${sheetUrl}?draft_id=${currentDraftId}`, '_blank');
         await loadMineSide();
     } catch (e) {
         showToast('下書きの保存に失敗しました: ' + e.message, 'error');
