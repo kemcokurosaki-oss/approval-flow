@@ -502,13 +502,17 @@ async function init() {
     if (draft.sheet_data) {
         checks       = draft.sheet_data.check_items   || {};
         pendingItems = draft.sheet_data.pending_items || [];
-        // 保存済みmetaがあれば反映（author上書き）
         if (draft.sheet_data.meta?.author && !sheetMeta.author) {
             sheetMeta.author = draft.sheet_data.meta.author;
             document.getElementById('sheet_author').textContent = sheetMeta.author;
         }
         restoreChecks();
         renderPendingItems();
+    }
+
+    // 初回開封時のみ即時保存して開封日を確定（再開時は保存済みの日付をそのまま使用）
+    if (!draft.sheet_data?.meta?.date) {
+        await saveNow();
     }
 
     document.getElementById('loading').classList.remove('visible');
