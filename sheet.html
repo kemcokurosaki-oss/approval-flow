@@ -254,6 +254,55 @@
             line-height: 2;
         }
 
+        /* ===== 完了報告書レイアウト ===== */
+        .report-info {
+            background: #fff;
+            border: 2px solid #1e3a5f;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+        }
+        .report-project-row {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+        .report-project-num {
+            font-size: 26px;
+            font-weight: bold;
+            color: #1e3a5f;
+            letter-spacing: 0.05em;
+        }
+        .report-machine-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .report-divider { border: none; border-top: 1px solid #e0e5f0; margin: 12px 0; }
+        .stamp-area { display: flex; gap: 16px; flex-wrap: wrap; }
+        .stamp-box {
+            min-width: 120px;
+            border: 2px solid #1e3a5f;
+            border-radius: 6px;
+            padding: 10px 14px;
+            text-align: center;
+        }
+        .stamp-role  { font-size: 11px; color: #999; font-weight: bold; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .stamp-name  { font-size: 16px; font-weight: bold; color: #1e3a5f; margin-bottom: 6px; }
+        .stamp-date  { font-size: 11px; color: #888; }
+        .stamp-box.stamp-approved { border-color: #2a7a3a; background: #f0faf2; }
+        .stamp-box.stamp-approved .stamp-name { color: #2a7a3a; }
+        .report-section-heading {
+            font-size: 12px;
+            font-weight: bold;
+            color: #888;
+            padding: 0 4px 6px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #dde3ee;
+            letter-spacing: 0.05em;
+        }
+
         /* ===== Add button in group header ===== */
         .btn-add-sm {
             padding: 4px 12px;
