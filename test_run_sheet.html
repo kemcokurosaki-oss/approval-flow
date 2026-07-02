@@ -594,11 +594,11 @@ async function init() {
         }
 
         document.getElementById('sheet_info').style.display = 'none';
-        document.getElementById('btn_print').style.display = '';
         const metaBox = document.querySelector('.sheet-meta-box');
         if (metaBox) metaBox.style.display = 'none';
 
         if (isApproved) {
+            document.getElementById('btn_print').style.display = '';
             document.getElementById('sheet_title').textContent = '社内試運転完了報告書';
             document.title = `社内試運転完了報告書 - ${req.project_number} ${req.machine_name}`;
             const legend = document.querySelector('.sheet-legend');
