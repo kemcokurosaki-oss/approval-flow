@@ -443,6 +443,14 @@ function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function setSheetInfoHeader(projectNum, machineName) {
+    const el = document.getElementById('sheet_info');
+    if (!el) return;
+    el.innerHTML =
+        `<span><span class="sheet-info-label">工事番号</span><span class="sheet-info-num">${esc(projectNum)}</span></span>` +
+        `<span><span class="sheet-info-label">機械名</span><span class="sheet-info-mach">${esc(machineName)}</span></span>`;
+}
+
 function fmtStampDate(iso) {
     const d = new Date(iso);
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
