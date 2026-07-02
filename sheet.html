@@ -654,8 +654,7 @@ async function init() {
         return;
     }
 
-    document.getElementById('sheet_info').textContent =
-        `工事番号: ${draft.project_number}　機械: ${draft.machine_name}`;
+    setSheetInfoHeader(draft.project_number, draft.machine_name);
     document.title = `機械組立完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
 
     // 担当者名を取得（profiles から）
