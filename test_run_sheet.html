@@ -514,8 +514,7 @@ async function init() {
         }
 
         const isApproved = req.status === 'approved';
-        document.getElementById('sheet_info').textContent =
-            `工事番号: ${req.project_number}　機械: ${req.machine_name}`;
+        setSheetInfoHeader(req.project_number, req.machine_name);
         checks      = req.sheet_data.check_items  || {};
         moushiokuri = req.sheet_data.moushiokuri  || [];
 
