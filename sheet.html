@@ -501,32 +501,59 @@ async function init() {
         // ===== 閲覧モード =====
         const { data: req, error } = await db
             .from('approval_requests')
-            .select('project_number, machine_name, sheet_data, requester_id')
+            .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
             .eq('id', viewId)
             .single();
 
         if (error || !req || !req.sheet_data) {
             document.getElementById('loading').classList.remove('visible');
             document.getElementById('sheet_content').innerHTML =
-                '<div class="error-screen">点検シートデータが見つかりません。</div>';
+                '<div class="error-screen">チェックシートデータが見つかりません。</div>';
             return;
         }
 
+        const isApproved = req.status === 'approved';
         document.getElementById('sheet_info').textContent =
             `工事番号: ${req.project_number}　機械: ${req.machine_name}`;
-        document.title = `点検シート（閲覧）- ${req.project_number} ${req.machine_name}`;
         checks       = req.sheet_data.check_items   || {};
         pendingItems = req.sheet_data.pending_items || [];
 
-        // 担当者・作成日を表示（保存済みmetaを優先、なければprofile取得）
         const meta = req.sheet_data.meta || {};
-        if (meta.author) {
-            document.getElementById('sheet_author').textContent = meta.author;
-        } else if (req.requester_id) {
+        let authorName = meta.author || '';
+        if (!authorName && req.requester_id) {
             const { data: p } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
-            if (p?.name) document.getElementById('sheet_author').textContent = p.name;
+            if (p?.name) authorName = p.name;
         }
-        if (meta.date) document.getElementById('sheet_date').textContent = meta.date;
+
+        let approvers = [];
+        if (isApproved && req.approval_steps) {
+            const approvedSteps = (req.approval_steps || [])
+                .filter(s => s.status === 'approved' && s.approver_id)
+                .sort((a, b) => (a.step_order || 0) - (b.step_order || 0));
+            if (approvedSteps.length > 0) {
+                const ids = [...new Set(approvedSteps.map(s => s.approver_id))];
+                const { data: profiles } = await db.from('profiles').select('id, name').in('id', ids);
+                approvers = approvedSteps.map(s => ({
+                    name: (profiles || []).find(p => p.id === s.approver_id)?.name || '—',
+                    date: s.decided_at ? fmtStampDate(s.decided_at) : '—'
+                }));
+            }
+        }
+
+        if (isApproved) {
+            document.getElementById('sheet_title').textContent = '機械組立完了報告書';
+            document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
+            const metaBox = document.querySelector('.sheet-meta-box');
+            if (metaBox) metaBox.style.display = 'none';
+            const legend = document.querySelector('.sheet-legend');
+            if (legend) legend.insertAdjacentHTML('beforebegin',
+                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', approvers));
+        } else {
+            document.getElementById('sheet_title').textContent = '機械組立完了チェックシート';
+            document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
+            document.getElementById('sheet_author').textContent = authorName || '—';
+            if (meta.date) document.getElementById('sheet_date').textContent = meta.date;
+        }
 
         restoreChecks();
         renderPendingItemsView();
