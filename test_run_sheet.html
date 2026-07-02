@@ -536,7 +536,7 @@ async function init() {
 
     document.getElementById('sheet_info').textContent =
         `工事番号: ${draft.project_number}　機械: ${draft.machine_name}`;
-    document.title = `試運転完了報告 - ${draft.project_number} ${draft.machine_name}`;
+    document.title = `社内試運転完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
 
     if (draft.requester_id) {
         const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
