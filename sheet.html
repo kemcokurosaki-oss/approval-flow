@@ -460,26 +460,31 @@ function fmtStampDate(iso) {
 }
 
 function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers) {
-    const approverStamps = approvers.map(a => `
-        <div class="stamp-box stamp-approved">
-            <div class="stamp-role">承認者</div>
-            <div class="stamp-name">${esc(a.name)}</div>
-            <div class="stamp-date">${esc(a.date)}</div>
-        </div>`).join('');
-    return `<div class="report-info">
-        <div class="report-project-row">
-            <span class="report-project-num">${esc(projectNum)}</span>
-            <span class="report-machine-name">【${esc(machineName)}】</span>
-        </div>
-        <hr class="report-divider">
-        <div class="stamp-area">
-            <div class="stamp-box">
-                <div class="stamp-role">申請者</div>
-                <div class="stamp-name">${esc(authorName || '—')}</div>
-                <div class="stamp-date">${esc(authorDate || '—')}</div>
-            </div>
-            ${approverStamps}
-        </div>
+    const approverRows = approvers.map((a, i) => `
+        <tr>
+            <th>${i === 0 ? '承認者' : '承認者' + (i+1)}</th>
+            <td>${esc(a.name)}</td>
+            <th>承認日</th>
+            <td>${esc(a.date)}</td>
+        </tr>`).join('');
+    return `<div class="report-cover">
+        <table class="report-table">
+            <tr>
+                <th>工事番号</th>
+                <td class="td-num" colspan="3">${esc(projectNum)}</td>
+            </tr>
+            <tr>
+                <th>機械名</th>
+                <td class="td-mach" colspan="3">${esc(machineName)}</td>
+            </tr>
+            <tr>
+                <th>申請者</th>
+                <td>${esc(authorName || '—')}</td>
+                <th>申請日</th>
+                <td>${esc(authorDate || '—')}</td>
+            </tr>
+            ${approverRows || `<tr><th>承認者</th><td>—</td><th>承認日</th><td>—</td></tr>`}
+        </table>
     </div>
     <div class="report-section-heading">確認項目</div>`;
 }
