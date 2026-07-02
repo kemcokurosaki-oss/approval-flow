@@ -823,7 +823,7 @@ async function loadProgress() {
         return;
     }
 
-    progressCachedData = { baseNums, projectData, machineTaskSet, shippingApproverNameMap };
+    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap };
 
     el.innerHTML = '<div id="progress_cards_wrap"></div>';
     _syncProgressControls();
