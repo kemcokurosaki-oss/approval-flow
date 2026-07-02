@@ -371,6 +371,65 @@
             font-weight: normal;
         }
         .btn-add-sm:hover { background: #eef2f8; }
+
+        /* ===== 印刷ボタン ===== */
+        .btn-print {
+            font-size: 12px;
+            padding: 5px 13px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.45);
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: 12px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .btn-print:hover { background: rgba(255,255,255,0.28); }
+
+        /* ===== 印刷用スタイル ===== */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: #fff !important; }
+            .sheet-header  { display: none !important; }
+            .sheet-footer  { display: none !important; }
+            .sheet-legend  { display: none !important; }
+            .sheet-meta-box { display: none !important; }
+            .loading-overlay { display: none !important; }
+            .sheet-content { max-width: 100%; padding: 16px 24px 24px; }
+            .sheet-group { page-break-inside: avoid; break-inside: avoid; }
+            /* 選択済みボタンのみ表示・テキスト化 */
+            .sheet-btn:not(.active) { display: none !important; }
+            .sheet-btn.active {
+                background: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 4px !important;
+                font-size: 13px !important;
+                font-weight: bold !important;
+                min-width: auto !important;
+            }
+            .sheet-btn.active.maru  { color: #1a7a3a !important; }
+            .sheet-btn.active.batu  { color: #c0392b !important; }
+            .sheet-btn.active.dash  { color: #888    !important; }
+            .sheet-btn.active.wide1 { color: #1a7a3a !important; }
+            .sheet-btn.active.wide2 { color: #c0392b !important; }
+            /* 備考入力欄 */
+            .sheet-note {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 4px !important;
+                color: #555 !important;
+                font-size: 12px !important;
+            }
+            .sheet-note:placeholder-shown { display: none !important; }
+            /* 報告書ヘッダー */
+            .report-info-tbl th { background-color: #eef2f8 !important; }
+            .report-stmp-tbl  th { background-color: #eef2f8 !important; }
+        }
     </style>
 </head>
 <body>
