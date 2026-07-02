@@ -490,13 +490,9 @@ async function init() {
         }
     }
 
-    // 作成日: 保存済みなら使用、なければ今日の日付
-    if (draft.sheet_data?.meta?.date) {
-        sheetMeta.date = draft.sheet_data.meta.date;
-    } else {
-        const d = new Date();
-        sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-    }
+    // 作成日: 常に開いた日の日付を表示（申請時に確定保存）
+    const _d = new Date();
+    sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
     document.getElementById('sheet_date').textContent = sheetMeta.date;
 
     if (draft.sheet_data) {
@@ -508,11 +504,6 @@ async function init() {
         }
         restoreChecks();
         renderPendingItems();
-    }
-
-    // 初回開封時のみ即時保存して開封日を確定（再開時は保存済みの日付をそのまま使用）
-    if (!draft.sheet_data?.meta?.date) {
-        await saveNow();
     }
 
     document.getElementById('loading').classList.remove('visible');
