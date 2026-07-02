@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社内試運転完了報告</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f4f6fb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ===== Header ===== */
+        .sheet-header {
+            background: #1e3a5f;
+            color: #fff;
+            padding: 11px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .sheet-header-inner {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .sheet-header-title { flex: 1; min-width: 0; }
+        .sheet-header h1 { font-size: 16px; font-weight: bold; }
+        .sheet-info { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 3px; }
+        .save-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 3px;
+            margin-left: 16px;
+        }
+        .save-status.saving { color: #ffd700; }
+        .save-status.error  { color: #ff7675; }
+
+        /* ===== Meta ===== */
+        .sheet-meta-box {
+            display: flex;
+            gap: 28px;
+            background: #fff;
+            border: 1px solid #e0e5f0;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+        }
+        .sheet-meta-item { display: flex; align-items: center; gap: 8px; }
+        .sheet-meta-label { font-size: 12px; color: #999; }
+        .sheet-meta-value { font-size: 14px; color: #333; font-weight: bold; }
+
+        /* ===== Content ===== */
+        .sheet-content {
+            flex: 1;
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 18px 16px 90px;
+        }
+        .sheet-legend {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 14px;
+            padding: 9px 14px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e0e5f0;
+        }
+
+        /* ===== Groups ===== */
+        .sheet-group {
+            margin-bottom: 12px;
+            border: 1px solid #dde3ee;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .sheet-group-label {
+            background: #eef2f8;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a5f;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sheet-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .sheet-no {
+            font-size: 12px;
+            color: #bbb;
+            width: 22px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .sheet-text { font-size: 14px; flex: 1; line-height: 1.5; }
+        .sheet-btns { display: flex; gap: 4px; flex-shrink: 0; }
+        .sheet-btn {
+            height: 34px;
+            border: 1.5px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            color: #555;
+            padding: 0 12px;
+            white-space: nowrap;
+            transition: background 0.1s, color 0.1s, border-color 0.1s;
+        }
+        .sheet-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+        .active-a { background: #2a7a3a; color: #fff !important; border-color: #2a7a3a !important; }
+        .active-b { background: #c0392b; color: #fff !important; border-color: #c0392b !important; }
+        .active-c { background: #1e6091; color: #fff !important; border-color: #1e6091 !important; }
+        .active-d { background: #d35400; color: #fff !important; border-color: #d35400 !important; }
+        .active-e { background: #888;    color: #fff !important; border-color: #888    !important; }
+
+        /* サブ行（7bなど） */
+        .sheet-item.sub-item { background: #fafbfd; }
+        .sheet-item.sub-item .sheet-text { font-size: 13px; color: #666; }
+
+        /* ===== 申送り事項 ===== */
+        .moushiokuri-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .moushiokuri-no { font-size: 12px; color: #bbb; width: 22px; flex-shrink: 0; text-align: right; }
+        .moushiokuri-text {
+            flex: 1;
+            font-size: 13px;
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 32px;
+        }
+        .moushiokuri-text:focus { outline: none; border-color: #1e3a5f; }
+        .moushiokuri-empty { color: #999; font-size: 13px; padding: 8px 14px; }
+        .btn-danger-xs {
+            padding: 4px 10px; font-size: 12px;
+            background: #fff; border: 1px solid #e74c3c; color: #e74c3c;
+            border-radius: 4px; cursor: pointer; flex-shrink: 0;
+        }
+        .btn-danger-xs:hover { background: #e74c3c; color: #fff; }
+        .btn-add-sm {
+            padding: 4px 12px; font-size: 12px; border-radius: 4px;
+            border: 1px solid #aab; background: #fff; color: #1e3a5f;
+            cursor: pointer; font-weight: normal;
+        }
+        .btn-add-sm:hover { background: #eef2f8; }
+
+        /* ===== 未入力警告 ===== */
+        .sheet-item-missing {
+            background: #fde8e8;
+            color: #c0392b;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 14px 4px 46px;
+            border-left: 3px solid #e74c3c;
+        }
+        .sheet-item.has-missing {
+            background: #fff8f8;
+            border-left: 3px solid #e74c3c;
+        }
+
+        /* ===== View Mode ===== */
+        body.view-mode .sheet-btn        { pointer-events: none; cursor: default; }
+        body.view-mode .moushiokuri-text { pointer-events: none; background: #f8f9fa; cursor: default; }
+        body.view-mode .btn-add-sm       { display: none !important; }
+        body.view-mode .btn-danger-xs    { display: none !important; }
+
+        /* ===== Footer ===== */
+        .sheet-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #fff;
+            border-top: 1px solid #dde3ee;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+        .sheet-footer-inner {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn { padding: 9px 22px; border-radius: 5px; font-size: 14px; cursor: pointer; border: none; font-family: inherit; font-weight: bold; }
+        .btn-secondary { background: #f0f2f6; color: #555; border: 1px solid #ccc; }
+        .btn-secondary:hover { background: #e4e8f0; }
+        .btn-primary { background: #1e3a5f; color: #fff; }
+        .btn-primary:hover { background: #2a4f7f; }
+        .btn:disabled { opacity: 0.6; cursor: default; }
+
+        /* ===== Loading ===== */
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.9); z-index: 200;
+            align-items: center; justify-content: center;
+            font-size: 16px; color: #1e3a5f; flex-direction: column; gap: 12px;
+        }
+        .loading-overlay.visible { display: flex; }
+        .error-screen { text-align: center; padding: 60px 20px; color: #888; font-size: 15px; line-height: 2; }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay visible" id="loading"><div>読み込み中...</div></div>
+
+<header class="sheet-header">
+    <div class="sheet-header-inner">
+        <div class="sheet-header-title">
+            <h1>社内試運転完了報告</h1>
+            <div class="sheet-info" id="sheet_info">—</div>
+        </div>
+        <div class="save-status" id="save_status">保存済み ✓</div>
+    </div>
+</header>
+
+<main class="sheet-content" id="sheet_content">
+    <div class="sheet-legend">各項目の実施結果を選択してください　　<strong>入力内容は自動保存されます</strong></div>
+    <div class="sheet-meta-box">
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">担当者</span>
+            <span class="sheet-meta-value" id="sheet_author">—</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">作成日</span>
+            <span class="sheet-meta-value" id="sheet_date">—</span>
+        </div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">確認内容</div>
+        <div class="sheet-item" data-id="1">
+            <span class="sheet-no">1</span>
+            <span class="sheet-text">特殊線の回収（光ケーブル、エンコーダーケーブル等）</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('1','未処理',this,'b')">未処理</button>
+                <button class="sheet-btn" onclick="setCheck('1','完了',this,'a')">完了</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="2">
+            <span class="sheet-no">2</span>
+            <span class="sheet-text">使用工具の回収、返却</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('2','未処理',this,'b')">未処理</button>
+                <button class="sheet-btn" onclick="setCheck('2','完了',this,'a')">完了</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="3">
+            <span class="sheet-no">3</span>
+            <span class="sheet-text">計測機器の回収、返却</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('3','未処理',this,'b')">未処理</button>
+                <button class="sheet-btn" onclick="setCheck('3','完了',this,'a')">完了</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="4">
+            <span class="sheet-no">4</span>
+            <span class="sheet-text">椅子・テーブル類を保管場所へ返却</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('4','未処理',this,'b')">未処理</button>
+                <button class="sheet-btn" onclick="setCheck('4','完了',this,'a')">完了</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="5">
+            <span class="sheet-no">5</span>
+            <span class="sheet-text">ウエス・ゴミの掃除（切り屑、パイプ残骸の処理含む）</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('5','未処理',this,'b')">未処理</button>
+                <button class="sheet-btn" onclick="setCheck('5','完了',this,'a')">完了</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="6">
+            <span class="sheet-no">6</span>
+            <span class="sheet-text">実装機器の処理を確認（ロール、クランプ、刃物等）営業へ</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('6','取外',this,'c')">取外</button>
+                <button class="sheet-btn" onclick="setCheck('6','実装OK',this,'a')">実装OK</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="7a">
+            <span class="sheet-no">7</span>
+            <span class="sheet-text">試運転終了時の機器停止位置を確認（営業部へ確認）</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('7a','未確認',this,'b')">未確認</button>
+                <button class="sheet-btn" onclick="setCheck('7a','確認済',this,'a')">確認済</button>
+            </div>
+        </div>
+        <div class="sheet-item sub-item" data-id="7b">
+            <span class="sheet-no"></span>
+            <span class="sheet-text">出荷時の荷姿により解体箇所が決定する為、組立部とも協議する事</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('7b','未確認',this,'b')">未確認</button>
+                <button class="sheet-btn" onclick="setCheck('7b','確認済',this,'a')">確認済</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="8">
+            <span class="sheet-no">8</span>
+            <span class="sheet-text">残テスト材料の処理を確認（営業部へ確認）</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('8','社内在庫',this,'c')">社内在庫</button>
+                <button class="sheet-btn" onclick="setCheck('8','返却',this,'d')">返却</button>
+                <button class="sheet-btn" onclick="setCheck('8','廃棄',this,'e')">廃棄</button>
+            </div>
+        </div>
+        <div class="sheet-item" data-id="9">
+            <span class="sheet-no">9</span>
+            <span class="sheet-text">残テスト材料の整理助勢依頼</span>
+            <div class="sheet-btns">
+                <button class="sheet-btn" onclick="setCheck('9','要',this,'d')">要</button>
+                <button class="sheet-btn" onclick="setCheck('9','不要',this,'a')">不要</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">
+            申送り事項
+            <button class="btn-add-sm" onclick="addMoushiokuri()">＋ 追加</button>
+        </div>
+        <div id="moushiokuri_container">
+            <div class="moushiokuri-empty">申送り事項はありません</div>
+        </div>
+    </div>
+</main>
+
+<footer class="sheet-footer">
+    <div class="sheet-footer-inner">
+        <button class="btn btn-secondary" onclick="suspendSheet()">一時保存して閉じる</button>
+        <button class="btn btn-primary" id="btn_complete" onclick="completeSheet()">入力完了・申請へ進む</button>
+    </div>
+</footer>
+
+<script>
+const S_URL = "https://dgekjzkrybrswsxlcbvh.supabase.co";
+const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU";
+
+const db = supabase.createClient(S_URL, S_KEY);
+const broadcastChannel = new BroadcastChannel('approval_sheet');
+
+let draftId      = null;
+let checks       = {};
+let moushiokuri  = [];
+let saveTimer    = null;
+let isSaving     = false;
+let sheetMeta    = { author: '', date: '' };
+
+const REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7a','7b','8','9'];
+
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function init() {
+    const params   = new URLSearchParams(location.search);
+    const viewMode = params.get('view') === '1';
+    const viewId   = params.get('id');
+    draftId = params.get('draft_id');
+
+    if (viewMode && viewId) {
+        const { data: req, error } = await db
+            .from('approval_requests')
+            .select('project_number, machine_name, sheet_data, requester_id')
+            .eq('id', viewId)
+            .single();
+
+        if (error || !req || !req.sheet_data) {
+            document.getElementById('loading').classList.remove('visible');
+            document.getElementById('sheet_content').innerHTML =
+                '<div class="error-screen">報告書データが見つかりません。</div>';
+            return;
+        }
+
+        document.getElementById('sheet_info').textContent =
+            `工事番号: ${req.project_number}　機械: ${req.machine_name}`;
+        document.title = `試運転完了報告（閲覧）- ${req.project_number} ${req.machine_name}`;
+        checks      = req.sheet_data.check_items  || {};
+        moushiokuri = req.sheet_data.moushiokuri  || [];
+
+        const meta = req.sheet_data.meta || {};
+        if (meta.author) {
+            document.getElementById('sheet_author').textContent = meta.author;
+        } else if (req.requester_id) {
+            const { data: p } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
+            if (p?.name) document.getElementById('sheet_author').textContent = p.name;
+        }
+        if (meta.date) document.getElementById('sheet_date').textContent = meta.date;
+
+        restoreChecks();
+        setViewMode();
+        document.getElementById('loading').classList.remove('visible');
+        return;
+    }
+
+    if (!draftId) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">URLパラメータが不正です。<br>申請画面の「次へ」ボタンから開き直してください。</div>';
+        return;
+    }
+
+    const { data: draft, error } = await db
+        .from('approval_requests')
+        .select('project_number, machine_name, sheet_data, requester_id')
+        .eq('id', draftId)
+        .single();
+
+    if (error || !draft) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">下書きデータが見つかりません。<br>申請画面から開き直してください。</div>';
+        return;
+    }
+
+    document.getElementById('sheet_info').textContent =
+        `工事番号: ${draft.project_number}　機械: ${draft.machine_name}`;
+    document.title = `試運転完了報告 - ${draft.project_number} ${draft.machine_name}`;
+
+    if (draft.requester_id) {
+        const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
+        if (profile?.name) {
+            sheetMeta.author = profile.name;
+            document.getElementById('sheet_author').textContent = profile.name;
+        }
+    }
+
+    const _d = new Date();
+    sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
+    document.getElementById('sheet_date').textContent = sheetMeta.date;
+
+    if (draft.sheet_data) {
+        checks      = draft.sheet_data.check_items  || {};
+        moushiokuri = draft.sheet_data.moushiokuri  || [];
+        if (draft.sheet_data.meta?.author && !sheetMeta.author) {
+            sheetMeta.author = draft.sheet_data.meta.author;
+            document.getElementById('sheet_author').textContent = sheetMeta.author;
+        }
+        restoreChecks();
+        renderMoushiokuri();
+    }
+
+    document.getElementById('loading').classList.remove('visible');
+}
+
+function restoreChecks() {
+    Object.entries(checks).forEach(([itemId, val]) => {
+        if (!val) return;
+        const btn = document.querySelector(`.sheet-btn[onclick*="setCheck('${itemId}','${val}',"]`);
+        if (!btn) return;
+        const m = btn.getAttribute('onclick').match(/,'([a-e])'\)$/);
+        if (m) btn.classList.add(`active-${m[1]}`);
+    });
+}
+
+function setCheck(itemId, val, btn, cls) {
+    const already = checks[itemId] === val;
+    btn.parentElement.querySelectorAll('.sheet-btn').forEach(b => {
+        b.className = b.className.replace(/\bactive-[a-e]\b/g, '').trim();
+    });
+    if (already) {
+        checks[itemId] = null;
+    } else {
+        checks[itemId] = val;
+        btn.classList.add(`active-${cls}`);
+        const item = btn.closest('.sheet-item');
+        if (item?.classList.contains('has-missing')) {
+            item.classList.remove('has-missing');
+            const prev = item.previousElementSibling;
+            if (prev?.classList.contains('sheet-item-missing')) prev.remove();
+        }
+    }
+    scheduleSave();
+}
+
+function scheduleSave() {
+    setSaveStatus('saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 1200);
+}
+
+function setSaveStatus(state) {
+    const el = document.getElementById('save_status');
+    if (state === 'saving') { el.textContent = '保存中...';   el.className = 'save-status saving'; }
+    else if (state === 'ok') { el.textContent = '保存済み ✓'; el.className = 'save-status'; }
+    else                     { el.textContent = '保存エラー ✕'; el.className = 'save-status error'; }
+}
+
+async function saveNow() {
+    if (isSaving || !draftId) return;
+    isSaving = true;
+    const sheetData = { check_items: checks, moushiokuri, meta: sheetMeta };
+    const { error } = await db.from('approval_requests')
+        .update({ sheet_data: sheetData }).eq('id', draftId);
+    isSaving = false;
+    setSaveStatus(error ? 'error' : 'ok');
+}
+
+function addMoushiokuri() {
+    moushiokuri.push({ text: '' });
+    renderMoushiokuri();
+    scheduleSave();
+}
+
+function removeMoushiokuri(idx) {
+    moushiokuri.splice(idx, 1);
+    renderMoushiokuri();
+    scheduleSave();
+}
+
+function renderMoushiokuri() {
+    const c = document.getElementById('moushiokuri_container');
+    if (!c) return;
+    if (!moushiokuri.length) {
+        c.innerHTML = '<div class="moushiokuri-empty">申送り事項はありません</div>';
+        return;
+    }
+    c.innerHTML = moushiokuri.map((item, i) => `
+        <div class="moushiokuri-row">
+            <span class="moushiokuri-no">${i+1}</span>
+            <input type="text" class="moushiokuri-text" placeholder="申送り内容を入力" value="${esc(item.text)}"
+                   oninput="moushiokuri[${i}].text=this.value; scheduleSave()">
+            <button class="btn-danger-xs" onclick="removeMoushiokuri(${i})">削除</button>
+        </div>
+    `).join('');
+}
+
+function renderMoushiokuri_view() {
+    const c = document.getElementById('moushiokuri_container');
+    if (!c) return;
+    if (!moushiokuri.length) {
+        c.innerHTML = '<div class="moushiokuri-empty">申送り事項はありません</div>';
+        return;
+    }
+    c.innerHTML = moushiokuri.map((item, i) => `
+        <div class="moushiokuri-row">
+            <span class="moushiokuri-no">${i+1}</span>
+            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px;">${esc(item.text || '—')}</span>
+        </div>
+    `).join('');
+}
+
+function clearMissingMarks() {
+    document.querySelectorAll('.sheet-item-missing').forEach(el => el.remove());
+    document.querySelectorAll('.sheet-item.has-missing').forEach(el => el.classList.remove('has-missing'));
+}
+
+function markMissingItems(missingIds) {
+    clearMissingMarks();
+    missingIds.forEach(id => {
+        const item = document.querySelector(`.sheet-item[data-id="${id}"]`);
+        if (!item) return;
+        item.classList.add('has-missing');
+        const warning = document.createElement('div');
+        warning.className = 'sheet-item-missing';
+        warning.textContent = '▼ 未入力です';
+        item.parentNode.insertBefore(warning, item);
+    });
+    const first = document.querySelector('.sheet-item-missing');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function setViewMode() {
+    document.body.classList.add('view-mode');
+    document.getElementById('save_status').style.display = 'none';
+    const legend = document.querySelector('.sheet-legend');
+    if (legend) legend.textContent = '各項目の実施結果';
+    renderMoushiokuri_view();
+    const footerInner = document.querySelector('.sheet-footer-inner');
+    if (footerInner) footerInner.innerHTML =
+        '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>';
+}
+
+function suspendSheet() {
+    clearTimeout(saveTimer);
+    saveNow().then(() => window.close());
+}
+
+async function completeSheet() {
+    const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]);
+    if (missing.length > 0) {
+        markMissingItems(missing);
+        return;
+    }
+    clearMissingMarks();
+
+    const d = new Date();
+    sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    document.getElementById('sheet_date').textContent = sheetMeta.date;
+
+    const btn = document.getElementById('btn_complete');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+    clearTimeout(saveTimer);
+    await saveNow();
+    broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
+    window.close();
+}
+
+init();
+</script>
+</body>
+</html>
