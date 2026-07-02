@@ -317,8 +317,8 @@
             .loading-overlay { display: none !important; }
             .sheet-content { max-width: 100%; padding: 16px 24px 24px; }
             .sheet-group { page-break-inside: avoid; break-inside: avoid; }
-            .sheet-btn:not(.active) { display: none !important; }
-            .sheet-btn.active {
+            .sheet-btn:not([class*="active-"]) { display: none !important; }
+            .sheet-btn[class*="active-"] {
                 background: none !important;
                 border: none !important;
                 box-shadow: none !important;
@@ -326,9 +326,10 @@
                 font-size: 13px !important;
                 font-weight: bold !important;
                 min-width: auto !important;
+                color: #333 !important;
             }
-            .sheet-btn.active.a { color: #1a7a3a !important; }
-            .sheet-btn.active.b { color: #c0392b !important; }
+            .sheet-btn.active-a { color: #1a7a3a !important; }
+            .sheet-btn.active-b { color: #c0392b !important; }
             .sheet-note {
                 border: none !important;
                 background: transparent !important;
