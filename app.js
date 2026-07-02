@@ -776,6 +776,15 @@ async function loadProgress() {
     );
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
 
+    // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議はproject全体に1つの場合がある
+    const { data: projectFlowTasks } = await db.from('tasks')
+        .select('project_number, text')
+        .in('text', ['簡易検査', '外観検査', '出荷確認会議']);
+    const projectFlowSet = new Set(
+        (projectFlowTasks || []).map(t => `${(t.project_number||'').toString().trim()}__${t.text}`)
+    );
+    const hasProjectFlow = (num, text) => projectFlowSet.has(`${num}__${text}`);
+
     // projectNum → machine → { flows, ... }
     const projectData = {};
 
