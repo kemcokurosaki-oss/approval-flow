@@ -427,25 +427,37 @@ function fmtStampDate(iso) {
 }
 
 function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers) {
-    const approverStamps = approvers.map(a => `
-        <div class="stamp-box stamp-approved">
-            <div class="stamp-role">承認者</div>
-            <div class="stamp-name">${esc(a.name)}</div>
-            <div class="stamp-date">${esc(a.date)}</div>
-        </div>`).join('');
-    return `<div class="report-info">
-        <div class="report-project-row">
-            <span class="report-project-num">${esc(projectNum)}</span>
-            <span class="report-machine-name">【${esc(machineName)}】</span>
-        </div>
-        <hr class="report-divider">
-        <div class="stamp-area">
-            <div class="stamp-box">
-                <div class="stamp-role">申請者</div>
-                <div class="stamp-name">${esc(authorName || '—')}</div>
-                <div class="stamp-date">${esc(authorDate || '—')}</div>
+    const approverCells = approvers.length > 0
+        ? approvers.map(a => `
+            <td class="report-stmp-tbl-td">
+                <div class="stamp-inner-name">${esc(a.name)}</div>
+                <div class="stamp-inner-date">${esc(a.date)}</div>
+            </td>`).join('')
+        : `<td class="report-stmp-tbl-td" style="color:#bbb;font-size:11px;">—</td>`;
+    const approverHeaders = approvers.length > 1
+        ? approvers.map((_, i) => `<th>承認者${i+1}</th>`).join('')
+        : `<th>承認者</th>`;
+    return `<div class="report-doc">
+        <div class="report-doc-date">発行日: ${esc(authorDate || '—')}</div>
+        <div class="report-doc-body">
+            <div class="report-doc-left">
+                <div class="report-doc-notice">下記の機械の試運転が完了しましたので、報告します。</div>
+                <table class="report-info-tbl">
+                    <tr><th>工 事 番 号</th><td class="td-num">${esc(projectNum)}</td></tr>
+                    <tr><th>機 械 名</th><td class="td-mach">${esc(machineName)}</td></tr>
+                    <tr><th>試 運 転 完 了 日</th><td>${esc(authorDate || '—')}</td></tr>
+                </table>
             </div>
-            ${approverStamps}
+            <div class="report-doc-right">
+                <table class="report-stmp-tbl">
+                    <tr>${approverHeaders}</tr>
+                    <tr>${approverCells}</tr>
+                </table>
+                <table class="report-stmp-tbl" style="margin-top:8px;">
+                    <tr><th colspan="2">作業担当者</th></tr>
+                    <tr><th>氏　名</th><td style="font-weight:bold;">${esc(authorName || '—')}</td></tr>
+                </table>
+            </div>
         </div>
     </div>
     <div class="report-section-heading">確認項目</div>`;
