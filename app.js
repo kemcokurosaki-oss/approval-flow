@@ -872,8 +872,9 @@ function renderProgressCards() {
     const wrap = document.getElementById('progress_cards_wrap');
     if (!wrap || !progressCachedData) return;
 
-    const { baseNums, projectData, machineTaskSet, shippingApproverNameMap } = progressCachedData;
-    const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
+    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap } = progressCachedData;
+    const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
+    const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
 
     // 並び替え
     let nums = [...baseNums];
