@@ -1797,10 +1797,18 @@ async function openDetailModal(requestId) {
         ${!['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type)
             ? '<hr class="section-divider"><div class="section-title">承認ステップ</div>' : ''}
         <div class="steps-list">${stepsHtml}</div>
-        ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? `
-        <hr class="section-divider">
-        <div class="section-title">${req.flow_type === 'test_run' ? '社内試運転完了報告' : '組立完了自主点検シート'}</div>
-        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${req.flow_type === 'test_run' ? 'test_run_sheet.html' : 'sheet.html'}?view=1&id=${req.id}', '_blank')">${req.flow_type === 'test_run' ? '試運転完了報告書' : '点検シート'}を確認する →</button>` : ''}
+        ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
+            const isAssembly = req.flow_type === 'assembly';
+            const isApproved = req.status === 'approved';
+            const sectionTitle = isAssembly
+                ? (isApproved ? '機械組立完了報告書' : '機械組立完了チェックシート')
+                : (isApproved ? '社内試運転完了報告書' : '社内試運転完了チェックシート');
+            const btnLabel = isApproved ? sectionTitle : (isAssembly ? 'チェックシート' : 'チェックシート');
+            const sheetFile = isAssembly ? 'sheet.html' : 'test_run_sheet.html';
+            return `<hr class="section-divider">
+        <div class="section-title">${sectionTitle}</div>
+        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>`;
+        })() : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
