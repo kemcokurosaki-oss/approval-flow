@@ -595,6 +595,7 @@ async function init() {
 
         if (isApproved) {
             document.getElementById('sheet_title').textContent = '機械組立完了報告書';
+            document.getElementById('sheet_info').style.display = 'none';
             document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
             const metaBox = document.querySelector('.sheet-meta-box');
             if (metaBox) metaBox.style.display = 'none';
