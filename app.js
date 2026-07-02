@@ -1220,10 +1220,11 @@ async function goToSheetStep() {
     }
 }
 
-// 「変更する」ボタン: 既存の下書きをsheet.htmlで再度開く
+// 「変更する」ボタン: 既存の下書きをシートで再度開く
 function reopenSheetTab() {
     if (!currentDraftId) { showToast('下書きIDが不明です。再度「次へ」を押してください', 'error'); return; }
-    window.open(`sheet.html?draft_id=${currentDraftId}`, '_blank');
+    const sheetUrl = currentFlowType === 'test_run' ? 'test_run_sheet.html' : 'sheet.html';
+    window.open(`${sheetUrl}?draft_id=${currentDraftId}`, '_blank');
 }
 
 // 点検シートモーダルを開いて保存済みデータを復元
