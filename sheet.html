@@ -618,20 +618,22 @@ async function init() {
             }
         }
 
+        document.getElementById('sheet_info').style.display = 'none';
+        const metaBox = document.querySelector('.sheet-meta-box');
+        if (metaBox) metaBox.style.display = 'none';
+
         if (isApproved) {
             document.getElementById('sheet_title').textContent = '機械組立完了報告書';
-            document.getElementById('sheet_info').style.display = 'none';
             document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
-            const metaBox = document.querySelector('.sheet-meta-box');
-            if (metaBox) metaBox.style.display = 'none';
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
                 buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', approvers));
         } else {
             document.getElementById('sheet_title').textContent = '機械組立完了チェックシート';
             document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
-            document.getElementById('sheet_author').textContent = authorName || '—';
-            if (meta.date) document.getElementById('sheet_date').textContent = meta.date;
+            const legend = document.querySelector('.sheet-legend');
+            if (legend) legend.insertAdjacentHTML('beforebegin',
+                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', [], '作成日'));
         }
 
         restoreChecks();
