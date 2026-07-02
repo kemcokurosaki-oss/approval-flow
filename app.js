@@ -1161,8 +1161,8 @@ function openSubmitModal(flowType = 'assembly') {
     const btnSubmit  = document.getElementById('submit_btn');
     if (needsSheetModal) {
         const sheetLabel = flowType === 'test_run'
-            ? '次へ（試運転完了報告書を入力する）→'
-            : '次へ（自主点検シートを入力する）→';
+            ? '次へ（社内試運転完了チェックシートを入力する）→'
+            : '次へ（機械組立完了チェックシートを入力する）→';
         if (btnGoSheet) { btnGoSheet.style.display = ''; btnGoSheet.textContent = sheetLabel; }
         if (btnSubmit)  btnSubmit.style.display  = 'none';
     } else {
