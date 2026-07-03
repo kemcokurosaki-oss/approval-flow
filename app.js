@@ -1842,7 +1842,9 @@ async function openDetailModal(requestId) {
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
                 </div>
-                ${!item.completed && canComplete ? `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>` : ''}
+                ${canComplete ? (item.completed
+                    ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
+                    : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
             </div>`).join('')}` : '';
 
             return `<hr class="section-divider">
