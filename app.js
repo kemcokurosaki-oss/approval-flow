@@ -1993,12 +1993,12 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
         if (el) {
             const isMyRequest = currentDetailReq.requester_id === currentUser.id;
             el.innerHTML = buildPendingSectionInner(currentDetailReq, isMyRequest);
-            showToast(toastMsg, 'success');
+            showToast(toastMsg, 'success', true);
             return;
         }
     }
     // フォールバック: モーダルを再描画
-    openDetailModal(requestId).then(() => showToast(toastMsg, 'success'));
+    openDetailModal(requestId).then(() => showToast(toastMsg, 'success', true));
 }
 
 // ===== 日程変更（簡易検査） =====
