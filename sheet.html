@@ -608,6 +608,13 @@ function fmtStampDate(iso) {
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
 }
 
+function fmtCompletionDate(isoStr) {
+    if (!isoStr) return '—';
+    const p = isoStr.split('-');
+    if (p.length !== 3) return isoStr;
+    return `${parseInt(p[0])}年${parseInt(p[1])}月${parseInt(p[2])}日`;
+}
+
 function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers, dateLabel) {
     dateLabel = dateLabel || '完成年月日';
     const approverCells = approvers.length > 0
