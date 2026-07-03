@@ -1627,6 +1627,28 @@ async function submitRequest() {
     }
 }
 
+// ===== ペンディングセクション HTML 生成 =====
+function buildPendingSectionInner(req, isMyRequest) {
+    const canComplete = isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status);
+    const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    if (!items.length) return '';
+    return `
+        <hr class="section-divider">
+        <div class="section-title">ペンディング項目</div>
+        ${items.map((item, idx) => `
+            <div class="pending-detail-row ${item.completed ? 'pending-done' : ''}">
+                <div class="pending-detail-icon">${item.completed ? '✓' : '●'}</div>
+                <div class="pending-detail-content">
+                    <div class="pending-detail-text">${esc(item.content || '—')}${item.machine ? ` <span class="pending-detail-machine">（${esc(item.machine)}）</span>` : ''}</div>
+                    ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
+                    ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
+                </div>
+                ${canComplete ? (item.completed
+                    ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
+                    : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
+            </div>`).join('')}`;
+}
+
 // ===== Detail Modal =====
 async function openDetailModal(requestId) {
     document.getElementById('detail_modal').classList.add('open');
