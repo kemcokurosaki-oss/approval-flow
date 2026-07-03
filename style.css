@@ -1103,6 +1103,12 @@
             border-radius: 4px; cursor: pointer; flex-shrink: 0;
         }
         .btn-success-xs:hover { background: #27ae60; color: #fff; }
+        .btn-undo-xs {
+            padding: 4px 10px; font-size: 12px;
+            background: #fff; border: 1px solid #aaa; color: #888;
+            border-radius: 4px; cursor: pointer; flex-shrink: 0;
+        }
+        .btn-undo-xs:hover { background: #aaa; color: #fff; }
 
         .btn-danger-xs {
             padding: 3px 8px;
