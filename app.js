@@ -1,13 +1,17 @@
 // ===== Toast Notifications =====
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', replace = false) {
     let container = document.getElementById('toast_container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast_container';
         document.body.appendChild(container);
     }
-    const existing = [...container.querySelectorAll('.toast')].find(t => t.textContent === message);
-    if (existing) return;
+    if (replace) {
+        container.querySelectorAll('.toast').forEach(t => t.remove());
+    } else {
+        const existing = [...container.querySelectorAll('.toast')].find(t => t.textContent === message);
+        if (existing) return;
+    }
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
