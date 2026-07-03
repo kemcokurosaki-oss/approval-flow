@@ -164,6 +164,7 @@ let progressSort         = 'job';   // 'job' | 'shipping'
 let progressFilterMine   = false;
 let progressFilterPrefix = '';
 let progressCachedData   = null;
+let currentDetailReq     = null;
 let devRole = ''; // 開発用ロール上書き
 let devDept = ''; // 開発用部署上書き
 let currentDetailFlowType = '';
