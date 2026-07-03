@@ -1815,9 +1815,27 @@ async function openDetailModal(requestId) {
                 : (isApproved ? '社内試運転完了報告書' : '社内試運転完了チェックシート');
             const btnLabel = isApproved ? sectionTitle : (isAssembly ? 'チェックシート' : 'チェックシート');
             const sheetFile = isAssembly ? 'sheet.html' : 'test_run_sheet.html';
+
+            const pendingItems = (req.sheet_data.pending_items || []).filter(p => p.content || p.machine);
+            const canComplete = isMyRequest && isApproved;
+            const pendingSection = pendingItems.length > 0 ? `
+        <hr class="section-divider">
+        <div class="section-title">ペンディング項目</div>
+        ${pendingItems.map((item, idx) => `
+            <div class="pending-detail-row ${item.completed ? 'pending-done' : ''}">
+                <div class="pending-detail-icon">${item.completed ? '✓' : '●'}</div>
+                <div class="pending-detail-content">
+                    <div class="pending-detail-text">${esc(item.content || '—')}${item.machine ? ` <span class="pending-detail-machine">（${esc(item.machine)}）</span>` : ''}</div>
+                    ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
+                    ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
+                </div>
+                ${!item.completed && canComplete ? `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>` : ''}
+            </div>`).join('')}` : '';
+
             return `<hr class="section-divider">
         <div class="section-title">${sectionTitle}</div>
-        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>`;
+        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
+        ${pendingSection}`;
         })() : ''}
         ${myStep ? `
         <hr class="section-divider">
