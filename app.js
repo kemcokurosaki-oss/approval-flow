@@ -1481,8 +1481,11 @@ function renderPendingItems() {
                    oninput="pendingItems[${i}].machine=this.value">
             <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
                    oninput="pendingItems[${i}].content=this.value">
-            <input type="date" class="pending-due" value="${esc(item.due)}"
-                   onchange="pendingItems[${i}].due=this.value">
+            <div style="display:flex;flex-direction:column;gap:2px;width:135px;flex-shrink:0;">
+                <span style="font-size:10px;color:#999;">完了予定日</span>
+                <input type="date" class="pending-due" value="${esc(item.due)}"
+                       onchange="pendingItems[${i}].due=this.value">
+            </div>
             <button type="button" class="btn-xs btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
         </div>
     `).join('');
