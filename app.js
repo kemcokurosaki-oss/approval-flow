@@ -1647,9 +1647,13 @@ function buildPendingSectionInner(req, isMyRequest) {
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
                 </div>
-                ${canComplete ? (item.completed
-                    ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
-                    : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
+                ${canComplete
+                    ? (item.completed
+                        ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
+                        : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`)
+                    : (item.completed
+                        ? `<button class="btn-undo-xs" style="opacity:0.35;cursor:default;" onclick="showToast('ペンディング項目は申請者のみ操作できます','info',true)">取り消す</button>`
+                        : `<button class="btn-success-xs" style="opacity:0.35;cursor:default;" onclick="showToast('ペンディング項目は申請者のみ操作できます','info',true)">完了にする</button>`)}
             </div>`).join('')}`;
 }
 
