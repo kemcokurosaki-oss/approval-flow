@@ -959,10 +959,9 @@ async function completeSheet() {
     }
     clearMissingMarks();
 
-    // 申請日を確定（この瞬間の日付で保存）
+    // 発行日を確定（この瞬間の日付で保存）
     const d = new Date();
     sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-    document.getElementById('sheet_date').textContent = sheetMeta.date;
 
     const btn = document.getElementById('btn_complete');
     btn.disabled = true;
