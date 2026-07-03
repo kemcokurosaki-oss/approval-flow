@@ -1475,18 +1475,28 @@ function renderPendingItems() {
         c.innerHTML = '<div style="color:#999;font-size:12px;padding:4px 0;">ペンディング項目はありません</div>';
         return;
     }
+    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
     c.innerHTML = pendingItems.map((item, i) => `
         <div class="pending-row">
-            <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
-                   oninput="pendingItems[${i}].machine=this.value">
-            <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
-                   oninput="pendingItems[${i}].content=this.value">
-            <div style="display:flex;flex-direction:column;gap:2px;width:135px;flex-shrink:0;">
-                <span style="font-size:10px;color:#999;">完了予定日</span>
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
+                <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                       oninput="pendingItems[${i}].machine=this.value">
+            </div>
+            <div style="display:flex;flex-direction:column;flex:1;">
+                ${lbl}
+                <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                       oninput="pendingItems[${i}].content=this.value">
+            </div>
+            <div style="display:flex;flex-direction:column;width:135px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>
                 <input type="date" class="pending-due" value="${esc(item.due)}"
                        onchange="pendingItems[${i}].due=this.value">
             </div>
-            <button type="button" class="btn-xs btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
+                <button type="button" class="btn-xs btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+            </div>
         </div>
     `).join('');
 }
