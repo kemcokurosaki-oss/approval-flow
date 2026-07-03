@@ -939,13 +939,20 @@ function renderPendingItemsView() {
         c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
         return;
     }
-    c.innerHTML = pendingItems.map(item => `
-        <div class="pending-row">
-            <span style="width:110px; font-size:13px; color:#444; padding:5px 8px;">${esc(item.machine || '—')}</span>
-            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px;">${esc(item.content || '—')}</span>
-            <span style="width:135px; font-size:13px; color:#888; padding:5px 8px;">${esc(item.due || '')}</span>
-        </div>
-    `).join('');
+    c.innerHTML = pendingItems.map(item => {
+        const done = !!item.completed;
+        const lineStyle = done ? 'text-decoration:line-through; color:#aaa;' : '';
+        const dateText = done
+            ? `<span style="font-size:12px; color:#27ae60; font-weight:bold;">完了 ${esc(item.completed_date || '')}</span>`
+            : `<span style="font-size:13px; color:#888;">${esc(item.due || '')}</span>`;
+        return `
+        <div class="pending-row" style="${done ? 'opacity:0.6;' : ''}">
+            <span style="width:16px; flex-shrink:0; font-size:13px; color:${done ? '#27ae60' : '#e74c3c'}; padding:5px 4px;">${done ? '✓' : '●'}</span>
+            <span style="width:100px; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.machine || '—')}</span>
+            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.content || '—')}</span>
+            <span style="width:135px; font-size:13px; padding:5px 8px;">${dateText}</span>
+        </div>`;
+    }).join('');
 }
 
 // 中断: 保存してタブを閉じる（申請画面には通知しない）
