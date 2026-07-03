@@ -615,8 +615,7 @@ function fmtCompletionDate(isoStr) {
     return `${parseInt(p[0])}年${parseInt(p[1])}月${parseInt(p[2])}日`;
 }
 
-function buildReportHeader(projectNum, machineName, authorName, authorDate, approvers, dateLabel) {
-    dateLabel = dateLabel || '完成年月日';
+function buildReportHeader(projectNum, machineName, authorName, issueDate, completionDate, approvers) {
     const approverCells = approvers.length > 0
         ? approvers.map((a, i) => `
             <td class="report-stmp-tbl-td">
@@ -628,14 +627,14 @@ function buildReportHeader(projectNum, machineName, authorName, authorDate, appr
         ? approvers.map((_, i) => `<th>承認者${i+1}</th>`).join('')
         : `<th>承認者</th>`;
     return `<div class="report-doc">
-        <div class="report-doc-date">発行日: ${esc(authorDate || '—')}</div>
+        <div class="report-doc-date">発行日: ${esc(issueDate || '—')}</div>
         <div class="report-doc-body">
             <div class="report-doc-left">
                 <div class="report-doc-notice">下記の機械の組立が完了しましたので、報告します。</div>
                 <table class="report-info-tbl">
                     <tr><th>工事番号</th><td class="td-num">${esc(projectNum)}</td></tr>
                     <tr><th>機械名</th><td class="td-mach">${esc(machineName)}</td></tr>
-                    <tr><th>${esc(dateLabel)}</th><td>${esc(authorDate || '—')}</td></tr>
+                    <tr><th>組立完了日</th><td>${esc(fmtCompletionDate(completionDate))}</td></tr>
                 </table>
             </div>
             <div class="report-doc-right">
