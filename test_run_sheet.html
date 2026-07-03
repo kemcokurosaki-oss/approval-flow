@@ -316,14 +316,13 @@
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
-            .sheet-content { max-width: 100%; padding: 6px 12px 12px; }
-            .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 6px !important; box-shadow: none !important; }
-            .sheet-group-label { padding: 4px 10px !important; font-size: 12px !important; }
-            .sheet-item { padding: 4px 10px !important; }
-            .sheet-text { font-size: 12px !important; line-height: 1.3 !important; }
-            .sheet-no { font-size: 11px !important; }
-            .report-doc { padding: 12px 14px !important; margin-bottom: 8px !important; }
-            .report-section-heading { padding: 0 4px 3px !important; margin-bottom: 5px !important; }
+            /* 2カラムレイアウト */
+            .sheet-content { max-width: 100%; padding: 6px 8px 8px; columns: 2; column-gap: 14px; }
+            .report-doc              { column-span: all; margin-bottom: 8px !important; padding: 12px 14px !important; }
+            .report-section-heading  { column-span: all; margin-bottom: 6px !important; }
+            .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; }
+            .sheet-group-label { padding: 5px 10px !important; }
+            .sheet-item { padding: 5px 10px !important; }
             .sheet-btn:not([class*="active-"]) { display: none !important; }
             .sheet-btn[class*="active-"] {
                 background: none !important;
