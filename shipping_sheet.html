@@ -122,18 +122,16 @@ function fmtSD(iso) {
     return `${String(d.getFullYear()).slice(2)}.${d.getMonth()+1}.${d.getDate()}`;
 }
 
-function mkStamp(dept, name, date, pending = false) {
+function mkStamp(dept, name, pending = false) {
     if (name) {
         return `<div class="sw"><div class="sk">` +
             `<span class="sk-d">${esc(dept)}</span>` +
             `<span class="sk-n">${esc(name)}</span>` +
-            `<span class="sk-dt">${esc(date)}</span>` +
             `</div></div>`;
     }
     const cls = pending ? 'sk sk-pending' : 'sk sk-empty';
     return `<div class="sw"><div class="${cls}">` +
         `<span class="sk-d">${esc(dept)}</span>` +
-        `<span class="sk-dt" style="margin-top:4px;">—</span>` +
         `</div></div>`;
 }
 
