@@ -1895,6 +1895,49 @@ function closeDetailModal() {
     ui.send('CLOSE');
 }
 
+async function completePendingItem(requestId, idx) {
+    showLoading('更新中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        if (!req?.sheet_data) return;
+
+        const items = req.sheet_data.pending_items || [];
+        if (!items[idx]) return;
+
+        const d = new Date();
+        items[idx] = {
+            ...items[idx],
+            completed: true,
+            completed_date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+        };
+
+        const newSheetData = { ...req.sheet_data, pending_items: items };
+        await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        // 進捗カードのキャッシュを更新して再描画
+        if (progressCachedData) {
+            for (const num of progressCachedData.baseNums) {
+                for (const machine of Object.keys(progressCachedData.projectData[num] || {})) {
+                    for (const flowReq of Object.values(progressCachedData.projectData[num][machine].flows || {})) {
+                        if (flowReq && flowReq.id === requestId) {
+                            flowReq.sheet_data = newSheetData;
+                        }
+                    }
+                }
+            }
+            renderProgressCards();
+        }
+
+        await openDetailModal(requestId);
+        showToast('ペンディング項目を完了にしました', 'success');
+    } catch(e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 日程変更（簡易検査） =====
 function showRescheduleForm() {
     document.getElementById('detail_reschedule_section').style.display = 'block';
