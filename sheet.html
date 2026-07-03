@@ -640,19 +640,19 @@ async function init() {
             }
         }
 
-        document.getElementById('sheet_info').style.display = 'none';
         const metaBox = document.querySelector('.sheet-meta-box');
         if (metaBox) metaBox.style.display = 'none';
 
         if (isApproved) {
-            document.getElementById('btn_print').style.display = '';
-            document.getElementById('sheet_title').textContent = '機械組立完了報告書';
+            document.getElementById('doc_title_top').textContent = '機械組立完了報告書';
+            document.getElementById('doc_date_top').textContent = meta.date || '';
+            document.getElementById('doc_date_top').style.display = '';
             document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
                 buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', approvers));
         } else {
-            document.getElementById('sheet_title').textContent = '機械組立完了チェックシート';
+            document.getElementById('doc_title_top').textContent = '機械組立完了チェックシート';
             document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
