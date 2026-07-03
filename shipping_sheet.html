@@ -247,13 +247,6 @@ async function init() {
             `<tbody>${tbody}</tbody>` +
         `</table>` +
 
-        `<div class="ship-date-wrap">` +
-            `<div class="ship-date-box">` +
-                `<div class="ship-date-lbl">確定出荷日</div>` +
-                `<div class="ship-date-val">${fmtShipDate(req.confirmed_shipping_date)}</div>` +
-            `</div>` +
-        `</div>` +
-
         `<div class="notes-head">特記事項（残件など）<span class="notes-copy">※コピーを物流課へ、原本は品質保証部へ</span></div>` +
         `<div class="notes-box">${esc(req.note || '')}</div>`;
 }
