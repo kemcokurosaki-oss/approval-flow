@@ -1936,7 +1936,6 @@ async function completePendingItem(requestId, idx) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        // 進捗カードのキャッシュを更新して再描画
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました');
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
