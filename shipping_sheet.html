@@ -238,6 +238,7 @@ async function init() {
             `<tr><td class="lbl">工事名称</td><td colspan="3">${esc(projName)}</td></tr>` +
             `<tr><td class="lbl">発注元</td><td colspan="3">${esc(customer)}</td></tr>` +
             `<tr><td class="lbl">納入先</td><td colspan="3">${esc(customer)}（同上）</td></tr>` +
+            `<tr><td class="lbl">確定出荷日</td><td colspan="3" style="font-size:14px;font-weight:bold;">${fmtShipDate(req.confirmed_shipping_date)}</td></tr>` +
         `</table>` +
 
         `<p class="cl-head">確認チェックリスト　<span class="cl-note">※確認した担当者のデジタル印（各部は検査にて確認済み）</span></p>` +
