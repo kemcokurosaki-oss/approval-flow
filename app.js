@@ -1953,6 +1953,43 @@ async function completePendingItem(requestId, idx) {
     }
 }
 
+async function uncompletePendingItem(requestId, idx) {
+    showLoading('更新中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        if (!req?.sheet_data) return;
+
+        const items = req.sheet_data.pending_items || [];
+        if (!items[idx]) return;
+
+        items[idx] = { ...items[idx], completed: false, completed_date: null };
+
+        const newSheetData = { ...req.sheet_data, pending_items: items };
+        await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        if (progressCachedData) {
+            for (const num of progressCachedData.baseNums) {
+                for (const machine of Object.keys(progressCachedData.projectData[num] || {})) {
+                    for (const flowReq of Object.values(progressCachedData.projectData[num][machine].flows || {})) {
+                        if (flowReq && flowReq.id === requestId) {
+                            flowReq.sheet_data = newSheetData;
+                        }
+                    }
+                }
+            }
+            renderProgressCards();
+        }
+
+        await openDetailModal(requestId);
+        showToast('完了を取り消しました', 'success');
+    } catch(e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 日程変更（簡易検査） =====
 function showRescheduleForm() {
     document.getElementById('detail_reschedule_section').style.display = 'block';
