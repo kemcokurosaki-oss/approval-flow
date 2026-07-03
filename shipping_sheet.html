@@ -218,10 +218,9 @@ async function init() {
             if (!act) return '<td class="cl-na"></td>';
             const col    = COLS[i];
             const isDir  = col.key === 'director';
-            const name   = isDir ? (dirName || null) : (o[col.key] || null);
-            const date   = isDir ? dirDate : sd;
-            const pend   = isDir && !isApproved;
-            return `<td>${mkStamp(col.lbl, name, name ? date : '', pend)}</td>`;
+            const name = isDir ? (dirName || null) : (o[col.key] || null);
+            const pend = isDir && !isApproved;
+            return `<td>${mkStamp(col.lbl, name, pend)}</td>`;
         }).join('');
         return `<tr><td class="rl">${esc(row.lbl)}</td>${cells}</tr>`;
     }).join('');
