@@ -724,6 +724,11 @@ function setCheck(itemId, val, btn, cls) {
     scheduleSave();
 }
 
+function onCompletionDateChange(val) {
+    sheetMeta.completion_date = val;
+    scheduleSave();
+}
+
 function scheduleSave() {
     setSaveStatus('saving');
     clearTimeout(saveTimer);
