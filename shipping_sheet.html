@@ -153,7 +153,7 @@ async function init() {
             .select('text, owner, major_item')
             .eq('project_number', pNum)
             .eq('machine', mac)
-            .in('text', ['機械組立', '試運転', '出図', '電気図面出図', '電気偽装']),
+            .in('text', ['機械組立', '試運転', '出図', '電気図面出図', '電気艤装']),
         db.from('app_settings').select('value').eq('key', 'sales_person_map').single()
     ]);
 
