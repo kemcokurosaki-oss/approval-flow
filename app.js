@@ -1665,6 +1665,7 @@ async function openDetailModal(requestId) {
     }
 
     const steps  = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
+    currentDetailReq = req;
     currentDetailFlowType = req.flow_type || '';
     const pNum   = req.project_number || '—';
     const pInfo  = projectsMap[pNum]  || {};
