@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出荷確認書</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @media screen { body { zoom: 1.1; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f4f6fb;
+            color: #222;
+            padding-bottom: 64px;
+        }
+
+        /* ===== Paper ===== */
+        .sheet-wrap {
+            max-width: 840px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 28px 34px 44px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.13);
+        }
+
+        /* ===== Document header ===== */
+        .doc-date  { text-align: right; font-size: 13px; margin-bottom: 6px; }
+        .doc-title { text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; margin-bottom: 12px; }
+        .doc-note  { font-size: 11px; color: #444; margin-bottom: 18px; padding: 6px 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; }
+
+        /* ===== Info table ===== */
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+        .info-table td { border: 1px solid #555; padding: 6px 10px; font-size: 13px; }
+        .info-table .lbl { background: #f0f0f0; font-weight: bold; white-space: nowrap; width: 80px; }
+
+        /* ===== Checklist ===== */
+        .cl-head { font-size: 13px; margin-bottom: 5px; }
+        .cl-note { font-size: 10px; color: #777; }
+        .cl-table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+        .cl-table th { border: 1px solid #555; padding: 5px 2px; font-size: 10px; background: #f0f0f0; text-align: center; font-weight: bold; }
+        .cl-table td { border: 1px solid #555; padding: 3px 1px; text-align: center; vertical-align: middle; }
+        .cl-table .rl { width: 80px; background: #f0f0f0; font-size: 12px; font-weight: bold; }
+        .cl-na { background: #f7f7f7; }
+
+        /* ===== Digital Stamp ===== */
+        .sw { display: flex; align-items: center; justify-content: center; padding: 5px 0; }
+        .sk {
+            width: 60px; height: 60px;
+            border: 2px solid #c0392b; border-radius: 50%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: #c0392b; flex-shrink: 0;
+        }
+        .sk-empty   { border-color: #ccc; color: #ccc; border-style: dashed; }
+        .sk-pending { border-color: #bbb; color: #bbb; border-style: dashed; }
+        .sk-d  { font-size: 8px; font-weight: bold; line-height: 1.2; text-align: center; }
+        .sk-n  { font-size: 10px; font-weight: bold; line-height: 1.3; margin-top: 1px; text-align: center; }
+        .sk-dt { font-size: 7px; line-height: 1.2; margin-top: 2px; opacity: 0.85; }
+
+        /* ===== Shipping date ===== */
+        .ship-date-wrap { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .ship-date-box  { border: 1px solid #555; padding: 8px 24px; text-align: center; }
+        .ship-date-lbl  { font-size: 11px; color: #666; margin-bottom: 3px; }
+        .ship-date-val  { font-size: 16px; font-weight: bold; }
+
+        /* ===== Notes ===== */
+        .notes-head { font-size: 13px; margin-bottom: 4px; }
+        .notes-copy { font-size: 10px; color: #777; float: right; }
+        .notes-box  { border: 1px solid #555; min-height: 90px; padding: 8px 10px; font-size: 12px; white-space: pre-wrap; }
+
+        /* ===== Footer button bar ===== */
+        .btn-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #fff; border-top: 1px solid #dde3ee;
+            padding: 10px 20px; display: flex; justify-content: flex-end; gap: 8px;
+        }
+        .btn-bar button { padding: 8px 22px; border-radius: 4px; font-size: 14px; cursor: pointer; }
+        .b-print { border: 1px solid #1e3a5f; background: #fff; color: #1e3a5f; }
+        .b-close { border: 1px solid #aaa; background: #fff; color: #555; }
+
+        /* ===== Print ===== */
+        @media print {
+            @page { margin: 10mm 8mm; }
+            body { background: #fff; }
+            .btn-bar { display: none; }
+            .sheet-wrap { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="sheet-wrap" id="root">
+    <div style="padding:40px;text-align:center;color:#888;">読み込み中...</div>
+</div>
+<div class="btn-bar">
+    <button class="b-print" onclick="window.print()">印刷</button>
+    <button class="b-close" onclick="window.close()">閉じる</button>
+</div>
+<script>
+const S_URL = "https://dgekjzkrybrswsxlcbvh.supabase.co";
+const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU";
+const _m = {};
+const db = supabase.createClient(S_URL, S_KEY, {
+    auth: {
+        storage: { getItem: k => _m[k] ?? null, setItem: (k,v) => { _m[k]=v; }, removeItem: k => { delete _m[k]; } },
+        persistSession: false, autoRefreshToken: false
+    }
+});
+
+function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso.length === 10 ? iso + 'T00:00:00' : iso);
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+function fmtShipDate(ds) {
+    if (!ds) return '未定';
+    const [y, m, d] = ds.split('-');
+    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+}
+
+function fmtSD(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${String(d.getFullYear()).slice(2)}.${d.getMonth()+1}.${d.getDate()}`;
+}
+
+function mkStamp(dept, name, date, pending = false) {
+    if (name) {
+        return `<div class="sw"><div class="sk">` +
+            `<span class="sk-d">${esc(dept)}</span>` +
+            `<span class="sk-n">${esc(name)}</span>` +
+            `<span class="sk-dt">${esc(date)}</span>` +
+            `</div></div>`;
+    }
+    const cls = pending ? 'sk sk-pending' : 'sk sk-empty';
+    return `<div class="sw"><div class="${cls}">` +
+        `<span class="sk-d">${esc(dept)}</span>` +
+        `<span class="sk-dt" style="margin-top:4px;">—</span>` +
+        `</div></div>`;
+}
+
+async function init() {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) { setErr('IDが指定されていません'); return; }
+
+    const { data: req } = await db.from('approval_requests')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
+        .eq('id', id).single();
+    if (!req) { setErr('データが見つかりません'); return; }
+
+    const pNum = req.project_number;
+    const mac  = req.machine_name;
+
+    const [{ data: proj }, { data: tasks }, { data: sData }] = await Promise.all([
+        db.from('projects').select('project_details, customer_name').eq('project_number', pNum).maybeSingle(),
+        db.from('tasks')
+            .select('text, owner, major_item')
+            .eq('project_number', pNum)
+            .eq('machine', mac)
+            .in('text', ['機械組立', '試運転', '出図', '電気図面出図', '電気偽装']),
+        db.from('app_settings').select('value').eq('key', 'sales_person_map').single()
+    ]);
+
+    const customer = proj?.customer_name  || '—';
+    const projName = proj?.project_details || '—';
+    const salesMap = sData?.value ? JSON.parse(sData.value) : {};
+
+    const find = (text, major) => {
+        const r = [...new Set(
+            (tasks || [])
+                .filter(t => t.text === text && (!major || (t.major_item || '').trim() === major))
+                .map(t => t.owner).filter(Boolean)
+        )];
+        return r.length ? r.join('・') : null;
+    };
+
+    const o = {
+        sekkei:   find('出図', '設計'),
+        denki:    find('電気図面出図'),
+        kumitatе: find('機械組立'),
+        denso:    find('電気偽装'),
+        sogyou:   find('試運転'),
+        sales:    salesMap[pNum] || null,
+        hinsho:   '田中(孝)',
+    };
+
+    // 常務承認情報
+    const dirStep    = (req.approval_steps || []).find(s => s.approver_role === 'assembly_director');
+    const isApproved = dirStep?.status === 'approved';
+    let dirName = '', dirDate = '';
+    if (isApproved && dirStep.approver_id) {
+        const { data: dp } = await db.from('profiles').select('name').eq('id', dirStep.approver_id).single();
+        dirName = dp?.name || '';
+        dirDate = fmtSD(dirStep.decided_at);
+    }
+
+    const sd = fmtSD(req.created_at); // 部署スタンプの日付 = 申請日
+
+    // 列定義
+    const COLS = [
+        { lbl: '設計',     key: 'sekkei'   },
+        { lbl: '電気技術', key: 'denki'    },
+        { lbl: '組立',     key: 'kumitatе' },
+        { lbl: '電装',     key: 'denso'    },
+        { lbl: '操業',     key: 'sogyou'   },
+        { lbl: '営業',     key: 'sales'    },
+        { lbl: '品証',     key: 'hinsho'   },
+        { lbl: '常務',     key: 'director' },
+    ];
+
+    // 行定義（active[i]=1 の列にスタンプ表示）
+    const ROWS = [
+        { lbl: '本体確認',       active: [1,1,1,1,1,1,0,0] },
+        { lbl: '出荷品リスト',   active: [1,1,1,1,0,1,1,0] },
+        { lbl: '出荷荷姿',       active: [1,1,1,1,0,1,0,0] },
+        { lbl: '社内製作仕様書', active: [0,0,0,0,0,1,0,1] },
+    ];
+
+    const thRow = COLS.map(c => `<th>${esc(c.lbl)}</th>`).join('');
+    const tbody = ROWS.map(row => {
+        const cells = row.active.map((act, i) => {
+            if (!act) return '<td class="cl-na"></td>';
+            const col    = COLS[i];
+            const isDir  = col.key === 'director';
+            const name   = isDir ? (dirName || null) : (o[col.key] || null);
+            const date   = isDir ? dirDate : sd;
+            const pend   = isDir && !isApproved;
+            return `<td>${mkStamp(col.lbl, name, name ? date : '', pend)}</td>`;
+        }).join('');
+        return `<tr><td class="rl">${esc(row.lbl)}</td>${cells}</tr>`;
+    }).join('');
+
+    document.getElementById('root').innerHTML =
+        `<div class="doc-date">${fmtDate(req.created_at)}</div>` +
+        `<div class="doc-title">出荷確認書</div>` +
+        `<div class="doc-note">※2000番・3000番・4000番・D番について、物流課は出荷確認書がなければ出荷しない。</div>` +
+
+        `<table class="info-table">` +
+            `<tr>` +
+                `<td class="lbl">工事番号</td><td style="width:180px;">${esc(pNum)}</td>` +
+                `<td class="lbl" style="width:60px;">機械名</td><td>${esc(mac)}</td>` +
+            `</tr>` +
+            `<tr><td class="lbl">工事名称</td><td colspan="3">${esc(projName)}</td></tr>` +
+            `<tr><td class="lbl">発注元</td><td colspan="3">${esc(customer)}</td></tr>` +
+            `<tr><td class="lbl">納入先</td><td colspan="3">${esc(customer)}（同上）</td></tr>` +
+        `</table>` +
+
+        `<p class="cl-head">確認チェックリスト　<span class="cl-note">※確認した担当者のデジタル印（各部は検査にて確認済み）</span></p>` +
+        `<table class="cl-table">` +
+            `<thead><tr><th class="rl"></th>${thRow}</tr></thead>` +
+            `<tbody>${tbody}</tbody>` +
+        `</table>` +
+
+        `<div class="ship-date-wrap">` +
+            `<div class="ship-date-box">` +
+                `<div class="ship-date-lbl">確定出荷日</div>` +
+                `<div class="ship-date-val">${fmtShipDate(req.confirmed_shipping_date)}</div>` +
+            `</div>` +
+        `</div>` +
+
+        `<div class="notes-head">特記事項（残件など）<span class="notes-copy">※コピーを物流課へ、原本は品質保証部へ</span></div>` +
+        `<div class="notes-box">${esc(req.note || '')}</div>`;
+}
+
+function setErr(msg) {
+    document.getElementById('root').innerHTML =
+        `<div style="padding:40px;text-align:center;color:#e74c3c;">${esc(msg)}</div>`;
+}
+
+init();
+</script>
+</body>
+</html>
