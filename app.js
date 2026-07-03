@@ -1820,7 +1820,7 @@ async function openDetailModal(requestId) {
             const sheetFile = isAssembly ? 'sheet.html' : 'test_run_sheet.html';
 
             const pendingItems = (req.sheet_data.pending_items || []).filter(p => p.content || p.machine);
-            const canComplete = isMyRequest && isApproved;
+            const canComplete = isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status);
             const pendingSection = pendingItems.length > 0 ? `
         <hr class="section-divider">
         <div class="section-title">ペンディング項目</div>
