@@ -411,6 +411,13 @@
             line-height: 1.2;
             white-space: nowrap;
         }
+        .flow-pending-badge {
+            font-size: 11px;
+            color: #e67e22;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+        }
         .flow-connector {
             flex: 1;
             height: 2px;
