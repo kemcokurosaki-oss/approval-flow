@@ -984,6 +984,15 @@ function renderProgressCards() {
                     flowDateStr = '入力中';
                 }
 
+                let pendingBadge = '';
+                if (req && req.status === 'approved' && (f.type === 'assembly' || f.type === 'test_run')) {
+                    const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+                    const unresolved = pItems.filter(p => !p.completed);
+                    if (unresolved.length > 0) {
+                        pendingBadge = `<div class="flow-pending-badge">⚠ ${unresolved.length}件</div>`;
+                    }
+                }
+
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
@@ -994,6 +1003,7 @@ function renderProgressCards() {
                     <div class="flow-circle ${fcClass}">${icon}</div>
                     <div class="flow-label">${esc(f.label)}</div>
                     ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
+                    ${pendingBadge}
                 </div>${connector}`;
             }).join('');
 
