@@ -716,7 +716,7 @@ async function init() {
             document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', [], '組立完了日'));
+                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', []));
         }
 
         restoreChecks();
