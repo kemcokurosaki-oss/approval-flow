@@ -1937,21 +1937,7 @@ async function completePendingItem(requestId, idx) {
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
         // 進捗カードのキャッシュを更新して再描画
-        if (progressCachedData) {
-            for (const num of progressCachedData.baseNums) {
-                for (const machine of Object.keys(progressCachedData.projectData[num] || {})) {
-                    for (const flowReq of Object.values(progressCachedData.projectData[num][machine].flows || {})) {
-                        if (flowReq && flowReq.id === requestId) {
-                            flowReq.sheet_data = newSheetData;
-                        }
-                    }
-                }
-            }
-            renderProgressCards();
-        }
-
-        await openDetailModal(requestId);
-        showToast('ペンディング項目を完了にしました', 'success');
+        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました');
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
@@ -1974,26 +1960,42 @@ async function uncompletePendingItem(requestId, idx) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (progressCachedData) {
-            for (const num of progressCachedData.baseNums) {
-                for (const machine of Object.keys(progressCachedData.projectData[num] || {})) {
-                    for (const flowReq of Object.values(progressCachedData.projectData[num][machine].flows || {})) {
-                        if (flowReq && flowReq.id === requestId) {
-                            flowReq.sheet_data = newSheetData;
-                        }
-                    }
-                }
-            }
-            renderProgressCards();
-        }
-
-        await openDetailModal(requestId);
-        showToast('完了を取り消しました', 'success');
+        _applyPendingUpdate(requestId, newSheetData, '完了を取り消しました');
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
+}
+
+function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
+    // キャッシュ更新
+    if (progressCachedData) {
+        for (const num of progressCachedData.baseNums) {
+            for (const machine of Object.keys(progressCachedData.projectData[num] || {})) {
+                for (const flowReq of Object.values(progressCachedData.projectData[num][machine].flows || {})) {
+                    if (flowReq && flowReq.id === requestId) {
+                        flowReq.sheet_data = newSheetData;
+                    }
+                }
+            }
+        }
+        renderProgressCards();
+    }
+
+    // モーダルのペンディングセクションだけ差し替え（開閉なし）
+    if (currentDetailReq && currentDetailReq.id === requestId) {
+        currentDetailReq.sheet_data = newSheetData;
+        const el = document.getElementById('pending_detail_section');
+        if (el) {
+            const isMyRequest = currentDetailReq.requester_id === currentUser.id;
+            el.innerHTML = buildPendingSectionInner(currentDetailReq, isMyRequest);
+            showToast(toastMsg, 'success');
+            return;
+        }
+    }
+    // フォールバック: モーダルを再描画
+    openDetailModal(requestId).then(() => showToast(toastMsg, 'success'));
 }
 
 // ===== 日程変更（簡易検査） =====
