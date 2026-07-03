@@ -1052,7 +1052,7 @@
         .pending-row {
             display: flex;
             gap: 6px;
-            align-items: flex-end;
+            align-items: center;
             padding: 5px 0;
             border-top: 1px solid #f0f2f6;
         }
