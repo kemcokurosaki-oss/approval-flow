@@ -985,7 +985,7 @@ function renderProgressCards() {
                 }
 
                 let pendingBadge = '';
-                if (req && req.status === 'approved' && (f.type === 'assembly' || f.type === 'test_run')) {
+                if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run')) {
                     const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
                     const unresolved = pItems.filter(p => !p.completed);
                     if (unresolved.length > 0) {
