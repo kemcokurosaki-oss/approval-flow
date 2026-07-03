@@ -770,6 +770,10 @@ async function init() {
             sheetMeta.author = draft.sheet_data.meta.author;
             document.getElementById('sheet_author').textContent = sheetMeta.author;
         }
+        if (draft.sheet_data.meta?.completion_date) {
+            sheetMeta.completion_date = draft.sheet_data.meta.completion_date;
+            document.getElementById('sheet_completion_date').value = sheetMeta.completion_date;
+        }
         restoreChecks();
         renderPendingItems();
     }
