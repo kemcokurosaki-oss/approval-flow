@@ -1862,6 +1862,10 @@ async function openDetailModal(requestId) {
         <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
+        ${req.flow_type === 'shipping' ? `
+        <hr class="section-divider">
+        <div class="section-title">出荷確認書</div>
+        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('shipping_sheet.html?view=1&id=${req.id}', '_blank')">出荷確認書を確認する →</button>` : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
