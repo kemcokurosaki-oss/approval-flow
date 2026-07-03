@@ -537,11 +537,10 @@ function esc(s) {
 }
 
 function setSheetInfoHeader(projectNum, machineName) {
-    const el = document.getElementById('sheet_info');
-    if (!el) return;
-    el.innerHTML =
-        `<span><span class="sheet-info-label">工事番号</span><span class="sheet-info-num">${esc(projectNum)}</span></span>` +
-        `<span><span class="sheet-info-label">機械名</span><span class="sheet-info-mach">${esc(machineName)}</span></span>`;
+    const pn = document.getElementById('sheet_project_num');
+    const mn = document.getElementById('sheet_machine_name');
+    if (pn) pn.textContent = projectNum;
+    if (mn) mn.textContent = machineName;
 }
 
 function fmtStampDate(iso) {
