@@ -759,10 +759,9 @@ async function init() {
         }
     }
 
-    // 作成日: 常に開いた日の日付を表示（申請時に確定保存）
+    // 発行日: 常に開いた日の日付を設定（申請時に確定保存）
     const _d = new Date();
     sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
-    document.getElementById('sheet_date').textContent = sheetMeta.date;
 
     if (draft.sheet_data) {
         checks       = draft.sheet_data.check_items   || {};
