@@ -1032,12 +1032,12 @@ function renderProgressCards() {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
                     } else {
-                    const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
-                    if (dateIso) {
-                        const d = new Date(dateIso);
-                        const prefix = req.status === 'approved' ? '完了' : req.status === 'rejected' ? '却下' : '申請';
-                        flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
-                    }
+                        const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
+                        if (dateIso) {
+                            const d = new Date(dateIso);
+                            const prefix = req.status === 'approved' ? '完了' : req.status === 'rejected' ? '却下' : '申請';
+                            flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                        }
                     }
                 } else if (req && req.status === 'draft') {
                     flowDateStr = '入力中';
