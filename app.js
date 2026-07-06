@@ -738,9 +738,6 @@ async function loadMineSide() {
 
     const renderCard = (req, pendingCount) => {
         const pNum        = req.project_number || '—';
-        const pInfo       = projectsMap[pNum]  || {};
-        const machineLabel = req.machine_name ? `【${esc(req.machine_name)}】` : '';
-        const date        = fmtDate(req.created_at);
 
         const isNotifFlow = ['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type);
         let statusText;
