@@ -1012,8 +1012,9 @@ function renderProgressCards() {
                 </div>${connector}`;
             }).join('');
 
+            const machineLabel = machines.length > 1 ? `<div class="prog-machine-label">【${esc(machine)}】</div>` : '';
             return `<div class="prog-machine-row">
-                <div class="prog-machine-label">【${esc(machine)}】</div>
+                ${machineLabel}
                 <div class="flow-steps">${nodes}</div>
             </div>`;
         }).join('');
