@@ -2495,7 +2495,8 @@ const extraRecipients = { inspection: [], sm: [], si: [] };
 
 async function showRecipientsStep(type) {
     const prefix = type; // 'inspection' | 'sm' | 'si'
-    const projectNum = document.getElementById(`${prefix}_project`).value;
+    const projectNumMap = { si: currentSiProjectNum, inspection: currentInspectionProjectNum, sm: currentSmProjectNum };
+    const projectNum = projectNumMap[prefix];
     const machines   = getSelectedMachines(`${prefix}_machine_list`);
     const dateVal    = document.getElementById(`${prefix}_date_input`).value;
 
