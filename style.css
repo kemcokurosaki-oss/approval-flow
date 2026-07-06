@@ -298,11 +298,11 @@
             align-items: start;
         }
         .kanban-arrow {
-            align-self: center;
-            font-size: 20px;
+            align-self: start;
+            font-size: 18px;
             font-weight: bold;
             color: #b8c2d6;
-            padding-top: 24px;
+            padding-top: 6px;
         }
         .kanban-col {
             display: flex;
