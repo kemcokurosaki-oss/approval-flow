@@ -53,11 +53,14 @@
             <div class="psort-group">
                 <button id="psort_job"      class="psort-btn active" onclick="setProgressSort('job')">工番順</button>
                 <button id="psort_shipping" class="psort-btn"        onclick="setProgressSort('shipping')">出荷日順</button>
-                <button id="completed_toggle_btn" class="psort-btn" onclick="toggleCompletedView()">✓ 完了済み</button>
             </div>
             <label class="pfilter-label">
                 <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
                 <span>自分の工番のみ</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_completed" onchange="toggleCompletedView(this.checked)">
+                <span>完了済みのみ表示</span>
             </label>
         </div>
     </div>
