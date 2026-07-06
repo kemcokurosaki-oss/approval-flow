@@ -1916,7 +1916,7 @@ async function openDetailModal(requestId) {
         <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
-        ${QA_MEETING_FLOWS.includes(req.flow_type) ? (() => {
+        ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled' ? (() => {
             const todayStr       = new Date().toISOString().slice(0, 10);
             const meetingPassed  = !!req.inspection_date && req.inspection_date <= todayStr;
             const items          = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
