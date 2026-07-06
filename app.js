@@ -854,6 +854,13 @@ function _syncProgressControls() {
     document.querySelectorAll('.prefix-btn').forEach(btn => {
         btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === progressFilterPrefix);
     });
+    document.getElementById('completed_toggle_btn')?.classList.toggle('active', progressFilterCompleted);
+}
+
+function toggleCompletedView() {
+    progressFilterCompleted = !progressFilterCompleted;
+    _syncProgressControls();
+    renderProgressCards();
 }
 
 function setProgressSort(order) {
