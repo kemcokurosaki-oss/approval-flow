@@ -2145,6 +2145,25 @@ async function cancelMeeting(requestId, flowType) {
     }
 }
 
+// フロー承認完了時に全体工程表のタスク完了チェックを自動連動（承認→完了の一方通行のみ）
+// 本番運用開始まではOFF。運用開始の合図があったら true に切り替える。
+const FLOW_TASK_SYNC_ENABLED = false;
+const FLOW_APPROVAL_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
+
+async function syncTaskCompletionOnFlowApproval(req) {
+    if (!FLOW_TASK_SYNC_ENABLED) return;
+    const taskText = FLOW_APPROVAL_TASK_TEXT[req?.flow_type];
+    if (!taskText || !req.project_number || !req.machine_name) return;
+    try {
+        await db.from('tasks').update({ is_completed: true })
+            .eq('project_number', req.project_number)
+            .eq('machine', req.machine_name)
+            .eq('text', taskText);
+    } catch (e) {
+        console.warn('全体工程表への完了連携に失敗:', e);
+    }
+}
+
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
@@ -2209,6 +2228,7 @@ async function approveStep(requestId, stepId, stepOrder) {
         }
 
         if (nextStatus === 'approved') {
+            await syncTaskCompletionOnFlowApproval(currentDetailReq);
             await recordNotifications(requestId);
             // 承認者本人にも完了通知を送る（すでに宛先に含まれている場合はスキップ）
             const { data: existing } = await db.from('approval_notifications')

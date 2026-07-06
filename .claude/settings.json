@@ -1,5 +1,15 @@
 {
   "hooks": {
-    "PostToolUse": []
+    "PostToolUse": [],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if printf '%s' \"$input\" | grep -qE '運用開始|本番切替|本番切り替え|本番運用'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"[承認フロー本番運用リマインダー] 運用開始の合図を検知しました。次の2点が未対応か確認し、状況をユーザーに伝えて対応してよいか確認すること。絶対に確認なしで自動実行しないこと: (1) 承認フロー/app.js の FLOW_TASK_SYNC_ENABLED を true に切り替える (2) Supabaseのテスト承認データ(approval_requests/approval_steps/approval_notifications)を削除する。\"}}'; fi"
+          }
+        ]
+      }
+    ]
   }
 }
