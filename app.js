@@ -764,11 +764,12 @@ async function loadMineSide() {
         const cardClick = req.status === 'draft'
             ? `openDraftInSubmitModal('${req.id}')`
             : `openDetailModal('${req.id}')`;
+        const flowLabel = esc(FLOW_LABELS[req.flow_type] || req.flow_type);
         return `
-        <div class="side-card ${cardClass}" onclick="${cardClick}">
-            <div class="side-card-title">${esc(pNum)}${machineLabel ? machineLabel : ''}${pInfo.customer_name ? `<span class="side-card-customer">${esc(pInfo.customer_name)}</span>` : ''}</div>
-            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}${resubmitBadge}</div>
-            <div class="side-card-status">${statusText}</div>
+        <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
+            <div class="mine-col-num">${esc(pNum)}${resubmitBadge}</div>
+            <div class="mine-col-flow">${flowLabel}</div>
+            <div class="mine-col-status">${statusText}</div>
         </div>`;
     };
 
