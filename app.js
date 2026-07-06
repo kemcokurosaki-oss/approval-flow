@@ -823,7 +823,6 @@ async function loadProgress() {
 
     const baseNums = Object.keys(projectData).filter(num => {
         if (projectsMap[num] === undefined) return false;
-        if (completedProjectNums.has(num) !== progressFilterCompleted) return false;
         if (is2000sSeries(num))       return false;
         if (isTInspectionSeries(num)) return false;
         if (is5or7Series(num))        return false;
