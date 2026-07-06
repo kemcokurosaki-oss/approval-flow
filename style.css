@@ -293,9 +293,16 @@
         /* ===== 自分の申請：4列カンバン表示 ===== */
         .side-half-content-kanban {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+            gap: 6px;
             align-items: start;
+        }
+        .kanban-arrow {
+            align-self: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #b8c2d6;
+            padding-top: 24px;
         }
         .kanban-col {
             display: flex;
