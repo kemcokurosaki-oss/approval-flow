@@ -902,8 +902,10 @@ function renderProgressCards() {
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
 
+    // 完了済みフィルタ（通常時は完了済みを除外、完了済みモード時は完了済みのみ）
+    let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted);
+
     // 並び替え
-    let nums = [...baseNums];
     if (progressSort === 'shipping') {
         nums.sort((a, b) => {
             const da = projectsMap[a]?.shipping_date || '9999-12-31';
