@@ -739,7 +739,7 @@ async function loadMineSide() {
         } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
-            statusText = isNotifFlow ? '<span class="si-badge si-green">✓</span> 案内済み' : '<span class="si-badge si-green">✓</span> 完了';
+            statusText = '<span class="si-badge si-green">✓</span> 完了';
         } else if (req.status === 'rejected') {
             statusText = '<span class="si-badge si-red">✕</span> 却下';
         } else {
