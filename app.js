@@ -928,7 +928,7 @@ function renderProgressCards() {
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
         const shippingDateLabel = pInfo.shipping_date
-            ? `<span class="prog-card-date">出荷予定日 ${fmtDate(pInfo.shipping_date)}</span>`
+            ? `<span class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span> <span class="prog-card-date-value">${fmtDate(pInfo.shipping_date)}</span></span>`
             : '';
 
         const machineRows = machines.map(machine => {
