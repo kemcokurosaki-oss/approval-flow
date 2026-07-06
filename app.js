@@ -411,11 +411,11 @@ async function bootApp(session) {
 
 // ===== Projects =====
 async function loadProjects() {
-    // 完了済み工事番号を取得
+    // 完了済み工事番号を取得（進捗一覧には含めるが、通常表示では除外する）
     const { data: completed } = await db
         .from('completed_projects')
         .select('project_number');
-    const completedSet = new Set(
+    completedProjectNums = new Set(
         (completed || []).map(c => (c.project_number || '').toString().trim())
     );
 
