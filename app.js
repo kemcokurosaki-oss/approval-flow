@@ -1916,6 +1916,39 @@ async function openDetailModal(requestId) {
         <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
+        ${QA_MEETING_FLOWS.includes(req.flow_type) ? (() => {
+            const todayStr       = new Date().toISOString().slice(0, 10);
+            const meetingPassed  = !!req.inspection_date && req.inspection_date <= todayStr;
+            const items          = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+            const unresolvedCount = items.filter(p => !p.completed).length;
+            const canManage      = isQualityOrSeikan && req.status === 'submitted';
+
+            let body;
+            if (req.status === 'approved') {
+                body = items.length
+                    ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
+                    : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>';
+            } else if (!meetingPassed) {
+                body = '<div style="color:#888; font-size:13px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
+            } else {
+                body = `
+                    <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
+                    ${canManage ? `
+                    <div class="pending-row" style="margin-top:8px;">
+                        <input type="text" id="qa_pending_machine" class="pending-machine" placeholder="機器名（任意）">
+                        <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
+                        <input type="date" id="qa_pending_due" class="pending-due">
+                        <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
+                    </div>
+                    ${unresolvedCount === 0 ? `<button class="btn btn-success" style="margin-top:10px;" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
+                    ` : ''}
+                `;
+            }
+
+            return `<hr class="section-divider">
+        <div class="section-title">開催結果・ペンディング確認</div>
+        ${body}`;
+        })() : ''}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div class="section-title">出荷確認書</div>
