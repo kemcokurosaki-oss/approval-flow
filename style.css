@@ -299,9 +299,9 @@
         }
         .kanban-arrow {
             align-self: start;
-            font-size: 18px;
-            font-weight: bold;
-            color: #b8c2d6;
+            font-size: 20px;
+            font-weight: 900;
+            color: #8fa0bf;
             padding-top: 6px;
         }
         .kanban-col {
