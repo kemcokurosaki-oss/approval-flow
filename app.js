@@ -1683,7 +1683,9 @@ async function submitRequest() {
 
 // ===== ペンディングセクション HTML 生成 =====
 function buildPendingSectionInner(req, isMyRequest) {
-    const canComplete = isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status);
+    const canComplete = QA_MEETING_FLOWS.includes(req.flow_type)
+        ? (isQualityOrSeikan && req.status === 'submitted')
+        : (isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status));
     const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
     if (!items.length) return '';
     return `
