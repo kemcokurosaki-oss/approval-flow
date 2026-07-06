@@ -1848,7 +1848,7 @@ async function openDetailModal(requestId) {
                 ${when          ? `<div class="step-date">${when}</div>` : ''}
             </div>
         </div>`;
-    } else if (['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type)) {
+    } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
         stepsHtml = '<div style="color:#888; font-size:13px; padding:4px 0;">承認フローなし（開催案内を送信済み）</div>';
     } else {
         stepsHtml = steps.map(s => {
