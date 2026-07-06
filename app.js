@@ -233,8 +233,15 @@ function applyRoleLayout(role) {
     if (tabPending)  tabPending.style.display  = isApprover      ? '' : 'none';
 
     // 両方のセクションがある人だけ折りたたみ機能を有効化
+    const hasBoth   = userIsApplicant && isApprover;
     const sidePanel = document.getElementById('side_panel');
-    if (sidePanel) sidePanel.classList.toggle('has-both', userIsApplicant && isApprover);
+    if (sidePanel) sidePanel.classList.toggle('has-both', hasBoth);
+
+    // 片方しかないユーザーはヘッダー自体を隠してカンバン／リストのみ表示
+    const headerMine    = halfMine    ? halfMine.querySelector('.side-half-header')    : null;
+    const headerPending = halfPending ? halfPending.querySelector('.side-half-header') : null;
+    if (headerMine)    headerMine.style.display    = (userIsApplicant && !hasBoth) ? 'none' : '';
+    if (headerPending) headerPending.style.display = (isApprover      && !hasBoth) ? 'none' : '';
 
     if (!isApprover) {
         const badgePending = document.getElementById('side_badge_pending');
