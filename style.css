@@ -488,8 +488,10 @@
             font-size: 13px;
             color: #8e44ad;
             font-weight: bold;
-            text-align: center;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
         .flow-connector {
             flex: 1;
