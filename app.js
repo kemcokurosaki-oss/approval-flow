@@ -1038,7 +1038,7 @@ function renderProgressCards() {
                     const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
                     const unresolved = pItems.filter(p => !p.completed);
                     if (unresolved.length > 0) {
-                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge" style="background:#8e44ad;">⚠</span> ${unresolved.length}件</div>`;
+                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolved.length}件</div>`;
                     }
                 }
 
