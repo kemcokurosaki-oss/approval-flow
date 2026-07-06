@@ -2930,7 +2930,7 @@ async function submitShippingMeeting() {
     try {
         for (const machine of machines) {
             const { data: req, error } = await db.from('approval_requests').insert({
-                project_number: num, machine_name: machine, flow_type: 'shipping_meeting', status: 'approved',
+                project_number: num, machine_name: machine, flow_type: 'shipping_meeting', status: 'submitted',
                 requester_id: currentUser.id, note: note || null,
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
