@@ -771,11 +771,13 @@ async function loadMineSide() {
         </div>`;
     };
 
-    el.innerHTML =
-        renderColumn('申請中', groups.inprogress, false) +
-        renderColumn('承認待ち', groups.waiting, false) +
-        renderColumn('ペンディング', groups.pending, true) +
-        renderColumn('承認済み', groups.approved, false);
+    const arrow = '<div class="kanban-arrow">→</div>';
+    el.innerHTML = [
+        renderColumn('申請中', groups.inprogress, false),
+        renderColumn('承認待ち', groups.waiting, false),
+        renderColumn('ペンディング', groups.pending, true),
+        renderColumn('承認済み', groups.approved, false)
+    ].join(arrow);
 }
 
 async function loadProgress() {
