@@ -688,7 +688,7 @@ async function loadMineSide() {
 
     let query = db
         .from('approval_requests')
-        .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, approval_steps(id, step_order, approver_role, status, decided_at)')
+        .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, sheet_data, approval_steps(id, step_order, approver_role, status, decided_at)')
         .eq('requester_id', currentUser.id)
         .order('created_at', { ascending: false });
 
