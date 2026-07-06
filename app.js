@@ -1746,6 +1746,8 @@ async function openDetailModal(requestId) {
     const cls    = STATUS_CLASSES[req.status] || 's-pending';
     const slbl   = (req.flow_type === 'shipping' && req.status === 'submitted')
         ? '常務承認待ち'
+        : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
+        ? '開催待ち'
         : (STATUS_LABELS[req.status] || req.status);
 
     // 自分が担当すべきステップか確認
