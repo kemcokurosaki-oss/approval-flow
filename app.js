@@ -718,10 +718,27 @@ async function loadMineSide() {
         return;
     }
 
-    el.innerHTML = reqs.map(req => {
+    // 4区分に振り分け（ペンディング項目があるものはステータスに関わらず優先表示）
+    const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
+    reqs.forEach(req => {
+        const unresolvedPending = (req.sheet_data?.pending_items || [])
+            .filter(p => (p.content || p.machine) && !p.completed);
+        if (req.status === 'draft' || req.status === 'rejected') {
+            groups.inprogress.push(req);
+        } else if (unresolvedPending.length > 0) {
+            groups.pending.push({ req, pendingCount: unresolvedPending.length });
+        } else if (req.status === 'submitted' || req.status === 'in_review') {
+            groups.waiting.push(req);
+        } else if (req.status === 'approved') {
+            groups.approved.push(req);
+        } else {
+            groups.waiting.push(req);
+        }
+    });
+
+    const renderCard = (req, pendingCount) => {
         const pNum        = req.project_number || '—';
         const pInfo       = projectsMap[pNum]  || {};
-        const label       = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machineLabel = req.machine_name ? `【${esc(req.machine_name)}】` : '';
         const date        = fmtDate(req.created_at);
 
@@ -729,6 +746,8 @@ async function loadMineSide() {
         let statusText;
         if (req.status === 'draft') {
             statusText = '<span class="si-badge si-gray">✏</span> 入力中';
+        } else if (pendingCount) {
+            statusText = `<span class="si-badge si-orange" style="background:#8e44ad;">⚠</span> ペンディング ${pendingCount}件`;
         } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
@@ -740,7 +759,8 @@ async function loadMineSide() {
         }
 
         const resubmitBadge = req.is_resubmit ? '<span class="resubmit-badge">再申請</span>' : '';
-        const cardClass = (req.status === 'submitted' || req.status === 'in_review') ? 'is-waiting'
+        const cardClass = pendingCount ? 'is-pending-item'
+                        : (req.status === 'submitted' || req.status === 'in_review') ? 'is-waiting'
                         : req.status === 'rejected' ? 'is-rejected'
                         : req.status === 'draft' ? 'is-draft'
                         : '';
@@ -753,7 +773,25 @@ async function loadMineSide() {
             <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}${resubmitBadge}</div>
             <div class="side-card-status">${statusText}</div>
         </div>`;
-    }).join('');
+    };
+
+    const renderColumn = (label, items, isPendingGroup) => {
+        const count = items.length;
+        const body = count === 0
+            ? '<div class="kanban-col-empty">該当なし</div>'
+            : items.map(item => isPendingGroup ? renderCard(item.req, item.pendingCount) : renderCard(item)).join('');
+        return `
+        <div class="kanban-col">
+            <div class="kanban-col-header"><span>${label}</span><span>${count}</span></div>
+            <div class="kanban-col-body">${body}</div>
+        </div>`;
+    };
+
+    el.innerHTML =
+        renderColumn('申請中', groups.inprogress, false) +
+        renderColumn('承認待ち', groups.waiting, false) +
+        renderColumn('ペンディング', groups.pending, true) +
+        renderColumn('承認済み', groups.approved, false);
 }
 
 async function loadProgress() {
