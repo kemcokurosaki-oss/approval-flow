@@ -242,12 +242,6 @@ function applyRoleLayout(role) {
         const countPending = document.getElementById('side_pending_count');
         if (countPending) countPending.style.display = 'none';
     }
-    if (!userIsApplicant) {
-        const badgeMine = document.getElementById('side_badge_mine');
-        if (badgeMine) badgeMine.style.display = 'none';
-        const countMine = document.getElementById('side_mine_count');
-        if (countMine) countMine.style.display = 'none';
-    }
 
     // 進捗一覧のみモード（申請ボタンをCSS非表示）
     const appEl = document.getElementById('app');
