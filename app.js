@@ -728,7 +728,7 @@ async function loadMineSide() {
     const renderCard = (req, pendingCount) => {
         const pNum        = req.project_number || '—';
 
-        const isNotifFlow = ['simple_inspection', 'inspection', 'shipping_meeting'].includes(req.flow_type);
+        const isNotifFlow = QA_MEETING_FLOWS.includes(req.flow_type);
         let statusText;
         if (req.status === 'draft') {
             statusText = '<span class="si-badge si-gray">✏</span> 入力中';
