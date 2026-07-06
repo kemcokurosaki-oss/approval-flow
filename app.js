@@ -980,12 +980,12 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if ((!req || req.status === 'rejected') && canApply) {
+                if ((!req || req.status === 'rejected') && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
                     // そのフローを申請できるロールのみクリック可能（例：組立担当者のみ assembly draft を操作可）
-                    if (canApply) {
+                    if (canApply && !progressFilterCompleted) {
                         clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
                         clickable = ' clickable can-apply';
                     }
