@@ -278,6 +278,9 @@ async function switchDevRole(value) {
 }
 
 // ===== Constants =====
+// 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
+const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
+
 const FLOW_LABELS = {
     assembly:          '組立完了申請',
     test_run:          '試運転完了申請',
