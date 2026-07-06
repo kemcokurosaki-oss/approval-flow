@@ -698,8 +698,8 @@ async function loadMineSide() {
     }
 
     const { data: rawReqs } = await query;
-    // 完了済み工番（projectsMapに存在しない）は非表示
-    const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined);
+    // 完了済み工番は非表示（進捗一覧の「完了済み」ボタンからのみ確認可能）
+    const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined && !completedProjectNums.has(r.project_number));
 
     // バッジ更新（承認待ち・却下のみカウント、完了済みは除外）
     const badgeCount = reqs.filter(r => ['submitted', 'in_review', 'rejected', 'draft'].includes(r.status)).length;
