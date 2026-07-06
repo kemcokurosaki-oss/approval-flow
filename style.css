@@ -333,16 +333,17 @@
         .prog-card-label { font-size: 16px; color: #888; margin-left: 9px; }
         .prog-card-date {
             position: absolute;
-            top: 13px;
+            top: 11px;
             right: 21px;
-            font-size: 15px;
             color: #5a7080;
             background: #f0f4fa;
             border: 1px solid #d0dae8;
             border-radius: 3px;
-            padding: 2px 8px;
+            padding: 4px 8px;
             white-space: nowrap;
         }
+        .prog-card-date-label { font-size: 13px; }
+        .prog-card-date-value { font-size: 15px; }
 
         .prog-machine-row {
             margin-top: 9px;
