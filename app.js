@@ -2698,7 +2698,7 @@ async function submitSimpleInspection() {
         for (const machine of machines) {
             const { data: req, error } = await db.from('approval_requests').insert({
                 project_number: num, machine_name: machine, flow_type: 'simple_inspection',
-                status: 'approved', requester_id: currentUser.id, note: note || null,
+                status: 'submitted', requester_id: currentUser.id, note: note || null,
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
