@@ -854,7 +854,11 @@ function _syncProgressControls() {
     document.querySelectorAll('.prefix-btn').forEach(btn => {
         btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === progressFilterPrefix);
     });
-    document.getElementById('completed_toggle_btn')?.classList.toggle('active', progressFilterCompleted);
+    const completedBtn = document.getElementById('completed_toggle_btn');
+    if (completedBtn) {
+        completedBtn.classList.toggle('active', progressFilterCompleted);
+        completedBtn.textContent = progressFilterCompleted ? '← 進行中に戻る' : '✓ 完了済み';
+    }
 }
 
 function toggleCompletedView() {
