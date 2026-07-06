@@ -853,11 +853,12 @@ function _syncProgressControls() {
     document.querySelectorAll('.prefix-btn').forEach(btn => {
         btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === progressFilterPrefix);
     });
-    document.getElementById('completed_toggle_btn')?.classList.toggle('active', progressFilterCompleted);
+    const completedCb = document.getElementById('pfilter_completed');
+    if (completedCb) completedCb.checked = progressFilterCompleted;
 }
 
-function toggleCompletedView() {
-    progressFilterCompleted = !progressFilterCompleted;
+function toggleCompletedView(checked) {
+    progressFilterCompleted = checked;
     _syncProgressControls();
     renderProgressCards();
 }
