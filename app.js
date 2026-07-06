@@ -395,6 +395,14 @@ async function bootApp(session) {
 
     // データ読み込み後にレイアウトを適用（タブ・ボタンが確実に正しい状態になる）
     applyRoleLayout(profile.role);
+
+    // 初期表示でマイページを開いておく（権限のあるセクションを優先: 自分の申請 > 承認待ち）
+    if (userIsApplicant) {
+        openSidePanelTo('mine');
+    } else if (APPROVER_ROLES.includes(profile.role)) {
+        openSidePanelTo('pending');
+    }
+
     setupSheetChannel();
     ui.send('READY');
 }
