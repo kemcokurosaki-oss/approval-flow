@@ -2078,7 +2078,8 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
     }
 
     // モーダルのペンディングセクションだけ差し替え（開閉なし）
-    if (currentDetailReq && currentDetailReq.id === requestId) {
+    // QA3フローは開催結果セクション内の追加フォーム・完了ボタンの表示切替も必要なため全体再描画にフォールバックする
+    if (currentDetailReq && currentDetailReq.id === requestId && !QA_MEETING_FLOWS.includes(currentDetailReq.flow_type)) {
         currentDetailReq.sheet_data = newSheetData;
         const el = document.getElementById('pending_detail_section');
         if (el) {
@@ -2090,6 +2091,57 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
     }
     // フォールバック: モーダルを再描画
     openDetailModal(requestId).then(() => showToast(toastMsg, 'success', true));
+}
+
+// ===== 開催結果・ペンディング確認（簡易検査・外観検査・出荷確認会議） =====
+async function addQaPendingItem(requestId) {
+    const machineEl = document.getElementById('qa_pending_machine');
+    const contentEl = document.getElementById('qa_pending_content');
+    const dueEl     = document.getElementById('qa_pending_due');
+    const machine   = machineEl ? machineEl.value.trim() : '';
+    const content   = contentEl ? contentEl.value.trim() : '';
+    const due       = dueEl ? dueEl.value : '';
+    if (!content) { showToast('内容を入力してください', 'error'); return; }
+
+    showLoading('追加中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        const items = req?.sheet_data?.pending_items || [];
+        items.push({ machine, content, due, completed: false, completed_date: null });
+        const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
+        await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を追加しました');
+    } catch (e) {
+        showToast('追加に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function finalizeQaMeeting(requestId) {
+    if (!confirm('この開催案内を完了にします。よろしいですか？')) return;
+
+    showLoading('処理中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        const unresolved = (req?.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.completed);
+        if (unresolved.length > 0) { showToast('未完了のペンディング項目があります', 'error'); return; }
+
+        await db.from('approval_requests')
+            .update({ status: 'approved', updated_at: new Date().toISOString() })
+            .eq('id', requestId);
+
+        await openDetailModal(requestId);
+        await refreshAll();
+        showToast('完了にしました', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
 // ===== 日程変更（簡易検査） =====
