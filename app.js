@@ -1885,15 +1885,15 @@ async function openDetailModal(requestId) {
             <tr><td>申請者</td><td>${esc(requesterName)}（${esc(requesterDept)}）</td></tr>
             ${req.flow_type === 'assembly' ? `<tr><td>試運転</td><td>${req.test_run ? 'あり' : 'なし'}</td></tr>` : ''}
             ${req.flow_type === 'shipping' && req.confirmed_shipping_date ? `<tr><td>確定出荷日</td><td>${fmtDate(req.confirmed_shipping_date)}</td></tr>` : ''}
-            ${['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type) && req.inspection_date
+            ${QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date
                 ? `<tr><td>開催日</td><td>${fmtDate(req.inspection_date)}${req.inspection_time ? '　' + req.inspection_time : ''}</td></tr>` : ''}
-            ${['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type) && req.inspection_location
+            ${QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location
                 ? `<tr><td>場所</td><td>${esc(req.inspection_location)}</td></tr>` : ''}
             <tr><td>申請日</td><td>${fmtDate(req.created_at)}</td></tr>
             <tr><td>状態</td><td><span class="status-badge ${cls}">${slbl}</span>${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}</td></tr>
         </table>
         ${req.note ? `<div style="background:#f8f9fa; border-radius:4px; padding:10px 12px; font-size:13px; color:#555; margin-bottom:14px;">${esc(req.note)}</div>` : ''}
-        ${!['simple_inspection','inspection','shipping_meeting'].includes(req.flow_type)
+        ${!QA_MEETING_FLOWS.includes(req.flow_type)
             ? '<hr class="section-divider"><div class="section-title">承認ステップ</div>' : ''}
         <div class="steps-list">${stepsHtml}</div>
         ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
