@@ -730,7 +730,7 @@ async function loadMineSide() {
         if (req.status === 'draft') {
             statusText = '<span class="si-badge si-gray">✏</span> 入力中';
         } else if (pendingCount) {
-            statusText = `<span class="si-badge si-orange" style="background:#8e44ad;">⚠</span> ${pendingCount}件`;
+            statusText = `<span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${pendingCount}件`;
         } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
