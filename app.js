@@ -1917,7 +1917,8 @@ async function openDetailModal(requestId) {
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled' ? (() => {
-            const todayStr       = new Date().toISOString().slice(0, 10);
+            const _now           = new Date();
+            const todayStr       = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
             const meetingPassed  = !!req.inspection_date && req.inspection_date <= todayStr;
             const items          = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
             const unresolvedCount = items.filter(p => !p.completed).length;
