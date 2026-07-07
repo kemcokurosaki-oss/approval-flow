@@ -174,6 +174,7 @@ let currentDetailReq     = null;
 let devRole = ''; // 開発用ロール上書き
 let devDept = ''; // 開発用部署上書き
 let currentDetailFlowType = '';
+let qaEditingPendingIdx  = null; // 開催結果セクションで編集中のペンディング項目インデックス
 
 // デモ用ロール→{role, department, flowTypes} マッピング
 // flowTypes: 自分の申請タブで表示するフロー種別（デモ用フィルタ）
@@ -288,6 +289,13 @@ const FLOW_LABELS = {
     inspection:        '外観検査開催案内',
     shipping_meeting:  '出荷確認会議開催案内',
     shipping:          '出荷確定申請'
+};
+
+// 開催案内送信後の詳細モーダルヘッダー用（「開催案内」を省いた表記）
+const QA_DETAIL_TITLE_LABELS = {
+    simple_inspection: '簡易検査',
+    inspection:        '外観検査',
+    shipping_meeting:  '出荷確認会議'
 };
 
 const ROLE_LABELS = {
@@ -755,7 +763,7 @@ async function loadMineSide() {
         const cardClick = req.status === 'draft'
             ? `openDraftInSubmitModal('${req.id}')`
             : `openDetailModal('${req.id}')`;
-        const flowLabel = esc(FLOW_LABELS[req.flow_type] || req.flow_type);
+        const flowLabel = esc(isNotifFlow ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type) : (FLOW_LABELS[req.flow_type] || req.flow_type));
         return `
         <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
             <div class="mine-col-num">${esc(pNum)}${resubmitBadge}</div>
@@ -1688,26 +1696,111 @@ async function submitRequest() {
 
 // ===== ペンディングセクション HTML 生成 =====
 function buildPendingSectionInner(req, isMyRequest) {
-    const canComplete = QA_MEETING_FLOWS.includes(req.flow_type)
+    const isQaFlow = QA_MEETING_FLOWS.includes(req.flow_type);
+    const canComplete = isQaFlow
         ? (isQualityOrSeikan && req.status === 'submitted')
         : (isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status));
+    // QA開催結果で追加したペンディング項目は、完了前であれば編集・削除できる
+    const canManage = isQaFlow && isQualityOrSeikan && req.status === 'submitted';
     const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
     if (!items.length) return '';
+    const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
         <hr class="section-divider">
         <div class="section-title">ペンディング項目</div>
-        ${items.map((item, idx) => `
+        ${items.map((item, idx) => {
+            if (canManage && qaEditingPendingIdx === idx) {
+                return `
+            <div class="pending-detail-row pending-detail-editing">
+                <div class="pending-detail-icon">●</div>
+                <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
+                        <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
+                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
+                    </div>
+                    <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                        ${editLbl}
+                        <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                    <button class="btn-success-xs" onclick="saveEditQaPendingItem('${req.id}', ${idx})">保存</button>
+                    <button class="btn-undo-xs" onclick="cancelEditQaPendingItem()">キャンセル</button>
+                </div>
+            </div>`;
+            }
+            return `
             <div class="pending-detail-row ${item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-icon">${item.completed ? '✓' : '●'}</div>
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">${esc(item.content || '—')}${item.machine ? ` <span class="pending-detail-machine">（${esc(item.machine)}）</span>` : ''}</div>
+                    <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}</div>
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
                 </div>
-                ${canComplete ? (item.completed
-                    ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
-                    : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
-            </div>`).join('')}`;
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    ${canComplete ? (item.completed
+                        ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
+                        : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
+                    ${canManage && !item.completed ? `
+                        <button class="btn-icon-xs" title="編集" onclick="startEditQaPendingItem(${idx})">✎</button>
+                        <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>
+                    ` : ''}
+                </div>
+            </div>`;
+        }).join('')}`;
+}
+
+// QA開催案内（簡易検査・外観検査・出荷確認会議）の開催日が過ぎているか
+function qaMeetingPassed(req) {
+    const _now     = new Date();
+    const todayStr = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
+    return !!req.inspection_date && req.inspection_date <= todayStr;
+}
+
+// QA開催案内を「完了にする」ボタンを出せる状態か（未完了のペンディングが残っていないこと等）
+function qaCanFinalize(req) {
+    if (!QA_MEETING_FLOWS.includes(req.flow_type)) return false;
+    if (!isQualityOrSeikan || req.status !== 'submitted') return false;
+    if (!qaMeetingPassed(req)) return false;
+    const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    return items.filter(p => !p.completed).length === 0;
+}
+
+// ===== 開催結果・ペンディング確認セクション HTML 生成（簡易検査・外観検査・出荷確認会議） =====
+function buildQaResultSectionInner(req, isMyRequest) {
+    const meetingPassed    = qaMeetingPassed(req);
+    const items            = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    const canManage        = isQualityOrSeikan && req.status === 'submitted';
+
+    let body;
+    if (req.status === 'approved') {
+        body = items.length
+            ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
+            : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>';
+    } else if (!meetingPassed) {
+        body = '<div style="color:#888; font-size:13px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
+    } else {
+        body = `
+            <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
+            ${canManage ? `
+            <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
+                <div style="display:flex;flex-direction:column;flex:1;">
+                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
+                    <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
+                </div>
+                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>
+                    <input type="date" id="qa_pending_due" class="pending-due">
+                </div>
+                <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    return `<hr class="section-divider">
+        <div class="section-title">開催結果・ペンディング確認</div>
+        ${body}`;
 }
 
 // ===== Detail Modal =====
@@ -1750,6 +1843,7 @@ async function openDetailModal(requestId) {
     const steps  = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
     currentDetailReq = req;
     currentDetailFlowType = req.flow_type || '';
+    qaEditingPendingIdx = null;
     const pNum   = req.project_number || '—';
     const pInfo  = projectsMap[pNum]  || {};
     const cls    = STATUS_CLASSES[req.status] || 's-pending';
@@ -1772,7 +1866,7 @@ async function openDetailModal(requestId) {
     const isMyRequest   = req.requester_id === currentUser.id;
     const canReschedule = QA_MEETING_FLOWS.includes(req.flow_type)
         && (isMyRequest || isQualityOrSeikan)
-        && req.status !== 'cancelled';
+        && req.status === 'submitted';
 
     // プロフィール名を取得
     const approverIds = steps.filter(s => s.approver_id).map(s => s.approver_id);
@@ -1886,7 +1980,9 @@ async function openDetailModal(requestId) {
         }).join('');
     }
 
-    document.getElementById('detail_title').textContent = FLOW_LABELS[req.flow_type] || req.flow_type;
+    document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
+        ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
+        : (FLOW_LABELS[req.flow_type] || req.flow_type);
     document.getElementById('detail_body').innerHTML = `
         <table class="info-table">
             <tr><td>工事番号</td><td>${esc(pNum)}</td></tr>
@@ -1921,40 +2017,9 @@ async function openDetailModal(requestId) {
         <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
-        ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled' ? (() => {
-            const _now           = new Date();
-            const todayStr       = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
-            const meetingPassed  = !!req.inspection_date && req.inspection_date <= todayStr;
-            const items          = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-            const unresolvedCount = items.filter(p => !p.completed).length;
-            const canManage      = isQualityOrSeikan && req.status === 'submitted';
-
-            let body;
-            if (req.status === 'approved') {
-                body = items.length
-                    ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-                    : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>';
-            } else if (!meetingPassed) {
-                body = '<div style="color:#888; font-size:13px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
-            } else {
-                body = `
-                    <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
-                    ${canManage ? `
-                    <div class="pending-row" style="margin-top:8px;">
-                        <input type="text" id="qa_pending_machine" class="pending-machine" placeholder="機器名（任意）">
-                        <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
-                        <input type="date" id="qa_pending_due" class="pending-due">
-                        <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
-                    </div>
-                    ${unresolvedCount === 0 ? `<button class="btn btn-success" style="margin-top:10px;" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
-                    ` : ''}
-                `;
-            }
-
-            return `<hr class="section-divider">
-        <div class="section-title">開催結果・ペンディング確認</div>
-        ${body}`;
-        })() : ''}
+        ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
+            ? `<div id="qa_result_section">${buildQaResultSectionInner(req, isMyRequest)}</div>`
+            : ''}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div class="section-title">出荷確認書</div>
@@ -1964,28 +2029,6 @@ async function openDetailModal(requestId) {
         <div class="form-group">
             <label>コメント${myStep ? '' : '（任意）'}</label>
             <textarea id="approval_comment" placeholder="承認・却下の理由など（却下時は必須）"></textarea>
-        </div>` : ''}
-        ${canReschedule ? `
-        <div id="detail_reschedule_section" style="display:none;">
-            <hr class="section-divider">
-            <div class="section-title">日程変更</div>
-            <div class="form-group">
-                <label>新しい開催日 *</label>
-                <input type="date" id="detail_new_date" value="${req.inspection_date || ''}">
-            </div>
-            <div class="form-group">
-                <label>開始時刻</label>
-                <div style="display:flex; gap:6px; align-items:center;">
-                    <select id="detail_new_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                        <option value="">--</option>
-                        ${['08','09','10','11','12','13','14','15','16'].map(h => `<option value="${h}"${req.inspection_time?.startsWith(h) ? ' selected' : ''}>${h}時</option>`).join('')}
-                    </select>
-                    <select id="detail_new_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
-                        <option value="">--</option>
-                        ${['00','15','30','45'].map(m => `<option value="${m}"${req.inspection_time?.endsWith(':' + m) ? ' selected' : ''}>${m}分</option>`).join('')}
-                    </select>
-                </div>
-            </div>
         </div>` : ''}
     `;
 
@@ -2003,13 +2046,18 @@ async function openDetailModal(requestId) {
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
     } else if (canReschedule) {
-        footer.innerHTML = `
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-            <button class="btn btn-danger"    onclick="cancelMeeting('${req.id}', '${req.flow_type}')">キャンセル</button>
-            <button class="btn btn-primary"   id="btn_show_reschedule" onclick="showRescheduleForm()">日程変更</button>
-            <button class="btn btn-success"   id="btn_save_reschedule" style="display:none;" onclick="saveReschedule('${req.id}')">保存して通知</button>
-        `;
+        footer.innerHTML = buildQaFooterInner(req);
     }
+}
+
+// ===== 開催結果・ペンディング確認の下部フッターボタン生成（簡易検査・外観検査・出荷確認会議） =====
+function buildQaFooterInner(req) {
+    return `
+        ${qaCanFinalize(req) ? `<button class="btn btn-success" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
+        <button class="btn btn-primary"   onclick="openRescheduleModal('${req.id}')">日程変更</button>
+        <button class="btn btn-danger"    onclick="cancelMeeting('${req.id}', '${req.flow_type}')">キャンセル</button>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+    `;
 }
 
 function closeDetailModal() {
@@ -2069,6 +2117,9 @@ async function uncompletePendingItem(requestId, idx) {
 }
 
 function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
+    // マイページのパネルを即時更新（ペンディング解消/発生で承認待ち⇔ペンディングを瞬時に反映）
+    loadMineSide();
+
     // キャッシュ更新
     if (progressCachedData) {
         for (const num of progressCachedData.baseNums) {
@@ -2083,16 +2134,26 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
         renderProgressCards();
     }
 
-    // モーダルのペンディングセクションだけ差し替え（開閉なし）
-    // QA3フローは開催結果セクション内の追加フォーム・完了ボタンの表示切替も必要なため全体再描画にフォールバックする
-    if (currentDetailReq && currentDetailReq.id === requestId && !QA_MEETING_FLOWS.includes(currentDetailReq.flow_type)) {
+    // モーダルの該当セクションだけ差し替え（開閉なし）
+    if (currentDetailReq && currentDetailReq.id === requestId) {
         currentDetailReq.sheet_data = newSheetData;
-        const el = document.getElementById('pending_detail_section');
-        if (el) {
-            const isMyRequest = currentDetailReq.requester_id === currentUser.id;
-            el.innerHTML = buildPendingSectionInner(currentDetailReq, isMyRequest);
-            showToast(toastMsg, 'success', true);
-            return;
+        const isMyRequest = currentDetailReq.requester_id === currentUser.id;
+        if (QA_MEETING_FLOWS.includes(currentDetailReq.flow_type)) {
+            const el = document.getElementById('qa_result_section');
+            if (el) {
+                el.innerHTML = buildQaResultSectionInner(currentDetailReq, isMyRequest);
+                const footerEl = document.getElementById('detail_footer');
+                if (footerEl) footerEl.innerHTML = buildQaFooterInner(currentDetailReq);
+                showToast(toastMsg, 'success', true);
+                return;
+            }
+        } else {
+            const el = document.getElementById('pending_detail_section');
+            if (el) {
+                el.innerHTML = buildPendingSectionInner(currentDetailReq, isMyRequest);
+                showToast(toastMsg, 'success', true);
+                return;
+            }
         }
     }
     // フォールバック: モーダルを再描画
@@ -2101,10 +2162,8 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
 
 // ===== 開催結果・ペンディング確認（簡易検査・外観検査・出荷確認会議） =====
 async function addQaPendingItem(requestId) {
-    const machineEl = document.getElementById('qa_pending_machine');
     const contentEl = document.getElementById('qa_pending_content');
     const dueEl     = document.getElementById('qa_pending_due');
-    const machine   = machineEl ? machineEl.value.trim() : '';
     const content   = contentEl ? contentEl.value.trim() : '';
     const due       = dueEl ? dueEl.value : '';
     if (!content) { showToast('内容を入力してください', 'error'); return; }
@@ -2114,13 +2173,78 @@ async function addQaPendingItem(requestId) {
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
-        items.push({ machine, content, due, completed: false, completed_date: null });
+        items.push({ content, due, completed: false, completed_date: null });
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を追加しました');
     } catch (e) {
         showToast('追加に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function _refreshQaPendingSection() {
+    if (!currentDetailReq) return;
+    const el = document.getElementById('pending_detail_section');
+    if (el) {
+        const isMyRequest = currentDetailReq.requester_id === currentUser.id;
+        el.innerHTML = buildPendingSectionInner(currentDetailReq, isMyRequest);
+    }
+}
+
+function startEditQaPendingItem(idx) {
+    qaEditingPendingIdx = idx;
+    _refreshQaPendingSection();
+}
+
+function cancelEditQaPendingItem() {
+    qaEditingPendingIdx = null;
+    _refreshQaPendingSection();
+}
+
+async function saveEditQaPendingItem(requestId, idx) {
+    const contentEl = document.getElementById(`qa_edit_content_${idx}`);
+    const dueEl     = document.getElementById(`qa_edit_due_${idx}`);
+    const content   = contentEl ? contentEl.value.trim() : '';
+    const due       = dueEl ? dueEl.value : '';
+    if (!content) { showToast('内容を入力してください', 'error'); return; }
+
+    showLoading('更新中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        const items = req?.sheet_data?.pending_items || [];
+        if (!items[idx]) return;
+        items[idx] = { ...items[idx], content, due };
+        const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
+        await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        qaEditingPendingIdx = null;
+        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を更新しました');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteQaPendingItem(requestId, idx) {
+    if (!confirm('このペンディング項目を削除します。よろしいですか？')) return;
+
+    showLoading('削除中...');
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', requestId).single();
+        const items = req?.sheet_data?.pending_items || [];
+        items.splice(idx, 1);
+        const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
+        await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を削除しました');
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
@@ -2150,18 +2274,38 @@ async function finalizeQaMeeting(requestId) {
     }
 }
 
-// ===== 日程変更（簡易検査） =====
-function showRescheduleForm() {
-    document.getElementById('detail_reschedule_section').style.display = 'block';
-    document.getElementById('btn_show_reschedule').style.display = 'none';
-    document.getElementById('btn_save_reschedule').style.display = '';
-    document.getElementById('detail_reschedule_section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// ===== 日程変更（簡易検査・外観検査・出荷確認会議） =====
+let rescheduleModalReqId = null; // 日程変更モーダルが対象としている申請ID
+
+function openRescheduleModal(requestId) {
+    const req = currentDetailReq;
+    if (!req || req.id !== requestId) return;
+
+    rescheduleModalReqId = requestId;
+    document.getElementById('reschedule_modal_title').textContent =
+        `日程変更－${QA_DETAIL_TITLE_LABELS[req.flow_type] || ''}`;
+    document.getElementById('reschedule_date_input').value = req.inspection_date || '';
+    document.getElementById('reschedule_time_hour').value  = req.inspection_time ? req.inspection_time.split(':')[0] : '';
+    document.getElementById('reschedule_time_min').value   = req.inspection_time ? req.inspection_time.split(':')[1] : '';
+
+    const btn = document.getElementById('btn_save_reschedule');
+    btn.disabled = false; btn.textContent = '保存して通知';
+
+    document.getElementById('reschedule_modal').classList.add('open');
 }
 
-async function saveReschedule(requestId) {
-    const newDate = document.getElementById('detail_new_date').value;
-    const newHour = document.getElementById('detail_new_time_hour').value;
-    const newMin  = document.getElementById('detail_new_time_min').value;
+function closeRescheduleModal() {
+    document.getElementById('reschedule_modal').classList.remove('open');
+    rescheduleModalReqId = null;
+}
+
+async function saveReschedule() {
+    const requestId = rescheduleModalReqId;
+    if (!requestId) return;
+
+    const newDate = document.getElementById('reschedule_date_input').value;
+    const newHour = document.getElementById('reschedule_time_hour').value;
+    const newMin  = document.getElementById('reschedule_time_min').value;
     if (!newDate) { showToast('開催日を入力してください', 'error'); return; }
     const newTime = (newHour && newMin) ? `${newHour}:${newMin}` : null;
 
@@ -2206,6 +2350,7 @@ async function saveReschedule(requestId) {
             if (notifs.length > 0) await db.from('approval_notifications').insert(notifs);
         }
 
+        closeRescheduleModal();
         closeDetailModal();
         await refreshAll();
         showToast('日程を変更しました。関係者に変更通知を送ります。', 'success');

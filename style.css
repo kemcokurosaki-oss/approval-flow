@@ -609,6 +609,7 @@
             justify-content: center;
         }
         .modal-overlay.open { display: flex; }
+        #reschedule_modal { z-index: 1001; }
         .modal {
             background: #fff;
             border-radius: 8px;
@@ -886,11 +887,13 @@
         #inspection_modal .modal,
         #simple_inspection_modal .modal,
         #shipping_meeting_modal .modal,
-        #shipping_modal .modal { height: 85vh; }
+        #shipping_modal .modal,
+        #detail_modal .modal { height: 85vh; }
         #inspection_modal .modal-body,
         #simple_inspection_modal .modal-body,
         #shipping_meeting_modal .modal-body,
-        #shipping_modal .modal-body { overflow-y: auto; flex: 1; }
+        #shipping_modal .modal-body,
+        #detail_modal .modal-body { overflow-y: auto; flex: 1; }
 
         /* ===== Recipients Preview ===== */
         .recipient-list { max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 10px; background: #fafafa; }
@@ -1156,6 +1159,14 @@
             border-radius: 4px;
             flex-shrink: 0;
         }
+        /* 開催結果・ペンディング確認の追加・編集欄（機械名なし・大きめ表示） */
+        .qa-pending-row .pending-content,
+        .qa-pending-row .pending-due {
+            font-size: 14px;
+            padding: 8px 10px;
+        }
+        .qa-pending-row .pending-due { width: 150px; }
+
         /* ===== ペンディング項目（詳細モーダル） ===== */
         .pending-detail-row {
             display: flex;
@@ -1197,6 +1208,25 @@
             flex-shrink: 0;
         }
         .btn-danger-xs:hover { background: #e74c3c; color: #fff; }
+
+        .btn-icon-xs {
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 17px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f5f5f5;
+            color: #555;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .btn-icon-xs:hover { background: #e8e8e8; }
+        .btn-icon-xs.btn-icon-danger { border-color: #e74c3c; color: #e74c3c; background: #fff; }
+        .btn-icon-xs.btn-icon-danger:hover { background: #e74c3c; color: #fff; }
 
         /* ===== Sheet Modal (全画面) ===== */
         .modal-sheet {

@@ -286,7 +286,7 @@
 <div id="inspection_modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h2>外観検査開催案内 — 作成</h2>
+            <h2>外観検査－開催案内作成</h2>
             <button class="modal-close" onclick="closeInspectionModal()">×</button>
         </div>
         <div class="modal-body">
@@ -382,7 +382,7 @@
 <div id="simple_inspection_modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h2>簡易検査開催案内 — 作成</h2>
+            <h2>簡易検査－開催案内作成</h2>
             <button class="modal-close" onclick="closeSimpleInspectionModal()">×</button>
         </div>
         <div class="modal-body">
@@ -478,7 +478,7 @@
 <div id="shipping_meeting_modal" class="modal-overlay">
     <div class="modal">
         <div class="modal-header">
-            <h2>出荷確認会議開催案内 — 作成</h2>
+            <h2>出荷確認会議－開催案内作成</h2>
             <button class="modal-close" onclick="closeShippingMeetingModal()">×</button>
         </div>
         <div class="modal-body">
@@ -625,6 +625,50 @@
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeShippingModal()">キャンセル</button>
             <button class="btn btn-primary" id="shipping_submit_btn" onclick="submitShipping()">申請する</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Reschedule Modal (簡易検査・外観検査・出荷確認会議 日程変更) ===== -->
+<div id="reschedule_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="reschedule_modal_title">日程変更</h2>
+            <button class="modal-close" onclick="closeRescheduleModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>新しい開催日 *</label>
+                <input type="date" id="reschedule_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="reschedule_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="reschedule_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeRescheduleModal()">キャンセル</button>
+            <button class="btn btn-success"   id="btn_save_reschedule" onclick="saveReschedule()">保存して通知</button>
         </div>
     </div>
 </div>
