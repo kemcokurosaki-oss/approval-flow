@@ -591,9 +591,9 @@ async function onMachineChange() {
     const doneFlows = await _getMachineDoneFlows(num, machine);
     const ALL_FLOWS = [
         { type: 'assembly',          label: '組立完了通知',        exists: true },
-        { type: 'test_run',          label: '試運転完了通知',       exists: detectedFlows.test_run },
         { type: 'simple_inspection', label: '簡易検査開催案内',     exists: !is2000sSeries(num) },
         { type: 'inspection',        label: '外観検査開催案内',     exists: detectedFlows.inspection },
+        { type: 'test_run',          label: '試運転完了通知',       exists: detectedFlows.test_run },
         { type: 'shipping_meeting',  label: '出荷確認会議開催案内', exists: detectedFlows.shippingMeeting },
         { type: 'shipping',          label: '出荷確認書',           exists: hasShipping }
     ].filter(f => f.exists);
