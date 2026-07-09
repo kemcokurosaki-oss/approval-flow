@@ -2803,7 +2803,7 @@ async function _detectApplicableFlows(projectNum, machine) {
 // 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定）
 async function _getRequiredFlows(projectNum, machine) {
     const flags = await _detectApplicableFlows(projectNum, machine);
-    const required = new Set(['assembly', 'shipping_prep']);
+    const required = new Set(['assembly']);
     if (flags.simple_inspection) required.add('simple_inspection');
     if (flags.test_run)          required.add('test_run');
     if (flags.inspection)        required.add('inspection');
