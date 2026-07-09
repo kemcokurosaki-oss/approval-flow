@@ -1069,7 +1069,7 @@ function renderProgressCards() {
                 }
 
                 let pendingBadge = '';
-                if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run' || PENDING_ONLY_FLOWS.includes(f.type))) {
+                if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
                     const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
                     const unresolved = pItems.filter(p => !p.completed);
                     if (unresolved.length > 0) {
