@@ -1886,8 +1886,6 @@ async function openDetailModal(requestId) {
         ? '常務承認待ち'
         : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
         ? '開催待ち'
-        : (OWNER_PENDING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
-        ? '確認待ち'
         : (STATUS_LABELS[req.status] || req.status);
 
     // 自分が担当すべきステップか確認
