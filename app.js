@@ -2738,6 +2738,15 @@ async function _getRequiredFlows(projectNum, machine) {
     return required;
 }
 
+// この検査フローがその機械にとって出荷直前のフローであれば、固定の「出荷準備」ペンディング項目を追加する
+async function _seedPrepItemIfLast(reqId, projectNum, machine, flowType) {
+    const flags = await _detectApplicableFlows(projectNum, machine);
+    if (!_isLastPreShipFlow(flowType, flags)) return;
+    await db.from('approval_requests')
+        .update({ sheet_data: { pending_items: [{ ...PREP_PENDING_ITEM }] } })
+        .eq('id', reqId);
+}
+
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [] };
 
