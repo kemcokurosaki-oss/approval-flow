@@ -2055,9 +2055,6 @@ async function openDetailModal(requestId) {
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
             ? `<div id="qa_result_section">${buildQaResultSectionInner(req, isMyRequest)}</div>`
             : ''}
-        ${OWNER_PENDING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
-            ? `<div id="qa_result_section">${buildPrepResultSectionInner(req, isMyRequest)}</div>`
-            : ''}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div class="section-title">出荷確認書</div>
