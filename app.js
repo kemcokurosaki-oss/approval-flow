@@ -3332,7 +3332,6 @@ function openShippingModal() {
     document.getElementById('shipping_approver_box').style.display  = 'none';
     document.getElementById('shipping_approver_list').innerHTML     = '';
     document.getElementById('shipping_flow_box').style.display      = 'none';
-    document.getElementById('shipping_date_input').value  = '';
     document.getElementById('shipping_note_input').value  = '';
 
     document.getElementById('shipping_modal').classList.add('open');
