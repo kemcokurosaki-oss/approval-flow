@@ -1788,14 +1788,11 @@ function qaMeetingPassed(req) {
     return !!req.inspection_date && req.inspection_date <= todayStr;
 }
 
-// QA開催案内・出荷準備確認を「完了にする」ボタンを出せる状態か（未完了のペンディングが残っていないこと等）
+// QA開催案内を「完了にする」ボタンを出せる状態か（未完了のペンディングが残っていないこと等）
 function qaCanFinalize(req) {
-    const isQaFlow   = QA_MEETING_FLOWS.includes(req.flow_type);
-    const isPrepFlow = OWNER_PENDING_FLOWS.includes(req.flow_type);
-    if (!isQaFlow && !isPrepFlow) return false;
+    if (!QA_MEETING_FLOWS.includes(req.flow_type)) return false;
     if (!isQualityOrSeikan || req.status !== 'submitted') return false;
-    // 出荷準備確認は開催日の概念が無いためこのゲートは適用しない
-    if (isQaFlow && !qaMeetingPassed(req)) return false;
+    if (!qaMeetingPassed(req)) return false;
     const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
     return items.filter(p => !p.completed).length === 0;
 }
