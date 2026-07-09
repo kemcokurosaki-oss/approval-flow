@@ -2306,9 +2306,13 @@ async function saveEditQaPendingItem(requestId, idx) {
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         if (!items[idx]) return;
-        items[idx] = { ...items[idx], content, due, ...(ownerEl ? { owner: ownerEl.value.trim() || null } : {}) };
+        const prevOwner = items[idx].owner || '';
+        const newOwner  = ownerEl ? ownerEl.value.trim() : prevOwner;
+        items[idx] = { ...items[idx], content, due, ...(ownerEl ? { owner: newOwner || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        if (newOwner && newOwner !== prevOwner) await _notifyPendingOwner(requestId, newOwner);
 
         qaEditingPendingIdx = null;
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を更新しました');
