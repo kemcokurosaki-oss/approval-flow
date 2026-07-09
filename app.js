@@ -3798,6 +3798,14 @@ async function recordNotifications(requestId) {
 }
 
 // ===== Helpers =====
+// 日付入力欄はどこをクリックしてもカレンダーを開く（カレンダーアイコンだけでなく枠全体をクリック可能にする）
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('input[type="date"]');
+    if (el && typeof el.showPicker === 'function') {
+        try { el.showPicker(); } catch (err) { /* 対応ブラウザ以外は無視 */ }
+    }
+});
+
 function fmtDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
