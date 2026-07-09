@@ -539,29 +539,15 @@ async function onMachineChange() {
     showLoading('読み込み中...');
     try {
     if (machines.length > 1) {
-        // 複数選択: 全選択機械のタスクを集めて後続フローを表示
-        const { data: allTasks } = await db.from('tasks')
-            .select('text').eq('project_number', num).in('machine', machines);
-        const taskNames = new Set((allTasks || []).map(t => (t.text || '').trim()));
-
-        detectedFlows.inspection      = taskNames.has('外観検査');
-        detectedFlows.test_run        = taskNames.has('試運転');
-        detectedFlows.shippingMeeting = taskNames.has('出荷確認会議');
-        const hasShipping             = taskNames.has('工場出荷');
-
-        const upcomingFlows = [
-            { type: 'simple_inspection', label: '簡易検査開催案内',     exists: !is2000sSeries(num) },
-            { type: 'inspection',        label: '外観検査開催案内',     exists: detectedFlows.inspection },
-            { type: 'test_run',          label: '試運転完了通知',       exists: detectedFlows.test_run },
-            { type: 'shipping_meeting',  label: '出荷確認会議開催案内', exists: detectedFlows.shippingMeeting },
-            { type: 'shipping',          label: '出荷確認書',           exists: hasShipping }
-        ].filter(f => f.exists && f.type !== currentFlowType);
+        // 複数選択: 全選択機械のフローを合成して後続フローを表示
+        const chain = await _getUnionFlowChain(num, machines);
+        const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly');
 
         const upcomingHtml = upcomingFlows.length > 0 ? `
             <div class="flow-info-section">
                 <div class="flow-info-tag">後続フロー</div>
-                ${upcomingFlows.map(f => `<div class="flow-info-item">
-                    <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(f.label)}</span>
+                ${upcomingFlows.map(t => `<div class="flow-info-item">
+                    <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(FLOW_LABELS[t] || t)}</span>
                 </div>`).join('')}
             </div>` : '';
 
@@ -577,37 +563,23 @@ async function onMachineChange() {
         return;
     }
 
-    // 1台選択: 詳細フロー検出
+    // 1台選択: 工程表の実タスクに基づく詳細フロー検出
     const machine = machines[0];
-    const flags = await _detectApplicableFlows(num, machine);
-
-    detectedFlows.inspection      = flags.inspection;
-    detectedFlows.test_run        = flags.test_run;
-    detectedFlows.shippingMeeting = flags.shipping_meeting;
-    const hasShipping             = flags.shipping;
-
+    const chain = await _getMachineFlowChain(num, machine);
     const doneFlows = await _getMachineDoneFlows(num, machine);
-    const ALL_FLOWS = [
-        { type: 'assembly',          label: '組立完了通知',        exists: true },
-        { type: 'simple_inspection', label: '簡易検査開催案内',     exists: !is2000sSeries(num) },
-        { type: 'inspection',        label: '外観検査開催案内',     exists: detectedFlows.inspection },
-        { type: 'test_run',          label: '試運転完了通知',       exists: detectedFlows.test_run },
-        { type: 'shipping_meeting',  label: '出荷確認会議開催案内', exists: detectedFlows.shippingMeeting },
-        { type: 'shipping',          label: '出荷確認書',           exists: hasShipping }
-    ].filter(f => f.exists);
 
-    const doneList     = ALL_FLOWS.filter(f => f.type !== currentFlowType && doneFlows.has(f.type));
-    const upcomingList = ALL_FLOWS.filter(f => f.type !== currentFlowType && !doneFlows.has(f.type));
+    const doneList     = chain.filter(t => t !== currentFlowType && doneFlows.has(t));
+    const upcomingList = chain.filter(t => t !== currentFlowType && !doneFlows.has(t));
 
     const doneHtml = doneList.length > 0 ? `<div class="flow-info-section">
         <div class="flow-info-tag">承認済み</div>
-        ${doneList.map(f=>`<div class="flow-info-item">
-            <span class="flow-info-icon">✅</span><span class="flow-info-done">${esc(f.label)}</span></div>`).join('')}
+        ${doneList.map(t=>`<div class="flow-info-item">
+            <span class="flow-info-icon">✅</span><span class="flow-info-done">${esc(FLOW_LABELS[t] || t)}</span></div>`).join('')}
         </div>` : '';
     const upcomingHtml = upcomingList.length > 0 ? `<div class="flow-info-section">
         <div class="flow-info-tag">後続フロー</div>
-        ${upcomingList.map(f=>`<div class="flow-info-item">
-            <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(f.label)}</span></div>`).join('')}
+        ${upcomingList.map(t=>`<div class="flow-info-item">
+            <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(FLOW_LABELS[t] || t)}</span></div>`).join('')}
         </div>` : '';
 
     document.getElementById('flow_detect_list').innerHTML = `${doneHtml}
