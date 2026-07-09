@@ -3286,6 +3286,7 @@ async function submitShippingMeeting() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
+            await _seedPrepItemIfLast(req.id, num, machine, 'shipping_meeting');
             await recordFlowNotifications(req.id, 'shipping_meeting');
             if (extraRecipients.sm.length > 0) {
                 await db.from('approval_notifications').insert(
