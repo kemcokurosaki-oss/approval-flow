@@ -2288,6 +2288,7 @@ function cancelEditQaPendingItem() {
 
 async function saveEditQaPendingItem(requestId, idx) {
     const contentEl = document.getElementById(`qa_edit_content_${idx}`);
+    const ownerEl   = document.getElementById(`qa_edit_owner_${idx}`);
     const dueEl     = document.getElementById(`qa_edit_due_${idx}`);
     const content   = contentEl ? contentEl.value.trim() : '';
     const due       = dueEl ? dueEl.value : '';
@@ -2299,7 +2300,7 @@ async function saveEditQaPendingItem(requestId, idx) {
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         if (!items[idx]) return;
-        items[idx] = { ...items[idx], content, due };
+        items[idx] = { ...items[idx], content, due, ...(ownerEl ? { owner: ownerEl.value.trim() || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
