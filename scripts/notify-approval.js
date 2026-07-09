@@ -235,11 +235,22 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'prep_item_assigned':
       return {
         from,
-        subject: `【出荷準備確認】${pStr}`,
+        subject: `【ペンディング項目】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の出荷準備確認で、担当のペンディング項目が割り当てられました。\n` +
+          `${pStr} で、担当のペンディング項目が割り当てられました。\n` +
           `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'shipping_prep_done':
+      return {
+        from,
+        subject: `【出荷準備完了】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷準備が完了しました。\n` +
+          `内容を確認のうえ、開催案内を完了にして出荷確定申請を行ってください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
