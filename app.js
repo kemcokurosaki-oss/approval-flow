@@ -323,7 +323,9 @@ const STATUS_LABELS = {
     in_review:  '部長承認待ち',
     approved:   '承認完了',
     rejected:   '却下',
-    cancelled:  'キャンセル'
+    cancelled:  'キャンセル',
+    awaiting_shipping_date:    '出荷日入力待ち',
+    awaiting_shipping_confirm: '品証確認待ち'
 };
 
 const STATUS_CLASSES = {
@@ -332,7 +334,9 @@ const STATUS_CLASSES = {
     in_review:  's-in_review',
     approved:   's-approved',
     rejected:   's-rejected',
-    cancelled:  's-rejected'
+    cancelled:  's-rejected',
+    awaiting_shipping_date:    's-gray',
+    awaiting_shipping_confirm: 's-gray'
 };
 
 // ===== Auth =====
