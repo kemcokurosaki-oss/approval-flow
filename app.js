@@ -270,7 +270,8 @@ async function switchDevRole(value) {
         assembly_director:   '組立部長',
         operations_manager:  '操業課長',
         operations_director: '操業部長',
-        quality:             '品質保証課'
+        quality:             '品質保証課',
+        sales:               '営業担当者'
     };
     const label = document.getElementById('dev_role_label');
     label.textContent = value ? `▶ ${DEMO_LABELS[value] || value} として表示中` : '';
