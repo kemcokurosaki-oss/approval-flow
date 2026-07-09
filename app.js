@@ -1815,46 +1815,12 @@ function buildQaResultSectionInner(req, isMyRequest) {
             <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
             ${canManage ? `
             <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
-                <div style="display:flex;flex-direction:column;flex:1;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
-                    <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
-                </div>
-                <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>
-                    <input type="date" id="qa_pending_due" class="pending-due">
-                </div>
-                <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
-            </div>
-            ` : ''}
-        `;
-    }
-
-    return `<hr class="section-divider">
-        <div class="section-title">開催結果・ペンディング確認</div>
-        ${body}`;
-}
-
-// ===== 出荷準備完了確認（担当者ペンディング） =====
-function buildPrepResultSectionInner(req, isMyRequest) {
-    const items     = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-    const canManage = isQualityOrSeikan && req.status === 'submitted';
-
-    let body;
-    if (req.status === 'approved') {
-        body = items.length
-            ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-            : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>';
-    } else {
-        body = `
-            <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
-            ${canManage ? `
-            <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
                 <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
                     <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
                     <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
                 </div>
                 <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者</span>
+                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者（任意）</span>
                     <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
                 </div>
                 <div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -1868,7 +1834,7 @@ function buildPrepResultSectionInner(req, isMyRequest) {
     }
 
     return `<hr class="section-divider">
-        <div class="section-title">担当者確認・ペンディング項目</div>
+        <div class="section-title">開催結果・ペンディング確認</div>
         ${body}`;
 }
 
