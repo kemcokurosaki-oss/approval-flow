@@ -2228,6 +2228,23 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
 }
 
 // ===== 開催結果・ペンディング確認（簡易検査・外観検査・出荷確認会議） =====
+// ペンディング項目の担当者に「割り当てられた」ことを通知（profilesに無ければnotification_recipientsへメールのみ）
+async function _notifyPendingOwner(requestId, owner) {
+    const { data: pRows } = await db.from('profiles').select('id').eq('name', owner);
+    if (pRows?.length > 0) {
+        await db.from('approval_notifications').insert(
+            pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: 'prep_item_assigned' }))
+        );
+    } else {
+        const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', owner).eq('active', true);
+        if (nRows?.length > 0) {
+            await db.from('approval_notifications').insert(
+                nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: 'prep_item_assigned' }))
+            );
+        }
+    }
+}
+
 async function addQaPendingItem(requestId) {
     const contentEl = document.getElementById('qa_pending_content');
     const ownerEl   = document.getElementById('qa_pending_owner');
@@ -2240,28 +2257,13 @@ async function addQaPendingItem(requestId) {
     showLoading('追加中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data, flow_type').eq('id', requestId).single();
+            .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         items.push({ content, due, owner: owner || null, completed: false, completed_date: null });
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        // 出荷準備確認: 担当者に「ペンディング項目が割り当てられた」ことを通知
-        if (owner && OWNER_PENDING_FLOWS.includes(req?.flow_type)) {
-            const { data: pRows } = await db.from('profiles').select('id').eq('name', owner);
-            if (pRows?.length > 0) {
-                await db.from('approval_notifications').insert(
-                    pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: 'prep_item_assigned' }))
-                );
-            } else {
-                const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', owner).eq('active', true);
-                if (nRows?.length > 0) {
-                    await db.from('approval_notifications').insert(
-                        nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: 'prep_item_assigned' }))
-                    );
-                }
-            }
-        }
+        if (owner) await _notifyPendingOwner(requestId, owner);
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を追加しました');
     } catch (e) {
