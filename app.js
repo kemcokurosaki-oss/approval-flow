@@ -2641,6 +2641,31 @@ async function _getMachineDoneFlows(projectNum, machine) {
     return new Set((data || []).map(r => r.flow_type));
 }
 
+// その機械にどのフローが該当するか（タスクの有無から判定）
+async function _detectApplicableFlows(projectNum, machine) {
+    const { data: tasks } = await db.from('tasks')
+        .select('text').eq('project_number', projectNum).eq('machine', machine);
+    const taskNames = (tasks || []).map(t => (t.text || '').trim());
+    return {
+        simple_inspection: !is2000sSeries(projectNum),
+        test_run:          taskNames.includes('試運転'),
+        inspection:        taskNames.includes('外観検査'),
+        shipping_meeting:  taskNames.includes('出荷確認会議'),
+        shipping:          taskNames.includes('工場出荷')
+    };
+}
+
+// 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定）
+async function _getRequiredFlows(projectNum, machine) {
+    const flags = await _detectApplicableFlows(projectNum, machine);
+    const required = new Set(['assembly', 'shipping_prep']);
+    if (flags.simple_inspection) required.add('simple_inspection');
+    if (flags.test_run)          required.add('test_run');
+    if (flags.inspection)        required.add('inspection');
+    if (flags.shipping_meeting)  required.add('shipping_meeting');
+    return required;
+}
+
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [] };
 
