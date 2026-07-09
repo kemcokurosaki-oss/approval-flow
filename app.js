@@ -488,7 +488,6 @@ async function loadProjects() {
 
 }
 
-let detectedFlows = { inspection: false, test_run: false, shippingMeeting: false }; // 自動検出結果
 const simpleInspectionProjectNums = new Set(); // 簡易検査タスクがある工番
 const inspectionProjectNums    = new Set(); // 外観検査タスクがある工番
 const assemblyProjectNums      = new Set(); // 機械組立タスクがある工番
