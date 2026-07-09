@@ -629,54 +629,6 @@
     </div>
 </div>
 
-<!-- ===== Shipping Prep Modal (フロー6: 出荷準備完了確認) ===== -->
-<div id="shipping_prep_modal" class="modal-overlay">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>出荷準備完了確認－起票</h2>
-            <button class="modal-close" onclick="closeShippingPrepModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>工事番号</label>
-                <div id="sp_project_display" class="project-info-box"></div>
-            </div>
-            <div id="sp_project_info" style="display:none;">
-                <div class="form-group">
-                    <label>客先名</label>
-                    <div class="project-info-box" id="sp_customer_display"></div>
-                </div>
-                <div class="form-group">
-                    <label>工事名</label>
-                    <div class="project-info-box" id="sp_project_name_display"></div>
-                </div>
-            </div>
-            <div class="form-group" id="sp_machine_group" style="display:none;">
-                <label>機械名 *（複数選択可）</label>
-                <div class="machine-checkbox-bar">
-                    <button type="button" class="btn-xs" onclick="toggleAllMachines('sp_machine_list', this)">全選択</button>
-                </div>
-                <div class="machine-checkbox-list" id="sp_machine_list"></div>
-            </div>
-            <div id="sp_flow_box" style="display:none;" class="form-group">
-                <label>フロー状況</label>
-                <div id="sp_flow_list" class="flow-info-box"></div>
-            </div>
-            <div class="form-group">
-                <label>備考（任意）</label>
-                <textarea id="sp_note_input" placeholder="梱包・出荷準備に関する連絡事項など"></textarea>
-            </div>
-            <div class="form-group">
-                <div style="font-size:12px; color:#888; padding:6px 0;">起票後、詳細画面から梱包作業などのペンディング項目と担当者を追加できます。</div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeShippingPrepModal()">キャンセル</button>
-            <button class="btn btn-primary" id="sp_submit_btn" onclick="submitShippingPrep()">起票する</button>
-        </div>
-    </div>
-</div>
-
 <!-- ===== Reschedule Modal (簡易検査・外観検査・出荷確認会議 日程変更) ===== -->
 <div id="reschedule_modal" class="modal-overlay">
     <div class="modal">
