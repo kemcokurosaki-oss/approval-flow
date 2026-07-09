@@ -3035,21 +3035,15 @@ async function onSiMachineChange() {
     if (machines.length === 0) { document.getElementById('si_flow_box').style.display = 'none'; return; }
     const machine   = machines[0];
     showLoading('読み込み中...');
-    let doneFlows;
+    let doneFlows, chain;
     try {
         doneFlows = await _getMachineDoneFlows(num, machine);
+        chain     = await _getMachineFlowChain(num, machine);
     } finally {
         hideLoading();
     }
-    document.getElementById('si_flow_list').innerHTML = [
-        { type: 'assembly', label: '組立完了通知' },
-        { type: 'test_run', label: '試運転完了通知' }
-    ].map(f => `<div class="flow-info-item">
-        <span class="flow-info-icon">${doneFlows.has(f.type) ? '✅' : '──'}</span>
-        <span class="${doneFlows.has(f.type) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(f.label)}</span>
-        ${doneFlows.has(f.type) ? '<span class="flow-info-note">承認済み</span>' : ''}
-    </div>`).join('') +
-    `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 簡易検査開催案内（今回）</span></div>`;
+    document.getElementById('si_flow_list').innerHTML =
+        _renderFlowStatusList(_priorSteps(chain, 'simple_inspection'), doneFlows, '簡易検査開催案内');
     document.getElementById('si_flow_box').style.display = 'block';
 }
 
