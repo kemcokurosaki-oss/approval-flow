@@ -2331,6 +2331,7 @@ async function deleteQaPendingItem(requestId, idx) {
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
+        if (items[idx]?.fixed) { showToast('この項目は削除できません', 'error'); return; }
         items.splice(idx, 1);
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
