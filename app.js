@@ -2199,15 +2199,6 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
                 showToast(toastMsg, 'success', true);
                 return;
             }
-        } else if (OWNER_PENDING_FLOWS.includes(currentDetailReq.flow_type)) {
-            const el = document.getElementById('qa_result_section');
-            if (el) {
-                el.innerHTML = buildPrepResultSectionInner(currentDetailReq, isMyRequest);
-                const footerEl = document.getElementById('detail_footer');
-                if (footerEl) footerEl.innerHTML = buildPrepFooterInner(currentDetailReq);
-                showToast(toastMsg, 'success', true);
-                return;
-            }
         } else {
             const el = document.getElementById('pending_detail_section');
             if (el) {
