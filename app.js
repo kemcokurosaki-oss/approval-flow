@@ -1990,8 +1990,6 @@ async function openDetailModal(requestId) {
         </div>`;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
         stepsHtml = '<div style="color:#888; font-size:13px; padding:4px 0;">承認フローなし（開催案内を送信済み）</div>';
-    } else if (OWNER_PENDING_FLOWS.includes(req.flow_type)) {
-        stepsHtml = '<div style="color:#888; font-size:13px; padding:4px 0;">承認フローなし（担当者確認を進行中）</div>';
     } else {
         stepsHtml = steps.map(s => {
             let icon, sc;
