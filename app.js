@@ -2139,11 +2139,11 @@ function buildPrepFooterInner(req) {
 }
 
 // ===== 営業: 確定出荷日入力フッター =====
-function buildSalesDateFooterInner() {
+function buildSalesDateFooterInner(req) {
     return `
         <input type="date" id="sales_date_input" style="margin-right:auto;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        <button class="btn btn-success"   onclick="submitSalesShippingDate('${'REQ_ID_PLACEHOLDER'}')">入力する</button>
+        <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
     `;
 }
 
