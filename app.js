@@ -519,7 +519,6 @@ async function onProjectChange() {
         await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange');
         machineGroup.style.display = 'block';
         flowEl.style.display       = 'none';
-        detectedFlows = { inspection: false, test_run: false, shippingMeeting: false };
     } finally {
         hideLoading();
     }
