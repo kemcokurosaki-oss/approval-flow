@@ -3147,20 +3147,15 @@ async function onInspectionMachineChange() {
     if (machines.length === 0) { document.getElementById('inspection_flow_box').style.display = 'none'; return; }
     const machine = machines[0]; // フロー状況は1台目で代表
     showLoading('読み込み中...');
-    let doneFlows;
+    let doneFlows, chain;
     try {
         doneFlows = await _getMachineDoneFlows(num, machine);
+        chain     = await _getMachineFlowChain(num, machine);
     } finally {
         hideLoading();
     }
-    const assemblyDone = doneFlows.has('assembly');
     document.getElementById('inspection_flow_list').innerHTML =
-        `<div class="flow-info-item">
-            <span class="flow-info-icon">${assemblyDone ? '✅' : '⚠'}</span>
-            <span class="${assemblyDone ? 'flow-info-done' : ''}" style="${assemblyDone ? '' : 'color:#e74c3c;'}">組立完了通知</span>
-            <span class="flow-info-note">${assemblyDone ? '承認済み' : '未承認'}</span>
-        </div>
-        <div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 外観検査開催案内（今回）</span></div>`;
+        _renderFlowStatusList(_priorSteps(chain, 'inspection'), doneFlows, '外観検査開催案内');
     document.getElementById('inspection_flow_box').style.display = 'block';
 }
 
