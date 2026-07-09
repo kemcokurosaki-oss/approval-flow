@@ -1216,6 +1216,7 @@ let currentProjectNum = '';
 let currentSiProjectNum = '';
 let currentInspectionProjectNum = '';
 let currentSmProjectNum = '';
+let currentSpProjectNum = '';
 let currentShippingProjectNum = '';
 let selectedApproverRole = 'assembly_manager';
 let sheetChecks = {};
