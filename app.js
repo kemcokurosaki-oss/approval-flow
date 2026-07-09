@@ -1927,7 +1927,7 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
     } else if (req.flow_type === 'shipping') {
-        // shipping: 担当者確認（簡易検査）＋常務承認ステップ
+        // shipping: 担当者確認＋常務承認ステップ
         const step = steps[0];
         let icon, sc;
         if      (step?.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
