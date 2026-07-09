@@ -1200,7 +1200,6 @@ function openSubmitModal(flowType = 'assembly') {
     document.getElementById('submit_machine_list').innerHTML = '';
     document.getElementById('flow_detect_group').style.display = 'none';
     document.getElementById('submit_note').value = '';
-    detectedFlows = { inspection: false, test_run: false, shippingMeeting: false };
 
     // モーダルタイトルをフロー種別で切り替え
     document.getElementById('submit_modal_title').textContent =
