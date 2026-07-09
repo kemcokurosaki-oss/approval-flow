@@ -2015,7 +2015,7 @@ async function openDetailModal(requestId) {
         }).join('');
     }
 
-    document.getElementById('detail_title').textContent = PENDING_ONLY_FLOWS.includes(req.flow_type)
+    document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
         ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
         : (FLOW_LABELS[req.flow_type] || req.flow_type);
     document.getElementById('detail_body').innerHTML = `
