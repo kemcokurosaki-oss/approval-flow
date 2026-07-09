@@ -2735,36 +2735,72 @@ async function _getMachineDoneFlows(projectNum, machine) {
     return new Set((data || []).map(r => r.flow_type));
 }
 
-// その機械にどのフローが該当するか（タスクの有無から判定）
-async function _detectApplicableFlows(projectNum, machine) {
-    const { data: tasks } = await db.from('tasks')
-        .select('text').eq('project_number', projectNum).eq('machine', machine);
-    const taskNames = (tasks || []).map(t => (t.text || '').trim());
-    return {
-        simple_inspection: !is2000sSeries(projectNum),
-        test_run:          taskNames.includes('試運転'),
-        inspection:        taskNames.includes('外観検査'),
-        shipping_meeting:  taskNames.includes('出荷確認会議'),
-        shipping:          taskNames.includes('工場出荷')
-    };
+// 工程表の実タスク（sort_order）から、その機械に該当する中間フロー（簡易検査・外観検査・試運転・出荷確認会議）を
+// 実際の工程順で返す（簡易検査と外観検査は排他、試運転・出荷確認会議は無い場合がある）
+async function _getMiddleFlowChain(projectNum, machine) {
+    const { data: rows } = await db.from('tasks')
+        .select('text, machine, sort_order')
+        .eq('project_number', projectNum)
+        .in('text', Object.keys(TASK_TEXT_TO_FLOW));
+    const best = {};
+    for (const r of (rows || [])) {
+        const text = (r.text || '').trim();
+        const flow = TASK_TEXT_TO_FLOW[text];
+        if (!flow) continue;
+        // 試運転は機械ごとに有無が異なる。他は工番単位で該当扱い（機械を指定しないタスクの場合がある）
+        if (text === '試運転' && r.machine !== machine) continue;
+        if (best[flow] === undefined || r.sort_order < best[flow]) best[flow] = r.sort_order;
+    }
+    return Object.keys(best).sort((a, b) => best[a] - best[b]);
 }
 
-// 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定）
+// 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
+async function _getMachineFlowChain(projectNum, machine) {
+    const middle = await _getMiddleFlowChain(projectNum, machine);
+    return ['assembly', ...middle, 'shipping'];
+}
+
+// 複数機械選択時: 各機械のフロー構成を、工程順を保ったまま合成する
+async function _getUnionFlowChain(projectNum, machines) {
+    const chains = await Promise.all(machines.map(m => _getMachineFlowChain(projectNum, m)));
+    const seen = new Set();
+    const union = [];
+    for (const chain of chains) {
+        for (const t of chain) {
+            if (!seen.has(t)) { seen.add(t); union.push(t); }
+        }
+    }
+    return union;
+}
+
+// chain上で flowType より前にある工程だけを返す（フロー状況チェックリスト用）
+function _priorSteps(chain, flowType) {
+    const idx = chain.indexOf(flowType);
+    return idx === -1 ? chain.filter(t => t !== 'shipping') : chain.slice(0, idx);
+}
+
+// フロー状況チェックリストのHTMLを生成（承認済み/未完了 + 今回のフロー）
+function _renderFlowStatusList(steps, doneFlows, currentLabel) {
+    return steps.map(t => `<div class="flow-info-item">
+        <span class="flow-info-icon">${doneFlows.has(t) ? '✅' : '──'}</span>
+        <span class="${doneFlows.has(t) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(FLOW_LABELS[t] || t)}</span>
+        ${doneFlows.has(t) ? '<span class="flow-info-note">承認済み</span>' : ''}
+    </div>`).join('') +
+    `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ ${esc(currentLabel)}（今回）</span></div>`;
+}
+
+// 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定、工程順を保持）
 async function _getRequiredFlows(projectNum, machine) {
-    const flags = await _detectApplicableFlows(projectNum, machine);
-    const required = new Set(['assembly']);
-    // 簡易検査は外観検査・出荷確認会議ルートと排他（同じ機械で両方使われることはない）
-    if (flags.simple_inspection && !flags.inspection && !flags.shipping_meeting) required.add('simple_inspection');
-    if (flags.test_run)          required.add('test_run');
-    if (flags.inspection)        required.add('inspection');
-    if (flags.shipping_meeting)  required.add('shipping_meeting');
-    return required;
+    const chain = await _getMachineFlowChain(projectNum, machine);
+    return new Set(chain.filter(t => t !== 'shipping'));
 }
 
-// この検査フローがその機械にとって出荷直前のフローであれば、固定の「出荷準備」ペンディング項目を追加する
+// この検査フローがその機械にとって出荷直前のフロー（chain上で最後のQA系フロー）であれば、
+// 固定の「出荷準備」ペンディング項目を追加する
 async function _seedPrepItemIfLast(reqId, projectNum, machine, flowType) {
-    const flags = await _detectApplicableFlows(projectNum, machine);
-    if (!_isLastPreShipFlow(flowType, flags)) return;
+    const chain = await _getMachineFlowChain(projectNum, machine);
+    const qaSteps = chain.filter(t => QA_MEETING_FLOWS.includes(t));
+    if (qaSteps[qaSteps.length - 1] !== flowType) return;
     await db.from('approval_requests')
         .update({ sheet_data: { pending_items: [{ ...PREP_PENDING_ITEM }] } })
         .eq('id', reqId);
