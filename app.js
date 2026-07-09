@@ -2121,7 +2121,7 @@ async function completePendingItem(requestId, idx) {
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data').eq('id', requestId).single();
+            .select('sheet_data, requester_id').eq('id', requestId).single();
         if (!req?.sheet_data) return;
 
         const items = req.sheet_data.pending_items || [];
@@ -2136,6 +2136,21 @@ async function completePendingItem(requestId, idx) {
 
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+
+        // 固定の「出荷準備」項目が完了したら品証・製管へ確認・本申請を促す通知を送る
+        if (items[idx].fixed) {
+            const notifIds = new Set();
+            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+            (qRows || []).forEach(p => notifIds.add(p.id));
+            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
+            (sRows || []).forEach(p => notifIds.add(p.id));
+            if (req.requester_id) notifIds.add(req.requester_id);
+            if (notifIds.size > 0) {
+                await db.from('approval_notifications').insert(
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_done' }))
+                );
+            }
+        }
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました');
     } catch(e) {
