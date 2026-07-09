@@ -747,14 +747,18 @@ async function loadMineSide() {
     const renderCard = (req, pendingCount) => {
         const pNum        = req.project_number || '—';
 
-        const isNotifFlow = QA_MEETING_FLOWS.includes(req.flow_type);
+        const isNotifFlow = PENDING_ONLY_FLOWS.includes(req.flow_type);
         let statusText;
         if (req.status === 'draft') {
             statusText = '<span class="si-badge si-gray">✏</span> 入力中';
         } else if (pendingCount) {
             statusText = `<span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${pendingCount}件`;
-        } else if (isNotifFlow && req.status === 'submitted') {
+        } else if (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted') {
             statusText = '<span class="si-badge si-orange">▶</span> 開催待ち';
+        } else if (OWNER_PENDING_FLOWS.includes(req.flow_type) && req.status === 'submitted') {
+            statusText = '<span class="si-badge si-orange">▶</span> 確認待ち';
+        } else if (req.status === 'awaiting_shipping_date' || req.status === 'awaiting_shipping_confirm') {
+            statusText = `<span class="si-badge si-orange">▶</span> ${STATUS_LABELS[req.status]}`;
         } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
