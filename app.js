@@ -303,13 +303,13 @@ const QA_DETAIL_TITLE_LABELS = {
 // 出荷準備の固定ペンディング項目（直前の検査フローに自動追加する）
 const PREP_PENDING_ITEM = { content: '出荷準備', due: null, owner: null, completed: false, completed_date: null, fixed: true };
 
-// この検査フローが、その機械にとって出荷直前（＝出荷準備を紐づけるべき）フローかどうか
-function _isLastPreShipFlow(flowType, flags) {
-    if (flowType === 'shipping_meeting')  return true;
-    if (flowType === 'inspection')        return !flags.shipping_meeting;
-    if (flowType === 'simple_inspection') return !flags.inspection && !flags.shipping_meeting;
-    return false;
-}
+// タスク名 → フロー種別（工程表の実タスクからフロー構成・順序を導出するための対応表）
+const TASK_TEXT_TO_FLOW = {
+    '簡易検査':     'simple_inspection',
+    '外観検査':     'inspection',
+    '試運転':       'test_run',
+    '出荷確認会議': 'shipping_meeting'
+};
 
 const ROLE_LABELS = {
     assembly_manager:    '組立課長',
