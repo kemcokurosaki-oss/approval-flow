@@ -2753,7 +2753,8 @@ async function _detectApplicableFlows(projectNum, machine) {
 async function _getRequiredFlows(projectNum, machine) {
     const flags = await _detectApplicableFlows(projectNum, machine);
     const required = new Set(['assembly']);
-    if (flags.simple_inspection) required.add('simple_inspection');
+    // 簡易検査は外観検査・出荷確認会議ルートと排他（同じ機械で両方使われることはない）
+    if (flags.simple_inspection && !flags.inspection && !flags.shipping_meeting) required.add('simple_inspection');
     if (flags.test_run)          required.add('test_run');
     if (flags.inspection)        required.add('inspection');
     if (flags.shipping_meeting)  required.add('shipping_meeting');
