@@ -1938,7 +1938,7 @@ async function openDetailModal(requestId) {
         const when = step?.decided_at ? fmtDate(step.decided_at) : '';
         stepsHtml = `
         <div style="margin-bottom:14px;">
-            <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（簡易検査）</div>
+            <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認</div>
             <div style="font-size:13px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
                 <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
                 <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
