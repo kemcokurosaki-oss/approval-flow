@@ -1714,22 +1714,26 @@ async function submitRequest() {
 // ===== ペンディングセクション HTML 生成 =====
 function buildPendingSectionInner(req, isMyRequest) {
     const isQaFlow   = QA_MEETING_FLOWS.includes(req.flow_type);
-    const isPrepFlow = OWNER_PENDING_FLOWS.includes(req.flow_type);
     const canComplete = isQaFlow
-        ? (isQualityOrSeikan && req.status === 'submitted')
+        ? null // QAフローは項目ごとに判定する（下記itemCanComplete）
         : (isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status));
     // QA開催結果で追加したペンディング項目は、完了前であれば編集・削除できる
-    const canManage = (isQaFlow || isPrepFlow) && isQualityOrSeikan && req.status === 'submitted';
-    const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-    if (!items.length) return '';
+    const canManage = isQaFlow && isQualityOrSeikan && req.status === 'submitted';
+    const rawItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    if (!rawItems.length) return '';
+    // 固定の「出荷準備」項目は常に最後に表示する（元の配列インデックスはidxとして保持）
+    const indexed = rawItems.map((item, idx) => ({ item, idx }));
+    const items = isQaFlow
+        ? [...indexed].sort((a, b) => (a.item.fixed ? 1 : 0) - (b.item.fixed ? 1 : 0))
+        : indexed;
     const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
         <hr class="section-divider">
         <div class="section-title">ペンディング項目</div>
-        ${items.map((item, idx) => {
-            // 出荷準備確認は項目ごとの担当者本人 or 品証が完了操作できる
-            const itemCanComplete = isPrepFlow
-                ? (req.status === 'submitted' && (isQualityOrSeikan || (currentProfile?.name && currentProfile.name === item.owner)))
+        ${items.map(({ item, idx }) => {
+            // QAフローは「品証」または「担当者本人（項目に担当者が設定されている場合）」が完了操作できる
+            const itemCanComplete = isQaFlow
+                ? (req.status === 'submitted' && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner)))
                 : canComplete;
             if (canManage && qaEditingPendingIdx === idx) {
                 return `
@@ -1738,13 +1742,12 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
                         <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
-                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
+                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}" ${item.fixed ? 'readonly' : ''}>
                     </div>
-                    ${isPrepFlow ? `
                     <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
                         <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者</span>
                         <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
-                    </div>` : ''}
+                    </div>
                     <div style="display:flex;flex-direction:column;flex-shrink:0;">
                         ${editLbl}
                         <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
@@ -1761,7 +1764,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-detail-icon">${item.completed ? '✓' : '●'}</div>
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}</div>
-                    ${isPrepFlow && item.owner ? `<div class="pending-detail-due">担当: ${esc(item.owner)}</div>` : ''}
+                    ${item.owner ? `<div class="pending-detail-due">担当: ${esc(item.owner)}</div>` : ''}
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
                 </div>
@@ -1771,7 +1774,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                         : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
                     ${canManage && !item.completed ? `
                         <button class="btn-icon-xs" title="編集" onclick="startEditQaPendingItem(${idx})">✎</button>
-                        <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>
+                        ${item.fixed ? '' : `<button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>`}
                     ` : ''}
                 </div>
             </div>`;
