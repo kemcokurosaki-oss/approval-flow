@@ -3565,12 +3565,10 @@ async function onShippingMachineChange() {
 async function submitShipping() {
     const num      = currentShippingProjectNum;
     const machines = getSelectedMachines('shipping_machine_list');
-    const dateVal  = document.getElementById('shipping_date_input').value;
     const note     = document.getElementById('shipping_note_input').value.trim();
 
-    if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
+    if (!num)                  { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (!dateVal)          { showToast('確定出荷日を入力してください', 'error'); return; }
 
     const btn = document.getElementById('shipping_submit_btn');
     btn.disabled    = true;
@@ -3578,35 +3576,126 @@ async function submitShipping() {
     showLoading('処理中...');
 
     try {
+        // 前フロー完了の再チェック（画面表示が古い場合の防御）
+        for (const machine of machines) {
+            const [doneFlows, required] = await Promise.all([
+                _getMachineDoneFlows(num, machine),
+                _getRequiredFlows(num, machine)
+            ]);
+            const missing = [...required].filter(t => !doneFlows.has(t));
+            if (missing.length > 0) {
+                throw new Error(`${machine}: 前フローが未完了のため申請できません`);
+            }
+        }
+
+        // 営業担当者を解決（sales_person_map）
+        const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
+        const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[num] || null;
+
         for (const machine of machines) {
             const { data: req, error } = await db.from('approval_requests').insert({
                 project_number: num, machine_name: machine, flow_type: 'shipping',
-                status: 'submitted', requester_id: currentUser.id, note: note || null,
-                confirmed_shipping_date: dateVal
+                status: 'awaiting_shipping_date', requester_id: currentUser.id, note: note || null,
+                confirmed_shipping_date: null
             }).select().single();
             if (error) throw error;
 
-            // 承認ステップ: 常務（assembly_director）の1ステップ
-            await db.from('approval_steps').insert({
-                request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending'
-            });
-
-            // 常務に承認依頼通知
-            const { data: directors } = await db.from('profiles').select('id').eq('role', 'assembly_director');
-            if (directors?.length > 0) {
-                await db.from('approval_notifications').insert(
-                    directors.map(d => ({ request_id: req.id, recipient_id: d.id, notification_type: 'approval_request' }))
-                );
+            // 営業へ確定出荷日の入力を依頼
+            if (salesOwner) {
+                const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
+                if (pRows?.length > 0) {
+                    await db.from('approval_notifications').insert(
+                        pRows.map(p => ({ request_id: req.id, recipient_id: p.id, notification_type: 'shipping_date_request' }))
+                    );
+                } else {
+                    const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', salesOwner).eq('active', true);
+                    if (nRows?.length > 0) {
+                        await db.from('approval_notifications').insert(
+                            nRows.map(n => ({ request_id: req.id, recipient_email: n.email, notification_type: 'shipping_date_request' }))
+                        );
+                    }
+                }
             }
         }
         closeShippingModal();
         await refreshAll();
-        showToast(`${machines.length}機械の申請をしました。\n常務に承認依頼が届きます。`, 'success');
+        showToast(`${machines.length}機械の申請をしました。\n営業担当者に確定出荷日の入力を依頼します。`, 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
         btn.textContent = '申請する';
+        hideLoading();
+    }
+}
+
+// 営業: 確定出荷日を入力（品証の確認待ちへ）
+async function submitSalesShippingDate(requestId) {
+    const dateVal = document.getElementById('sales_date_input')?.value;
+    if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        const { data: req, error } = await db.from('approval_requests')
+            .update({ confirmed_shipping_date: dateVal, status: 'awaiting_shipping_confirm', updated_at: new Date().toISOString() })
+            .eq('id', requestId).eq('status', 'awaiting_shipping_date')
+            .select().single();
+        if (error) throw error;
+        if (!req) { showToast('既に処理済みです', 'error'); return; }
+
+        // 申請者（品証）＋品証・製管全体へ確認依頼を通知
+        const notifIds = new Set();
+        if (req.requester_id) notifIds.add(req.requester_id);
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => notifIds.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
+        (sRows || []).forEach(p => notifIds.add(p.id));
+        if (notifIds.size > 0) {
+            await db.from('approval_notifications').insert(
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done' }))
+            );
+        }
+
+        closeDetailModal();
+        await refreshAll();
+        showToast('確定出荷日を入力しました。品証の確認後、申請されます。', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 品証: 営業入力済みの確定出荷日を確認し、常務へ本申請する
+async function confirmAndSubmitShipping(requestId) {
+    showLoading('処理中...');
+    try {
+        const { data: req, error } = await db.from('approval_requests')
+            .update({ status: 'submitted', updated_at: new Date().toISOString() })
+            .eq('id', requestId).eq('status', 'awaiting_shipping_confirm')
+            .select().single();
+        if (error) throw error;
+        if (!req) { showToast('既に処理済みです', 'error'); return; }
+
+        // 承認ステップ: 常務（assembly_director）の1ステップ
+        await db.from('approval_steps').insert({
+            request_id: requestId, step_order: 1, approver_role: 'assembly_director', status: 'pending'
+        });
+
+        // 常務に承認依頼通知
+        const { data: directors } = await db.from('profiles').select('id').eq('role', 'assembly_director');
+        if (directors?.length > 0) {
+            await db.from('approval_notifications').insert(
+                directors.map(d => ({ request_id: requestId, recipient_id: d.id, notification_type: 'approval_request' }))
+            );
+        }
+
+        closeDetailModal();
+        await refreshAll();
+        showToast('申請しました。常務に承認依頼が届きます。', 'success');
+    } catch (e) {
+        showToast('申請に失敗しました: ' + e.message, 'error');
+    } finally {
         hideLoading();
     }
 }
