@@ -564,14 +564,12 @@ async function onMachineChange() {
 
     // 1台選択: 詳細フロー検出
     const machine = machines[0];
-    const { data: tasks } = await db.from('tasks')
-        .select('text').eq('project_number', num).eq('machine', machine);
-    const taskNames = (tasks || []).map(t => (t.text || '').trim());
+    const flags = await _detectApplicableFlows(num, machine);
 
-    detectedFlows.inspection      = taskNames.includes('外観検査');
-    detectedFlows.test_run        = taskNames.includes('試運転');
-    detectedFlows.shippingMeeting = taskNames.includes('出荷確認会議');
-    const hasShipping             = taskNames.includes('工場出荷');
+    detectedFlows.inspection      = flags.inspection;
+    detectedFlows.test_run        = flags.test_run;
+    detectedFlows.shippingMeeting = flags.shipping_meeting;
+    const hasShipping             = flags.shipping;
 
     const doneFlows = await _getMachineDoneFlows(num, machine);
     const ALL_FLOWS = [
