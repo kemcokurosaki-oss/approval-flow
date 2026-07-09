@@ -2035,7 +2035,7 @@ async function openDetailModal(requestId) {
             <tr><td>状態</td><td><span class="status-badge ${cls}">${slbl}</span>${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}</td></tr>
         </table>
         ${req.note ? `<div style="background:#f8f9fa; border-radius:4px; padding:10px 12px; font-size:13px; color:#555; margin-bottom:14px;">${esc(req.note)}</div>` : ''}
-        ${!PENDING_ONLY_FLOWS.includes(req.flow_type)
+        ${!QA_MEETING_FLOWS.includes(req.flow_type)
             ? '<hr class="section-divider"><div class="section-title">承認ステップ</div>' : ''}
         <div class="steps-list">${stepsHtml}</div>
         ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
