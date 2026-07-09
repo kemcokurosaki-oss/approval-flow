@@ -2104,6 +2104,7 @@ async function openDetailModal(requestId) {
 
     // フッターボタン
     const footer = document.getElementById('detail_footer');
+    const isSales = getEffectiveRole() === 'staff' && getEffectiveDept() === '営業';
     if (myStep) {
         footer.innerHTML = `
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -2115,9 +2116,35 @@ async function openDetailModal(requestId) {
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
+    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && isSales) {
+        footer.innerHTML = buildSalesDateFooterInner();
+    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
+        footer.innerHTML = `
+            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
+        `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
+    } else if (OWNER_PENDING_FLOWS.includes(req.flow_type) && isQualityOrSeikan && req.status === 'submitted') {
+        footer.innerHTML = buildPrepFooterInner(req);
     }
+}
+
+// ===== 出荷準備確認フッター =====
+function buildPrepFooterInner(req) {
+    return `
+        ${qaCanFinalize(req) ? `<button class="btn btn-success" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+    `;
+}
+
+// ===== 営業: 確定出荷日入力フッター =====
+function buildSalesDateFooterInner() {
+    return `
+        <input type="date" id="sales_date_input" style="margin-right:auto;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn btn-success"   onclick="submitSalesShippingDate('${'REQ_ID_PLACEHOLDER'}')">入力する</button>
+    `;
 }
 
 // ===== 開催結果・ペンディング確認の下部フッターボタン生成（簡易検査・外観検査・出荷確認会議） =====
