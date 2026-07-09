@@ -284,6 +284,10 @@ async function switchDevRole(value) {
 // ===== Constants =====
 // 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
+// 承認ステップを持たず、担当者ごとのペンディング完了で進行するフロー（開催日の概念はない）
+const OWNER_PENDING_FLOWS = ['shipping_prep'];
+// 承認ステップを持たない全フロー（ペンディング駆動）の集合
+const PENDING_ONLY_FLOWS = [...QA_MEETING_FLOWS, ...OWNER_PENDING_FLOWS];
 
 const FLOW_LABELS = {
     assembly:          '組立完了申請',
@@ -291,6 +295,7 @@ const FLOW_LABELS = {
     simple_inspection: '簡易検査開催案内',
     inspection:        '外観検査開催案内',
     shipping_meeting:  '出荷確認会議開催案内',
+    shipping_prep:     '出荷準備完了確認',
     shipping:          '出荷確定申請'
 };
 
@@ -298,7 +303,8 @@ const FLOW_LABELS = {
 const QA_DETAIL_TITLE_LABELS = {
     simple_inspection: '簡易検査',
     inspection:        '外観検査',
-    shipping_meeting:  '出荷確認会議'
+    shipping_meeting:  '出荷確認会議',
+    shipping_prep:     '出荷準備'
 };
 
 const ROLE_LABELS = {
