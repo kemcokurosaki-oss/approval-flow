@@ -3536,23 +3536,27 @@ async function onShippingMachineChange() {
     ).join('');
     document.getElementById('shipping_approver_box').style.display = 'block';
 
-    // フロー状況
+    // フロー状況（この機械に必要な前フローを動的判定し、未完了があれば申請不可にする）
     const doneFlows = await _getMachineDoneFlows(num, machine);
-    const rows = [
-        { type: 'assembly',          label: '組立完了通知' },
-        { type: 'test_run',          label: '試運転完了通知' },
-        { type: 'simple_inspection', label: '簡易検査開催案内' },
-        { type: 'inspection',        label: '外観検査開催案内' },
-        { type: 'shipping_meeting',  label: '出荷確認会議開催案内' }
-    ].filter(f => doneFlows.has(f.type) || f.type === 'assembly');
+    const required  = await _getRequiredFlows(num, machine);
+    const rows = [...required].map(t => ({ type: t, label: FLOW_LABELS[t] || t }));
     document.getElementById('shipping_flow_list').innerHTML =
         rows.map(f => `<div class="flow-info-item">
             <span class="flow-info-icon">${doneFlows.has(f.type) ? '✅' : '──'}</span>
             <span class="${doneFlows.has(f.type) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(f.label)}</span>
-            ${doneFlows.has(f.type) ? '<span class="flow-info-note">承認済み</span>' : ''}
+            ${doneFlows.has(f.type) ? '<span class="flow-info-note">承認済み</span>' : '<span class="flow-info-note" style="color:#c0392b;">未完了</span>'}
         </div>`).join('') +
-        `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 出荷確定通知（今回）</span></div>`;
+        `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 出荷確定申請（今回）</span></div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
+
+    const missing = [...required].filter(t => !doneFlows.has(t));
+    if (missing.length > 0) {
+        const labels = missing.map(t => FLOW_LABELS[t] || t).join('・');
+        const warnEl = document.getElementById('shipping_missing_warning');
+        warnEl.textContent = `前フローが未完了のため申請できません（${labels}）`;
+        warnEl.style.display = 'block';
+        document.getElementById('shipping_submit_btn').disabled = true;
+    }
     } finally {
         hideLoading();
     }
