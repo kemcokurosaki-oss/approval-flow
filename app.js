@@ -3501,8 +3501,10 @@ async function onShippingProjectChange() {
 async function onShippingMachineChange() {
     const num      = currentShippingProjectNum;
     const machines = getSelectedMachines('shipping_machine_list');
-    document.getElementById('shipping_approver_box').style.display = 'none';
-    document.getElementById('shipping_flow_box').style.display     = 'none';
+    document.getElementById('shipping_approver_box').style.display   = 'none';
+    document.getElementById('shipping_flow_box').style.display       = 'none';
+    document.getElementById('shipping_missing_warning').style.display = 'none';
+    document.getElementById('shipping_submit_btn').disabled           = false;
     if (machines.length === 0) return;
 
     const machine = machines[0];
