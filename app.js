@@ -1162,15 +1162,6 @@ async function openFlowModalPreset(el) {
         await onSmProjectChange();
         const cb = findCb('sm_machine_list');
         if (cb) { cb.checked = true; await onSmMachineChange(); }
-    } else if (flowType === 'shipping_prep') {
-        openShippingPrepModal();
-        currentSpProjectNum = projectNum;
-        const pSp = projectsMap[projectNum] || {};
-        const lblSp = [pSp.customer_name, pSp.project_details].filter(Boolean).join('　');
-        document.getElementById('sp_project_display').textContent = projectNum;
-        await onSpProjectChange();
-        const cb = findCb('sp_machine_list');
-        if (cb) { cb.checked = true; await onSpMachineChange(); }
     } else if (flowType === 'shipping') {
         openShippingModal();
         currentShippingProjectNum = projectNum;
