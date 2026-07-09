@@ -2090,17 +2090,7 @@ async function openDetailModal(requestId) {
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
-    } else if (OWNER_PENDING_FLOWS.includes(req.flow_type) && isQualityOrSeikan && req.status === 'submitted') {
-        footer.innerHTML = buildPrepFooterInner(req);
     }
-}
-
-// ===== 出荷準備確認フッター =====
-function buildPrepFooterInner(req) {
-    return `
-        ${qaCanFinalize(req) ? `<button class="btn btn-success" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
-        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-    `;
 }
 
 // ===== 営業: 確定出荷日入力フッター =====
