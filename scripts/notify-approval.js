@@ -210,6 +210,39 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
+    case 'shipping_date_request':
+      return {
+        from,
+        subject: `【確定出荷日入力依頼】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷確定申請が品証より起票されました。\n` +
+          `承認フロー管理システムにログインし、確定出荷日を入力してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'shipping_date_input_done':
+      return {
+        from,
+        subject: `【確定出荷日入力済み】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の確定出荷日が営業担当者より入力されました。\n` +
+          `内容を確認し、常務への本申請をお願いします。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'prep_item_assigned':
+      return {
+        from,
+        subject: `【出荷準備確認】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷準備確認で、担当のペンディング項目が割り当てられました。\n` +
+          `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'shipping_meeting_invite': {
       const date     = req?.inspection_date     || '未定';
       const time     = req?.inspection_time     ? ` ${req.inspection_time}` : '';
