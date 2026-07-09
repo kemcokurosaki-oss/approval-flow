@@ -185,7 +185,7 @@ const DEV_ROLE_MAP = {
     assembly_director:   { role: 'assembly_director',   department: '組立', flowTypes: [] },
     operations_manager:  { role: 'operations_manager',  department: '操業', flowTypes: ['test_run'] },
     operations_director: { role: 'operations_director', department: '操業', flowTypes: [] },
-    quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping', 'shipping_prep'] },
+    quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping'] },
     sales:               { role: 'staff',               department: '営業', flowTypes: [] }
 };
 let devFlowTypes    = []; // デモ用: 自分の申請タブのフロー絞り込み
