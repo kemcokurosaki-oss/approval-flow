@@ -2101,7 +2101,8 @@ async function openDetailModal(requestId) {
         <div class="section-title">申請・承認状況</div>
         <div class="steps-list">${appliedStepHtml}${stepsHtml}</div>
         ${req.flow_type === 'shipping' ? `
-        <div style="margin-top:12px;">
+        <hr class="section-divider">
+        <div>
             <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
             <div style="font-size:13px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
                 <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
