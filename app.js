@@ -1995,7 +1995,7 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
-        stepsHtml = `
+        const sentStep = `
         <div class="step-item">
             <div class="step-circle sc-submitted">✉</div>
             <div class="step-detail">
@@ -2004,6 +2004,34 @@ async function openDetailModal(requestId) {
                 <div class="step-date">${fmtDate(req.created_at)}</div>
             </div>
         </div>`;
+        let resultStep;
+        if (req.status === 'approved') {
+            resultStep = `
+        <div class="step-item">
+            <div class="step-circle sc-approved">✓</div>
+            <div class="step-detail">
+                <div class="step-label">開催済み</div>
+                <div class="step-date">${fmtDate(req.updated_at)}</div>
+            </div>
+        </div>`;
+        } else if (req.status === 'cancelled') {
+            resultStep = `
+        <div class="step-item">
+            <div class="step-circle sc-rejected"><span class="fc-x-icon">×</span></div>
+            <div class="step-detail">
+                <div class="step-label">キャンセル</div>
+            </div>
+        </div>`;
+        } else {
+            resultStep = `
+        <div class="step-item">
+            <div class="step-circle sc-waiting">○</div>
+            <div class="step-detail">
+                <div class="step-label">開催待ち</div>
+            </div>
+        </div>`;
+        }
+        stepsHtml = sentStep + resultStep;
     } else {
         stepsHtml = steps.map(s => {
             let icon, sc;
