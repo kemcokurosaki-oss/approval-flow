@@ -1006,7 +1006,7 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if ((!req || req.status === 'rejected') && canApply && !progressFilterCompleted) {
+                if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
