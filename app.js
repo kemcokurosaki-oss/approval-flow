@@ -1920,7 +1920,7 @@ async function openDetailModal(requestId) {
         : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
         ? '開催待ち'
         : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'approved')
-        ? '開催完了'
+        ? '開催済み'
         : (STATUS_LABELS[req.status] || req.status);
 
     // 自分が担当すべきステップか確認
