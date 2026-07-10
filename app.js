@@ -1742,7 +1742,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                         : `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`) : ''}
                     ${canManage && !item.completed ? `
                         <button class="btn-icon-xs" title="編集" onclick="startEditQaPendingItem(${idx})">✎</button>
-                        ${item.fixed ? '' : `<button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>`}
+                        <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>
                     ` : ''}
                 </div>
             </div>`;
