@@ -1755,18 +1755,17 @@ function buildPrepReadinessSection(req) {
     const bg          = item.owner ? '#fffaf0' : '#fdf0ef';
     return `
         <div style="border:2px solid ${borderColor}; background:${bg}; border-radius:8px; padding:12px 14px; margin-top:12px;">
-            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:8px;">📦 出荷準備完了確認（最後に確認）</div>
-            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px;">
+            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:8px;">📦 出荷準備完了確認</div>
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:13px; color:#888;">担当者</span>
-                    <input type="text" id="prep_owner_input" class="pending-content" style="width:140px;" placeholder="担当者名" value="${esc(item.owner || '')}" ${canManage ? '' : 'disabled'}>
+                    <input type="text" id="prep_owner_input" class="pending-content" style="width:220px; font-size:15px; padding:8px 10px;" placeholder="担当者名" value="${esc(item.owner || '')}" ${canManage ? '' : 'disabled'}>
                 </div>
                 ${canManage ? `<button class="btn-xs" onclick="savePrepOwner('${req.id}')">保存</button>` : ''}
-                ${!item.owner ? '<span style="color:#c0392b; font-size:14px; font-weight:bold;">⚠ 担当者が未入力です</span>' : ''}
+                ${itemCanComplete ? `<button class="btn-success-xs" style="margin-left:auto;" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>` : ''}
             </div>
-            ${itemCanComplete
-                ? `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`
-                : (!item.owner ? '<div style="font-size:14px;color:#999;">担当者を入力すると、本人がログインして完了操作できるようになります</div>' : '')}
+            ${!item.owner ? '<div style="margin-top:8px;color:#c0392b; font-size:14px; font-weight:bold;">⚠ 担当者が未入力です</div>' : ''}
+            ${(!itemCanComplete && !item.owner) ? '<div style="font-size:14px;color:#999;margin-top:6px;">担当者を入力すると、本人がログインして完了操作できるようになります</div>' : ''}
         </div>`;
 }
 
