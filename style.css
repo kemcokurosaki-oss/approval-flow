@@ -762,6 +762,7 @@
         /* ===== Approval Steps ===== */
         .steps-list { display: flex; flex-direction: column; gap: 0; }
         .step-item {
+            position: relative;
             display: flex;
             align-items: flex-start;
             gap: 10px;
@@ -769,7 +770,20 @@
             border-bottom: 1px solid #f5f5f5;
         }
         .step-item:last-child { border-bottom: none; }
+        /* ステップ間をつなぐ縦線（丸アイコンの中心を通す） */
+        .step-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 31px;
+            bottom: -11px;
+            width: 2px;
+            background: #dde3ee;
+            z-index: 0;
+        }
         .step-circle {
+            position: relative;
+            z-index: 1;
             width: 30px;
             height: 30px;
             border-radius: 50%;
@@ -785,8 +799,8 @@
         .sc-rejected { background: #f8d7da; color: #721c24; }
         .sc-waiting  { background: #e9ecef; color: #6c757d; }
         .step-detail { flex: 1; }
-        .step-label { font-size: 13px; color: #aaa; }
-        .step-name  { font-size: 15px; font-weight: bold; margin-top: 1px; }
+        .step-label { font-size: 13px; color: #1e3a5f; font-weight: bold; }
+        .step-name  { font-size: 14px; font-weight: bold; color: #444; margin-top: 2px; }
         .step-comment { font-size: 13px; color: #888; margin-top: 2px; font-style: italic; }
         .step-date  { font-size: 13px; color: #bbb; margin-top: 1px; }
 
