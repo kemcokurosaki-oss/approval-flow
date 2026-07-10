@@ -1997,7 +1997,7 @@ async function openDetailModal(requestId) {
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
         stepsHtml = `
         <div class="step-item">
-            <div class="step-circle sc-waiting">📨</div>
+            <div class="step-circle sc-submitted">✉</div>
             <div class="step-detail">
                 <div class="step-label">承認フローなし（開催案内を送信済み）</div>
             </div>
