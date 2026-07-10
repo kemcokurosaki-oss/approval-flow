@@ -893,10 +893,6 @@
         #detail_modal .step-name   { font-size: 16px; }
         #detail_modal .step-date   { font-size: 14px; }
         #detail_modal .step-comment { font-size: 14px; }
-        #detail_modal .pending-detail-text { font-size: 14px; }
-        #detail_modal .pending-detail-due,
-        #detail_modal .pending-detail-date { font-size: 13px; }
-        #detail_modal .pending-detail-machine { font-size: 13px; }
 
         /* ===== Recipients Preview ===== */
         .recipient-list { max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px 10px; background: #fafafa; }
