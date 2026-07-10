@@ -2083,9 +2083,9 @@ async function openDetailModal(requestId) {
     if (req.note) subInfoParts.push(`備考: ${esc(req.note)}`);
 
     document.getElementById('detail_body').innerHTML = `
-        <div style="font-size:13px;color:#888;">${esc(pNum)}${pInfo.customer_name ? `　${esc(pInfo.customer_name)}` : ''}</div>
-        ${pInfo.project_details ? `<div style="font-size:15px;font-weight:bold;color:#333;margin-top:2px;">${esc(pInfo.project_details)}</div>` : ''}
-        ${req.machine_name ? `<div style="font-size:14px;font-weight:bold;color:#1e3a5f;margin-top:4px;">機械名: ${esc(req.machine_name)}</div>` : ''}
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(pNum)}${pInfo.customer_name ? `　${esc(pInfo.customer_name)}` : ''}</div>
+        ${pInfo.project_details ? `<div style="font-size:14px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        ${req.machine_name ? `<div style="font-size:14px;font-weight:bold;color:#1e3a5f;margin-top:6px;">機械名: ${esc(req.machine_name)}</div>` : ''}
 
         <div style="margin:10px 0 2px;">
             <span class="status-badge ${cls}">${slbl}</span>
