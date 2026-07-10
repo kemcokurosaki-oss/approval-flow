@@ -689,7 +689,7 @@
         }
 
         /* 申請系モーダルのヘッダー（工事番号・客先名・工事名）を詳細画面の見た目と統一 */
-        .mph-header   { display: grid; grid-template-columns: max-content 1fr; column-gap: 10px; }
+        .mph-header   { display: grid; grid-template-columns: max-content 1fr; column-gap: 10px; align-items: baseline; }
         .mph-pnum     { font-size: 18px; font-weight: bold; color: #1e3a5f; white-space: nowrap; }
         .mph-customer { font-size: 18px; font-weight: bold; color: #1e3a5f; }
         .mph-name     { font-size: 14px; color: #666; margin-top: 3px; }
