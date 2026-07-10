@@ -793,10 +793,11 @@
             flex-shrink: 0;
             margin-top: 1px;
         }
-        .sc-pending  { background: #fff3cd; color: #856404; }
-        .sc-approved { background: #d4edda; color: #155724; }
-        .sc-rejected { background: #f8d7da; color: #721c24; }
-        .sc-waiting  { background: #e9ecef; color: #6c757d; }
+        /* メインの進捗ステップ表示（.flow-circle / .fc-*）と同じ配色に統一 */
+        .sc-pending  { background: #f39c12; color: #fff; }
+        .sc-approved { background: #27ae60; color: #fff; }
+        .sc-rejected { background: #e74c3c; color: #fff; }
+        .sc-waiting  { background: #e0e0e0; color: #aaa; }
         .step-detail { flex: 1; }
         .step-label { font-size: 13px; color: #1e3a5f; font-weight: bold; }
         .step-name  { font-size: 14px; font-weight: bold; color: #444; margin-top: 2px; }
