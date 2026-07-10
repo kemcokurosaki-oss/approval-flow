@@ -767,9 +767,7 @@
             align-items: flex-start;
             gap: 10px;
             padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
         }
-        .step-item:last-child { border-bottom: none; }
         /* ステップ間をつなぐ縦線（丸アイコンの中心を通す） */
         .step-item:not(:last-child)::before {
             content: '';
