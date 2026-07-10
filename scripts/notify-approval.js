@@ -235,10 +235,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'prep_item_assigned':
       return {
         from,
-        subject: `【ペンディング項目】${pStr}`,
+        subject: `【出荷準備】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} で、担当のペンディング項目が割り当てられました。\n` +
+          `${pStr} の出荷準備の担当者に割り当てられました。\n` +
           `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
