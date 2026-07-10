@@ -2166,7 +2166,7 @@ async function openDetailModal(requestId) {
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
-    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && isSales) {
+    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildSalesDateFooterInner(req);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
