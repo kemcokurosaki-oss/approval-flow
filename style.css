@@ -557,9 +557,9 @@
 
         /* ===== Status Badges ===== */
         .status-badge {
-            font-size: 11px;
-            padding: 2px 9px;
-            border-radius: 10px;
+            font-size: 14px;
+            padding: 5px 14px;
+            border-radius: 12px;
             font-weight: bold;
             white-space: nowrap;
             flex-shrink: 0;
