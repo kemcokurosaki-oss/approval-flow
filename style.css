@@ -870,7 +870,7 @@
         .machine-checkbox-list {
             max-height: 140px; overflow-y: auto;
             border: 1px solid #dce1ec; border-radius: 4px;
-            padding: 6px 8px; background: #f4f6fb;
+            padding: 6px 8px;
             display: flex; flex-direction: column; gap: 2px;
         }
         .machine-checkbox-list label {
