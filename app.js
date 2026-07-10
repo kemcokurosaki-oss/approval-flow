@@ -1999,7 +1999,9 @@ async function openDetailModal(requestId) {
         <div class="step-item">
             <div class="step-circle sc-submitted">✉</div>
             <div class="step-detail">
-                <div class="step-label">承認フローなし（開催案内を送信済み）</div>
+                <div class="step-label">開催案内送信済み</div>
+                <div class="step-name">${esc(requesterName)}${requesterDept ? `（${esc(requesterDept)}）` : ''}</div>
+                <div class="step-date">${fmtDate(req.created_at)}</div>
             </div>
         </div>`;
     } else {
