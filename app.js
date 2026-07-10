@@ -1688,13 +1688,12 @@ function buildPendingSectionInner(req, isMyRequest) {
         : (isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status));
     // QA開催結果で追加したペンディング項目は、完了前であれば編集・削除できる
     const canManage = isQaFlow && isQualityOrSeikan && req.status === 'submitted';
-    const rawItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-    if (!rawItems.length) return '';
-    // 固定の「出荷準備」項目は常に最後に表示する（元の配列インデックスはidxとして保持）
-    const indexed = rawItems.map((item, idx) => ({ item, idx }));
-    const items = isQaFlow
-        ? [...indexed].sort((a, b) => (a.item.fixed ? 1 : 0) - (b.item.fixed ? 1 : 0))
-        : indexed;
+    // 固定の「出荷準備」項目は別セクション（buildPrepReadinessSection）で独立して表示するため、ここでは除外する
+    const allItems = req.sheet_data?.pending_items || [];
+    const items = allItems
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => (item.content || item.machine) && !item.fixed);
+    if (!items.length) return '';
     const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
         <hr class="section-divider">
