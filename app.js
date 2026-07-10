@@ -2112,11 +2112,13 @@ async function openDetailModal(requestId) {
             const btnLabel = isApproved ? sectionTitle : (isAssembly ? 'チェックシート' : 'チェックシート');
             const sheetFile = isAssembly ? 'sheet.html' : 'test_run_sheet.html';
 
-            const canEdit = req.status === 'rejected' && isMyRequest;
+            // 却下されて再申請可能な本人には、閲覧専用ではなく編集可能なチェックシートを開く
+            const canEdit  = req.status === 'rejected' && isMyRequest;
+            const sheetUrl = canEdit ? `${sheetFile}?draft_id=${req.id}` : `${sheetFile}?view=1&id=${req.id}`;
+            const linkLabel = canEdit ? `${btnLabel}を修正する →` : `${btnLabel}を確認する →`;
             return `<hr class="section-divider">
         <div class="section-title">${sectionTitle}</div>
-        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetFile}?view=1&id=${req.id}', '_blank')">${btnLabel}を確認する →</button>
-        ${canEdit ? `<button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px; margin-left:6px;" onclick="window.open('${sheetFile}?draft_id=${req.id}', '_blank')">内容を修正する →</button>` : ''}
+        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
