@@ -696,7 +696,6 @@
 
         /* ===== フロー情報ボックス（申請モーダル内） ===== */
         .flow-info-box {
-            background: #f4f6fb;
             border: 1px solid #dce1ec;
             border-radius: 4px;
             padding: 10px 12px;
