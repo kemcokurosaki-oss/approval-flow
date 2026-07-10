@@ -2022,7 +2022,13 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
-        stepsHtml = '<div style="color:#888; font-size:13px; padding:4px 0;">承認フローなし（開催案内を送信済み）</div>';
+        stepsHtml = `
+        <div class="step-item">
+            <div class="step-circle sc-waiting">📨</div>
+            <div class="step-detail">
+                <div class="step-label">承認フローなし（開催案内を送信済み）</div>
+            </div>
+        </div>`;
     } else {
         stepsHtml = steps.map(s => {
             let icon, sc;
