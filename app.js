@@ -3509,13 +3509,13 @@ async function onShippingMachineChange() {
     const doneFlows = await _getMachineDoneFlows(num, machine);
     const required  = await _getRequiredFlows(num, machine);
     const rows = [...required].map(t => ({ type: t, label: FLOW_LABELS[t] || t }));
-    document.getElementById('shipping_flow_list').innerHTML =
-        rows.map(f => `<div class="flow-info-item">
-            <span class="flow-info-icon">${doneFlows.has(f.type) ? '✅' : '──'}</span>
-            <span class="${doneFlows.has(f.type) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(f.label)}</span>
-            ${doneFlows.has(f.type) ? '<span class="flow-info-note">承認済み</span>' : '<span class="flow-info-note" style="color:#c0392b;">未完了</span>'}
-        </div>`).join('') +
-        `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ 出荷確定申請（今回）</span></div>`;
+    document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
+        rows.map(f => doneFlows.has(f.type)
+            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, f.label, '承認済み')
+            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label, '未完了', '#c0392b')
+        ).join('') +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷確定申請（今回）') +
+        `</div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
 
     const missing = [...required].filter(t => !doneFlows.has(t));
