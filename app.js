@@ -543,22 +543,10 @@ async function onMachineChange() {
         const chain = await _getUnionFlowChain(num, machines);
         const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly');
 
-        const upcomingHtml = upcomingFlows.length > 0 ? `
-            <div class="flow-info-section">
-                <div class="flow-info-tag">後続フロー</div>
-                ${upcomingFlows.map(t => `<div class="flow-info-item">
-                    <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(FLOW_LABELS[t] || t)}</span>
-                </div>`).join('')}
-            </div>` : '';
-
-        document.getElementById('flow_detect_list').innerHTML = `
-            <div class="flow-info-section">
-                <div class="flow-info-tag">今回申請</div>
-                <div class="flow-info-item">
-                    <span class="flow-info-current">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span>
-                    <span class="flow-info-note">${machines.length}機械を一括申請</span>
-                </div>
-            </div>${upcomingHtml}`;
+        document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
+            _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[currentFlowType] || '完了通知'}（今回）`, `${machines.length}機械を一括申請`) +
+            upcomingFlows.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
+            `</div>`;
         flowEl.style.display = 'block';
         return;
     }
@@ -571,22 +559,11 @@ async function onMachineChange() {
     const doneList     = chain.filter(t => t !== currentFlowType && doneFlows.has(t));
     const upcomingList = chain.filter(t => t !== currentFlowType && !doneFlows.has(t));
 
-    const doneHtml = doneList.length > 0 ? `<div class="flow-info-section">
-        <div class="flow-info-tag">承認済み</div>
-        ${doneList.map(t=>`<div class="flow-info-item">
-            <span class="flow-info-icon">✅</span><span class="flow-info-done">${esc(FLOW_LABELS[t] || t)}</span></div>`).join('')}
-        </div>` : '';
-    const upcomingHtml = upcomingList.length > 0 ? `<div class="flow-info-section">
-        <div class="flow-info-tag">後続フロー</div>
-        ${upcomingList.map(t=>`<div class="flow-info-item">
-            <span class="flow-info-icon">──</span><span class="flow-info-upcoming">${esc(FLOW_LABELS[t] || t)}</span></div>`).join('')}
-        </div>` : '';
-
-    document.getElementById('flow_detect_list').innerHTML = `${doneHtml}
-        <div class="flow-info-section">
-            <div class="flow-info-tag">今回申請</div>
-            <div class="flow-info-item"><span class="flow-info-current">▶ ${esc(FLOW_LABELS[currentFlowType] || '完了通知')}</span></div>
-        </div>${upcomingHtml}`;
+    document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
+        doneList.map(t => _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')).join('') +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[currentFlowType] || '完了通知'}（今回）`) +
+        upcomingList.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
+        `</div>`;
     flowEl.style.display = 'block';
     } finally {
         hideLoading();
