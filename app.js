@@ -1710,7 +1710,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
                         <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
-                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}" ${item.fixed ? 'readonly' : ''}>
+                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
                     </div>
                     <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
                         <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者</span>
