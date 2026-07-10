@@ -2861,14 +2861,29 @@ function _priorSteps(chain, flowType) {
     return idx === -1 ? chain.filter(t => t !== 'shipping') : chain.slice(0, idx);
 }
 
+// フロー状況をメインの承認フロー・詳細画面のステップ表示と同じ丸アイコンで描画する共通ヘルパー
+function _flowStepHtml(sc, icon, label, note, noteColor) {
+    return `<div class="step-item">
+        <div class="step-circle ${sc}">${icon}</div>
+        <div class="step-detail">
+            <div class="step-name">${esc(label)}</div>
+            ${note ? `<div class="step-comment"${noteColor ? ` style="color:${noteColor};"` : ''}>${esc(note)}</div>` : ''}
+        </div>
+    </div>`;
+}
+const FS_DONE_ICON = '✓', FS_DONE_SC = 'sc-approved';
+const FS_WAIT_ICON = '○', FS_WAIT_SC = 'sc-waiting';
+const FS_CUR_ICON  = '<span class="fc-play-icon">▶</span>', FS_CUR_SC = 'sc-pending';
+
 // フロー状況チェックリストのHTMLを生成（承認済み/未完了 + 今回のフロー）
 function _renderFlowStatusList(steps, doneFlows, currentLabel) {
-    return steps.map(t => `<div class="flow-info-item">
-        <span class="flow-info-icon">${doneFlows.has(t) ? '✅' : '──'}</span>
-        <span class="${doneFlows.has(t) ? 'flow-info-done' : 'flow-info-upcoming'}">${esc(FLOW_LABELS[t] || t)}</span>
-        ${doneFlows.has(t) ? '<span class="flow-info-note">承認済み</span>' : ''}
-    </div>`).join('') +
-    `<div class="flow-info-item" style="margin-top:6px;"><span class="flow-info-current">▶ ${esc(currentLabel)}（今回）</span></div>`;
+    return `<div class="steps-list">` +
+        steps.map(t => doneFlows.has(t)
+            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')
+            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)
+        ).join('') +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${currentLabel}（今回）`) +
+        `</div>`;
 }
 
 // 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定、工程順を保持）
