@@ -2072,9 +2072,8 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
 
-    // ヘッダー下の補足情報（開催日・場所・試運転有無・備考など、頻度の低い項目をまとめて1行に）
+    // ヘッダー下の補足情報（開催日・場所・備考など、頻度の低い項目をまとめて1行に）
     const subInfoParts = [];
-    if (req.flow_type === 'assembly') subInfoParts.push(`試運転: ${req.test_run ? 'あり' : 'なし'}`);
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date) {
         subInfoParts.push(`開催日: ${fmtDate(req.inspection_date)}${req.inspection_time ? ' ' + req.inspection_time : ''}`);
     }
@@ -2082,10 +2081,14 @@ async function openDetailModal(requestId) {
     if (req.flow_type === 'shipping' && req.confirmed_shipping_date) subInfoParts.push(`確定出荷日: ${fmtDate(req.confirmed_shipping_date)}`);
     if (req.note) subInfoParts.push(`備考: ${esc(req.note)}`);
 
+    // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
+    const headerLine1Left = `${esc(pNum)}${req.machine_name ? `【${esc(req.machine_name)}】` : ''}`;
     document.getElementById('detail_body').innerHTML = `
-        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(pNum)}${pInfo.customer_name ? `　${esc(pInfo.customer_name)}` : ''}</div>
-        ${pInfo.project_details ? `<div style="font-size:14px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
-        ${req.machine_name ? `<div style="font-size:14px;font-weight:bold;color:#1e3a5f;margin-top:6px;">機械名: ${esc(req.machine_name)}</div>` : ''}
+        <div style="display:grid; grid-template-columns:max-content 1fr; column-gap:10px;">
+            <div style="font-size:18px;font-weight:bold;color:#1e3a5f;white-space:nowrap;">${headerLine1Left}</div>
+            <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(pInfo.customer_name || '')}</div>
+            ${pInfo.project_details ? `<div></div><div style="font-size:14px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        </div>
 
         <div style="margin:10px 0 2px;">
             <span class="status-badge ${cls}">${slbl}</span>
