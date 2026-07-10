@@ -283,20 +283,12 @@
             <button class="modal-close" onclick="closeInspectionModal()">×</button>
         </div>
         <div class="modal-body">
-            <div class="form-group">
-                <label>工事番号</label>
-                <div id="inspection_project_display" class="project-info-box"></div>
-            </div>
+            <div class="mph-pnum" id="inspection_project_display"></div>
             <div id="inspection_project_info" style="display:none;">
-                <div class="form-group">
-                    <label>客先名</label>
-                    <div class="project-info-box" id="inspection_customer_display"></div>
-                </div>
-                <div class="form-group">
-                    <label>工事名</label>
-                    <div class="project-info-box" id="inspection_project_name_display"></div>
-                </div>
+                <div class="mph-customer" id="inspection_customer_display"></div>
+                <div class="mph-name" id="inspection_project_name_display"></div>
             </div>
+            <hr class="section-divider">
             <div class="form-group" id="inspection_machine_group" style="display:none;">
                 <label>機械名 *（複数選択可）</label>
                 <div class="machine-checkbox-bar">
@@ -308,6 +300,8 @@
                 <label>フロー状況</label>
                 <div id="inspection_flow_list" class="flow-info-box"></div>
             </div>
+            <hr class="section-divider">
+            <div class="section-title">開催情報</div>
             <div class="form-group">
                 <label>外観検査日 *</label>
                 <input type="date" id="inspection_date_input">
