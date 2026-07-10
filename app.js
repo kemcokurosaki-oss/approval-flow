@@ -2051,23 +2051,44 @@ async function openDetailModal(requestId) {
     document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
         ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
         : (FLOW_LABELS[req.flow_type] || req.flow_type);
+    // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
+    let statusNote = '';
+    if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') {
+        statusNote = '営業担当者による確定出荷日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
+    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm') {
+        statusNote = '営業担当者が確定出荷日を入力しました。品証が内容を確認し「内容を確認し申請する」を押すと常務に承認依頼が届きます。';
+    } else if (req.status === 'rejected' && isMyRequest) {
+        statusNote = '却下されました。内容を確認・修正のうえ「再申請する」から再申請してください。';
+    }
+
     document.getElementById('detail_body').innerHTML = `
+        <div class="section-title">工事情報</div>
         <table class="info-table">
             <tr><td>工事番号</td><td>${esc(pNum)}</td></tr>
             ${pInfo.customer_name   ? `<tr><td>客先</td><td>${esc(pInfo.customer_name)}</td></tr>`   : ''}
             ${pInfo.project_details ? `<tr><td>工事名</td><td>${esc(pInfo.project_details)}</td></tr>` : ''}
             ${req.machine_name ? `<tr><td>機械名</td><td>${esc(req.machine_name)}</td></tr>` : ''}
+        </table>
+
+        <div class="section-title" style="margin-top:14px;">申請情報</div>
+        <table class="info-table">
             <tr><td>申請者</td><td>${esc(requesterName)}（${esc(requesterDept)}）</td></tr>
+            <tr><td>申請日</td><td>${fmtDate(req.created_at)}</td></tr>
             ${req.flow_type === 'assembly' ? `<tr><td>試運転</td><td>${req.test_run ? 'あり' : 'なし'}</td></tr>` : ''}
-            ${req.flow_type === 'shipping' && req.confirmed_shipping_date ? `<tr><td>確定出荷日</td><td>${fmtDate(req.confirmed_shipping_date)}</td></tr>` : ''}
             ${QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date
                 ? `<tr><td>開催日</td><td>${fmtDate(req.inspection_date)}${req.inspection_time ? '　' + req.inspection_time : ''}</td></tr>` : ''}
             ${QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location
                 ? `<tr><td>場所</td><td>${esc(req.inspection_location)}</td></tr>` : ''}
-            <tr><td>申請日</td><td>${fmtDate(req.created_at)}</td></tr>
+            ${req.note ? `<tr><td>備考</td><td>${esc(req.note)}</td></tr>` : ''}
+        </table>
+
+        <div class="section-title" style="margin-top:14px;">状態</div>
+        <table class="info-table">
+            ${req.flow_type === 'shipping' && req.confirmed_shipping_date ? `<tr><td>確定出荷日</td><td>${fmtDate(req.confirmed_shipping_date)}</td></tr>` : ''}
             <tr><td>状態</td><td><span class="status-badge ${cls}">${slbl}</span>${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}</td></tr>
         </table>
-        ${req.note ? `<div style="background:#f8f9fa; border-radius:4px; padding:10px 12px; font-size:13px; color:#555; margin-bottom:14px;">${esc(req.note)}</div>` : ''}
+        ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:12px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
+
         ${!QA_MEETING_FLOWS.includes(req.flow_type)
             ? '<hr class="section-divider"><div class="section-title">承認ステップ</div>' : ''}
         <div class="steps-list">${stepsHtml}</div>
