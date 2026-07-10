@@ -966,6 +966,14 @@ async function completeSheet() {
     window.close();
 }
 
+// 日付入力欄はどこをクリックしてもカレンダーを開く
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('input[type="date"]');
+    if (el && typeof el.showPicker === 'function') {
+        try { el.showPicker(); } catch (err) { /* 対応ブラウザ以外は無視 */ }
+    }
+});
+
 init();
 </script>
 </body>
