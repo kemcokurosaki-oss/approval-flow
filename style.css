@@ -855,27 +855,6 @@
         .empty-text { font-size: 13px; }
         .loading-indicator { text-align: center; padding: 32px; color: #aaa; font-size: 13px; }
 
-        /* ===== Step Progress ===== */
-        .step-progress { display: flex; align-items: flex-start; margin-top: 10px; }
-        .step-node {
-            display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 48px;
-        }
-        .step-circle {
-            width: 26px; height: 26px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; flex-shrink: 0;
-        }
-        .sc-done     { background: #27ae60; color: #fff; }
-        .sc-active   { background: #f39c12; color: #fff; }
-        .sc-rejected { background: #e74c3c; color: #fff; }
-        .sc-empty    { background: #e0e0e0; color: #aaa; }
-        .step-label  { font-size: 10px; color: #999; white-space: nowrap; text-align: center; }
-        .step-connector {
-            flex: 1; height: 2px; margin-top: 13px; min-width: 16px;
-        }
-        .sc-line-done    { background: #27ae60; }
-        .sc-line-pending { background: #e0e0e0; }
-
         /* ===== Machine Progress ===== */
         .machine-section { border-top: 1px solid #f0f0f0; padding-top: 8px; margin-top: 8px; }
         .machine-section:first-child { border-top: none; padding-top: 0; margin-top: 0; }
