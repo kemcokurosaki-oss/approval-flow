@@ -1831,14 +1831,15 @@ function qaCanFinalize(req) {
 // ===== 開催結果・ペンディング確認セクション HTML 生成（簡易検査・外観検査・出荷確認会議） =====
 function buildQaResultSectionInner(req, isMyRequest) {
     const meetingPassed    = qaMeetingPassed(req);
-    const items            = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    const items            = (req.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.fixed);
     const canManage        = isQualityOrSeikan && req.status === 'submitted';
+    const prepSection       = buildPrepReadinessSection(req);
 
     let body;
     if (req.status === 'approved') {
-        body = items.length
+        body = (items.length
             ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-            : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>';
+            : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>') + prepSection;
     } else if (!meetingPassed) {
         body = '<div style="color:#888; font-size:13px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
     } else {
@@ -1861,6 +1862,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
             </div>
             ` : ''}
+            ${prepSection}
         `;
     }
 
