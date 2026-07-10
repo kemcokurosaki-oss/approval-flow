@@ -2080,7 +2080,7 @@ async function openDetailModal(requestId) {
 
         <hr class="section-divider">
         <div class="section-title">申請・承認状況</div>
-        <div class="steps-list">${appliedStepHtml}${stepsHtml}</div>
+        <div class="steps-list">${QA_MEETING_FLOWS.includes(req.flow_type) ? '' : appliedStepHtml}${stepsHtml}</div>
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
