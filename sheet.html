@@ -705,6 +705,19 @@ async function init() {
     setSheetInfoHeader(draft.project_number, draft.machine_name);
     document.title = `機械組立完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
 
+    // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
+    // （再申請自体は元の詳細画面の「再申請する」ボタンで行う）
+    if (draft.status && draft.status !== 'draft') {
+        const completeBtn = document.getElementById('btn_complete');
+        if (completeBtn) {
+            completeBtn.textContent = '保存して閉じる';
+            completeBtn.onclick = () => suspendSheet();
+        }
+        const legend = document.querySelector('.sheet-legend');
+        if (legend) legend.insertAdjacentHTML('afterend',
+            '<div style="font-size:12px; color:#c0392b; margin-bottom:14px;">却下された申請の内容を修正しています。保存後、元の申請画面の「再申請する」ボタンから再申請してください。</div>');
+    }
+
     // 担当者名を取得（profiles から）
     if (draft.requester_id) {
         const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
