@@ -1979,10 +1979,12 @@ async function openDetailModal(requestId) {
         const who      = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
         const roleLabel = activeStep ? (ROLE_LABELS[activeStep.approver_role] || activeStep.approver_role) : null;
         const when     = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
+        const label    = approvedStep ? '承認' : rejectedStep ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
         stepsHtml = `
         <div class="step-item">
             <div class="step-circle ${sc}">${icon}</div>
             <div class="step-detail">
+                <div class="step-label">${label}</div>
                 ${who
                     ? `<div class="step-name">${esc(who)}${roleLabel ? `（${esc(roleLabel)}）` : ''}</div>`
                     : '<div class="step-name" style="color:#bbb;">未</div>'}
@@ -1991,29 +1993,21 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
     } else if (req.flow_type === 'shipping') {
-        // shipping: 担当者確認＋常務承認ステップ
+        // shipping: 常務承認ステップ（担当者確認は参考情報として別枠に表示）
         const step = steps[0];
         let icon, sc;
         if      (step?.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
         else if (step?.status === 'rejected') { icon = '×'; sc = 'sc-rejected'; }
         else if (req.status === 'submitted')  { icon = '⏳'; sc = 'sc-pending'; }
         else                                  { icon = '—';  sc = 'sc-waiting'; }
-        const who  = step?.approver_id ? (approverNames[step.approver_id] || '—') : null;
-        const when = step?.decided_at ? fmtDate(step.decided_at) : '';
+        const who   = step?.approver_id ? (approverNames[step.approver_id] || '—') : null;
+        const when  = step?.decided_at ? fmtDate(step.decided_at) : '';
+        const label = step?.status === 'approved' ? '承認' : step?.status === 'rejected' ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
         stepsHtml = `
-        <div style="margin-bottom:14px;">
-            <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認</div>
-            <div style="font-size:13px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
-            </div>
-        </div>
-        <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">常務承認</div>
         <div class="step-item">
             <div class="step-circle ${sc}">${icon}</div>
             <div class="step-detail">
+                <div class="step-label">${label}</div>
                 ${who
                     ? `<div class="step-name">${esc(who)}（常務）</div>`
                     : '<div class="step-name" style="color:#bbb;">未</div>'}
