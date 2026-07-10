@@ -1709,11 +1709,11 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-detail-icon">●</div>
                 <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                        <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
+                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
                         <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
                     </div>
                     <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                        <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者</span>
+                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者</span>
                         <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
                     </div>
                     <div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -1768,8 +1768,8 @@ function buildPrepReadinessSection(req) {
     if (item.completed) {
         return `
         <div style="border:2px solid #27ae60; background:#f3fbf5; border-radius:8px; padding:12px 14px; margin-top:12px;">
-            <div style="font-weight:bold; font-size:13px; color:#1e3a5f; margin-bottom:6px;">📦 出荷準備完了確認</div>
-            <div style="color:#27ae60; font-weight:bold; font-size:13px;">✓ 完了（担当: ${esc(item.owner || '—')}　${esc(item.completed_date || '')}）</div>
+            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:6px;">📦 出荷準備完了確認</div>
+            <div style="color:#27ae60; font-weight:bold; font-size:14px;">✓ 完了（担当: ${esc(item.owner || '—')}　${esc(item.completed_date || '')}）</div>
             ${itemCanComplete ? `<button class="btn-undo-xs" style="margin-top:8px;" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>` : ''}
         </div>`;
     }
@@ -1778,18 +1778,18 @@ function buildPrepReadinessSection(req) {
     const bg          = item.owner ? '#fffaf0' : '#fdf0ef';
     return `
         <div style="border:2px solid ${borderColor}; background:${bg}; border-radius:8px; padding:12px 14px; margin-top:12px;">
-            <div style="font-weight:bold; font-size:13px; color:#1e3a5f; margin-bottom:8px;">📦 出荷準備完了確認（最後に確認）</div>
+            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:8px;">📦 出荷準備完了確認（最後に確認）</div>
             <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px;">
                 <div style="display:flex; flex-direction:column;">
-                    <span style="font-size:11px; color:#888;">担当者</span>
+                    <span style="font-size:13px; color:#888;">担当者</span>
                     <input type="text" id="prep_owner_input" class="pending-content" style="width:140px;" placeholder="担当者名" value="${esc(item.owner || '')}" ${canManage ? '' : 'disabled'}>
                 </div>
                 ${canManage ? `<button class="btn-xs" onclick="savePrepOwner('${req.id}')">保存</button>` : ''}
-                ${!item.owner ? '<span style="color:#c0392b; font-size:12px; font-weight:bold;">⚠ 担当者が未入力です</span>' : ''}
+                ${!item.owner ? '<span style="color:#c0392b; font-size:14px; font-weight:bold;">⚠ 担当者が未入力です</span>' : ''}
             </div>
             ${itemCanComplete
                 ? `<button class="btn-success-xs" onclick="completePendingItem('${req.id}', ${idx})">完了にする</button>`
-                : (!item.owner ? '<div style="font-size:12px;color:#999;">担当者を入力すると、本人がログインして完了操作できるようになります</div>' : '')}
+                : (!item.owner ? '<div style="font-size:14px;color:#999;">担当者を入力すると、本人がログインして完了操作できるようになります</div>' : '')}
         </div>`;
 }
 
@@ -1839,24 +1839,24 @@ function buildQaResultSectionInner(req, isMyRequest) {
     if (req.status === 'approved') {
         body = (items.length
             ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-            : '<div style="color:#888; font-size:13px; padding:4px 0;">ペンディングなし・確認完了</div>') + prepSection;
+            : '<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし・確認完了</div>') + prepSection;
     } else if (!meetingPassed) {
-        body = '<div style="color:#888; font-size:13px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
+        body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
     } else {
         body = `
             <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
             ${canManage ? `
             <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
                 <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">内容</span>
+                    <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
                     <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
                 </div>
                 <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者（任意）</span>
+                    <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
                     <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
                 </div>
                 <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                    <span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>
+                    <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
                     <input type="date" id="qa_pending_due" class="pending-due">
                 </div>
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
@@ -2094,8 +2094,8 @@ async function openDetailModal(requestId) {
             <span class="status-badge ${cls}">${slbl}</span>
             ${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}
         </div>
-        ${subInfoParts.length ? `<div style="font-size:12px;color:#888;margin-top:4px;">${subInfoParts.join('　')}</div>` : ''}
-        ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:12px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
+        ${subInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;">${subInfoParts.join('　')}</div>` : ''}
+        ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:14px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
         <hr class="section-divider">
         <div class="section-title">申請・承認状況</div>
@@ -2103,12 +2103,12 @@ async function openDetailModal(requestId) {
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
-            <div style="font-size:12px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
-            <div style="font-size:13px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
-                <div><span style="color:#888; font-size:11px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
+            <div style="font-size:14px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
+            <div style="font-size:15px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
+                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
+                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
+                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
+                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
             </div>
         </div>` : ''}
         ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
@@ -2126,7 +2126,7 @@ async function openDetailModal(requestId) {
             const linkLabel = canEdit ? `${btnLabel}を修正する →` : `${btnLabel}を確認する →`;
             return `<hr class="section-divider">
         <div class="section-title">${sectionTitle}</div>
-        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
+        <button class="btn btn-secondary" style="font-size:14px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
@@ -2135,7 +2135,7 @@ async function openDetailModal(requestId) {
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div class="section-title">出荷確認書</div>
-        <button class="btn btn-secondary" style="font-size:13px; padding:7px 18px; margin-top:2px;" onclick="window.open('shipping_sheet.html?view=1&id=${req.id}', '_blank')">出荷確認書を確認する →</button>` : ''}
+        <button class="btn btn-secondary" style="font-size:14px; padding:7px 18px; margin-top:2px;" onclick="window.open('shipping_sheet.html?view=1&id=${req.id}', '_blank')">出荷確認書を確認する →</button>` : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
@@ -2174,7 +2174,7 @@ async function openDetailModal(requestId) {
 function buildSalesDateFooterInner(req) {
     return `
         <div style="margin-right:auto;display:flex;flex-direction:column;">
-            <span style="font-size:11px;color:#888;">確定出荷日</span>
+            <span style="font-size:13px;color:#888;">確定出荷日</span>
             <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
