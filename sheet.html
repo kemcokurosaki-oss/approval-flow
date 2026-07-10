@@ -691,7 +691,7 @@ async function init() {
 
     const { data: draft, error } = await db
         .from('approval_requests')
-        .select('project_number, machine_name, sheet_data, requester_id')
+        .select('project_number, machine_name, sheet_data, requester_id, status')
         .eq('id', draftId)
         .single();
 
