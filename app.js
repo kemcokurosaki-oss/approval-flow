@@ -1973,9 +1973,9 @@ async function openDetailModal(requestId) {
         const activeStep   = approvedStep || rejectedStep;
         let icon, sc;
         if      (approvedStep)                          { icon = '✓'; sc = 'sc-approved'; }
-        else if (rejectedStep)                          { icon = '×'; sc = 'sc-rejected'; }
-        else if (req.status === 'submitted')            { icon = '⏳'; sc = 'sc-pending'; }
-        else                                            { icon = '—';  sc = 'sc-waiting'; }
+        else if (rejectedStep)                          { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
+        else if (req.status === 'submitted')            { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
+        else                                            { icon = '○';  sc = 'sc-waiting'; }
         const who      = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
         const roleLabel = activeStep ? (ROLE_LABELS[activeStep.approver_role] || activeStep.approver_role) : null;
         const when     = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
@@ -1997,9 +1997,9 @@ async function openDetailModal(requestId) {
         const step = steps[0];
         let icon, sc;
         if      (step?.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
-        else if (step?.status === 'rejected') { icon = '×'; sc = 'sc-rejected'; }
-        else if (req.status === 'submitted')  { icon = '⏳'; sc = 'sc-pending'; }
-        else                                  { icon = '—';  sc = 'sc-waiting'; }
+        else if (step?.status === 'rejected') { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
+        else if (req.status === 'submitted')  { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
+        else                                  { icon = '○';  sc = 'sc-waiting'; }
         const who   = step?.approver_id ? (approverNames[step.approver_id] || '—') : null;
         const when  = step?.decided_at ? fmtDate(step.decided_at) : '';
         const label = step?.status === 'approved' ? '承認' : step?.status === 'rejected' ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
@@ -2027,12 +2027,12 @@ async function openDetailModal(requestId) {
         stepsHtml = steps.map(s => {
             let icon, sc;
             if      (s.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
-            else if (s.status === 'rejected') { icon = '×'; sc = 'sc-rejected'; }
+            else if (s.status === 'rejected') { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
             else if (s.status === 'pending' &&
                      ((s.step_order === 1 && req.status === 'submitted') ||
                       (s.step_order === 2 && req.status === 'in_review')))
-                                              { icon = '⏳'; sc = 'sc-pending'; }
-            else                              { icon = '—';  sc = 'sc-waiting'; }
+                                              { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
+            else                              { icon = '○';  sc = 'sc-waiting'; }
             const who  = s.approver_id ? (approverNames[s.approver_id] || '—') : '—';
             const when = s.decided_at  ? fmtDate(s.decided_at) : '';
             return `
