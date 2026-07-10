@@ -889,6 +889,11 @@
         #shipping_meeting_modal .modal,
         #shipping_modal .modal,
         #detail_modal .modal { height: 85vh; }
+        #inspection_modal .modal,
+        #simple_inspection_modal .modal,
+        #shipping_meeting_modal .modal,
+        #shipping_modal .modal,
+        #submit_modal .modal,
         #detail_modal .modal { width: 760px; }
         #inspection_modal .modal-body,
         #simple_inspection_modal .modal-body,

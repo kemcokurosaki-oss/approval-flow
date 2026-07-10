@@ -1421,7 +1421,7 @@ async function openDraftInSubmitModal(draftId) {
         document.getElementById('submit_project_display').textContent = draft.project_number;
         document.getElementById('submit_customer_display').textContent     = p.customer_name  || '—';
         document.getElementById('submit_project_name_display').textContent = p.project_details || '—';
-        document.getElementById('submit_project_info').style.display = 'block';
+        document.getElementById('submit_project_info').style.display = 'contents';
         document.getElementById('submit_note').value = draft.note || '';
         document.getElementById('submit_machine_group').style.display = 'block';
         document.getElementById('flow_detect_group').style.display = 'none';
@@ -3131,7 +3131,7 @@ async function onSiProjectChange() {
     const p = projectsMap[num] || {};
     document.getElementById('si_customer_display').textContent = p.customer_name || '—';
     document.getElementById('si_project_name_display').textContent = p.project_details || '—';
-    document.getElementById('si_project_info').style.display = 'block';
+    document.getElementById('si_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
         await _loadMachineCheckboxes(num, 'si_machine_list', 'onSiMachineChange');
@@ -3242,7 +3242,7 @@ async function onInspectionProjectChange() {
     const p = projectsMap[num] || {};
     document.getElementById('inspection_customer_display').textContent = p.customer_name || '—';
     document.getElementById('inspection_project_name_display').textContent = p.project_details || '—';
-    document.getElementById('inspection_project_info').style.display = 'block';
+    document.getElementById('inspection_project_info').style.display = 'contents';
 
     showLoading('読み込み中...');
     try {
@@ -3356,7 +3356,7 @@ async function onSmProjectChange() {
     const p = projectsMap[num] || {};
     document.getElementById('sm_customer_display').textContent = p.customer_name || '—';
     document.getElementById('sm_project_name_display').textContent = p.project_details || '—';
-    document.getElementById('sm_project_info').style.display = 'block';
+    document.getElementById('sm_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
         await _loadMachineCheckboxes(num, 'sm_machine_list', 'onSmMachineChange');
@@ -3465,7 +3465,7 @@ async function onShippingProjectChange() {
     const p = projectsMap[num] || {};
     document.getElementById('shipping_customer_display').textContent = p.customer_name || '—';
     document.getElementById('shipping_project_name_display').textContent = p.project_details || '—';
-    document.getElementById('shipping_project_info').style.display = 'block';
+    document.getElementById('shipping_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
         await _loadMachineCheckboxes(num, 'shipping_machine_list', 'onShippingMachineChange');
