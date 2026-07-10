@@ -875,12 +875,12 @@
         }
         .machine-checkbox-list label {
             display: flex; align-items: center; gap: 6px;
-            padding: 2px 0; cursor: pointer; font-size: 13px;
+            padding: 3px 0; cursor: pointer; font-size: 15px;
             color: #333; font-weight: normal; text-transform: none; letter-spacing: 0;
         }
-        .machine-checkbox-list input[type="checkbox"] { cursor: pointer; }
+        .machine-checkbox-list input[type="checkbox"] { cursor: pointer; width: 15px; height: 15px; }
         .machine-checkbox-bar { display: flex; gap: 6px; margin-bottom: 4px; }
-        .btn-xs { padding: 2px 8px; font-size: 11px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
+        .btn-xs { padding: 4px 10px; font-size: 13px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
         .btn-xs:hover { background: #e8e8e8; }
         /* モーダルサイズ固定（submit_modalはコンテンツに合わせて自動調整） */
         #inspection_modal .modal,
