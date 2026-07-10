@@ -2182,7 +2182,7 @@ async function openDetailModal(requestId) {
 function buildSalesDateFooterInner(req) {
     return `
         <div style="margin-right:auto;display:flex;flex-direction:column;">
-            <span style="font-size:13px;color:#888;">確定出荷日</span>
+            <span style="font-size:14px;color:#888;font-weight:bold;">確定出荷日</span>
             <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
