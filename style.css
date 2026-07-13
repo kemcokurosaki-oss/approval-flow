@@ -804,6 +804,9 @@
         .sc-approved { background: #27ae60; color: #fff; }
         .sc-rejected { background: #e74c3c; color: #fff; }
         .sc-waiting  { background: #e0e0e0; color: #aaa; }
+        /* 申請ステップ: 状態ではなく事実の記録なので、色付きの丸ではなくニュートラルな小さい点にする */
+        .sc-applied  { background: transparent; }
+        .applied-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #9aa5b1; }
         .step-detail { flex: 1; }
         .step-label { font-size: 13px; color: #1e3a5f; font-weight: bold; }
         .step-name  { font-size: 14px; font-weight: bold; color: #444; margin-top: 2px; }
