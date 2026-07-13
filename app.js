@@ -2885,7 +2885,7 @@ function _flowStepHtml(sc, icon, label, note, noteColor) {
         <div class="step-circle ${sc}">${icon}</div>
         <div class="step-detail">
             <div class="step-name">${esc(label)}</div>
-            ${note ? `<div class="step-comment"${noteColor ? ` style="color:${noteColor};"` : ''}>${esc(note)}</div>` : ''}
+            ${note ? `<div class="step-note"${noteColor ? ` style="color:${noteColor};"` : ''}>${esc(note)}</div>` : ''}
         </div>
     </div>`;
 }
