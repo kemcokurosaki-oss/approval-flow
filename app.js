@@ -2207,6 +2207,7 @@ function closeDetailModal() {
 }
 
 async function completePendingItem(requestId, idx) {
+    if (!confirm('このペンディング項目を完了にします。よろしいですか？')) return;
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
