@@ -587,8 +587,10 @@ async function refreshAll() {
 }
 
 async function loadPendingSide() {
-    const role = getEffectiveRole();
-    const el   = document.getElementById('side_content_pending');
+    const role    = getEffectiveRole();
+    const dept    = getEffectiveDept();
+    const isSales = role === 'staff' && dept === '営業';
+    const el      = document.getElementById('side_content_pending');
     if (!el) return;
 
     // 承認ステップが自分のロールで pending のものを取得
@@ -601,10 +603,10 @@ async function loadPendingSide() {
         .eq('approver_role', role)
         .eq('status', 'pending');
 
-    if (error || !steps) { el.innerHTML = '<div class="empty"><div class="empty-text">データ取得エラー</div></div>'; return; }
+    if (error) { el.innerHTML = '<div class="empty"><div class="empty-text">データ取得エラー</div></div>'; return; }
 
     // 今自分が担当すべきステップのみに絞る
-    const actionable = steps.filter(s => {
+    const actionable = (steps || []).filter(s => {
         const req = s.approval_requests;
         if (!req) return false;
         // assembly/test_run並列: submitted 状態で全 pending ステップが操作可能
@@ -614,43 +616,53 @@ async function loadPendingSide() {
         if (s.step_order === 1 && req.status === 'submitted') return true;
         if (s.step_order === 2 && req.status === 'in_review')  return true;
         return false;
-    });
+    }).map(s => ({
+        id:         s.approval_requests.id,
+        pNum:       s.approval_requests.project_number || '—',
+        flowLabel:  FLOW_LABELS[s.approval_requests.flow_type] || s.approval_requests.flow_type,
+        date:       s.approval_requests.created_at,
+        statusText: '🔴 要承認',
+    }));
+
+    // 営業: 確定出荷日の入力待ちになっている出荷確定申請を取得
+    let salesItems = [];
+    if (isSales) {
+        const { data: salesReqs } = await db.from('approval_requests')
+            .select('id, project_number, created_at')
+            .eq('flow_type', 'shipping').eq('status', 'awaiting_shipping_date');
+        salesItems = (salesReqs || []).map(r => ({
+            id:         r.id,
+            pNum:       r.project_number || '—',
+            flowLabel:  '出荷確定申請',
+            date:       r.created_at,
+            statusText: '🔴 確定出荷日 入力待ち',
+        }));
+    }
+
+    const combined = [...actionable, ...salesItems];
 
     // バッジ更新（side_badge_pending と side_pending_count 両方）
     const badgePending = document.getElementById('side_badge_pending');
     const countPending = document.getElementById('side_pending_count');
-    if (actionable.length > 0) {
-        if (badgePending) { badgePending.style.display = 'inline-flex'; badgePending.textContent = actionable.length; }
-        if (countPending) { countPending.style.display = 'inline-flex'; countPending.textContent = actionable.length; }
+    if (combined.length > 0) {
+        if (badgePending) { badgePending.style.display = 'inline-flex'; badgePending.textContent = combined.length; }
+        if (countPending) { countPending.style.display = 'inline-flex'; countPending.textContent = combined.length; }
     } else {
         if (badgePending) badgePending.style.display = 'none';
         if (countPending) countPending.style.display = 'none';
     }
 
-    if (actionable.length === 0) {
-        el.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">承認待ちの案件はありません</div></div>';
+    if (combined.length === 0) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">対応待ちの案件はありません</div></div>';
         return;
     }
 
-    // 申請者名を一括取得
-    const requesterIds = [...new Set(actionable.map(s => s.approval_requests?.requester_id).filter(Boolean))];
-    const requesterMap = {};
-    if (requesterIds.length > 0) {
-        const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
-        if (prs) prs.forEach(p => { requesterMap[p.id] = p.name; });
-    }
-
-    el.innerHTML = actionable.map(s => {
-        const req  = s.approval_requests;
-        const pNum = req.project_number || '—';
-        const date = fmtDate(req.created_at);
-        return `
-        <div class="side-card is-pending-action" onclick="openDetailModal('${req.id}')">
-            <div class="side-card-title">${esc(pNum)}</div>
-            <div class="side-card-sub">${esc(FLOW_LABELS[req.flow_type] || req.flow_type)} | ${date}</div>
-            <div class="side-card-status">🔴 要承認</div>
-        </div>`;
-    }).join('');
+    el.innerHTML = combined.map(item => `
+        <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
+            <div class="side-card-title">${esc(item.pNum)}</div>
+            <div class="side-card-sub">${esc(item.flowLabel)} | ${fmtDate(item.date)}</div>
+            <div class="side-card-status">${item.statusText}</div>
+        </div>`).join('');
 }
 
 async function loadMineSide() {
