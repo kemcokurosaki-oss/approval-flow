@@ -2331,18 +2331,19 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
 // ===== 開催結果・ペンディング確認（簡易検査・外観検査・出荷確認会議） =====
 // ペンディング項目の担当者に「割り当てられた」ことを通知（profilesに無ければnotification_recipientsへメールのみ）
 // isFixed: 固定の「出荷準備」項目なら true、通常のペンディング項目なら false
-async function _notifyPendingOwner(requestId, owner, isFixed = false) {
+// content: 通知本文にどの項目かわかるよう添える内容テキスト
+async function _notifyPendingOwner(requestId, owner, isFixed = false, content = null) {
     const notifType = isFixed ? 'prep_item_assigned' : 'pending_item_assigned';
     const { data: pRows } = await db.from('profiles').select('id').eq('name', owner);
     if (pRows?.length > 0) {
         await db.from('approval_notifications').insert(
-            pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: notifType }))
+            pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: notifType, detail: content }))
         );
     } else {
         const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', owner).eq('active', true);
         if (nRows?.length > 0) {
             await db.from('approval_notifications').insert(
-                nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: notifType }))
+                nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: notifType, detail: content }))
             );
         }
     }
