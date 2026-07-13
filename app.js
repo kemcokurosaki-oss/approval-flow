@@ -1986,7 +1986,7 @@ async function openDetailModal(requestId) {
             <div class="step-detail">
                 <div class="step-label">${label}</div>
                 ${who
-                    ? `<div class="step-name">${esc(who)}（常務）</div>`
+                    ? `<div class="step-name">${esc(who)}</div>`
                     : '<div class="step-name" style="color:#bbb;">未</div>'}
                 ${step?.comment ? `<div class="step-comment">"${esc(step.comment)}"</div>` : ''}
                 ${when          ? `<div class="step-date">${when}</div>` : ''}
