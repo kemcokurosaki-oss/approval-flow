@@ -760,6 +760,7 @@ function clearMissingMarks() {
     document.querySelectorAll('.sheet-item-missing').forEach(el => el.remove());
     document.querySelectorAll('.sheet-item.has-missing').forEach(el => el.classList.remove('has-missing'));
     document.getElementById('sheet_completion_date')?.classList.remove('missing');
+    document.getElementById('date_missing_warning')?.classList.remove('show');
 }
 
 function markMissingDate(isMissing = true, shouldScroll = true) {
