@@ -173,7 +173,6 @@ function buildEmail(type, req, recipientName, extra = {}) {
           completedBody +
           shippingDate +
           approverLine +
-          ownersSection +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
