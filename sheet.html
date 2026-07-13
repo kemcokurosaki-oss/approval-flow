@@ -899,6 +899,14 @@ function renderPendingItems() {
 function clearMissingMarks() {
     document.querySelectorAll('.sheet-item-missing').forEach(el => el.remove());
     document.querySelectorAll('.sheet-item.has-missing').forEach(el => el.classList.remove('has-missing'));
+    document.getElementById('sheet_completion_date')?.classList.remove('missing');
+}
+
+function markMissingDate() {
+    const el = document.getElementById('sheet_completion_date');
+    if (!el) return;
+    el.classList.add('missing');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function markMissingItems(missingIds) {
