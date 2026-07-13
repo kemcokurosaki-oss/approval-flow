@@ -1873,10 +1873,10 @@ async function openDetailModal(requestId) {
     }
 
     // 申請者名を別途取得
-    let requesterName = '—', requesterDept = '—';
+    let requesterName = '—';
     if (req?.requester_id) {
-        const { data: rp } = await db.from('profiles').select('name, department').eq('id', req.requester_id).single();
-        if (rp) { requesterName = rp.name; requesterDept = rp.department; }
+        const { data: rp } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
+        if (rp) requesterName = rp.name;
     }
 
     if (!req) {
@@ -1998,7 +1998,7 @@ async function openDetailModal(requestId) {
             <div class="step-circle sc-submitted">✉</div>
             <div class="step-detail">
                 <div class="step-label">開催案内送信済み</div>
-                <div class="step-name">${esc(requesterName)}${requesterDept ? `（${esc(requesterDept)}）` : ''}</div>
+                <div class="step-name">${esc(requesterName)}</div>
                 <div class="step-date">${fmtDate(req.created_at)}</div>
             </div>
         </div>`;
@@ -2074,7 +2074,7 @@ async function openDetailModal(requestId) {
             <div class="step-circle sc-submitted">📝</div>
             <div class="step-detail">
                 <div class="step-label">申請</div>
-                <div class="step-name">${esc(requesterName)}${requesterDept ? `（${esc(requesterDept)}）` : ''}</div>
+                <div class="step-name">${esc(requesterName)}</div>
                 <div class="step-date">${fmtDate(req.created_at)}</div>
             </div>
         </div>`;
