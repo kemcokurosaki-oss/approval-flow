@@ -1745,9 +1745,11 @@ function buildPrepReadinessSection(req) {
     if (item.completed) {
         return `
         <div style="border:2px solid #27ae60; background:#f3fbf5; border-radius:8px; padding:12px 14px; margin-top:12px;">
-            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:6px;">📦 出荷準備完了確認</div>
-            <div style="color:#27ae60; font-weight:bold; font-size:14px;">✓ 完了（担当: ${esc(item.owner || '—')}　${esc(item.completed_date || '')}）</div>
-            ${itemCanComplete ? `<button class="btn-undo-xs" style="margin-top:8px;" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>` : ''}
+            <div style="font-weight:bold; font-size:14px; color:#1e3a5f; margin-bottom:8px;">📦 出荷準備完了確認</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="color:#27ae60; font-weight:bold; font-size:14px;">✓ 完了（担当: ${esc(item.owner || '—')}　${esc(item.completed_date || '')}）</div>
+                ${itemCanComplete ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>` : ''}
+            </div>
         </div>`;
     }
 
