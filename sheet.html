@@ -909,6 +909,7 @@ function markMissingDate(isMissing = true, shouldScroll = true) {
     const el = document.getElementById('sheet_completion_date');
     if (!el) return;
     el.classList.toggle('missing', isMissing);
+    document.getElementById('date_missing_warning')?.classList.toggle('show', isMissing);
     if (isMissing && shouldScroll) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
