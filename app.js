@@ -2441,26 +2441,13 @@ async function finalizeQaMeeting(requestId) {
     showLoading('処理中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data, requester_id').eq('id', requestId).single();
+            .select('sheet_data').eq('id', requestId).single();
         const unresolved = (req?.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.completed);
         if (unresolved.length > 0) { showToast('未完了のペンディング項目があります', 'error'); return; }
 
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
-
-        // 品証・製管・申請者へ完了を通知
-        const notifIds = new Set();
-        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-        (qRows || []).forEach(p => notifIds.add(p.id));
-        const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
-        (sRows || []).forEach(p => notifIds.add(p.id));
-        if (req?.requester_id) notifIds.add(req.requester_id);
-        if (notifIds.size > 0) {
-            await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'qa_meeting_completed' }))
-            );
-        }
 
         closeDetailModal();
         await refreshAll();
