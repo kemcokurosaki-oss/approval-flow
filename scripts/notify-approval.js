@@ -409,7 +409,7 @@ async function main() {
 
   // 未送信の通知を取得
   const notifications = await supabaseFetch(
-    'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type'
+    'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type,detail'
   );
   console.log(`未送信通知: ${notifications.length}件`);
 
