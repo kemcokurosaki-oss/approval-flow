@@ -1787,7 +1787,7 @@ async function savePrepOwner(requestId) {
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (owner !== prevOwner) await _notifyPendingOwner(requestId, owner, true);
+        if (owner !== prevOwner) await _notifyPendingOwner(requestId, owner, true, items[idx].content);
 
         _applyPendingUpdate(requestId, newSheetData, '担当者を保存しました');
     } catch (e) {
