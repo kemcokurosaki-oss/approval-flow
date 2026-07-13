@@ -803,6 +803,10 @@ async function completeSheet() {
         markMissingItems(missing);
         return;
     }
+    if (!sheetMeta.completion_date) {
+        markMissingDate();
+        return;
+    }
     clearMissingMarks();
 
     const d = new Date();
