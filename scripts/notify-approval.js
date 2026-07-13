@@ -229,8 +229,9 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【出荷準備】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の出荷準備の担当者に割り当てられました。\n` +
-          `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
+          `${pStr}（${flow}）の出荷準備の担当者に割り当てられました。` +
+          detailLine +
+          `\n承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -240,8 +241,9 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【ペンディング項目】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} のペンディング項目の担当者に割り当てられました。\n` +
-          `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
+          `${pStr}（${flow}）のペンディング項目の担当者に割り当てられました。` +
+          detailLine +
+          `\n承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -251,8 +253,9 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【ペンディング完了】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} のペンディング項目が完了になりました。\n` +
-          `承認フロー管理システムで内容をご確認ください。` +
+          `${pStr}（${flow}）のペンディング項目が完了になりました。` +
+          detailLine +
+          `\n承認フロー管理システムで内容をご確認ください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -262,8 +265,9 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【出荷準備完了】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の出荷準備が完了しました。\n` +
-          `内容を確認のうえ、開催案内を完了にして出荷確定申請を行ってください。` +
+          `${pStr}（${flow}）の出荷準備が完了しました。` +
+          detailLine +
+          `\n内容を確認のうえ、開催案内を完了にして出荷確定申請を行ってください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
