@@ -271,6 +271,30 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
+    case 'pending_item_uncompleted':
+      return {
+        from,
+        subject: `【ペンディング完了取消】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr}（${flow}）のペンディング項目の完了が取り消されました。` +
+          detailLine +
+          `\n承認フロー管理システムで内容をご確認ください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'shipping_prep_uncompleted':
+      return {
+        from,
+        subject: `【出荷準備完了取消】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr}（${flow}）の出荷準備の完了が取り消されました。` +
+          detailLine +
+          `\n承認フロー管理システムで内容をご確認ください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'shipping_meeting_invite': {
       const date     = req?.inspection_date     || '未定';
       const time     = req?.inspection_time     ? ` ${req.inspection_time}` : '';
