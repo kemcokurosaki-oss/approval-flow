@@ -148,7 +148,7 @@ async function init() {
     const mac  = req.machine_name;
 
     const [{ data: projRows }, { data: tasks }, { data: sData }] = await Promise.all([
-        db.from('tasks').select('customer_name, project_details').eq('project_number', pNum).limit(1),
+        db.from('tasks').select('customer_name, project_details').eq('project_number', pNum),
         db.from('tasks')
             .select('text, owner, major_item')
             .eq('project_number', pNum)
@@ -157,9 +157,9 @@ async function init() {
         db.from('app_settings').select('value').eq('key', 'sales_person_map').single()
     ]);
 
-    const proj     = projRows?.[0];
-    const customer = proj?.customer_name  || '—';
-    const projName = proj?.project_details || '—';
+    // タスク行によって customer_name/project_details が空文字のものもあるため、値が入っている行を探す
+    const customer = (projRows || []).map(r => r.customer_name).find(v => v) || '—';
+    const projName = (projRows || []).map(r => r.project_details).find(v => v) || '—';
     const salesMap = sData?.value ? JSON.parse(sData.value) : {};
 
     const find = (text, major) => {
