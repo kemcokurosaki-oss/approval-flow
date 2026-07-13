@@ -2194,9 +2194,9 @@ async function openDetailModal(requestId) {
 // ===== 営業: 確定出荷日入力フッター =====
 function buildSalesDateFooterInner(req) {
     return `
-        <div class="sales-date-highlight" style="margin-right:auto;display:flex;flex-direction:column;background:#fff8e1;border:2px solid #f5a623;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#b8860b;font-weight:bold;">● 確定出荷日を入力してください</span>
-            <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #f5a623;border-radius:4px;font-size:14px;margin-top:4px;">
+        <div class="sales-date-highlight" style="margin-right:auto;display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 確定出荷日を入力してください</span>
+            <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
