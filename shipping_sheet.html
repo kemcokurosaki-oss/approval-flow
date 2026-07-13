@@ -147,8 +147,8 @@ async function init() {
     const pNum = req.project_number;
     const mac  = req.machine_name;
 
-    const [{ data: proj }, { data: tasks }, { data: sData }] = await Promise.all([
-        db.from('projects').select('project_details, customer_name').eq('project_number', pNum).maybeSingle(),
+    const [{ data: projRows }, { data: tasks }, { data: sData }] = await Promise.all([
+        db.from('tasks').select('customer_name, project_details').eq('project_number', pNum).limit(1),
         db.from('tasks')
             .select('text, owner, major_item')
             .eq('project_number', pNum)
@@ -157,6 +157,7 @@ async function init() {
         db.from('app_settings').select('value').eq('key', 'sales_person_map').single()
     ]);
 
+    const proj     = projRows?.[0];
     const customer = proj?.customer_name  || '—';
     const projName = proj?.project_details || '—';
     const salesMap = sData?.value ? JSON.parse(sData.value) : {};
