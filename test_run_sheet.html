@@ -680,6 +680,7 @@ function setCheck(itemId, val, btn, cls) {
 
 function onCompletionDateChange(val) {
     sheetMeta.completion_date = val;
+    if (val) document.getElementById('sheet_completion_date')?.classList.remove('missing');
     scheduleSave();
 }
 
