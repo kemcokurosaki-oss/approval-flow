@@ -2226,8 +2226,8 @@ async function completePendingItem(requestId, idx) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        // 固定の「出荷準備」項目が完了したら品証・製管へ確認・本申請を促す通知を送る
         if (items[idx].fixed) {
+            // 固定の「出荷準備」項目が完了したら品証・製管・申請者へ確認・本申請を促す通知を送る
             const notifIds = new Set();
             const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
             (qRows || []).forEach(p => notifIds.add(p.id));
@@ -2237,6 +2237,18 @@ async function completePendingItem(requestId, idx) {
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
                     [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_done' }))
+                );
+            }
+        } else {
+            // 通常のペンディング項目が完了したら品証・製管へ通知（組立/試運転/QAフロー共通）
+            const notifIds = new Set();
+            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+            (qRows || []).forEach(p => notifIds.add(p.id));
+            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
+            (sRows || []).forEach(p => notifIds.add(p.id));
+            if (notifIds.size > 0) {
+                await db.from('approval_notifications').insert(
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed' }))
                 );
             }
         }
