@@ -243,6 +243,28 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
+    case 'pending_item_assigned':
+      return {
+        from,
+        subject: `【ペンディング項目】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} のペンディング項目の担当者に割り当てられました。\n` +
+          `承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'qa_meeting_completed':
+      return {
+        from,
+        subject: `【${flow} 完了】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の${flow}が完了しました。\n` +
+          `対応は不要です。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'shipping_prep_done':
       return {
         from,
