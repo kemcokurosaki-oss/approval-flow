@@ -799,12 +799,10 @@ function suspendSheet() {
 
 async function completeSheet() {
     const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]);
-    if (missing.length > 0) {
+    const dateMissing = !sheetMeta.completion_date;
+    if (missing.length > 0 || dateMissing) {
         markMissingItems(missing);
-        return;
-    }
-    if (!sheetMeta.completion_date) {
-        markMissingDate();
+        markMissingDate(dateMissing, missing.length === 0);
         return;
     }
     clearMissingMarks();
