@@ -473,15 +473,13 @@ async function main() {
     });
   }
 
-  // shipping完了通知用: 承認した常務の名前 + 担当者名を取得
+  // shipping完了通知用: 承認した常務の名前を取得
   const shippingApproverNameMap = {};
-  const shippingOwnersMap = {};
   const shippingCompletedReqIds = [...new Set(
     notifications.filter(n => reqMap[n.request_id]?.flow_type === 'shipping' && n.notification_type === 'completed')
       .map(n => n.request_id)
   )];
   if (shippingCompletedReqIds.length > 0) {
-    // 承認者名
     const steps = await supabaseFetch(
       `approval_steps?request_id=in.(${shippingCompletedReqIds.join(',')})&status=eq.approved&select=request_id,approver_id`
     );
@@ -492,25 +490,6 @@ async function main() {
       (steps || []).forEach(s => {
         if (s.approver_id && nameById[s.approver_id]) shippingApproverNameMap[s.request_id] = nameById[s.approver_id];
       });
-    }
-    // 担当者名（設計・組立・操業・営業）
-    const salesData = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
-    const salesMap = salesData?.[0]?.value ? JSON.parse(salesData[0].value) : {};
-    for (const reqId of shippingCompletedReqIds) {
-      const req = reqMap[reqId];
-      if (!req) continue;
-      const tasks = await supabaseFetch(
-        `tasks?project_number=eq.${encodeURIComponent(req.project_number)}&machine=eq.${encodeURIComponent(req.machine_name || '')}&select=text,owner,major_item`
-      );
-      const findO = (text, major) => [...new Set((tasks || [])
-        .filter(t => t.text === text && (!major || (t.major_item || '').trim() === major))
-        .map(t => t.owner).filter(Boolean))].join('・') || null;
-      shippingOwnersMap[reqId] = {
-        sekkei:   findO('出図', '設計'),
-        kumitate: findO('機械組立'),
-        shiunten: findO('試運転'),
-        sales:    salesMap[req.project_number] || null,
-      };
     }
   }
 
