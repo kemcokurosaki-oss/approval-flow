@@ -2236,7 +2236,7 @@ async function completePendingItem(requestId, idx) {
             if (req.requester_id) notifIds.add(req.requester_id);
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_done' }))
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_done', detail: items[idx].content }))
                 );
             }
         } else {
@@ -2248,7 +2248,7 @@ async function completePendingItem(requestId, idx) {
             (sRows || []).forEach(p => notifIds.add(p.id));
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed' }))
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content }))
                 );
             }
         }
