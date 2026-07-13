@@ -526,7 +526,6 @@ async function main() {
     try {
       const extra = {
         approverName: shippingApproverNameMap[notif.request_id],
-        owners:       shippingOwnersMap[notif.request_id],
       };
       const mail = buildEmail(notif.notification_type, req, toName, extra);
 
