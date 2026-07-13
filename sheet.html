@@ -970,12 +970,10 @@ function suspendSheet() {
 async function completeSheet() {
     // 未入力チェック: 各項目の直前に警告を表示
     const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]?.result);
-    if (missing.length > 0) {
+    const dateMissing = !sheetMeta.completion_date;
+    if (missing.length > 0 || dateMissing) {
         markMissingItems(missing);
-        return;
-    }
-    if (!sheetMeta.completion_date) {
-        markMissingDate();
+        markMissingDate(dateMissing, missing.length === 0);
         return;
     }
     clearMissingMarks();
