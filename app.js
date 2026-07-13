@@ -211,7 +211,7 @@ const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manag
 
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
-    const isApprover  = APPROVER_ROLES.includes(role);
+    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業');
     // 品証、および品証代理の製管スタッフは同一権限（グローバル変数に保存）
     isQualityOrSeikan = role === 'quality' || (role === 'staff' && dept === '製管');
     // 組立・操業 staff + 組立課長 + 操業課長 が申請可
