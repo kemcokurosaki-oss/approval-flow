@@ -2073,7 +2073,7 @@ async function openDetailModal(requestId) {
     // ステップ表示の先頭に「申請」ステップを追加する（誰が・いつ申請したか）
     const appliedStepHtml = `
         <div class="step-item">
-            <div class="step-circle sc-submitted">📝</div>
+            <div class="step-circle sc-applied"><span class="applied-dot"></span></div>
             <div class="step-detail">
                 <div class="step-label">申請</div>
                 <div class="step-name">${esc(requesterName)}</div>
