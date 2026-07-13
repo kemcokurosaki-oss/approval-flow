@@ -2416,7 +2416,7 @@ async function saveEditQaPendingItem(requestId, idx) {
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (newOwner && newOwner !== prevOwner) await _notifyPendingOwner(requestId, newOwner);
+        if (newOwner && newOwner !== prevOwner) await _notifyPendingOwner(requestId, newOwner, false, content);
 
         qaEditingPendingIdx = null;
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を更新しました');
