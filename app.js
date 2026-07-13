@@ -2445,7 +2445,7 @@ async function finalizeQaMeeting(requestId) {
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
 
-        await openDetailModal(requestId);
+        closeDetailModal();
         await refreshAll();
         showToast('完了にしました', 'success');
     } catch (e) {
