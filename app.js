@@ -1955,7 +1955,6 @@ async function openDetailModal(requestId) {
         else if (req.status === 'submitted')            { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
         else                                            { icon = '○';  sc = 'sc-waiting'; }
         const who      = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
-        const roleLabel = activeStep ? (ROLE_LABELS[activeStep.approver_role] || activeStep.approver_role) : null;
         const when     = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
         const label    = approvedStep ? '承認' : rejectedStep ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
         stepsHtml = `
@@ -1964,7 +1963,7 @@ async function openDetailModal(requestId) {
             <div class="step-detail">
                 <div class="step-label">${label}</div>
                 ${who
-                    ? `<div class="step-name">${esc(who)}${roleLabel ? `（${esc(roleLabel)}）` : ''}</div>`
+                    ? `<div class="step-name">${esc(who)}</div>`
                     : '<div class="step-name" style="color:#bbb;">未</div>'}
                 ${activeStep?.comment ? `<div class="step-comment">"${esc(activeStep.comment)}"</div>` : ''}
                 ${when               ? `<div class="step-date">${when}</div>` : ''}
