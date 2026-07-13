@@ -974,6 +974,10 @@ async function completeSheet() {
         markMissingItems(missing);
         return;
     }
+    if (!sheetMeta.completion_date) {
+        markMissingDate();
+        return;
+    }
     clearMissingMarks();
 
     // 発行日を確定（この瞬間の日付で保存）
