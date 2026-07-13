@@ -2367,7 +2367,7 @@ async function addQaPendingItem(requestId) {
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (owner) await _notifyPendingOwner(requestId, owner);
+        if (owner) await _notifyPendingOwner(requestId, owner, false, content);
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を追加しました');
     } catch (e) {
