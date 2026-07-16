@@ -684,28 +684,15 @@ async function loadMineSide() {
     // 完了済み工番は非表示（進捗一覧の「完了済み」ボタンからのみ確認可能）
     const reqs = (rawReqs || []).filter(r => projectsMap[r.project_number] !== undefined && !completedProjectNums.has(r.project_number));
 
-    if (reqs.length === 0) {
+    // 自分が申請に関われるフロー種別だけをセクションとして表示する
+    // （組立・試運転系と検査・会議系、出荷確定申請はそれぞれ進捗の構成が異なるため、フローごとに区分けする）
+    const visibleFlowTypes = Object.keys(FLOW_LABELS)
+        .filter(ft => canApplyFlow(ft) && (devFlowTypes.length === 0 || devFlowTypes.includes(ft)));
+
+    if (reqs.length === 0 || visibleFlowTypes.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">申請中の案件はありません</div></div>';
         return;
     }
-
-    // 4区分に振り分け（ペンディング項目があるものはステータスに関わらず優先表示）
-    const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
-    reqs.forEach(req => {
-        const unresolvedPending = (req.sheet_data?.pending_items || [])
-            .filter(p => (p.content || p.machine) && !p.completed);
-        if (req.status === 'draft' || req.status === 'rejected') {
-            groups.inprogress.push(req);
-        } else if (unresolvedPending.length > 0) {
-            groups.pending.push({ req, pendingCount: unresolvedPending.length });
-        } else if (req.status === 'submitted' || req.status === 'in_review') {
-            groups.waiting.push(req);
-        } else if (req.status === 'approved') {
-            groups.approved.push(req);
-        } else {
-            groups.waiting.push(req);
-        }
-    });
 
     const renderCard = (req, pendingCount) => {
         const pNum        = req.project_number || '—';
@@ -720,6 +707,8 @@ async function loadMineSide() {
             statusText = '<span class="si-badge si-orange">▶</span> 開催待ち';
         } else if (req.status === 'awaiting_shipping_date' || req.status === 'awaiting_shipping_confirm') {
             statusText = `<span class="si-badge si-orange">▶</span> ${STATUS_LABELS[req.status]}`;
+        } else if (req.flow_type === 'shipping' && req.status === 'submitted') {
+            statusText = '<span class="si-badge si-orange">▶</span> 常務承認待ち';
         } else if (req.status === 'submitted' || req.status === 'in_review') {
             statusText = '<span class="si-badge si-orange">▶</span> 承認待ち';
         } else if (req.status === 'approved') {
