@@ -749,13 +749,85 @@ async function loadMineSide() {
         </div>`;
     };
 
+    // 組立・試運転（承認ステップあり）: 承認は pending の有無に関わらず可能なため、
+    // 「承認済み」は未完了ペンディングが0件のものだけとし、残っているものは手前の「ペンディング」列に表示する
+    const buildAssemblyLikeColumns = (list) => {
+        const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
+        list.forEach(req => {
+            const unresolvedPending = (req.sheet_data?.pending_items || [])
+                .filter(p => (p.content || p.machine) && !p.completed);
+            if (req.status === 'draft' || req.status === 'rejected') {
+                groups.inprogress.push(req);
+            } else if (req.status === 'submitted' || req.status === 'in_review') {
+                groups.waiting.push(req);
+            } else if (req.status === 'approved' && unresolvedPending.length > 0) {
+                groups.pending.push({ req, pendingCount: unresolvedPending.length });
+            } else if (req.status === 'approved') {
+                groups.approved.push(req);
+            } else {
+                groups.waiting.push(req);
+            }
+        });
+        return [
+            ['入力中', groups.inprogress, false],
+            ['承認待ち', groups.waiting, false],
+            ['ペンディング', groups.pending, true],
+            ['承認済み', groups.approved, false],
+        ];
+    };
+
+    // 検査・会議（承認ステップなし、開催案内→ペンディング消化→完了）:
+    // 出荷直前フローにのみ自動追加される固定の「出荷準備」項目(fixed)は必ず発生する別工程のため、ペンディング判定から除外する
+    const buildQaLikeColumns = (list) => {
+        const groups = { waiting: [], pending: [], approved: [] };
+        list.forEach(req => {
+            const unresolvedPending = (req.sheet_data?.pending_items || [])
+                .filter(p => (p.content || p.machine) && !p.completed && !p.fixed);
+            if (req.status === 'approved') {
+                groups.approved.push(req);
+            } else if (unresolvedPending.length > 0) {
+                groups.pending.push({ req, pendingCount: unresolvedPending.length });
+            } else {
+                groups.waiting.push(req);
+            }
+        });
+        return [
+            ['開催待ち', groups.waiting, false],
+            ['ペンディング', groups.pending, true],
+            ['完了', groups.approved, false],
+        ];
+    };
+
+    // 出荷確定申請（品証・製管が申請 → 営業が出荷日入力 → 品証・製管が確認 → 常務が承認）
+    const buildShippingColumns = (list) => {
+        const groups = { dateWait: [], confirmWait: [], approvalWait: [], approved: [] };
+        list.forEach(req => {
+            if (req.status === 'awaiting_shipping_date') groups.dateWait.push(req);
+            else if (req.status === 'awaiting_shipping_confirm') groups.confirmWait.push(req);
+            else if (req.status === 'approved') groups.approved.push(req);
+            else groups.approvalWait.push(req);
+        });
+        return [
+            ['出荷日待ち', groups.dateWait, false],
+            ['品証確認待ち', groups.confirmWait, false],
+            ['常務承認待ち', groups.approvalWait, false],
+            ['完了', groups.approved, false],
+        ];
+    };
+
     const arrow = '<div class="kanban-arrow">→</div>';
-    el.innerHTML = [
-        renderColumn('入力中', groups.inprogress, false),
-        renderColumn('承認待ち', groups.waiting, false),
-        renderColumn('ペンディング', groups.pending, true),
-        renderColumn('承認済み', groups.approved, false)
-    ].join(arrow);
+    el.innerHTML = visibleFlowTypes.map(flowType => {
+        const list = reqs.filter(r => r.flow_type === flowType);
+        const columns = QA_MEETING_FLOWS.includes(flowType) ? buildQaLikeColumns(list)
+                       : flowType === 'shipping'              ? buildShippingColumns(list)
+                       : buildAssemblyLikeColumns(list);
+        const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
+        return `
+        <div class="mine-flow-section">
+            <div class="mine-flow-section-title">${esc(FLOW_LABELS[flowType] || flowType)}</div>
+            <div class="mine-kanban-row">${row}</div>
+        </div>`;
+    }).join('');
 }
 
 async function loadProgress() {
