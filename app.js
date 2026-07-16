@@ -762,7 +762,7 @@ async function loadMineSide() {
 
     const arrow = '<div class="kanban-arrow">→</div>';
     el.innerHTML = [
-        renderColumn('申請中', groups.inprogress, false),
+        renderColumn('入力中', groups.inprogress, false),
         renderColumn('承認待ち', groups.waiting, false),
         renderColumn('ペンディング', groups.pending, true),
         renderColumn('承認済み', groups.approved, false)
