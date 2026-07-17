@@ -754,7 +754,7 @@ async function loadMineSide() {
         return `
         <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
             <div class="mine-col-num">${esc(pNum)}${resubmitBadge}</div>
-            <div class="mine-col-flow">${flowLabel}</div>
+            <div class="mine-col-date">${fmtDate(req.created_at)}</div>
             <div class="mine-col-status">${statusText}</div>
         </div>`;
     };

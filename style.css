@@ -380,7 +380,7 @@
         }
         .kanban-col .side-card { padding: 8px 9px; }
         .mine-col-num,
-        .mine-col-flow,
+        .mine-col-date,
         .mine-col-status {
             overflow: hidden;
             text-overflow: ellipsis;
@@ -391,7 +391,7 @@
             font-weight: bold;
             color: #1e3a5f;
         }
-        .mine-col-flow {
+        .mine-col-date {
             font-size: 14px;
             color: #555;
             margin-top: 3px;
