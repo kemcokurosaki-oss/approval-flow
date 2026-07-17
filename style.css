@@ -1,6 +1,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; overflow: hidden; }
-        body { font-family: 'Segoe UI', 'Noto Sans JP', sans-serif; background: #edf1f7; color: #333; font-size: 14px; }
+        body { font-family: "メイリオ", Meiryo, sans-serif; background: #edf1f7; color: #333; font-size: 13px; }
 
         /* ===== Header ===== */
         .header {
@@ -9,42 +9,43 @@
             z-index: 300;
         }
         .header-row1 {
-            background: #1e3a5f;
+            background: linear-gradient(180deg, #34495e, #2c3e50);
             color: #fff;
-            padding: 9px 20px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.18);
         }
         .header-row2 {
-            background: #f4f6fb;
+            background: #fff;
             padding: 7px 20px 8px;
             display: flex;
             align-items: center;
             gap: 16px;
             border-bottom: 1.5px solid #c4cedd;
         }
-        .header h1 { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+        .header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.5px; }
         .header-user { font-size: 13px; display: flex; align-items: center; gap: 12px; }
 
         /* ===== Dev Role Switcher ===== */
         .dev-bar {
-            background: #7d3c98;
-            color: #fff;
+            background: #fff;
+            color: #000;
             padding: 5px 20px;
             font-size: 11px;
             display: flex;
             align-items: center;
             gap: 10px;
+            border-bottom: 1px solid #d8dde8;
         }
         .dev-bar select {
             font-size: 11px;
             padding: 2px 6px;
             border-radius: 3px;
-            border: none;
-            background: rgba(255,255,255,0.2);
-            color: #fff;
+            border: 1px solid #ccc;
+            background: #fff;
+            color: #000;
             cursor: pointer;
         }
         .dev-bar select option { color: #333; background: #fff; }
@@ -90,7 +91,7 @@
             border-left: 4px solid transparent;
             background: #fff;
             cursor: pointer;
-            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            font-family: "メイリオ", Meiryo, sans-serif;
             font-size: 16px;
             font-weight: bold;
             color: #1e3a5f;
@@ -98,8 +99,8 @@
             transition: background 0.12s, border-color 0.12s, transform 0.08s;
         }
         .prefix-btn:hover { background: #edf2fc; }
-        .prefix-btn:active { transform: translateY(1px); background: #e0eaf8; border-left-color: #1e3a5f; }
-        .prefix-btn.active { background: #1e3a5f; border-left-color: transparent; color: #fff; }
+        .prefix-btn:active { transform: translateY(1px); background: #e0eaf8; border-left-color: #546e7a; }
+        .prefix-btn.active { background: #546e7a; border-left-color: transparent; color: #fff; }
         /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
         .prefix-btn[data-prefix=""] { font-size: 14px; }
 
@@ -137,7 +138,7 @@
             border-left: 2px solid #dce1ec;
         }
         .side-tab-header {
-            background: #1e3a5f;
+            background: #546e7a;
             color: #fff;
             font-size: 12px;
             font-weight: bold;
@@ -189,7 +190,7 @@
 
         .side-panel-header {
             padding: 10px 14px;
-            background: #1e3a5f;
+            background: #546e7a;
             border-bottom: 1px solid #152c4a;
             display: flex;
             align-items: center;
@@ -376,21 +377,20 @@
         }
 
         /* ===== ヘッダー2行目コントロール（並び替え・フィルタ） ===== */
-        .psort-group { display: flex; gap: 4px; }
+        .psort-group { display: flex; align-items: center; gap: 6px; }
+        .psort-group label { font-size: 11px; color: #78909c; font-weight: bold; white-space: nowrap; }
         .psort-btn {
-            padding: 4px 14px;
-            border: 1px solid #b8c8d8;
-            border-radius: 4px;
-            background: #e8eef8;
-            color: #1e3a5f;
-            font-size: 13px;
+            padding: 3px 10px;
+            border: 1px solid #cfd8dc;
+            border-radius: 14px;
+            background: #fff;
+            color: #546e7a;
+            font-size: 12px;
             cursor: pointer;
-            transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.08s;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.12);
+            transition: 0.12s;
         }
-        .psort-btn:hover { background: #d8e4f4; border-color: #9ab0cc; }
-        .psort-btn:active { transform: translateY(2px); box-shadow: 0 0px 1px rgba(0,0,0,0.10); }
-        .psort-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; font-weight: bold; box-shadow: inset 0 2px 4px rgba(0,0,0,0.25); transform: translateY(1px); }
+        .psort-btn:hover { background: #f1f4f6; }
+        .psort-btn.active { background: #2c3e50; color: #fff; border-color: #2c3e50; }
         .pfilter-label {
             display: flex;
             align-items: center;
@@ -677,7 +677,7 @@
             border: 1px solid #d0d4dc;
             border-radius: 4px;
             font-size: 14px;
-            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            font-family: "メイリオ", Meiryo, sans-serif;
             background: #fff;
             transition: border-color 0.15s, box-shadow 0.15s;
         }

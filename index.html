@@ -13,7 +13,7 @@
 <!-- ===== Login ===== -->
 <div id="login_overlay" class="visible">
     <div id="login_dialog">
-        <h2>承認フロー</h2>
+        <h2>✅ 承認フロー</h2>
         <p>メールアドレスとパスワードでログイン</p>
         <input type="email" id="login_email" placeholder="メールアドレス" autocomplete="email">
         <input type="password" id="login_password" placeholder="パスワード" autocomplete="current-password"
@@ -43,7 +43,7 @@
             <span id="dev_role_label" style="font-weight:bold;"></span>
         </div>
         <div class="header-row1">
-            <h1>承認フロー</h1>
+            <h1>✅ 承認フロー</h1>
             <div class="header-user">
                 <span id="user_name_display"></span>
                 <button class="btn btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3);"
@@ -52,6 +52,7 @@
         </div>
         <div class="header-row2">
             <div class="psort-group">
+                <label>並び替え</label>
                 <button id="psort_job"      class="psort-btn active" onclick="setProgressSort('job')">工番順</button>
                 <button id="psort_shipping" class="psort-btn"        onclick="setProgressSort('shipping')">出荷日順</button>
             </div>
