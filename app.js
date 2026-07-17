@@ -665,10 +665,11 @@ async function loadPendingSide() {
         (groups[item.flowType] || (groups[item.flowType] = [])).push(item);
     });
 
+    // フロー名は見出し側で表示済みのため、カード内では省略して申請タブのカードと行数を揃える
     const renderPendingCard = item => `
         <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
             <div class="side-card-title">${esc(item.pNum)}</div>
-            <div class="side-card-sub">${esc(item.flowLabel)} | ${fmtDate(item.date)}</div>
+            <div class="side-card-sub">${fmtDate(item.date)}</div>
             <div class="side-card-status">${item.statusText}</div>
         </div>`;
 
@@ -677,7 +678,10 @@ async function loadPendingSide() {
         const label = items[0].flowLabel;
         return `
         <div class="mine-flow-section">
-            <div class="mine-flow-section-title">【${esc(label)}】</div>
+            <div class="mine-flow-section-title" onclick="toggleMineFlowSection(this)">
+                <span>【${esc(label)}】</span>
+                <span class="mine-flow-section-arrow">▾</span>
+            </div>
             <div class="pending-flow-list">${items.map(renderPendingCard).join('')}</div>
         </div>`;
     }).join('');
@@ -840,9 +844,14 @@ async function loadMineSide() {
                        : flowType === 'shipping'              ? buildShippingColumns(list)
                        : buildAssemblyLikeColumns(list);
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
+        // 対象案件が1件もないフローは最初から折りたたんでおく（見出しクリックで開閉可能）
+        const isEmpty = columns.every(([, items]) => items.length === 0);
         return `
-        <div class="mine-flow-section">
-            <div class="mine-flow-section-title">【${esc(FLOW_LABELS[flowType] || flowType)}】</div>
+        <div class="mine-flow-section${isEmpty ? ' collapsed' : ''}">
+            <div class="mine-flow-section-title" onclick="toggleMineFlowSection(this)">
+                <span>【${esc(FLOW_LABELS[flowType] || flowType)}】</span>
+                <span class="mine-flow-section-arrow">▾</span>
+            </div>
             <div class="mine-kanban-row">${row}</div>
         </div>`;
     }).join('');
@@ -1238,6 +1247,9 @@ function toggleSideHalf(which) {
     if (!panel || !panel.classList.contains('has-both')) return;
     const half = document.getElementById('side_half_' + which);
     if (half) half.classList.toggle('collapsed');
+}
+function toggleMineFlowSection(titleEl) {
+    titleEl.closest('.mine-flow-section')?.classList.toggle('collapsed');
 }
 
 // ===== Submit Modal =====

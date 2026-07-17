@@ -299,13 +299,27 @@
             gap: 16px;
         }
         .mine-flow-section-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             color: #1e3a5f;
             margin: 0 0 8px 2px;
             padding-bottom: 5px;
             border-bottom: 2px solid #c4cedd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
         }
+        .mine-flow-section-arrow {
+            font-size: 15px;
+            color: #78909c;
+            transition: transform 0.2s ease;
+            margin-right: 2px;
+        }
+        .mine-flow-section.collapsed .mine-flow-section-arrow { transform: rotate(-90deg); }
+        .mine-flow-section.collapsed .mine-kanban-row,
+        .mine-flow-section.collapsed .pending-flow-list { display: none; }
         /* 最大4カンバン分の幅を常に確保する固定グリッド。3カンバンのフローは4列目のトラックが空のまま残り、
            結果として横幅の3/4だけを使う（列1つあたりの幅はカンバン数に関わらず統一される） */
         .mine-kanban-row {
@@ -313,6 +327,18 @@
             grid-template-columns: 1fr 20px 1fr 20px 1fr 20px 1fr;
             column-gap: 6px;
             align-items: start;
+        }
+        /* 承認タブのカードも申請タブのカンバン1列分と同じ幅に揃える（同じグリッドテンプレートを流用） */
+        .pending-flow-list {
+            display: grid;
+            grid-template-columns: 1fr 20px 1fr 20px 1fr 20px 1fr;
+            column-gap: 6px;
+            row-gap: 6px;
+        }
+        .pending-flow-list .side-card {
+            grid-column: 1;
+            margin: 0 7px;
+            padding: 8px 9px;
         }
         .kanban-arrow {
             align-self: start;
