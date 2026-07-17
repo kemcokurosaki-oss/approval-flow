@@ -619,6 +619,7 @@ async function loadPendingSide() {
     }).map(s => ({
         id:         s.approval_requests.id,
         pNum:       s.approval_requests.project_number || '—',
+        flowType:   s.approval_requests.flow_type,
         flowLabel:  FLOW_LABELS[s.approval_requests.flow_type] || s.approval_requests.flow_type,
         date:       s.approval_requests.created_at,
         statusText: '🔴 要承認',
@@ -633,6 +634,7 @@ async function loadPendingSide() {
         salesItems = (salesReqs || []).map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
+            flowType:   'shipping',
             flowLabel:  '出荷確定申請',
             date:       r.created_at,
             statusText: '🔴 確定出荷日 入力待ち',
@@ -657,12 +659,28 @@ async function loadPendingSide() {
         return;
     }
 
-    el.innerHTML = combined.map(item => `
+    // フロー種別ごとにグルーピングして表示（複数フローを兼務する担当者でも区別しやすいように）
+    const groups = {};
+    combined.forEach(item => {
+        (groups[item.flowType] || (groups[item.flowType] = [])).push(item);
+    });
+
+    const renderPendingCard = item => `
         <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
             <div class="side-card-title">${esc(item.pNum)}</div>
             <div class="side-card-sub">${esc(item.flowLabel)} | ${fmtDate(item.date)}</div>
             <div class="side-card-status">${item.statusText}</div>
-        </div>`).join('');
+        </div>`;
+
+    el.innerHTML = Object.keys(FLOW_LABELS).filter(ft => groups[ft]).map(flowType => {
+        const items = groups[flowType];
+        const label = items[0].flowLabel;
+        return `
+        <div class="mine-flow-section">
+            <div class="mine-flow-section-title">【${esc(label)}】</div>
+            <div class="pending-flow-list">${items.map(renderPendingCard).join('')}</div>
+        </div>`;
+    }).join('');
 }
 
 async function loadMineSide() {
@@ -824,7 +842,7 @@ async function loadMineSide() {
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
         return `
         <div class="mine-flow-section">
-            <div class="mine-flow-section-title">${esc(FLOW_LABELS[flowType] || flowType)}</div>
+            <div class="mine-flow-section-title">【${esc(FLOW_LABELS[flowType] || flowType)}】</div>
             <div class="mine-kanban-row">${row}</div>
         </div>`;
     }).join('');
