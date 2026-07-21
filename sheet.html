@@ -833,6 +833,17 @@ function scheduleSave() {
     saveTimer = setTimeout(saveNow, 1200);
 }
 
+// 印刷時：一行入力欄では折り返せないため、隣接するテキストに複製して表示する
+function syncNotePrint() {
+    document.querySelectorAll('.sheet-note').forEach(input => {
+        const span = input.nextElementSibling;
+        if (span && span.classList.contains('sheet-note-print')) {
+            span.textContent = input.value;
+        }
+    });
+}
+window.addEventListener('beforeprint', syncNotePrint);
+
 function setSaveStatus(state) {
     const el = document.getElementById('save_status');
     if (!el) return;
