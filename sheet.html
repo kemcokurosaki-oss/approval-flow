@@ -396,16 +396,17 @@
             .sheet-btn.active-dash  { color: #888    !important; }
             .sheet-btn.active-wide1 { color: #1a7a3a !important; font-size: 15px !important; }
             .sheet-btn.active-wide2 { color: #c0392b !important; font-size: 15px !important; }
-            /* 備考入力欄 */
-            .sheet-note {
-                border: none !important;
-                background: transparent !important;
-                box-shadow: none !important;
+            /* 備考欄：印刷時は入力欄を隠し、折り返し可能なテキストに差し替える */
+            .sheet-note { display: none !important; }
+            .sheet-note-print {
+                display: block !important;
+                width: 100%;
+                white-space: pre-wrap;
+                word-break: break-word;
                 padding: 0 4px !important;
                 color: #555 !important;
                 font-size: 12px !important;
             }
-            .sheet-note:placeholder-shown { display: none !important; }
             /* 報告書ヘッダー */
             .report-info-tbl th { background-color: #eef2f8 !important; }
             .report-stmp-tbl  th { background-color: #eef2f8 !important; }
