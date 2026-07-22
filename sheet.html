@@ -396,7 +396,10 @@
             .sheet-btn.active-dash  { color: #888    !important; }
             .sheet-btn.active-wide1 { color: #1a7a3a !important; font-size: 15px !important; }
             .sheet-btn.active-wide2 { color: #c0392b !important; font-size: 15px !important; }
-            /* 備考欄：印刷時は入力欄を隠し、折り返し可能なテキストに差し替える */
+            /* 備考欄：印刷時は入力欄を隠し、折り返し可能なテキストに差し替える。
+               画面入力用の min-width は不要なので狭め、その分を項目本文に戻す */
+            .sheet-text { flex: 1 1 auto !important; }
+            .sheet-note-wrap { flex: 0 0 88px !important; min-width: 0 !important; }
             .sheet-note { display: none !important; }
             .sheet-note-print {
                 display: block !important;
