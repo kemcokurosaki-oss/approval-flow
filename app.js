@@ -1768,9 +1768,11 @@ async function submitRequest() {
 // ===== ペンディングセクション HTML 生成 =====
 function buildPendingSectionInner(req, isMyRequest) {
     const isQaFlow   = QA_MEETING_FLOWS.includes(req.flow_type);
+    // 組立フローは「申請者本人」または「品証・製管」が完了操作できる（担当者本人は下記itemCanComplete参照）
+    const statusOkForNonQa = ['submitted', 'in_review', 'approved'].includes(req.status);
     const canComplete = isQaFlow
         ? null // QAフローは項目ごとに判定する（下記itemCanComplete）
-        : (isMyRequest && ['submitted', 'in_review', 'approved'].includes(req.status));
+        : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan));
     // QA開催結果で追加したペンディング項目は、完了前であれば編集・削除できる
     const canManage = isQaFlow && isQualityOrSeikan && req.status === 'submitted';
     // 固定の「出荷準備」項目は別セクション（buildPrepReadinessSection）で独立して表示するため、ここでは除外する
