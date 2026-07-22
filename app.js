@@ -1067,7 +1067,7 @@ function renderProgressCards() {
     // 完了済みフィルタ（通常時は完了済みを除外、完了済みモード時は完了済みのみ）
     let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted);
 
-    // 未申請・未承認フィルタ（品証・製管のみ利用可能）
+    // 未申請・未承認フィルタ
     if (progressFilterOverdue) {
         nums = nums.filter(num => projectHasOverdueFlow(num));
     }
