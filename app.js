@@ -1020,7 +1020,7 @@ function renderProgressCards() {
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
 
-    // 未申請・未承認判定（対象は承認ステップのある組立・試運転・出荷確定のみ）
+    // 未申請・未承認判定（組立・試運転・出荷確定）
     const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const isFlowOverdue = (num, machine, flowType, req) => {
