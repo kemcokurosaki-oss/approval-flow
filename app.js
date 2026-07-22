@@ -1194,10 +1194,14 @@ function renderProgressCards() {
 
                 // 未申請・未承認ハイライト（品証・製管のみ表示するフィルタと連動）
                 let overdueBadge = '';
-                if (isQualityOrSeikan && OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req)) {
-                    fcClass += ' fc-overdue';
-                    const isUnapproved = req && req.status !== 'draft';
-                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
+                if (isQualityOrSeikan) {
+                    const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
+                    const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
+                    if (isMainOverdueFlow || isInviteOverdueFlow) {
+                        fcClass += ' fc-overdue';
+                        const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
+                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
+                    }
                 }
 
                 const connector = i < applicable.length - 1
