@@ -884,7 +884,7 @@ async function loadProgress() {
 
     // 機械ごとのフロー状態チェック用セット（project__machine__taskText）
     const { data: machineTasks } = await db.from('tasks')
-        .select('project_number, machine, text')
+        .select('project_number, machine, text, end_date, is_completed')
         .in('text', ['機械組立', '外観検査', '試運転', '出荷確認会議', '工場出荷'])
         .not('machine', 'is', null);
 
@@ -892,6 +892,12 @@ async function loadProgress() {
         (machineTasks || []).map(t => `${t.project_number}__${t.machine}__${t.text}`)
     );
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
+
+    // 未申請催促（組立・試運転・工場出荷）の期日判定用（project__machine__taskText → {end_date, is_completed}）
+    const taskInfoMap = {};
+    (machineTasks || []).forEach(t => {
+        taskInfoMap[`${t.project_number}__${t.machine}__${t.text}`] = { end_date: t.end_date, is_completed: t.is_completed };
+    });
 
     // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議はproject全体に1つの場合がある
     const { data: projectFlowTasks } = await db.from('tasks')
