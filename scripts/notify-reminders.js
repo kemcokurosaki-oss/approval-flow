@@ -484,10 +484,12 @@ async function runInvitationReminders() {
         const dedupKey = `${submitKey}__${profile.id}`;
         if (sentThisRun.has(dedupKey)) continue;
 
+        const detailText = flow.flowType === 'shipping_meeting'
+          ? `出荷確認会議が ${target.refEndDate} に開催予定ですが、${flow.label}がされていません。`
+          : `${target.refTaskName}が ${target.refEndDate} に終了予定ですが、${flow.label}がされていません。`;
         const text =
           `${profile.name} 様\n\n` +
-          `${pStr} について、${target.refTaskName}が ${target.refEndDate} に終了予定ですが、` +
-          `${flow.label}がされていません。\n` +
+          `${pStr} について、${detailText}\n` +
           `承認フロー管理システムにログインして開催案内の送付をお願いします。\n\n` +
           `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
