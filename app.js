@@ -1011,7 +1011,10 @@ function renderProgressCards() {
     const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const isFlowOverdue = (num, machine, flowType, req) => {
-        if (req) return req.status === 'submitted' || req.status === 'in_review';
+        if (req && req.status !== 'draft') {
+            return req.status === 'submitted' || req.status === 'in_review';
+        }
+        // 申請なし、または下書きのまま → 期日を過ぎた未申請タスクかどうかを判定
         const taskText = OVERDUE_FLOW_TASK_TEXT[flowType];
         if (!taskText) return false;
         const info = (taskInfoMap || {})[`${num}__${machine}__${taskText}`];
@@ -1020,11 +1023,7 @@ function renderProgressCards() {
     const projectHasOverdueFlow = (num) => {
         return Object.keys(projectData[num] || {}).some(machine => {
             const flows = projectData[num][machine].flows || {};
-            return Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => {
-                const req = flows[flowType];
-                if (req && req.status !== 'draft') return isFlowOverdue(num, machine, flowType, req);
-                return isFlowOverdue(num, machine, flowType, null);
-            });
+            return Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => isFlowOverdue(num, machine, flowType, flows[flowType]));
         });
     };
 
