@@ -1048,7 +1048,8 @@ function renderProgressCards() {
         if (!ref) return false;
         // 簡易検査・外観検査は試運転タスクがある機械では対象外（案内催促と同じ仕様）
         if ((flowType === 'simple_inspection' || flowType === 'inspection') && ref.name === '試運転') return false;
-        return !!(ref.info.end_date && ref.info.end_date < todayStr);
+        // 案内催促と同じく基準日の3日前から対象（超過後も継続）
+        return !!(ref.info.end_date && ref.info.end_date <= threeDaysLaterStr);
     };
 
     const projectHasOverdueFlow = (num) => {
