@@ -972,6 +972,8 @@ function _syncProgressControls() {
     });
     const completedCb = document.getElementById('pfilter_completed');
     if (completedCb) completedCb.checked = progressFilterCompleted;
+    const overdueCb = document.getElementById('pfilter_overdue');
+    if (overdueCb) overdueCb.checked = progressFilterOverdue;
 }
 
 function toggleCompletedView(checked) {
