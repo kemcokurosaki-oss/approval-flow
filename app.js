@@ -1622,6 +1622,11 @@ function renderPendingItems() {
                 <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
                        oninput="pendingItems[${i}].content=this.value">
             </div>
+            <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
+                <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
+                       oninput="pendingItems[${i}].owner=this.value">
+            </div>
             <div style="display:flex;flex-direction:column;width:135px;flex-shrink:0;">
                 <span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>
                 <input type="date" class="pending-due" value="${esc(item.due)}"
