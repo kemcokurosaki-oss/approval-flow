@@ -3201,7 +3201,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     for (const o of sekkeiOwnersFallback) await addEbyName(o);
     // 設計管理職: 担当者の上長を members テーブルから取得
     await addSekkeiSupervisors();
-    await addE({ department: '技戦' });
+    if (flowType !== 'simple_inspection') await addE({ department: '技戦' }); // 簡易検査は技戦を宛先から除外
 
     // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
     if (kumitateOwners.length > 0) {
