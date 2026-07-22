@@ -2398,6 +2398,7 @@ async function uncompletePendingItem(requestId, idx) {
             const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
             (sRows || []).forEach(p => notifIds.add(p.id));
             if (req.requester_id) notifIds.add(req.requester_id);
+            notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
                     [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_uncompleted', detail: items[idx].content }))
@@ -2410,6 +2411,7 @@ async function uncompletePendingItem(requestId, idx) {
             (qRows || []).forEach(p => notifIds.add(p.id));
             const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
             (sRows || []).forEach(p => notifIds.add(p.id));
+            notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
                     [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content }))
