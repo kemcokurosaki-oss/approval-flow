@@ -1,8 +1,8 @@
 name: リマインダー通知
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # 毎日 9:00 JST (= 0:00 UTC) に自動実行
+  # schedule:
+  #   - cron: '0 0 * * *'  # 毎日 9:00 JST (= 0:00 UTC) に自動実行（合図があるまでコメントアウトで無効化）
   workflow_dispatch:
     inputs:
       test_mode:
