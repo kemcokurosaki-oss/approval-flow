@@ -1786,10 +1786,10 @@ function buildPendingSectionInner(req, isMyRequest) {
         <hr class="section-divider">
         <div class="section-title">ペンディング項目</div>
         ${items.map(({ item, idx }) => {
-            // QAフローは「品証」または「担当者本人（項目に担当者が設定されている場合）」が完了操作できる
+            // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             const itemCanComplete = isQaFlow
                 ? (req.status === 'submitted' && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner)))
-                : canComplete;
+                : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner));
             if (canManage && qaEditingPendingIdx === idx) {
                 return `
             <div class="pending-detail-row pending-detail-editing">
