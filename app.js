@@ -1017,8 +1017,6 @@ function renderProgressCards() {
     // 未申請・未承認判定（対象は承認ステップのある組立・試運転・出荷確定のみ）
     const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
-    const [ty, tm, td] = todayStr.split('-').map(Number);
-    const threeDaysLaterStr = new Date(ty, tm - 1, td + 3).toLocaleDateString('en-CA');
     const isFlowOverdue = (num, machine, flowType, req) => {
         if (req && req.status !== 'draft') {
             return req.status === 'submitted' || req.status === 'in_review';
