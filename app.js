@@ -1036,10 +1036,30 @@ function renderProgressCards() {
         const info = (taskInfoMap || {})[`${num}__${machine}__${taskText}`];
         return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
     };
+    // 検査・会議フロー（簡易検査・外観検査・出荷確認会議）の未申請判定
+    // 「案内催促」と同じ考え方：試運転タスクがあればその終了日、なければ機械組立の終了日を基準にする
+    const getInviteRefInfo = (num, machine) => {
+        const testRunInfo = (taskInfoMap || {})[`${num}__${machine}__試運転`];
+        if (testRunInfo && !testRunInfo.is_completed) return { name: '試運転', info: testRunInfo };
+        const assemblyInfo = (taskInfoMap || {})[`${num}__${machine}__機械組立`];
+        if (assemblyInfo) return { name: '機械組立', info: assemblyInfo };
+        return null;
+    };
+    const isInviteFlowOverdue = (num, machine, flowType, req) => {
+        if (req && req.status !== 'draft') return false; // 開催案内送付済み（申請済み）なら対象外
+        const ref = getInviteRefInfo(num, machine);
+        if (!ref) return false;
+        // 簡易検査・外観検査は試運転タスクがある機械では対象外（案内催促と同じ仕様）
+        if ((flowType === 'simple_inspection' || flowType === 'inspection') && ref.name === '試運転') return false;
+        return !!(ref.info.end_date && ref.info.end_date < todayStr);
+    };
+
     const projectHasOverdueFlow = (num) => {
         return Object.keys(projectData[num] || {}).some(machine => {
             const flows = projectData[num][machine].flows || {};
-            return Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => isFlowOverdue(num, machine, flowType, flows[flowType]));
+            const mainOverdue = Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => isFlowOverdue(num, machine, flowType, flows[flowType]));
+            if (mainOverdue) return true;
+            return QA_MEETING_FLOWS.some(flowType => isInviteFlowOverdue(num, machine, flowType, flows[flowType]));
         });
     };
 
