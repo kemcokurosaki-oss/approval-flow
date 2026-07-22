@@ -302,6 +302,87 @@ async function runSubmissionReminders() {
   console.log(`申請催促: ${count}件送信`);
 }
 
+// ペンディング項目の担当者名から通知先を解決（profiles優先、無ければnotification_recipients）
+async function resolveOwnerRecipients(ownerName) {
+  if (!ownerName) return [];
+  const profiles = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+  const withEmail = (profiles || []).filter(p => p.email);
+  if (withEmail.length > 0) return withEmail.map(p => ({ id: p.id, name: p.name, email: p.email }));
+
+  const recips = await supabaseFetch(
+    `notification_recipients?name=eq.${encodeURIComponent(ownerName)}&active=eq.true&select=name,email`
+  );
+  return (recips || []).filter(r => r.email).map(r => ({ id: null, name: r.name, email: r.email }));
+}
+
+// ===== ペンディング期日超過催促 =====
+async function runPendingItemReminders() {
+  console.log('\n--- ペンディング期日超過催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  const requests = await supabaseFetch(
+    `approval_requests?status=neq.rejected&select=id,project_number,machine_name,flow_type,sheet_data`
+  );
+
+  // 今日すでに送ったリマインダーのセット（申請ID + 宛先 + 項目内容）
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.pending_item_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id,recipient_email,detail`
+  );
+  const sentSet = new Set(
+    (sentToday || []).map(n => `${n.request_id}__${n.recipient_id || n.recipient_email}__${n.detail}`)
+  );
+
+  let count = 0;
+  for (const req of (requests || [])) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+
+    const items = req.sheet_data?.pending_items || [];
+    for (const item of items) {
+      if (item.completed) continue;
+      if (!item.due || item.due >= todayStr) continue; // 期日翌日から対象（当日はまだ超過していない）
+      if (!item.owner) continue;
+
+      const label = item.content || item.machine || (item.fixed ? '出荷準備' : 'ペンディング項目');
+      const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
+      const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+      const subject = `【ペンディング期日超過】${pStr}　${label}`;
+
+      const recipients = await resolveOwnerRecipients(item.owner);
+      for (const recipient of recipients) {
+        const dedupKey = `${req.id}__${recipient.id || recipient.email}__${label}`;
+        if (sentSet.has(dedupKey)) continue;
+
+        const text =
+          `${recipient.name} 様\n\n` +
+          `${pStr}（${flow}）のペンディング項目「${label}」の完了予定日（${item.due}）を過ぎていますが、` +
+          `まだ完了になっていません。\n` +
+          `承認フロー管理システムにログインし、対応後は「完了にする」を押してください。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(recipient.email, recipient.name, subject, text);
+          await supabaseInsert('approval_notifications', {
+            request_id:         req.id,
+            recipient_id:       recipient.id || null,
+            recipient_email:    recipient.id ? null : recipient.email,
+            notification_type:  'pending_item_reminder',
+            detail:             label,
+            emailed_at:         new Date().toISOString(),
+          });
+          sentSet.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`ペンディング期日超過催促: ${count}件送信`);
+}
+
 // ===== 案内催促 =====
 async function runInvitationReminders() {
   console.log('\n--- 案内催促チェック ---');
