@@ -1160,7 +1160,8 @@ function renderProgressCards() {
                 let overdueBadge = '';
                 if (OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req)) {
                     fcClass += ' fc-overdue';
-                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${req ? '未承認' : '未申請'}</div>`;
+                    const isUnapproved = req && req.status !== 'draft';
+                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
                 }
 
                 const connector = i < applicable.length - 1
