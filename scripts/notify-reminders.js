@@ -369,8 +369,10 @@ async function runPendingItemReminders() {
           `承認フロー管理システムにログインし、対応後は「完了にする」を押してください。\n\n` +
           `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
+        const ccEmails = PENDING_REMINDER_CC.filter(email => email !== recipient.email);
+
         try {
-          await sendEmail(recipient.email, recipient.name, subject, text);
+          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
           await supabaseInsert('approval_notifications', {
             request_id:         req.id,
             recipient_id:       recipient.id || null,
