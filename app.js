@@ -256,6 +256,15 @@ function applyRoleLayout(role) {
     // 進捗一覧のみモード（申請ボタンをCSS非表示）
     const appEl = document.getElementById('app');
     appEl.classList.toggle('is-view-only', isViewOnly);
+
+    // 未申請・未承認フィルタ（品証・製管のみ表示）
+    const overdueWrap = document.getElementById('pfilter_overdue_wrap');
+    if (overdueWrap) overdueWrap.style.display = isQualityOrSeikan ? '' : 'none';
+    if (!isQualityOrSeikan && progressFilterOverdue) {
+        progressFilterOverdue = false;
+        const overdueCb = document.getElementById('pfilter_overdue');
+        if (overdueCb) overdueCb.checked = false;
+    }
 }
 
 async function switchDevRole(value) {
