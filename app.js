@@ -1156,6 +1156,13 @@ function renderProgressCards() {
                     }
                 }
 
+                // 未申請・未承認ハイライト（品証・製管のみ表示するフィルタと連動）
+                let overdueBadge = '';
+                if (OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req)) {
+                    fcClass += ' fc-overdue';
+                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${req ? '未承認' : '未申請'}</div>`;
+                }
+
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
