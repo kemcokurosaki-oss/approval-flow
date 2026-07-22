@@ -538,6 +538,15 @@
             align-items: center;
             gap: 4px;
         }
+        .flow-overdue-badge {
+            font-size: 13px;
+            color: #e74c3c;
+            font-weight: bold;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
         .flow-connector {
             flex: 1;
             height: 2px;
