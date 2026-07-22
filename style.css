@@ -405,6 +405,7 @@
         }
 
         /* ===== ヘッダー2行目コントロール（並び替え・フィルタ） ===== */
+        .pfilter-group-label { font-size: 11px; color: #78909c; font-weight: bold; white-space: nowrap; }
         .psort-group { display: flex; align-items: center; gap: 6px; }
         .psort-group label { font-size: 11px; color: #78909c; font-weight: bold; white-space: nowrap; }
         .psort-btn {
