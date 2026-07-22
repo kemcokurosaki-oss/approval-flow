@@ -552,6 +552,7 @@ async function main() {
   await runApprovalReminders();
   await runSubmissionReminders();
   await runInvitationReminders();
+  await runPendingItemReminders();
 
   console.log('\n====== 完了 ======');
 }
