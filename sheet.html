@@ -371,44 +371,29 @@
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
-            /* 2カラムレイアウト */
-            .sheet-content { max-width: 100%; padding: 6px 8px 8px; columns: 2; column-gap: 14px; box-shadow: none !important; margin: 0 !important; }
-            .report-doc              { column-span: all; margin-bottom: 8px !important; padding: 12px 14px !important; }
-            .report-section-heading  { column-span: all; margin-bottom: 6px !important; }
+            /* 画面と同じ1カラムレイアウト。区切りが不自然な位置で切れないよう避ける */
+            .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
+            .report-doc              { margin-bottom: 8px !important; padding: 12px 14px !important; }
+            .report-section-heading  { margin-bottom: 6px !important; }
             .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; }
             .sheet-group-label { padding: 5px 10px !important; }
             .sheet-bulk-btn { display: none !important; }
-            .sheet-item { padding: 5px 10px !important; }
-            /* 選択済みボタンのみ表示・テキスト化 */
-            .sheet-btn:not([class*="active-"]) { display: none !important; }
-            .sheet-btn[class*="active-"] {
-                background: none !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 4px !important;
-                font-size: 22px !important;
-                font-weight: bold !important;
-                min-width: auto !important;
-                color: #333 !important;
-            }
-            .sheet-btn.active-maru  { color: #1a7a3a !important; }
-            .sheet-btn.active-batu  { color: #c0392b !important; }
-            .sheet-btn.active-dash  { color: #888    !important; }
-            .sheet-btn.active-wide1 { color: #1a7a3a !important; font-size: 15px !important; }
-            .sheet-btn.active-wide2 { color: #c0392b !important; font-size: 15px !important; }
-            /* 備考欄：印刷時は入力欄を隠し、折り返し可能なテキストに差し替える。
-               画面入力用の min-width は不要なので狭め、その分を項目本文に戻す */
-            .sheet-text { flex: 1 1 auto !important; }
-            .sheet-note-wrap { flex: 0 0 88px !important; min-width: 0 !important; }
+            .sheet-item { padding: 5px 10px !important; page-break-inside: avoid; break-inside: avoid; }
+            /* 備考欄：印刷時は入力欄を隠し、画面と同じ見た目のまま折り返し可能なテキストに差し替える
+               （<input>は折り返せず長文が欠けるため） */
             .sheet-note { display: none !important; }
             .sheet-note-print {
                 display: block !important;
                 width: 100%;
+                min-height: 32px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 5px 8px;
+                box-sizing: border-box;
                 white-space: pre-wrap;
                 word-break: break-word;
-                padding: 0 4px !important;
                 color: #555 !important;
-                font-size: 12px !important;
+                font-size: 13px !important;
             }
             /* 報告書ヘッダー */
             .report-info-tbl th { background-color: #eef2f8 !important; }
