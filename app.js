@@ -1003,12 +1003,38 @@ function renderProgressCards() {
     const wrap = document.getElementById('progress_cards_wrap');
     if (!wrap || !progressCachedData) return;
 
-    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap } = progressCachedData;
+    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
 
+    // 未申請・未承認判定（対象は承認ステップのある組立・試運転・出荷確定のみ）
+    const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    const isFlowOverdue = (num, machine, flowType, req) => {
+        if (req) return req.status === 'submitted' || req.status === 'in_review';
+        const taskText = OVERDUE_FLOW_TASK_TEXT[flowType];
+        if (!taskText) return false;
+        const info = (taskInfoMap || {})[`${num}__${machine}__${taskText}`];
+        return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+    };
+    const projectHasOverdueFlow = (num) => {
+        return Object.keys(projectData[num] || {}).some(machine => {
+            const flows = projectData[num][machine].flows || {};
+            return Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => {
+                const req = flows[flowType];
+                if (req && req.status !== 'draft') return isFlowOverdue(num, machine, flowType, req);
+                return isFlowOverdue(num, machine, flowType, null);
+            });
+        });
+    };
+
     // 完了済みフィルタ（通常時は完了済みを除外、完了済みモード時は完了済みのみ）
     let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted);
+
+    // 未申請・未承認フィルタ（品証・製管のみ利用可能）
+    if (progressFilterOverdue) {
+        nums = nums.filter(num => projectHasOverdueFlow(num));
+    }
 
     // 並び替え
     if (progressSort === 'shipping') {
