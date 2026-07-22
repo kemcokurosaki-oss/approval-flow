@@ -168,6 +168,7 @@ let progressSort         = 'job';   // 'job' | 'shipping'
 let progressFilterMine   = false;
 let progressFilterPrefix = '';
 let progressFilterCompleted = false; // 完了済み工番のみ表示するモード
+let progressFilterOverdue = false; // 未申請・未承認（品証・製管のみ表示可能）のみ表示するモード
 let completedProjectNums = new Set(); // completed_projectsに登録済みの工番
 let progressCachedData   = null;
 let currentDetailReq     = null;
