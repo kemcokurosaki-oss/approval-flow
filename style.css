@@ -513,7 +513,6 @@
         .fc-play-icon { font-size: 15px; display: inline-block; transform: translate(1px, -1px); }
         .fc-x-icon   { font-size: 24px; font-weight: bold; display: inline-block; transform: translateY(-2px); }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
-        .fc-overdue  { box-shadow: 0 0 0 3px #e74c3c; }
         .flow-label {
             font-size: 16px;
             color: #666;
