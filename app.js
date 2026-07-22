@@ -1034,25 +1034,25 @@ function renderProgressCards() {
         return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
     };
     // 検査・会議フロー（簡易検査・外観検査・出荷確認会議）の未申請判定
-    // 「案内催促」と同じ考え方：試運転タスクがあればその終了日、なければ機械組立の終了日を基準にする
-    const getInviteRefInfo = (num, machine) => {
-        const testRunInfo = (taskInfoMap || {})[`${num}__${machine}__試運転`];
-        if (testRunInfo) {
-            // 試運転タスクがある機械は、未完了の間だけ試運転終了日を基準にする。
-            // 試運転が完了済みなら機械組立にはフォールバックせず対象外（案内催促メールと同じ仕様）
-            return testRunInfo.is_completed ? null : { name: '試運転', info: testRunInfo };
-        }
-        const assemblyInfo = (taskInfoMap || {})[`${num}__${machine}__機械組立`];
-        if (assemblyInfo) return { name: '機械組立', info: assemblyInfo };
-        return null;
-    };
+    // 簡易検査・外観検査：それぞれ自分自身のタスクの終了日を基準にする
+    // 出荷確認会議：試運転タスクが存在すればその終了日、存在しなければ外観検査の終了日を基準にする（試運転の完了有無は問わない）
     const isInviteFlowOverdue = (num, machine, flowType, req) => {
         if (req && req.status !== 'draft') return false; // 開催案内送付済み（申請済み）なら対象外
-        const ref = getInviteRefInfo(num, machine);
-        if (!ref) return false;
-        // 簡易検査・外観検査は試運転タスクがある機械では対象外（案内催促と同じ仕様）
-        if ((flowType === 'simple_inspection' || flowType === 'inspection') && ref.name === '試運転') return false;
-        return !!(ref.info.end_date && ref.info.end_date < todayStr);
+
+        if (flowType === 'simple_inspection') {
+            const info = (projectFlowInfoMap || {})[`${num}__簡易検査`];
+            return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+        }
+        if (flowType === 'inspection') {
+            const info = (taskInfoMap || {})[`${num}__${machine}__外観検査`];
+            return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+        }
+        if (flowType === 'shipping_meeting') {
+            const testRunInfo = (taskInfoMap || {})[`${num}__${machine}__試運転`];
+            const ref = testRunInfo || (taskInfoMap || {})[`${num}__${machine}__外観検査`];
+            return !!(ref && ref.end_date && ref.end_date < todayStr);
+        }
+        return false;
     };
 
     const projectHasOverdueFlow = (num) => {
