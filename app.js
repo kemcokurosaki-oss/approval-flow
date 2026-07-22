@@ -991,6 +991,11 @@ function setProgressFilter(mine) {
     renderProgressCards();
 }
 
+function setProgressFilterOverdue(checked) {
+    progressFilterOverdue = checked;
+    renderProgressCards();
+}
+
 function matchesPrefix(num, prefix) {
     if (prefix === '3')  return /^3\d/.test(num);
     if (prefix === '4')  return /^4\d/.test(num);
