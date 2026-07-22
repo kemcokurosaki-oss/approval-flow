@@ -472,7 +472,6 @@ async function runInvitationReminders() {
       // 対象フローのタスクが存在しない工番_機械はスキップ
       if (!flow.hasTask(taskKey)) continue;
 
-      // 簡易検査・外観検査は機械組立3日前にのみ送る（出荷確認会議は試運転タイミングでも送る）
       const submitKey = `${taskKey}__${flow.flowType}`;
       if (submittedSet.has(submitKey)) continue;
 
