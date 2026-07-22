@@ -31,6 +31,13 @@ const TASK_TO_FLOW = {
   '工場出荷': 'shipping',
 };
 
+// ペンディング期日超過催促のCC固定宛先（品証・製管）
+const PENDING_REMINDER_CC = [
+  't-tanaka@kusakabe.com',    // 品証（田中）
+  's-morimura@kusakabe.com',  // 製管（森村）
+  'e-kurosaki@kusakabe.com',  // 製管（黒崎）
+];
+
 function requireEnv(name, v) {
   if (!v) throw new Error(`環境変数 ${name} が未設定です`);
 }
