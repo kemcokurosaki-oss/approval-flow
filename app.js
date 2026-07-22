@@ -901,12 +901,18 @@ async function loadProgress() {
 
     // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議はproject全体に1つの場合がある
     const { data: projectFlowTasks } = await db.from('tasks')
-        .select('project_number, text')
+        .select('project_number, text, end_date, is_completed')
         .in('text', ['簡易検査', '外観検査', '出荷確認会議']);
     const projectFlowSet = new Set(
         (projectFlowTasks || []).map(t => `${(t.project_number||'').toString().trim()}__${t.text}`)
     );
     const hasProjectFlow = (num, text) => projectFlowSet.has(`${num}__${text}`);
+
+    // 簡易検査（project全体扱い）の期日判定用（project__text → {end_date, is_completed}）
+    const projectFlowInfoMap = {};
+    (projectFlowTasks || []).forEach(t => {
+        projectFlowInfoMap[`${(t.project_number||'').toString().trim()}__${t.text}`] = { end_date: t.end_date, is_completed: t.is_completed };
+    });
 
     // projectNum → machine → { flows, ... }
     const projectData = {};
