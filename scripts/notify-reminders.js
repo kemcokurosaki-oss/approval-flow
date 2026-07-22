@@ -421,7 +421,17 @@ async function runInvitationReminders() {
     return true;
   });
 
-  // 試運転タスク（全件）- どの工番に試運転があるか確認 + 3日前以内の判定に使用
+  // 簡易検査・外観検査：常に機械組立終了日の3日前を基準にする（試運転の有無は問わない）
+  const assemblyTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,end_date,is_completed`
+  );
+  const assemblyTargets = (assemblyTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '機械組立', refEndDate: t.end_date }));
+
+  // 出荷確認会議：試運転タスクが存在すればその終了日、存在しなければ外観検査の終了日を基準にする
+  // （試運転タスク自体が存在するかどうかで判定。完了済みでも試運転タスクがあれば試運転基準を優先）
   const allTestRuns = await supabaseFetch(
     `tasks?text=eq.${encodeURIComponent('試運転')}&select=project_number,machine,end_date,is_completed`
   );
@@ -429,12 +439,21 @@ async function runInvitationReminders() {
   for (const t of (allTestRuns || [])) {
     testRunMap.set(`${t.project_number}__${t.machine}`, t);
   }
-
-  // 機械組立タスク（終了3日前以内）
-  const assemblyTasks = await supabaseFetch(
-    `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
-    `&select=project_number,machine,end_date,is_completed`
+  const allInspections = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine,end_date,is_completed`
   );
+
+  const shippingMeetingTargets = [];
+  for (const [key, t] of testRunMap) {
+    if (t.end_date > threeDaysLater) continue;
+    shippingMeetingTargets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '試運転', refEndDate: t.end_date });
+  }
+  for (const t of (allInspections || [])) {
+    const key = `${t.project_number}__${t.machine}`;
+    if (testRunMap.has(key)) continue; // 試運転タスクがある機械は試運転基準を優先
+    if (t.end_date > threeDaysLater) continue;
+    shippingMeetingTargets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '外観検査', refEndDate: t.end_date });
+  }
 
   // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築
   const hasInspectionTask = new Set();
@@ -449,64 +468,18 @@ async function runInvitationReminders() {
   for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
   for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
 
-  // 通知対象リストを構築（機械ごと）
-  // - 試運転あり → 試運転終了3日前にトリガー（機械組立のタイミングは使わない）
-  // - 試運転なし → 機械組立終了3日前にトリガー
-  const targets = [];
-  const processedKeys = new Set();
-
-  // 試運転が3日前以内のものを先に追加
-  for (const [key, t] of testRunMap) {
-    if (t.is_completed) continue;
-    if (t.end_date > threeDaysLater) continue;
-    processedKeys.add(key);
-    targets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '試運転', refEndDate: t.end_date });
-  }
-
-  // 試運転のない機械組立タスク（3日前以内）を追加
-  for (const t of (assemblyTasks || [])) {
-    if (t.is_completed) continue;
-    const key = `${t.project_number}__${t.machine}`;
-    if (processedKeys.has(key)) continue;
-    if (testRunMap.has(key)) continue; // 試運転あり → 試運転のタイミングで通知
-    processedKeys.add(key);
-    targets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '機械組立', refEndDate: t.end_date });
-  }
-
   // 案内催促の対象フロー定義
   const inviteFlows = [
-    {
-      flowType: 'simple_inspection',
-      label:    '簡易検査開催案内',
-      hasTask:  (key) => hasSimpleInspectionTask.has(key),
-      // 簡易検査：機械組立終了3日前のみ（試運転タイミングは使わない）
-      skipTestRunTrigger: true,
-    },
-    {
-      flowType: 'inspection',
-      label:    '外観検査開催案内',
-      hasTask:  (key) => hasInspectionTask.has(key),
-      // 外観検査：機械組立終了3日前
-      skipTestRunTrigger: true,
-    },
-    {
-      flowType: 'shipping_meeting',
-      label:    '出荷確認会議開催案内',
-      hasTask:  (key) => hasShippingMeetingTask.has(key),
-      // 出荷確認会議：試運転あり→試運転終了3日前、なし→機械組立終了3日前
-      skipTestRunTrigger: false,
-    },
+    { flowType: 'simple_inspection', label: '簡易検査開催案内',   hasTask: (key) => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
+    { flowType: 'inspection',        label: '外観検査開催案内',   hasTask: (key) => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'shipping_meeting',  label: '出荷確認会議開催案内', hasTask: (key) => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
   ];
 
-  // 簡易検査と外観検査は機械組立終了3日前のみ対象（試運転タイミングのtargetを除外）
   const sentThisRun = new Set();
   let count = 0;
 
   for (const flow of inviteFlows) {
-    for (const target of targets) {
-      // skipTestRunTrigger=true のフローは試運転タイミングのtargetをスキップ
-      if (flow.skipTestRunTrigger && target.refTaskName === '試運転') continue;
-
+    for (const target of flow.targets) {
       if (completedProjectsSet.has(String(target.project_number).trim())) continue;
       if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
 
