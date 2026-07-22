@@ -1034,8 +1034,7 @@ function renderProgressCards() {
         return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
     };
     // 検査・会議フロー（簡易検査・外観検査・出荷確認会議）の未申請判定
-    // 簡易検査・外観検査：それぞれ自分自身のタスクの終了日を基準にする
-    // 出荷確認会議：試運転タスクが存在すればその終了日、存在しなければ外観検査の終了日を基準にする（試運転の完了有無は問わない）
+    // いずれもそれぞれ自分自身のタスクの終了日を基準にする
     const isInviteFlowOverdue = (num, machine, flowType, req) => {
         if (req && req.status !== 'draft') return false; // 開催案内送付済み（申請済み）なら対象外
 
