@@ -1175,6 +1175,7 @@ function renderProgressCards() {
                     <div class="flow-label">${esc(f.label)}</div>
                     ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
                     ${pendingBadge}
+                    ${overdueBadge}
                 </div>${connector}`;
             }).join('');
 
