@@ -430,30 +430,14 @@ async function runInvitationReminders() {
     .filter(t => !t.is_completed)
     .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '機械組立', refEndDate: t.end_date }));
 
-  // 出荷確認会議：試運転タスクが存在すればその終了日、存在しなければ外観検査の終了日を基準にする
-  // （試運転タスク自体が存在するかどうかで判定。完了済みでも試運転タスクがあれば試運転基準を優先）
-  const allTestRuns = await supabaseFetch(
-    `tasks?text=eq.${encodeURIComponent('試運転')}&select=project_number,machine,end_date,is_completed`
+  // 出荷確認会議：試運転や外観検査の有無に頼らず、出荷確認会議タスク自身の開始日の3日前を基準にする
+  const shippingMeetingTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('出荷確認会議')}&start_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,start_date,is_completed`
   );
-  const testRunMap = new Map(); // key: "工番__機械" → task
-  for (const t of (allTestRuns || [])) {
-    testRunMap.set(`${t.project_number}__${t.machine}`, t);
-  }
-  const allInspections = await supabaseFetch(
-    `tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine,end_date,is_completed`
-  );
-
-  const shippingMeetingTargets = [];
-  for (const [key, t] of testRunMap) {
-    if (t.end_date > threeDaysLater) continue;
-    shippingMeetingTargets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '試運転', refEndDate: t.end_date });
-  }
-  for (const t of (allInspections || [])) {
-    const key = `${t.project_number}__${t.machine}`;
-    if (testRunMap.has(key)) continue; // 試運転タスクがある機械は試運転基準を優先
-    if (t.end_date > threeDaysLater) continue;
-    shippingMeetingTargets.push({ project_number: t.project_number, machine: t.machine, refTaskName: '外観検査', refEndDate: t.end_date });
-  }
+  const shippingMeetingTargets = (shippingMeetingTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '出荷確認会議', refEndDate: t.start_date }));
 
   // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築
   const hasInspectionTask = new Set();
