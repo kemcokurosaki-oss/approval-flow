@@ -1031,7 +1031,11 @@ function renderProgressCards() {
     // 「案内催促」と同じ考え方：試運転タスクがあればその終了日、なければ機械組立の終了日を基準にする
     const getInviteRefInfo = (num, machine) => {
         const testRunInfo = (taskInfoMap || {})[`${num}__${machine}__試運転`];
-        if (testRunInfo && !testRunInfo.is_completed) return { name: '試運転', info: testRunInfo };
+        if (testRunInfo) {
+            // 試運転タスクがある機械は、未完了の間だけ試運転終了日を基準にする。
+            // 試運転が完了済みなら機械組立にはフォールバックせず対象外（案内催促メールと同じ仕様）
+            return testRunInfo.is_completed ? null : { name: '試運転', info: testRunInfo };
+        }
         const assemblyInfo = (taskInfoMap || {})[`${num}__${machine}__機械組立`];
         if (assemblyInfo) return { name: '機械組立', info: assemblyInfo };
         return null;
