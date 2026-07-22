@@ -1593,7 +1593,7 @@ function setSheetCheck(itemId, val, btn) {
 
 // ===== ペンディングリスト =====
 function addPendingItem() {
-    pendingItems.push({ machine: '', content: '', due: '' });
+    pendingItems.push({ machine: '', content: '', owner: '', due: '' });
     renderPendingItems();
 }
 
