@@ -1048,9 +1048,8 @@ function renderProgressCards() {
             return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
         }
         if (flowType === 'shipping_meeting') {
-            const testRunInfo = (taskInfoMap || {})[`${num}__${machine}__試運転`];
-            const ref = testRunInfo || (taskInfoMap || {})[`${num}__${machine}__外観検査`];
-            return !!(ref && ref.end_date && ref.end_date < todayStr);
+            const info = (taskInfoMap || {})[`${num}__${machine}__出荷確認会議`];
+            return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
         }
         return false;
     };
