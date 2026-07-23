@@ -1289,7 +1289,8 @@ function renderShipAfterPendingList(wrap) {
         nums = nums.filter(num => matchesPrefix(num, progressFilterPrefix));
     }
 
-    const rows = [];
+    // 工事番号ごとにまとめる（1工番につき1枚のカードに、複数のペンディングを行として並べる）
+    const grouped = {}; // num -> [{ machine, req, item, idx }, ...]
     for (const num of nums) {
         const machines = Object.keys(projectData[num] || {}).sort();
         for (const machine of machines) {
@@ -1298,41 +1299,45 @@ function renderShipAfterPendingList(wrap) {
                 const items = req?.sheet_data?.pending_items || [];
                 items.forEach((item, idx) => {
                     if (item.ship_after && !item.completed && (item.content || item.machine)) {
-                        rows.push({ num, machine, req, item, idx });
+                        (grouped[num] || (grouped[num] = [])).push({ machine, req, item, idx });
                     }
                 });
             }
         }
     }
 
-    if (rows.length === 0) {
+    const numsWithPending = Object.keys(grouped).sort();
+
+    if (numsWithPending.length === 0) {
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">出荷後対応の未完了ペンディングはありません</div></div>';
         return;
     }
 
-    rows.sort((a, b) => (a.num < b.num ? -1 : a.num > b.num ? 1 : (a.machine < b.machine ? -1 : a.machine > b.machine ? 1 : 0)));
-
-    wrap.innerHTML = rows.map(r => {
-        const pInfo = projectsMap[r.num] || {};
+    wrap.innerHTML = numsWithPending.map(num => {
+        const pInfo = projectsMap[num] || {};
         const label = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
-        const flowLabel = FLOW_LABELS[r.req.flow_type] || r.req.flow_type;
-        const isCompletedProject = completedProjectNums.has(r.num);
-        const canComplete = _canCompletePendingItem(r.req, r.item);
-        return `
-        <div class="prog-card">
-            <div class="prog-card-header">
-                <span class="prog-card-num">${esc(r.num)}</span>${r.machine ? `<span class="prog-card-label">【${esc(r.machine)}】</span>` : ''}${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
-                ${isCompletedProject ? '<span class="si-badge si-gray" style="width:auto;border-radius:4px;padding:2px 8px;margin-left:8px;">完了済み工番</span>' : ''}
-            </div>
-            <div class="pending-detail-row" style="border-bottom:none;">
+        const isCompletedProject = completedProjectNums.has(num);
+        const rowsHtml = grouped[num].map(r => {
+            const flowLabel = FLOW_LABELS[r.req.flow_type] || r.req.flow_type;
+            const canComplete = _canCompletePendingItem(r.req, r.item);
+            return `
+            <div class="pending-detail-row">
                 <div class="pending-detail-icon">●</div>
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
+                    <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
                     ${r.item.owner ? `<div class="pending-detail-due">担当: ${esc(r.item.owner)}</div>` : ''}
                     ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
                 </div>
                 ${canComplete ? `<button class="btn-success-xs" onclick="completePendingItem('${r.req.id}', ${r.idx}, {skipModalFallback:true})">完了にする</button>` : ''}
+            </div>`;
+        }).join('');
+        return `
+        <div class="prog-card">
+            <div class="prog-card-header">
+                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
+                ${isCompletedProject ? '<span class="si-badge si-gray" style="width:auto;border-radius:4px;padding:2px 8px;margin-left:8px;">完了済み工番</span>' : ''}
             </div>
+            ${rowsHtml}
         </div>`;
     }).join('');
 }
