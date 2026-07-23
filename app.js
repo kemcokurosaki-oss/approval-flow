@@ -2505,9 +2505,11 @@ async function openDetailModal(requestId) {
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
-    } else if (req.flow_type === 'tentative_shipping' && req.status === 'awaiting_tentative_date' && (isSales || isQualityOrSeikan)) {
+    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
+        && !req.tentative_shipping_date && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildTentativeDateFooterInner(req);
-    } else if (req.flow_type === 'tentative_shipping' && req.status === 'awaiting_tentative_confirm' && (isMyRequest || isQualityOrSeikan)) {
+    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
+        && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
         footer.innerHTML = `
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmTentativeShippingDate('${req.id}')">確認して確定する</button>
