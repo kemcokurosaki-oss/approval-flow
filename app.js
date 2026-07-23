@@ -3054,17 +3054,6 @@ async function _getRequiredFlows(projectNum, machine) {
     return new Set(chain.filter(t => t !== 'shipping'));
 }
 
-// この検査フローがその機械にとって出荷直前のフロー（chain上で最後のQA系フロー）であれば、
-// 固定の「出荷準備」ペンディング項目を追加する
-async function _seedPrepItemIfLast(reqId, projectNum, machine, flowType) {
-    const chain = await _getMachineFlowChain(projectNum, machine);
-    const qaSteps = chain.filter(t => QA_MEETING_FLOWS.includes(t));
-    if (qaSteps[qaSteps.length - 1] !== flowType) return;
-    await db.from('approval_requests')
-        .update({ sheet_data: { pending_items: [{ ...PREP_PENDING_ITEM }] } })
-        .eq('id', reqId);
-}
-
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [] };
 
