@@ -1803,7 +1803,7 @@ async function submitRequest() {
                     ];
                     notifyRoles = ['assembly_manager', 'assembly_director'];
                 }
-            } else {
+            } else if (currentFlowType === 'test_run') {
                 // test_run: assemblyと同じ並列承認（どちらかが承認で完了）
                 if (submitterRole === 'operations_manager') {
                     // 課長申請: 部長のみ1ステップ
@@ -1817,6 +1817,13 @@ async function submitRequest() {
                     ];
                     notifyRoles = ['operations_manager', 'operations_director'];
                 }
+            } else {
+                // shipping_prep: 品証・製管の並列2ステップ（どちらかが承認で完了）
+                stepsToInsert = [
+                    { request_id: req.id, step_order: 1, approver_role: 'quality',            status: 'pending' },
+                    { request_id: req.id, step_order: 2, approver_role: 'production_control',  status: 'pending' }
+                ];
+                notifyRoles = ['quality', 'production_control'];
             }
             if (!firstApproverRole) firstApproverRole = notifyRoles[0];
             await db.from('approval_steps').insert(stepsToInsert);
