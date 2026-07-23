@@ -551,6 +551,76 @@ async function runInvitationReminders() {
   console.log(`案内催促: ${count}件送信`);
 }
 
+// ===== 完了処理催促（簡易検査・外観検査・出荷確認会議） =====
+async function runQaFinalizeReminders() {
+  console.log('\n--- 完了処理催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  // 開催日の翌日以降になっても「完了にする」が押されていない開催案内
+  const requests = await supabaseFetch(
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=eq.submitted` +
+    `&inspection_date=lt.${todayStr}&select=id,project_number,machine_name,flow_type,inspection_date`
+  );
+
+  if (!requests || requests.length === 0) {
+    console.log('完了処理催促: 対象なし');
+    return;
+  }
+
+  // 今日すでに送ったリマインダーのセット
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.qa_finalize_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id`
+  );
+  const sentSet = new Set((sentToday || []).map(n => `${n.request_id}__${n.recipient_id}`));
+
+  // 品証（TO）・製管（CC）を取得
+  const qualityProfs = (await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`)) || [];
+  const seikanProfs  = (await supabaseFetch(`profiles?role=eq.production_control&select=email`)) || [];
+  const ccEmailsAll  = seikanProfs.map(p => p.email).filter(Boolean);
+
+  let count = 0;
+  for (const req of requests) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+
+    const flow = QA_MEETING_LABELS[req.flow_type] || req.flow_type;
+    const pStr = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+
+    for (const approver of qualityProfs) {
+      if (!approver.email) continue;
+      const key = `${req.id}__${approver.id}`;
+      if (sentSet.has(key)) continue;
+
+      const subject = `【完了処理催促】${pStr}　${flow}`;
+      const text =
+        `${approver.name} 様\n\n` +
+        `${pStr} の「${flow}」について、開催日（${req.inspection_date}）を過ぎていますが、` +
+        `まだ「完了にする」の処理がされていません。\n` +
+        `承認フロー管理システムにログインし、開催結果・ペンディングを確認のうえ完了処理をお願いします。\n\n` +
+        `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+      const ccEmails = ccEmailsAll.filter(e => e !== approver.email);
+
+      try {
+        await sendEmail(approver.email, approver.name, subject, text, ccEmails);
+        await supabaseInsert('approval_notifications', {
+          request_id:        req.id,
+          recipient_id:      approver.id,
+          notification_type: 'qa_finalize_reminder',
+          emailed_at:        new Date().toISOString(),
+        });
+        sentSet.add(key);
+        count++;
+      } catch (e) {
+        console.error(`✗ 送信エラー: ${approver.email}`, e.message);
+      }
+    }
+  }
+  console.log(`完了処理催促: ${count}件送信`);
+}
+
 async function main() {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
