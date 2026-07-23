@@ -1271,6 +1271,85 @@ function renderProgressCards() {
     wrap.innerHTML = html;
 }
 
+// ===== 出荷後対応ペンディング一覧（完了済み工番も含めて全工番を横断表示） =====
+function renderShipAfterPendingList(wrap) {
+    const { baseNums, projectData } = progressCachedData;
+
+    let nums = baseNums.slice();
+    if (progressFilterMine) {
+        const myName = currentProfile?.name;
+        if (myName) {
+            nums = nums.filter(num => {
+                const owners = projectsMap[num]?.owners;
+                return owners && owners.has(myName);
+            });
+        }
+    }
+    if (progressFilterPrefix) {
+        nums = nums.filter(num => matchesPrefix(num, progressFilterPrefix));
+    }
+
+    const rows = [];
+    for (const num of nums) {
+        const machines = Object.keys(projectData[num] || {}).sort();
+        for (const machine of machines) {
+            const flows = projectData[num][machine].flows || {};
+            for (const req of Object.values(flows)) {
+                const items = req?.sheet_data?.pending_items || [];
+                items.forEach((item, idx) => {
+                    if (item.ship_after && !item.completed && (item.content || item.machine)) {
+                        rows.push({ num, machine, req, item, idx });
+                    }
+                });
+            }
+        }
+    }
+
+    if (rows.length === 0) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">出荷後対応の未完了ペンディングはありません</div></div>';
+        return;
+    }
+
+    rows.sort((a, b) => (a.num < b.num ? -1 : a.num > b.num ? 1 : (a.machine < b.machine ? -1 : a.machine > b.machine ? 1 : 0)));
+
+    wrap.innerHTML = rows.map(r => {
+        const pInfo = projectsMap[r.num] || {};
+        const label = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
+        const flowLabel = FLOW_LABELS[r.req.flow_type] || r.req.flow_type;
+        const isCompletedProject = completedProjectNums.has(r.num);
+        const canComplete = _canCompletePendingItem(r.req, r.item);
+        return `
+        <div class="prog-card">
+            <div class="prog-card-header">
+                <span class="prog-card-num">${esc(r.num)}</span>${r.machine ? `<span class="prog-card-label">【${esc(r.machine)}】</span>` : ''}${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
+                ${isCompletedProject ? '<span class="si-badge si-gray" style="width:auto;border-radius:4px;padding:2px 8px;margin-left:8px;">完了済み工番</span>' : ''}
+            </div>
+            <div class="pending-detail-row" style="border-bottom:none;">
+                <div class="pending-detail-icon">●</div>
+                <div class="pending-detail-content">
+                    <div class="pending-detail-text">[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
+                    ${r.item.owner ? `<div class="pending-detail-due">担当: ${esc(r.item.owner)}</div>` : ''}
+                    ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
+                </div>
+                ${canComplete ? `<button class="btn-success-xs" onclick="completePendingItem('${r.req.id}', ${r.idx})">完了にする</button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ペンディング項目を「完了にする」操作ができるか（buildPendingSectionInnerのitemCanComplete判定と同じ基準）
+function _canCompletePendingItem(req, item) {
+    if (!req) return false;
+    const isQaFlow = QA_MEETING_FLOWS.includes(req.flow_type);
+    const statusOk = isQaFlow
+        ? req.status === 'submitted'
+        : ['submitted', 'in_review', 'approved'].includes(req.status);
+    if (!statusOk) return false;
+    const isOwner     = !!(item.owner && currentProfile?.name === item.owner);
+    const isMyRequest = req.requester_id === currentUser.id;
+    return isQualityOrSeikan || isOwner || (!isQaFlow && isMyRequest);
+}
+
 // ===== Tab Switch（廃止済み・後方互換用スタブ） =====
 function switchTab(tab) {
     // 新レイアウトではサイドパネルを使用するため、この関数は何もしない
