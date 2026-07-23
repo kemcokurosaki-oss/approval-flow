@@ -336,7 +336,9 @@ const STATUS_LABELS = {
     rejected:   '却下',
     cancelled:  'キャンセル',
     awaiting_shipping_date:    '出荷日入力待ち',
-    awaiting_shipping_confirm: '品証確認待ち'
+    awaiting_shipping_confirm: '品証確認待ち',
+    awaiting_tentative_date:    '仮出荷予定日入力待ち',
+    awaiting_tentative_confirm: '品証確認待ち'
 };
 
 const STATUS_CLASSES = {
@@ -347,7 +349,9 @@ const STATUS_CLASSES = {
     rejected:   's-rejected',
     cancelled:  's-rejected',
     awaiting_shipping_date:    's-gray',
-    awaiting_shipping_confirm: 's-gray'
+    awaiting_shipping_confirm: 's-gray',
+    awaiting_tentative_date:    's-gray',
+    awaiting_tentative_confirm: 's-gray'
 };
 
 // ===== Auth =====
