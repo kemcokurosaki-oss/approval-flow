@@ -3065,6 +3065,26 @@ async function _getRequiredFlows(projectNum, machine) {
     return new Set(chain.filter(t => t !== 'shipping'));
 }
 
+// 出荷準備より前の全フローについて、未完了かつ「出荷後対応」でないペンディング項目が残っていないか調べる
+// （出荷後の現地工事等で完了予定のペンディングはチェック対象から除外する）
+async function _getPrepBlockers(projectNum, machine) {
+    const chain = await _getMachineFlowChain(projectNum, machine);
+    const priorFlows = _priorSteps(chain, 'shipping_prep');
+    if (priorFlows.length === 0) return [];
+    const { data: reqs } = await db.from('approval_requests')
+        .select('flow_type, sheet_data')
+        .eq('project_number', projectNum).eq('machine_name', machine)
+        .in('flow_type', priorFlows);
+    const blockers = [];
+    for (const flowType of priorFlows) {
+        const req = (reqs || []).find(r => r.flow_type === flowType);
+        const items = (req?.sheet_data?.pending_items || [])
+            .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
+        if (items.length > 0) blockers.push({ flowType, count: items.length });
+    }
+    return blockers;
+}
+
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [] };
 
