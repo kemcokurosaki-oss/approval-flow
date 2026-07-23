@@ -2818,15 +2818,15 @@ async function finalizeQaMeeting(requestId) {
     showLoading('処理中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('flow_type, project_number, machine_name, sheet_data').eq('id', requestId).single();
+            .select('flow_type, project_number').eq('id', requestId).single();
 
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
 
-        // 簡易検査・外観検査の完了後、営業へ仮出荷予定日の入力を依頼する申請を自動起票する
+        // 簡易検査・外観検査の完了後、営業へ仮出荷予定日の入力を依頼する（同じ申請に付随。別フローは起票しない）
         if (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') {
-            await startTentativeShippingFlow(req.project_number, req.machine_name);
+            await _notifyTentativeShippingDateRequest(requestId, req.project_number);
         }
 
         closeDetailModal();
@@ -2839,36 +2839,23 @@ async function finalizeQaMeeting(requestId) {
     }
 }
 
-// 検査完了をきっかけに「仮出荷予定日」申請を起票し、営業へ入力を依頼する
-async function startTentativeShippingFlow(projectNum, machineName) {
-    if (!projectNum || !machineName) return;
-    // 同一機械で既に起票済みなら重複作成しない
-    const { data: existing } = await db.from('approval_requests')
-        .select('id').eq('project_number', projectNum).eq('machine_name', machineName)
-        .eq('flow_type', 'tentative_shipping').limit(1);
-    if (existing && existing.length > 0) return;
-
-    const { data: newReq, error } = await db.from('approval_requests').insert({
-        project_number: projectNum, machine_name: machineName, flow_type: 'tentative_shipping',
-        status: 'awaiting_tentative_date', requester_id: currentUser.id
-    }).select().single();
-    if (error) throw error;
-
+// 検査完了をきっかけに、営業へ仮出荷予定日の入力を依頼する通知を送る（同一申請の tentative_shipping_date 列に入力してもらう）
+async function _notifyTentativeShippingDateRequest(requestId, projectNum) {
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
     const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[projectNum] || null;
-    if (salesOwner) {
-        const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
-        if (pRows?.length > 0) {
+    if (!salesOwner) return;
+
+    const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
+    if (pRows?.length > 0) {
+        await db.from('approval_notifications').insert(
+            pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: 'tentative_shipping_date_request' }))
+        );
+    } else {
+        const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', salesOwner).eq('active', true);
+        if (nRows?.length > 0) {
             await db.from('approval_notifications').insert(
-                pRows.map(p => ({ request_id: newReq.id, recipient_id: p.id, notification_type: 'tentative_shipping_date_request' }))
+                nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: 'tentative_shipping_date_request' }))
             );
-        } else {
-            const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', salesOwner).eq('active', true);
-            if (nRows?.length > 0) {
-                await db.from('approval_notifications').insert(
-                    nRows.map(n => ({ request_id: newReq.id, recipient_email: n.email, notification_type: 'tentative_shipping_date_request' }))
-                );
-            }
         }
     }
 }
