@@ -251,18 +251,6 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
-    case 'shipping_prep_done':
-      return {
-        from,
-        subject: `【出荷準備完了】${pStr}`,
-        text:
-          `${recipientName} 様\n\n` +
-          `${pStr}（${flow}）の出荷準備が完了しました。` +
-          detailLine +
-          `\n内容を確認のうえ、開催案内を完了にして出荷確定申請を行ってください。` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
-      };
-
     case 'pending_item_uncompleted':
       return {
         from,
