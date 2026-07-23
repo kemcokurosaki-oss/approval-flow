@@ -598,8 +598,9 @@ async function onMachineChange() {
 async function refreshAll() {
     const role        = getEffectiveRole();
     const dept        = getEffectiveDept();
-    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業');
     const isQorS      = role === 'quality' || role === 'production_control';
+    // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
+    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || isQorS;
     const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業');
 
     const loads = [];
