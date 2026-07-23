@@ -1891,6 +1891,10 @@ function buildPendingSectionInner(req, isMyRequest) {
                         ${editLbl}
                         <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
                     </div>
+                    <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                        <span style="font-size:13px;color:#999;">出荷後対応</span>
+                        <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
+                    </label>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
                     <button class="btn-success-xs" onclick="saveEditQaPendingItem('${req.id}', ${idx})">保存</button>
@@ -1902,7 +1906,7 @@ function buildPendingSectionInner(req, isMyRequest) {
             <div class="pending-detail-row ${item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-icon">${item.completed ? '✓' : '●'}</div>
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}</div>
+                    <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}${item.ship_after ? ' <span class="badge-ship-after" style="font-size:11px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
                     ${item.owner ? `<div class="pending-detail-due">担当: ${esc(item.owner)}</div>` : ''}
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
