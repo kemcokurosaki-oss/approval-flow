@@ -2036,8 +2036,8 @@ function buildPendingSectionInner(req, isMyRequest) {
     const canComplete = isQaFlow
         ? null // QAフローは項目ごとに判定する（下記itemCanComplete）
         : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan));
-    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済みの間）
-    const canManage = isQualityOrSeikan && (isQaFlow ? req.status === 'submitted' : statusOkForNonQa);
+    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能）
+    const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : statusOkForNonQa);
     const allItems = req.sheet_data?.pending_items || [];
     const items = allItems
         .map((item, idx) => ({ item, idx }))
