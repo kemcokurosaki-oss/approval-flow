@@ -1388,7 +1388,7 @@ function _canCompletePendingItem(req, item) {
     if (!req) return false;
     const isQaFlow = QA_MEETING_FLOWS.includes(req.flow_type);
     const statusOk = isQaFlow
-        ? req.status === 'submitted'
+        ? ['submitted', 'approved'].includes(req.status)
         : ['submitted', 'in_review', 'approved'].includes(req.status);
     if (!statusOk) return false;
     const isOwner     = !!(item.owner && currentProfile?.name === item.owner);
