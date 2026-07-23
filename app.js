@@ -2963,8 +2963,10 @@ async function resubmit(requestId) {
         }).eq('id', requestId);
 
         // 全ステップの承認者に再申請通知を記録（assembly並列承認対応）
+        // shipping_prep（品証・製管）は品証のみへ通知（製管へはメール送信時にCCで届く）
         const { data: allSteps } = await db.from('approval_steps').select('approver_role').eq('request_id', requestId);
-        const rolesToNotify = [...new Set((allSteps || []).map(s => s.approver_role))];
+        const rolesToNotify = [...new Set((allSteps || []).map(s => s.approver_role))]
+            .filter(r => r !== 'production_control');
         for (const role of rolesToNotify) {
             const { data: approvers } = await db.from('profiles').select('id').eq('role', role);
             if (approvers?.length > 0) {
