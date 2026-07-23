@@ -1202,23 +1202,6 @@ function renderProgressCards() {
         { type: 'shipping',           label: '出荷',       alwaysShow: true }
     ];
 
-    // 出荷予定日表示: 工程表（工場出荷タスク終了日）をベースに、仮出荷予定日→確定出荷日の順で上書きする
-    const getEffectiveShippingDate = (num) => {
-        let tentative = null, confirmed = null;
-        Object.values(projectData[num] || {}).forEach(mData => {
-            const shipReq = mData.flows['shipping'];
-            if (shipReq?.confirmed_shipping_date && (!confirmed || shipReq.confirmed_shipping_date < confirmed)) {
-                confirmed = shipReq.confirmed_shipping_date;
-            }
-            [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
-                if (req?.tentative_shipping_date && (!tentative || req.tentative_shipping_date < tentative)) {
-                    tentative = req.tentative_shipping_date;
-                }
-            });
-        });
-        return confirmed || tentative || projectsMap[num]?.shipping_date || null;
-    };
-
     const html = nums.map(num => {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
