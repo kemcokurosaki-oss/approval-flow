@@ -291,13 +291,14 @@ async function switchDevRole(value) {
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
 const FLOW_LABELS = {
-    assembly:          '組立完了申請',
-    test_run:          '試運転完了申請',
-    simple_inspection: '簡易検査開催案内',
-    inspection:        '外観検査開催案内',
-    shipping_meeting:  '出荷確認会議開催案内',
-    shipping_prep:     '出荷準備完了申請',
-    shipping:          '出荷確定申請'
+    assembly:            '組立完了申請',
+    test_run:            '試運転完了申請',
+    simple_inspection:   '簡易検査開催案内',
+    inspection:          '外観検査開催案内',
+    tentative_shipping:  '仮出荷予定日',
+    shipping_meeting:    '出荷確認会議開催案内',
+    shipping_prep:       '出荷準備完了申請',
+    shipping:            '出荷確定申請'
 };
 
 // 開催案内送信後の詳細モーダルヘッダー用（「開催案内」を省いた表記）
