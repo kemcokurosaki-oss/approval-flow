@@ -1163,8 +1163,8 @@ function renderProgressCards() {
     // 並び替え
     if (progressSort === 'shipping') {
         nums.sort((a, b) => {
-            const da = projectsMap[a]?.shipping_date || '9999-12-31';
-            const db2 = projectsMap[b]?.shipping_date || '9999-12-31';
+            const da = getEffectiveShippingDate(a) || '9999-12-31';
+            const db2 = getEffectiveShippingDate(b) || '9999-12-31';
             if (da < db2) return -1;
             if (da > db2) return 1;
             return a < b ? -1 : a > b ? 1 : 0;
