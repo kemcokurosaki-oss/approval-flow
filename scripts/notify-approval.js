@@ -18,13 +18,14 @@ const ROOM_EMAILS = {
 };
 
 const FLOW_LABELS = {
-  assembly:         '組立',
-  test_run:         '試運転',
-  simple_inspection:'簡易検査',
-  inspection:       '外観検査',
-  shipping_meeting: '出荷確認会議',
-  shipping_prep:    '出荷準備',
-  shipping:         '出荷確定',
+  assembly:           '組立',
+  test_run:           '試運転',
+  simple_inspection:  '簡易検査',
+  inspection:         '外観検査',
+  tentative_shipping: '仮出荷予定日',
+  shipping_meeting:   '出荷確認会議',
+  shipping_prep:      '出荷準備',
+  shipping:           '出荷確定',
 };
 
 // 承認依頼・再申請・却下・他者完了の件名用ラベル（申請系表記）
