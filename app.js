@@ -1252,7 +1252,7 @@ async function openFlowModalPreset(el) {
     const findCb = (listId) =>
         [...document.querySelectorAll(`#${listId} input[type="checkbox"]`)].find(c => c.value === machineName);
 
-    if (flowType === 'assembly' || flowType === 'test_run') {
+    if (flowType === 'assembly' || flowType === 'test_run' || flowType === 'shipping_prep') {
         openSubmitModal(flowType);
         currentProjectNum = projectNum;
         const p = projectsMap[projectNum] || {};
