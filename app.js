@@ -2417,33 +2417,17 @@ async function completePendingItem(requestId, idx) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (items[idx].fixed) {
-            // 固定の「出荷準備」項目が完了したら品証・製管・申請者へ確認・本申請を促す通知を送る
-            const notifIds = new Set();
-            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-            (qRows || []).forEach(p => notifIds.add(p.id));
-            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
-            (sRows || []).forEach(p => notifIds.add(p.id));
-            if (req.requester_id) notifIds.add(req.requester_id);
-            notifIds.delete(currentUser.id); // 完了操作をした本人には通知不要
-            if (notifIds.size > 0) {
-                await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_done', detail: items[idx].content }))
-                );
-            }
-        } else {
-            // 通常のペンディング項目が完了したら品証・製管へ通知（組立/試運転/QAフロー共通）
-            const notifIds = new Set();
-            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-            (qRows || []).forEach(p => notifIds.add(p.id));
-            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
-            (sRows || []).forEach(p => notifIds.add(p.id));
-            notifIds.delete(currentUser.id); // 完了操作をした本人には通知不要
-            if (notifIds.size > 0) {
-                await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content }))
-                );
-            }
+        // ペンディング項目が完了したら品証・製管へ通知（組立/試運転/QAフロー共通）
+        const notifIds = new Set();
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => notifIds.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+        (sRows || []).forEach(p => notifIds.add(p.id));
+        notifIds.delete(currentUser.id); // 完了操作をした本人には通知不要
+        if (notifIds.size > 0) {
+            await db.from('approval_notifications').insert(
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content }))
+            );
         }
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました');
