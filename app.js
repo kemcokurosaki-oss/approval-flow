@@ -1047,6 +1047,11 @@ function renderProgressCards() {
     const wrap = document.getElementById('progress_cards_wrap');
     if (!wrap || !progressCachedData) return;
 
+    if (progressFilterShipAfter) {
+        renderShipAfterPendingList(wrap);
+        return;
+    }
+
     const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
