@@ -4053,6 +4053,76 @@ async function confirmAndSubmitShipping(requestId) {
     }
 }
 
+// 営業: 仮出荷予定日を入力（品証・製管の確認待ちへ）
+async function submitTentativeShippingDate(requestId) {
+    const dateVal = document.getElementById('tentative_date_input')?.value;
+    if (!dateVal) { showToast('仮出荷予定日を入力してください', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        const { data: req, error } = await db.from('approval_requests')
+            .update({ tentative_shipping_date: dateVal, status: 'awaiting_tentative_confirm', updated_at: new Date().toISOString() })
+            .eq('id', requestId).eq('status', 'awaiting_tentative_date')
+            .select().single();
+        if (error) throw error;
+        if (!req) { showToast('既に処理済みです', 'error'); return; }
+
+        // 品証・製管全体へ確認依頼を通知
+        const notifIds = new Set();
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => notifIds.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+        (sRows || []).forEach(p => notifIds.add(p.id));
+        if (notifIds.size > 0) {
+            await db.from('approval_notifications').insert(
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'tentative_shipping_date_input_done' }))
+            );
+        }
+
+        closeDetailModal();
+        await refreshAll();
+        showToast('仮出荷予定日を入力しました。品証・製管の確認後、確定します。', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 品証・製管: 営業入力済みの仮出荷予定日を確認し確定する
+async function confirmTentativeShippingDate(requestId) {
+    showLoading('処理中...');
+    try {
+        const { data: req, error } = await db.from('approval_requests')
+            .update({ status: 'approved', updated_at: new Date().toISOString() })
+            .eq('id', requestId).eq('status', 'awaiting_tentative_confirm')
+            .select().single();
+        if (error) throw error;
+        if (!req) { showToast('既に処理済みです', 'error'); return; }
+
+        // 申請者（品証）＋品証・製管全体へ完了を通知
+        const notifIds = new Set();
+        if (req.requester_id) notifIds.add(req.requester_id);
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => notifIds.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+        (sRows || []).forEach(p => notifIds.add(p.id));
+        if (notifIds.size > 0) {
+            await db.from('approval_notifications').insert(
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'completed' }))
+            );
+        }
+
+        closeDetailModal();
+        await refreshAll();
+        showToast('仮出荷予定日を確定しました。', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== Notifications =====
 
 async function recordFlowNotifications(requestId, flowType) {
