@@ -2509,7 +2509,7 @@ async function completePendingItem(requestId, idx, opts = {}) {
             );
         }
 
-        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました');
+        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました', opts);
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
@@ -2517,7 +2517,7 @@ async function completePendingItem(requestId, idx, opts = {}) {
     }
 }
 
-async function uncompletePendingItem(requestId, idx) {
+async function uncompletePendingItem(requestId, idx, opts = {}) {
     if (!confirm('完了を取り消します。よろしいですか？')) return;
     showLoading('更新中...');
     try {
