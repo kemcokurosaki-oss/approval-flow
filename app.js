@@ -1860,11 +1860,10 @@ function buildPendingSectionInner(req, isMyRequest) {
         : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan));
     // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済みの間）
     const canManage = isQualityOrSeikan && (isQaFlow ? req.status === 'submitted' : statusOkForNonQa);
-    // 固定の「出荷準備」項目は別セクション（buildPrepReadinessSection）で独立して表示するため、ここでは除外する
     const allItems = req.sheet_data?.pending_items || [];
     const items = allItems
         .map((item, idx) => ({ item, idx }))
-        .filter(({ item }) => (item.content || item.machine) && !item.fixed);
+        .filter(({ item }) => (item.content || item.machine));
     if (!items.length) return '';
     const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
