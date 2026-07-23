@@ -187,7 +187,8 @@ const DEV_ROLE_MAP = {
     operations_manager:  { role: 'operations_manager',  department: '操業', flowTypes: ['test_run'] },
     operations_director: { role: 'operations_director', department: '操業', flowTypes: [] },
     quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping'] },
-    sales:               { role: 'staff',               department: '営業', flowTypes: [] }
+    production_control:  { role: 'production_control',  department: '製管', flowTypes: [] },
+    sales:               { role: 'staff',               department: '営業', flowTypes: ['shipping_prep'] }
 };
 let devFlowTypes    = []; // デモ用: 自分の申請タブのフロー絞り込み
 let userIsApplicant  = false; // 申請権限フラグ
