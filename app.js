@@ -2050,7 +2050,7 @@ function buildPendingSectionInner(req, isMyRequest) {
         ${items.map(({ item, idx }) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             const itemCanComplete = isQaFlow
-                ? (req.status === 'submitted' && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner)))
+                ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner)))
                 : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner));
             if (canManage && qaEditingPendingIdx === idx) {
                 return `
