@@ -200,9 +200,10 @@ function getEffectiveDept() { return devDept || currentProfile?.department || ''
 function canApplyFlow(flowType) {
     const role  = getEffectiveRole();
     const dept  = getEffectiveDept();
-    const isQorS = role === 'quality' || (role === 'staff' && dept === '製管');
+    const isQorS = role === 'quality' || role === 'production_control';
     if (flowType === 'assembly')         return (role === 'staff' && dept === '組立') || role === 'assembly_manager';
     if (flowType === 'test_run')         return (role === 'staff' && dept === '操業') || role === 'operations_manager';
+    if (flowType === 'shipping_prep')    return dept === '組立' || dept === '営業';
     if (flowType === 'simple_inspection' || flowType === 'inspection' ||
         flowType === 'shipping_meeting'  || flowType === 'shipping')  return isQorS;
     return false;
