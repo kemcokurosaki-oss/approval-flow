@@ -1876,7 +1876,7 @@ async function submitRequest() {
         const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
                                 (currentFlowType === 'test_run'  && submitterRole !== 'operations_manager');
         const approverLabel = currentFlowType === 'shipping_prep'
-            ? '品証・製管'
+            ? '品証（製管にもCCで届きます）'
             : isParallelStaff
                 ? (currentFlowType === 'assembly' ? '組立課長・部長' : '操業課長・部長')
                 : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
