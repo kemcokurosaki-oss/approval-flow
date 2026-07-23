@@ -541,7 +541,7 @@ function _renderPrepBlockerWarning(blockers) {
     if (btn) btn.disabled = blockers.length > 0;
     if (blockers.length === 0) return;
     const msg = blockers.map(b => b.notApproved
-        ? `${FLOW_LABELS[b.flowType] || b.flowType}（未確定）`
+        ? `${b.label || FLOW_LABELS[b.flowType] || b.flowType}（未確定）`
         : `${FLOW_LABELS[b.flowType] || b.flowType}（${b.count}件）`
     ).join('、');
     const listEl = document.getElementById('flow_detect_list');
