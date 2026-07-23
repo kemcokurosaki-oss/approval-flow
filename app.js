@@ -656,7 +656,7 @@ async function loadPendingSide() {
         statusText: '🔴 要承認',
     }));
 
-    // 営業: 確定出荷日の入力待ちになっている出荷確定申請を取得
+    // 営業: 確定出荷日・仮出荷予定日の入力待ちになっている申請を取得
     let salesItems = [];
     if (isSales) {
         const { data: salesReqs } = await db.from('approval_requests')
@@ -670,9 +670,37 @@ async function loadPendingSide() {
             date:       r.created_at,
             statusText: '🔴 確定出荷日 入力待ち',
         }));
+
+        const { data: tentativeReqs } = await db.from('approval_requests')
+            .select('id, project_number, created_at')
+            .eq('flow_type', 'tentative_shipping').eq('status', 'awaiting_tentative_date');
+        salesItems.push(...(tentativeReqs || []).map(r => ({
+            id:         r.id,
+            pNum:       r.project_number || '—',
+            flowType:   'tentative_shipping',
+            flowLabel:  '仮出荷予定日',
+            date:       r.created_at,
+            statusText: '🔴 仮出荷予定日 入力待ち',
+        })));
     }
 
-    const combined = [...actionable, ...salesItems];
+    // 品証・製管: 営業入力済みの仮出荷予定日の確認待ちを取得
+    let qorsItems = [];
+    if (isQorS) {
+        const { data: confirmReqs } = await db.from('approval_requests')
+            .select('id, project_number, created_at')
+            .eq('flow_type', 'tentative_shipping').eq('status', 'awaiting_tentative_confirm');
+        qorsItems = (confirmReqs || []).map(r => ({
+            id:         r.id,
+            pNum:       r.project_number || '—',
+            flowType:   'tentative_shipping',
+            flowLabel:  '仮出荷予定日',
+            date:       r.created_at,
+            statusText: '🔴 仮出荷予定日 確認待ち',
+        }));
+    }
+
+    const combined = [...actionable, ...salesItems, ...qorsItems];
 
     // バッジ更新（side_badge_pending と side_pending_count 両方）
     const badgePending = document.getElementById('side_badge_pending');
