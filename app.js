@@ -2546,7 +2546,7 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
             );
         }
 
-        _applyPendingUpdate(requestId, newSheetData, '完了を取り消しました');
+        _applyPendingUpdate(requestId, newSheetData, '完了を取り消しました', opts);
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
@@ -2554,7 +2554,7 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
     }
 }
 
-function _applyPendingUpdate(requestId, newSheetData, toastMsg) {
+function _applyPendingUpdate(requestId, newSheetData, toastMsg, opts = {}) {
     // マイページのパネルを即時更新（ペンディング解消/発生で承認待ち⇔ペンディングを瞬時に反映）
     loadMineSide();
 
