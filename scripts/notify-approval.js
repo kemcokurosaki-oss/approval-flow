@@ -22,7 +22,6 @@ const FLOW_LABELS = {
   test_run:           '試運転',
   simple_inspection:  '簡易検査',
   inspection:         '外観検査',
-  tentative_shipping: '仮出荷予定日',
   shipping_meeting:   '出荷確認会議',
   shipping_prep:      '出荷準備',
   shipping:           '出荷確定',
