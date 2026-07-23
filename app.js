@@ -4093,9 +4093,8 @@ async function recordFlowNotifications(requestId, flowType) {
             break;
 
         case 'shipping_prep':
-            // 固定: 品証・製管
+            // 品証のみ宛先（製管へはメール送信時にCCで届く）
             await addP({ role: 'quality' });
-            await addP({ role: 'production_control' });
             break;
 
         case 'shipping':
