@@ -2503,6 +2503,18 @@ function buildSalesDateFooterInner(req) {
     `;
 }
 
+// ===== 営業: 仮出荷予定日入力フッター =====
+function buildTentativeDateFooterInner(req) {
+    return `
+        <div class="sales-date-highlight" style="margin-right:auto;display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 仮出荷予定日を入力してください</span>
+            <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        </div>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn btn-success"   onclick="submitTentativeShippingDate('${req.id}')">入力する</button>
+    `;
+}
+
 // ===== 開催結果・ペンディング確認の下部フッターボタン生成（簡易検査・外観検査・出荷確認会議） =====
 function buildQaFooterInner(req) {
     return `
