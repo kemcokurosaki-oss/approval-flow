@@ -2822,8 +2822,6 @@ async function finalizeQaMeeting(requestId) {
     try {
         const { data: req } = await db.from('approval_requests')
             .select('flow_type, project_number, machine_name, sheet_data').eq('id', requestId).single();
-        const unresolved = (req?.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.completed);
-        if (unresolved.length > 0) { showToast('未完了のペンディング項目があります', 'error'); return; }
 
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
