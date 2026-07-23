@@ -2081,7 +2081,7 @@ async function openDetailModal(requestId) {
         s.approver_role === getEffectiveRole() &&
         s.status        === 'pending' &&
         (
-            ((req.flow_type === 'assembly' || req.flow_type === 'test_run') && req.status === 'submitted') ||
+            ((req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'shipping_prep') && req.status === 'submitted') ||
             (s.step_order === 1 && req.status === 'submitted') ||
             (s.step_order === 2 && req.status === 'in_review')
         )
