@@ -124,7 +124,7 @@ async function runApprovalReminders() {
   // 前日以前に申請されてまだ submitted のリクエスト（テストモードは時間制限なし）
   const cutoff = TEST_MODE ? new Date().toISOString() : todayMidnightJST();
   const requests = await supabaseFetch(
-    `approval_requests?status=eq.submitted&flow_type=in.(assembly,test_run,shipping)` +
+    `approval_requests?status=eq.submitted&flow_type=in.(assembly,test_run,shipping_prep,shipping)` +
     `&created_at=lt.${encodeURIComponent(cutoff)}&select=id,project_number,machine_name,flow_type`
   );
 
