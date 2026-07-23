@@ -567,8 +567,7 @@ async function onMachineChange() {
     if (machines.length > 1) {
         // 複数選択: 全選択機械のフローを合成して後続フローを表示
         const chain = await _getUnionFlowChain(num, machines);
-        // 仮出荷予定日は自動起票される付随タスクのため、申請プレビューのステップ一覧には表示しない
-        const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly' && t !== 'tentative_shipping');
+        const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly');
 
         document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
             _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[currentFlowType] || '完了通知'}（今回）`, `${machines.length}機械を一括申請`) +
