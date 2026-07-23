@@ -1110,6 +1110,7 @@ function renderProgressCards() {
         { type: 'inspection',        label: '外観検査', alwaysShow: false },
         { type: 'test_run',          label: '試運転',   alwaysShow: false },
         { type: 'shipping_meeting',  label: '出荷会議', alwaysShow: false },
+        { type: 'shipping_prep',     label: '出荷準備', alwaysShow: false },
         { type: 'shipping',          label: '出荷',     alwaysShow: true }
     ];
 
