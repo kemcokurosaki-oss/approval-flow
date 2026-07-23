@@ -455,10 +455,16 @@ async function main() {
   let profileMap = {};
   if (recipientIds.length > 0) {
     const profiles = await supabaseFetch(
-      `profiles?id=in.(${recipientIds.join(',')})&select=id,name,email`
+      `profiles?id=in.(${recipientIds.join(',')})&select=id,name,email,role`
     );
     profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
   }
+
+  // 出荷準備フロー: 品証宛の通知に製管をCCで追加するため、製管のメールアドレスを事前取得
+  const productionControlProfiles = await supabaseFetch(`profiles?role=eq.production_control&select=email`);
+  const productionControlEmails = (productionControlProfiles || []).map(p => p.email).filter(Boolean);
+  // CC対象の通知種別（申請時・承認完了時・再申請時）
+  const SHIPPING_PREP_CC_TYPES = ['approval_request', 'completed', 'resubmit'];
 
   // notification_recipients の名前マップを取得（外部宛先の宛名に使用）
   const recipientEmails = [...new Set(notifications.map(n => n.recipient_email).filter(Boolean))];
