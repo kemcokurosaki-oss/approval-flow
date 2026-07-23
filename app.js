@@ -586,9 +586,8 @@ async function onMachineChange() {
     const chain = await _getMachineFlowChain(num, machine);
     const doneFlows = await _getMachineDoneFlows(num, machine);
 
-    // 仮出荷予定日は自動起票される付随タスクのため、申請プレビューのステップ一覧には表示しない
-    const doneList     = chain.filter(t => t !== currentFlowType && t !== 'tentative_shipping' && doneFlows.has(t));
-    const upcomingList = chain.filter(t => t !== currentFlowType && t !== 'tentative_shipping' && !doneFlows.has(t));
+    const doneList     = chain.filter(t => t !== currentFlowType && doneFlows.has(t));
+    const upcomingList = chain.filter(t => t !== currentFlowType && !doneFlows.has(t));
 
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
         doneList.map(t => _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')).join('') +
