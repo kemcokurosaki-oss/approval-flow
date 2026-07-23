@@ -234,6 +234,28 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
+    case 'tentative_shipping_date_request':
+      return {
+        from,
+        subject: `【仮出荷予定日入力依頼】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の簡易検査・外観検査が完了しました。\n` +
+          `承認フロー管理システムにログインし、仮出荷予定日を入力してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
+    case 'tentative_shipping_date_input_done':
+      return {
+        from,
+        subject: `【仮出荷予定日入力済み】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の仮出荷予定日が営業担当者より入力されました。\n` +
+          `内容を確認し、確定してください。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'pending_item_assigned':
       return {
         from,
