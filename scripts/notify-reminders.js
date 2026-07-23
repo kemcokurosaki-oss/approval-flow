@@ -144,6 +144,45 @@ async function runApprovalReminders() {
   let count = 0;
   for (const req of requests) {
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+
+    // shipping_prep（品証・製管）は品証のみへ送信し、製管はCCで通知（品証不在時の緊急対応の把握用）
+    if (req.flow_type === 'shipping_prep') {
+      const qualityApprovers = (await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`)) || [];
+      const pcApprovers      = (await supabaseFetch(`profiles?role=eq.production_control&select=email`)) || [];
+      const ccEmails         = pcApprovers.map(p => p.email).filter(Boolean);
+
+      for (const approver of qualityApprovers) {
+        if (!approver.email) continue;
+        const key = `${req.id}__${approver.id}`;
+        if (sentSet.has(key)) continue;
+
+        const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
+        const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+        const subject = `【承認催促】${pStr}　${flow}`;
+        const text    =
+          `${approver.name} 様\n\n` +
+          `${pStr} の「${flow}」について、` +
+          `前日に承認依頼が届いていますが、まだ承認されていません。\n` +
+          `承認フロー管理システムにログインして承認をお願いします。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(approver.email, approver.name, subject, text, ccEmails.filter(e => e !== approver.email));
+          await supabaseInsert('approval_notifications', {
+            request_id:        req.id,
+            recipient_id:      approver.id,
+            notification_type: 'approval_reminder',
+            emailed_at:        new Date().toISOString(),
+          });
+          sentSet.add(key);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${approver.email}`, e.message);
+        }
+      }
+      continue;
+    }
+
     const steps = await supabaseFetch(
       `approval_steps?request_id=eq.${req.id}&status=eq.pending&select=approver_role`
     );
