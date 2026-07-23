@@ -2392,6 +2392,7 @@ async function openDetailModal(requestId) {
     }
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) subInfoParts.push(`場所: ${esc(req.inspection_location)}`);
     if (req.flow_type === 'shipping' && req.confirmed_shipping_date) subInfoParts.push(`確定出荷日: ${fmtDate(req.confirmed_shipping_date)}`);
+    if (req.flow_type === 'tentative_shipping' && req.tentative_shipping_date) subInfoParts.push(`仮出荷予定日: ${fmtDate(req.tentative_shipping_date)}`);
     if (req.note) subInfoParts.push(`備考: ${esc(req.note)}`);
 
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
