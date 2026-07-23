@@ -895,11 +895,27 @@ async function loadMineSide() {
         ];
     };
 
+    // 仮出荷予定日（検査完了 → 営業が入力 → 品証・製管が確認して確定）
+    const buildTentativeShippingColumns = (list) => {
+        const groups = { dateWait: [], confirmWait: [], approved: [] };
+        list.forEach(req => {
+            if (req.status === 'awaiting_tentative_date') groups.dateWait.push(req);
+            else if (req.status === 'awaiting_tentative_confirm') groups.confirmWait.push(req);
+            else if (req.status === 'approved') groups.approved.push(req);
+        });
+        return [
+            ['入力待ち', groups.dateWait, false],
+            ['品証確認待ち', groups.confirmWait, false],
+            ['完了', groups.approved, false],
+        ];
+    };
+
     const arrow = '<div class="kanban-arrow">→</div>';
     el.innerHTML = visibleFlowTypes.map(flowType => {
         const list = reqs.filter(r => r.flow_type === flowType);
         const columns = QA_MEETING_FLOWS.includes(flowType) ? buildQaLikeColumns(list)
                        : flowType === 'shipping'              ? buildShippingColumns(list)
+                       : flowType === 'tentative_shipping'     ? buildTentativeShippingColumns(list)
                        : buildAssemblyLikeColumns(list);
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
         // 対象案件が1件もないフローは最初から折りたたんでおく（見出しクリックで開閉可能）
