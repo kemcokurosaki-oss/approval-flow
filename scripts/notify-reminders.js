@@ -207,9 +207,7 @@ async function runSubmissionReminders() {
   async function getShippingRecipients() {
     if (shippingRecipients) return shippingRecipients;
     const qualityProfs = await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`);
-    const seikanProfs  = await supabaseFetch(
-      `profiles?department=eq.${encodeURIComponent('製管')}&role=eq.staff&select=id,name,email`
-    );
+    const seikanProfs  = await supabaseFetch(`profiles?role=eq.production_control&select=id,name,email`);
     const seen = new Set();
     shippingRecipients = [...(qualityProfs || []), ...(seikanProfs || [])].filter(p => {
       if (!p.id || seen.has(p.id)) return false;
