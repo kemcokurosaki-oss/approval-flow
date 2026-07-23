@@ -2475,7 +2475,7 @@ function closeDetailModal() {
     ui.send('CLOSE');
 }
 
-async function completePendingItem(requestId, idx) {
+async function completePendingItem(requestId, idx, opts = {}) {
     if (!confirm('このペンディング項目を完了にします。よろしいですか？')) return;
     showLoading('更新中...');
     try {
