@@ -21,13 +21,15 @@ const TEST_EMAIL   = 'e-kurosaki@kusakabe.com';
 const TEST_PROJECT = (process.env.TEST_PROJECT || '').trim();
 
 const FLOW_LABELS = {
-  assembly: '組立完了申請',
-  test_run: '試運転完了申請',
-  shipping: '出荷確定申請',
+  assembly:      '組立完了申請',
+  test_run:      '試運転完了申請',
+  shipping_prep: '出荷準備完了申請',
+  shipping:      '出荷確定申請',
 };
 const TASK_TO_FLOW = {
   '機械組立': 'assembly',
   '試運転':   'test_run',
+  '出荷準備': 'shipping_prep',
   '工場出荷': 'shipping',
 };
 
