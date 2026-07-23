@@ -995,6 +995,8 @@ function _syncProgressControls() {
     if (completedCb) completedCb.checked = progressFilterCompleted;
     const overdueCb = document.getElementById('pfilter_overdue');
     if (overdueCb) overdueCb.checked = progressFilterOverdue;
+    const shipAfterCb = document.getElementById('pfilter_ship_after');
+    if (shipAfterCb) shipAfterCb.checked = progressFilterShipAfter;
 }
 
 function toggleCompletedView(checked) {
