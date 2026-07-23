@@ -195,7 +195,7 @@ async function runSubmissionReminders() {
 
   // 申請済みリクエストのセット（rejected以外）
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=in.(assembly,test_run,shipping)&status=neq.rejected` +
+    `approval_requests?flow_type=in.(assembly,test_run,shipping_prep,shipping)&status=neq.rejected` +
     `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
