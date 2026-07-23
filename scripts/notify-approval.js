@@ -127,6 +127,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
     ? '\n\n※組立課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
     : req?.flow_type === 'test_run'
     ? '\n\n※操業課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
+    : req?.flow_type === 'shipping_prep'
+    ? '\n\n※品証・製管どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
     : '';
 
   switch (type) {
