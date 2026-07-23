@@ -634,8 +634,8 @@ async function loadPendingSide() {
     const actionable = (steps || []).filter(s => {
         const req = s.approval_requests;
         if (!req) return false;
-        // assembly/test_run並列: submitted 状態で全 pending ステップが操作可能
-        if ((req.flow_type === 'assembly' || req.flow_type === 'test_run') && req.status === 'submitted' && s.status === 'pending') return true;
+        // assembly/test_run/shipping_prep 並列: submitted 状態で全 pending ステップが操作可能
+        if ((req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'shipping_prep') && req.status === 'submitted' && s.status === 'pending') return true;
         // shipping: step_order=1 の直列承認
         if (req.flow_type === 'shipping' && s.step_order === 1 && req.status === 'submitted' && s.status === 'pending') return true;
         if (s.step_order === 1 && req.status === 'submitted') return true;
