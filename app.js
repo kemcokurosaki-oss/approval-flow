@@ -2454,33 +2454,17 @@ async function uncompletePendingItem(requestId, idx) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (items[idx].fixed) {
-            // 固定の「出荷準備」項目の完了が取り消されたら品証・製管・申請者へ通知
-            const notifIds = new Set();
-            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-            (qRows || []).forEach(p => notifIds.add(p.id));
-            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
-            (sRows || []).forEach(p => notifIds.add(p.id));
-            if (req.requester_id) notifIds.add(req.requester_id);
-            notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
-            if (notifIds.size > 0) {
-                await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_prep_uncompleted', detail: items[idx].content }))
-                );
-            }
-        } else {
-            // 通常のペンディング項目の完了が取り消されたら品証・製管へ通知
-            const notifIds = new Set();
-            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-            (qRows || []).forEach(p => notifIds.add(p.id));
-            const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
-            (sRows || []).forEach(p => notifIds.add(p.id));
-            notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
-            if (notifIds.size > 0) {
-                await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content }))
-                );
-            }
+        // ペンディング項目の完了が取り消されたら品証・製管へ通知
+        const notifIds = new Set();
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => notifIds.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+        (sRows || []).forEach(p => notifIds.add(p.id));
+        notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
+        if (notifIds.size > 0) {
+            await db.from('approval_notifications').insert(
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content }))
+            );
         }
 
         _applyPendingUpdate(requestId, newSheetData, '完了を取り消しました');
