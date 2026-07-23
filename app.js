@@ -1919,7 +1919,7 @@ async function submitRequest() {
     if (currentFlowType === 'shipping_prep') {
         const blockerLists = await Promise.all(machineNums.map(m => _getPrepBlockers(projectNum, m)));
         if (blockerLists.some(list => list.length > 0)) {
-            showToast('前フローに未完了のペンディングが残っているため申請できません', 'error');
+            showToast('前フローが未完了のため申請できません', 'error');
             return;
         }
     }
