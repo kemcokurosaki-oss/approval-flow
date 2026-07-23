@@ -3145,7 +3145,11 @@ async function _getMiddleFlowChain(projectNum, machine) {
         if (text === '試運転' && r.machine !== machine) continue;
         if (best[flow] === undefined || r.sort_order < best[flow]) best[flow] = r.sort_order;
     }
-    return Object.keys(best).sort((a, b) => best[a] - best[b]);
+    const chain = Object.keys(best).sort((a, b) => best[a] - best[b]);
+    // 仮出荷予定日は工程表上のタスクを持たないため、簡易検査/外観検査の直後に固定で挿入する
+    const inspIdx = chain.findIndex(t => t === 'simple_inspection' || t === 'inspection');
+    if (inspIdx !== -1) chain.splice(inspIdx + 1, 0, 'tentative_shipping');
+    return chain;
 }
 
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
