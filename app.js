@@ -2272,6 +2272,27 @@ async function openDetailModal(requestId) {
                 ${when          ? `<div class="step-date">${when}</div>` : ''}
             </div>
         </div>`;
+    } else if (req.flow_type === 'tentative_shipping') {
+        // 仮出荷予定日: 承認ステップを持たないため status ベースで営業入力→品証確認の2段階を表示
+        const dateDone    = !!req.tentative_shipping_date;
+        const dateIcon    = dateDone ? '✓' : (req.status === 'awaiting_tentative_date' ? '<span class="fc-play-icon">▶</span>' : '○');
+        const dateSc      = dateDone ? 'sc-approved' : (req.status === 'awaiting_tentative_date' ? 'sc-pending' : 'sc-waiting');
+        const confirmIcon = req.status === 'approved' ? '✓' : (req.status === 'awaiting_tentative_confirm' ? '<span class="fc-play-icon">▶</span>' : '○');
+        const confirmSc   = req.status === 'approved' ? 'sc-approved' : (req.status === 'awaiting_tentative_confirm' ? 'sc-pending' : 'sc-waiting');
+        stepsHtml = `
+        <div class="step-item">
+            <div class="step-circle ${dateSc}">${dateIcon}</div>
+            <div class="step-detail">
+                <div class="step-label">営業入力</div>
+                ${dateDone ? `<div class="step-name">${fmtDate(req.tentative_shipping_date)}</div>` : '<div class="step-name" style="color:#bbb;">未</div>'}
+            </div>
+        </div>
+        <div class="step-item">
+            <div class="step-circle ${confirmSc}">${confirmIcon}</div>
+            <div class="step-detail">
+                <div class="step-label">品証・製管確認</div>
+            </div>
+        </div>`;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
         const sentStep = `
         <div class="step-item">
