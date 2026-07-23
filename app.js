@@ -2109,13 +2109,11 @@ function qaMeetingPassed(req) {
     return !!req.inspection_date && req.inspection_date <= todayStr;
 }
 
-// QA開催案内を「完了にする」ボタンを出せる状態か（未完了のペンディングが残っていないこと等）
+// QA開催案内を「完了にする」ボタンを出せる状態か（開催＝完了。ペンディングの有無は別問題として扱う）
 function qaCanFinalize(req) {
     if (!QA_MEETING_FLOWS.includes(req.flow_type)) return false;
     if (!isQualityOrSeikan || req.status !== 'submitted') return false;
-    if (!qaMeetingPassed(req)) return false;
-    const items = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-    return items.filter(p => !p.completed).length === 0;
+    return qaMeetingPassed(req);
 }
 
 // ===== 開催結果・ペンディング確認セクション HTML 生成（簡易検査・外観検査・出荷確認会議） =====
