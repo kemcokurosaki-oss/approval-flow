@@ -1847,12 +1847,13 @@ async function submitRequest() {
                     notifyRoles = ['operations_manager', 'operations_director'];
                 }
             } else {
-                // shipping_prep: 品証・製管の並列2ステップ（どちらかが承認で完了）
+                // shipping_prep: 品証・製管の並列2ステップ（どちらかが承認で完了、製管は品証不在時の緊急対応）
+                // 通知は品証のみへ送る（製管へはメール送信時にCCで届く）
                 stepsToInsert = [
                     { request_id: req.id, step_order: 1, approver_role: 'quality',            status: 'pending' },
                     { request_id: req.id, step_order: 2, approver_role: 'production_control',  status: 'pending' }
                 ];
-                notifyRoles = ['quality', 'production_control'];
+                notifyRoles = ['quality'];
             }
             if (!firstApproverRole) firstApproverRole = notifyRoles[0];
             await db.from('approval_steps').insert(stepsToInsert);
