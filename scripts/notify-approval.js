@@ -159,18 +159,23 @@ function buildEmail(type, req, recipientName, extra = {}) {
 
     case 'approved':
     case 'completed': {
-      const isShipping = req?.flow_type === 'shipping';
+      const isShipping  = req?.flow_type === 'shipping';
+      const isTentative = req?.flow_type === 'tentative_shipping';
       const shippingDate = isShipping && req?.confirmed_shipping_date
         ? `\n確定出荷日: ${req.confirmed_shipping_date}` : '';
+      const tentativeDate = isTentative && req?.tentative_shipping_date
+        ? `\n仮出荷予定日: ${req.tentative_shipping_date}` : '';
       const approverLine = isShipping && extra?.approverName
         ? `\n承認者: ${extra.approverName}（常務）` : '';
-      const completedSubject = isShipping ? `【出荷確定通知】${pStr}` : `【${flow}】${pStr}`;
+      const completedSubject = isShipping ? `【出荷確定通知】${pStr}` : isTentative ? `【仮出荷予定日確定】${pStr}` : `【${flow}】${pStr}`;
       const completedBody = req?.flow_type === 'assembly'
         ? `${pStr} の機械組立が完了しました。`
         : req?.flow_type === 'test_run'
         ? `${pStr} の試運転が完了しました。`
         : isShipping
         ? `${pStr} の出荷日が確定しました。`
+        : isTentative
+        ? `${pStr} の仮出荷予定日が確定しました。`
         : `${pStr} の「${flow}」が承認されました。`;
       return {
         from,
@@ -179,6 +184,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${recipientName} 様\n\n` +
           completedBody +
           shippingDate +
+          tentativeDate +
           approverLine +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
