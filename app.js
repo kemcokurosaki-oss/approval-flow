@@ -273,6 +273,7 @@ async function switchDevRole(value) {
         operations_manager:  '操業課長',
         operations_director: '操業部長',
         quality:             '品質保証課',
+        production_control:  '製管',
         sales:               '営業担当者'
     };
     const label = document.getElementById('dev_role_label');
