@@ -1144,13 +1144,14 @@ function renderProgressCards() {
     }
 
     const FLOW_DEFS = [
-        { type: 'assembly',          label: '組立',     alwaysShow: true },
-        { type: 'simple_inspection', label: '簡易検査', alwaysShow: false },
-        { type: 'inspection',        label: '外観検査', alwaysShow: false },
-        { type: 'test_run',          label: '試運転',   alwaysShow: false },
-        { type: 'shipping_meeting',  label: '出荷会議', alwaysShow: false },
-        { type: 'shipping_prep',     label: '出荷準備', alwaysShow: false },
-        { type: 'shipping',          label: '出荷',     alwaysShow: true }
+        { type: 'assembly',           label: '組立',       alwaysShow: true },
+        { type: 'simple_inspection',  label: '簡易検査',   alwaysShow: false },
+        { type: 'inspection',         label: '外観検査',   alwaysShow: false },
+        { type: 'tentative_shipping', label: '仮出荷予定日', alwaysShow: false },
+        { type: 'test_run',           label: '試運転',     alwaysShow: false },
+        { type: 'shipping_meeting',   label: '出荷会議',   alwaysShow: false },
+        { type: 'shipping_prep',      label: '出荷準備',   alwaysShow: false },
+        { type: 'shipping',           label: '出荷',       alwaysShow: true }
     ];
 
     const html = nums.map(num => {
