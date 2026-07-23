@@ -883,32 +883,17 @@ async function loadMineSide() {
 
     // 出荷確定申請（品証・製管が申請 → 営業が出荷日入力 → 品証・製管が確認 → 常務が承認）
     const buildShippingColumns = (list) => {
-        const groups = { dateWait: [], confirmWait: [], approvalWait: [], approved: [] };
+        // 「出荷日待ち」は営業側のアクション待ちであり品証・製管がすべき作業がないため、マイページには表示しない
+        const groups = { confirmWait: [], approvalWait: [], approved: [] };
         list.forEach(req => {
-            if (req.status === 'awaiting_shipping_date') groups.dateWait.push(req);
+            if (req.status === 'awaiting_shipping_date') return;
             else if (req.status === 'awaiting_shipping_confirm') groups.confirmWait.push(req);
             else if (req.status === 'approved') groups.approved.push(req);
             else groups.approvalWait.push(req);
         });
         return [
-            ['出荷日待ち', groups.dateWait, false],
             ['品証確認待ち', groups.confirmWait, false],
             ['常務承認待ち', groups.approvalWait, false],
-            ['完了', groups.approved, false],
-        ];
-    };
-
-    // 仮出荷予定日（検査完了 → 営業が入力 → 品証・製管が確認して確定）
-    const buildTentativeShippingColumns = (list) => {
-        const groups = { dateWait: [], confirmWait: [], approved: [] };
-        list.forEach(req => {
-            if (req.status === 'awaiting_tentative_date') groups.dateWait.push(req);
-            else if (req.status === 'awaiting_tentative_confirm') groups.confirmWait.push(req);
-            else if (req.status === 'approved') groups.approved.push(req);
-        });
-        return [
-            ['入力待ち', groups.dateWait, false],
-            ['品証確認待ち', groups.confirmWait, false],
             ['完了', groups.approved, false],
         ];
     };
@@ -918,7 +903,6 @@ async function loadMineSide() {
         const list = reqs.filter(r => r.flow_type === flowType);
         const columns = QA_MEETING_FLOWS.includes(flowType) ? buildQaLikeColumns(list)
                        : flowType === 'shipping'              ? buildShippingColumns(list)
-                       : flowType === 'tentative_shipping'     ? buildTentativeShippingColumns(list)
                        : buildAssemblyLikeColumns(list);
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
         // 対象案件が1件もないフローは最初から折りたたんでおく（見出しクリックで開閉可能）
