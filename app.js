@@ -187,7 +187,7 @@ const DEV_ROLE_MAP = {
     assembly_director:   { role: 'assembly_director',   department: '組立', flowTypes: [] },
     operations_manager:  { role: 'operations_manager',  department: '操業', flowTypes: ['test_run'] },
     operations_director: { role: 'operations_director', department: '操業', flowTypes: [] },
-    quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'tentative_shipping', 'shipping'] },
+    quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping'] },
     production_control:  { role: 'production_control',  department: '製管', flowTypes: [] },
     sales:               { role: 'staff',               department: '営業', flowTypes: ['shipping_prep'] }
 };
