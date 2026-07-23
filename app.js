@@ -802,13 +802,12 @@ async function loadMineSide() {
         ];
     };
 
-    // 検査・会議（承認ステップなし、開催案内→ペンディング消化→完了）:
-    // 出荷直前フローにのみ自動追加される固定の「出荷準備」項目(fixed)は必ず発生する別工程のため、ペンディング判定から除外する
+    // 検査・会議（承認ステップなし、開催案内→ペンディング消化→完了）
     const buildQaLikeColumns = (list) => {
         const groups = { waiting: [], pending: [], approved: [] };
         list.forEach(req => {
             const unresolvedPending = (req.sheet_data?.pending_items || [])
-                .filter(p => (p.content || p.machine) && !p.completed && !p.fixed);
+                .filter(p => (p.content || p.machine) && !p.completed);
             if (req.status === 'approved') {
                 groups.approved.push(req);
             } else if (unresolvedPending.length > 0) {
