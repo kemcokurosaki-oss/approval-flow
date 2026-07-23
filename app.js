@@ -3845,7 +3845,7 @@ async function submitSalesShippingDate(requestId) {
         if (req.requester_id) notifIds.add(req.requester_id);
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
         (qRows || []).forEach(p => notifIds.add(p.id));
-        const { data: sRows } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff');
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
         (sRows || []).forEach(p => notifIds.add(p.id));
         if (notifIds.size > 0) {
             await db.from('approval_notifications').insert(
