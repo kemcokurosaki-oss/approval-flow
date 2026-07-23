@@ -579,8 +579,8 @@ async function refreshAll() {
     const role        = getEffectiveRole();
     const dept        = getEffectiveDept();
     const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業');
-    const isQorS      = role === 'quality' || (role === 'staff' && dept === '製管');
-    const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業');
+    const isQorS      = role === 'quality' || role === 'production_control';
+    const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業');
 
     const loads = [];
     loads.push(loadProgress());
