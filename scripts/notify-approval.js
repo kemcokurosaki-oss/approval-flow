@@ -565,9 +565,19 @@ async function main() {
         }
       }
 
+      // 出荷準備フロー: 品証宛の通知には製管をCCに追加（品証不在時の緊急対応の把握用）
+      const recipientProfile = notif.recipient_id ? profileMap[notif.recipient_id] : null;
+      const ccEmails = (!TEST_MODE
+        && req?.flow_type === 'shipping_prep'
+        && SHIPPING_PREP_CC_TYPES.includes(notif.notification_type)
+        && recipientProfile?.role === 'quality')
+        ? productionControlEmails.filter(e => e !== actualEmail)
+        : [];
+
       await transporter.sendMail({
         from:        mail.from,
         to:          toEmail,
+        cc:          ccEmails.length > 0 ? ccEmails.join(',') : undefined,
         subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
         text:        TEST_MODE
           ? `【テスト送信】本来の宛先: ${actualEmail}\n\n${mail.text}`
@@ -575,7 +585,8 @@ async function main() {
         attachments,
       });
 
-      console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})`);
+      const ccLog = ccEmails.length > 0 ? ` CC: ${ccEmails.join(', ')}` : '';
+      console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})${ccLog}`);
 
       // 送信済みマーク
       await supabaseFetch(`approval_notifications?id=eq.${notif.id}`, {
