@@ -2594,6 +2594,11 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg, opts = {}) {
             }
         }
     }
+    // 詳細モーダルを介さない呼び出し元（出荷後対応一覧など）では、勝手にモーダルを開かない
+    if (opts.skipModalFallback) {
+        showToast(toastMsg, 'success', true);
+        return;
+    }
     // フォールバック: モーダルを再描画
     openDetailModal(requestId).then(() => showToast(toastMsg, 'success', true));
 }
