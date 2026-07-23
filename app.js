@@ -528,6 +528,18 @@ async function onProjectChange() {
     }
 }
 
+// 出荷準備申請時、前フローに未完了ペンディング（出荷後対応を除く）が残っていれば警告して申請ボタンを無効化する
+function _renderPrepBlockerWarning(blockers) {
+    const btn = document.getElementById('submit_btn');
+    if (btn) btn.disabled = blockers.length > 0;
+    if (blockers.length === 0) return;
+    const msg = blockers.map(b => `${FLOW_LABELS[b.flowType] || b.flowType}（${b.count}件）`).join('、');
+    const listEl = document.getElementById('flow_detect_list');
+    if (listEl) {
+        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:13px; margin-top:8px;">⚠ 前フローに未完了のペンディングが残っているため申請できません: ${msg}</div>`;
+    }
+}
+
 async function onMachineChange() {
     const num      = currentProjectNum;
     const machines = getSelectedMachines('submit_machine_list');
@@ -552,6 +564,10 @@ async function onMachineChange() {
             upcomingFlows.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
             `</div>`;
         flowEl.style.display = 'block';
+        if (currentFlowType === 'shipping_prep') {
+            const blockerLists = await Promise.all(machines.map(m => _getPrepBlockers(num, m)));
+            _renderPrepBlockerWarning(blockerLists.flat());
+        }
         return;
     }
 
@@ -569,6 +585,9 @@ async function onMachineChange() {
         upcomingList.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
         `</div>`;
     flowEl.style.display = 'block';
+    if (currentFlowType === 'shipping_prep') {
+        _renderPrepBlockerWarning(await _getPrepBlockers(num, machine));
+    }
     } finally {
         hideLoading();
     }
