@@ -636,6 +636,7 @@ async function main() {
   await runSubmissionReminders();
   await runInvitationReminders();
   await runPendingItemReminders();
+  await runQaFinalizeReminders();
 
   console.log('\n====== 完了 ======');
 }
