@@ -4116,6 +4116,7 @@ async function confirmAndSubmitShipping(requestId) {
 }
 
 // 営業: 仮出荷予定日を入力（品証・製管の確認待ちへ）
+// 営業: 仮出荷予定日を入力（簡易検査・外観検査の申請そのものに付随。品証・製管の確認待ちへ）
 async function submitTentativeShippingDate(requestId) {
     const dateVal = document.getElementById('tentative_date_input')?.value;
     if (!dateVal) { showToast('仮出荷予定日を入力してください', 'error'); return; }
@@ -4123,8 +4124,8 @@ async function submitTentativeShippingDate(requestId) {
     showLoading('処理中...');
     try {
         const { data: req, error } = await db.from('approval_requests')
-            .update({ tentative_shipping_date: dateVal, status: 'awaiting_tentative_confirm', updated_at: new Date().toISOString() })
-            .eq('id', requestId).eq('status', 'awaiting_tentative_date')
+            .update({ tentative_shipping_date: dateVal, updated_at: new Date().toISOString() })
+            .eq('id', requestId).is('tentative_shipping_date', null)
             .select().single();
         if (error) throw error;
         if (!req) { showToast('既に処理済みです', 'error'); return; }
@@ -4156,13 +4157,13 @@ async function confirmTentativeShippingDate(requestId) {
     showLoading('処理中...');
     try {
         const { data: req, error } = await db.from('approval_requests')
-            .update({ status: 'approved', updated_at: new Date().toISOString() })
-            .eq('id', requestId).eq('status', 'awaiting_tentative_confirm')
+            .update({ tentative_shipping_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+            .eq('id', requestId).not('tentative_shipping_date', 'is', null).is('tentative_shipping_confirmed_at', null)
             .select().single();
         if (error) throw error;
         if (!req) { showToast('既に処理済みです', 'error'); return; }
 
-        // 申請者（品証）＋品証・製管全体へ完了を通知
+        // 申請者（検査開催案内を送った品証）＋品証・製管全体へ確定を通知
         const notifIds = new Set();
         if (req.requester_id) notifIds.add(req.requester_id);
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
@@ -4171,7 +4172,7 @@ async function confirmTentativeShippingDate(requestId) {
         (sRows || []).forEach(p => notifIds.add(p.id));
         if (notifIds.size > 0) {
             await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'completed' }))
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'tentative_shipping_confirmed' }))
             );
         }
 
