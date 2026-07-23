@@ -352,7 +352,7 @@ async function runPendingItemReminders() {
       if (!item.due || item.due >= todayStr) continue; // 期日翌日から対象（当日はまだ超過していない）
       if (!item.owner) continue;
 
-      const label = item.content || item.machine || (item.fixed ? '出荷準備' : 'ペンディング項目');
+      const label = item.content || item.machine || 'ペンディング項目';
       const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
       const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
       const subject = `【ペンディング期日超過】${pStr}　${label}`;
