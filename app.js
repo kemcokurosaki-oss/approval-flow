@@ -2118,21 +2118,16 @@ function qaCanFinalize(req) {
 
 // ===== 開催結果・ペンディング確認セクション HTML 生成（簡易検査・外観検査・出荷確認会議） =====
 function buildQaResultSectionInner(req, isMyRequest) {
-    const meetingPassed    = qaMeetingPassed(req);
-    const items            = (req.sheet_data?.pending_items || []).filter(p => (p.content || p.machine));
-    const canManage        = isQualityOrSeikan && req.status === 'submitted';
+    const meetingPassed = qaMeetingPassed(req);
+    // 開催＝完了のため、完了後（approved）もペンディングの追加・編集・削除は継続して可能にする
+    const canManage     = isQualityOrSeikan && ['submitted', 'approved'].includes(req.status);
 
     let body;
-    if (req.status === 'approved') {
-        body = items.length
-            ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-            : '<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし・確認完了</div>';
-    } else if (!meetingPassed) {
+    if (!meetingPassed) {
         body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
     } else {
-        body = `
-            <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>
-            ${canManage ? `
+        const pendingHtml = buildPendingSectionInner(req, isMyRequest);
+        const addFormHtml = canManage ? `
             <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
                 <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
                     <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
@@ -2152,8 +2147,10 @@ function buildQaResultSectionInner(req, isMyRequest) {
                 </label>
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
             </div>
-            ` : ''}
-        `;
+        ` : '';
+        body = (pendingHtml || addFormHtml)
+            ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}`
+            : `<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
     return `<hr class="section-divider">
