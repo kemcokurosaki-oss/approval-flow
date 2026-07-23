@@ -1412,7 +1412,7 @@ function openSubmitModal(flowType = 'assembly') {
         if (btnSubmit)  btnSubmit.style.display  = 'none';
     } else {
         if (btnGoSheet) btnGoSheet.style.display = 'none';
-        if (btnSubmit)  btnSubmit.style.display  = '';
+        if (btnSubmit)  { btnSubmit.style.display = ''; btnSubmit.disabled = false; }
     }
 
     document.getElementById('submit_modal').classList.add('open');
