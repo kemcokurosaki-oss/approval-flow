@@ -1712,6 +1712,11 @@ function renderPendingItems() {
                 <input type="date" class="pending-due" value="${esc(item.due)}"
                        onchange="pendingItems[${i}].due=this.value">
             </div>
+            <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                <span style="font-size:10px;color:#999;">出荷後対応</span>
+                <input type="checkbox" ${item.ship_after ? 'checked' : ''}
+                       onchange="pendingItems[${i}].ship_after=this.checked">
+            </label>
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
                 ${lbl}
                 <button type="button" class="btn-xs btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
