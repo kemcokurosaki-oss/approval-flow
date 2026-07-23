@@ -34,6 +34,11 @@ const TASK_TO_FLOW = {
   '出荷準備': 'shipping_prep',
   '工場出荷': 'shipping',
 };
+const QA_MEETING_LABELS = {
+  simple_inspection: '簡易検査',
+  inspection:        '外観検査',
+  shipping_meeting:  '出荷確認会議',
+};
 
 // ペンディング期日超過催促のCC固定宛先（品証・製管）
 const PENDING_REMINDER_CC = [
