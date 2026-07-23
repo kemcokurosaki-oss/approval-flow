@@ -2776,8 +2776,8 @@ async function syncTaskCompletionOnFlowApproval(req) {
 async function approveStep(requestId, stepId, stepOrder) {
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
 
-    // assembly は並列承認（どちらかが承認した時点で即完了）、test_run は直列
-    const isParallel = currentDetailFlowType === 'assembly' || currentDetailFlowType === 'test_run';
+    // assembly・test_run・shipping_prep はいずれも並列承認（どちらかが承認した時点で即完了）
+    const isParallel = currentDetailFlowType === 'assembly' || currentDetailFlowType === 'test_run' || currentDetailFlowType === 'shipping_prep';
     showLoading('処理中...');
     let nextStatus;
     if (isParallel) {
