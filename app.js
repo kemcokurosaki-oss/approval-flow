@@ -301,15 +301,13 @@ const QA_DETAIL_TITLE_LABELS = {
     shipping_meeting:  '出荷確認会議'
 };
 
-// 出荷準備の固定ペンディング項目（直前の検査フローに自動追加する）
-const PREP_PENDING_ITEM = { content: '出荷準備', due: null, owner: null, completed: false, completed_date: null, fixed: true };
-
 // タスク名 → フロー種別（工程表の実タスクからフロー構成・順序を導出するための対応表）
 const TASK_TEXT_TO_FLOW = {
     '簡易検査':     'simple_inspection',
     '外観検査':     'inspection',
     '試運転':       'test_run',
-    '出荷確認会議': 'shipping_meeting'
+    '出荷確認会議': 'shipping_meeting',
+    '出荷準備':     'shipping_prep'
 };
 
 const ROLE_LABELS = {
@@ -318,6 +316,7 @@ const ROLE_LABELS = {
     operations_manager:  '操業課長',
     operations_director: '操業部長',
     quality:             '品質保証課',
+    production_control:  '製管',
     staff:               '担当者',
     logistics:           '物流'
 };
