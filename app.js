@@ -1999,15 +1999,14 @@ function qaCanFinalize(req) {
 // ===== 開催結果・ペンディング確認セクション HTML 生成（簡易検査・外観検査・出荷確認会議） =====
 function buildQaResultSectionInner(req, isMyRequest) {
     const meetingPassed    = qaMeetingPassed(req);
-    const items            = (req.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.fixed);
+    const items            = (req.sheet_data?.pending_items || []).filter(p => (p.content || p.machine));
     const canManage        = isQualityOrSeikan && req.status === 'submitted';
-    const prepSection       = buildPrepReadinessSection(req);
 
     let body;
     if (req.status === 'approved') {
-        body = (items.length
+        body = items.length
             ? `<div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`
-            : '<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし・確認完了</div>') + prepSection;
+            : '<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし・確認完了</div>';
     } else if (!meetingPassed) {
         body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
     } else {
@@ -2027,10 +2026,13 @@ function buildQaResultSectionInner(req, isMyRequest) {
                     <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
                     <input type="date" id="qa_pending_due" class="pending-due">
                 </div>
+                <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                    <span style="font-size:13px;color:#999;">出荷後対応</span>
+                    <input type="checkbox" id="qa_pending_ship_after">
+                </label>
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
             </div>
             ` : ''}
-            ${prepSection}
         `;
     }
 
