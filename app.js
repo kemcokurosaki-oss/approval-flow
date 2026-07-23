@@ -3964,9 +3964,9 @@ async function recordFlowNotifications(requestId, flowType) {
     // 製管スタッフが開催案内を送った場合：相方の製管スタッフ＋品証（田中孝）を宛先に追加
     // 品証が送った場合：製管スタッフ全員（森村・黒崎）を追加
     const addSeikanOrQuality = async () => {
-        const isSeikanApplicant = requesterProfile?.department === '製管' && requesterProfile?.role === 'staff';
+        const isSeikanApplicant = requesterProfile?.role === 'production_control';
         if (isSeikanApplicant) {
-            const { data: others } = await db.from('profiles').select('id').eq('department', '製管').eq('role', 'staff').neq('id', req.requester_id);
+            const { data: others } = await db.from('profiles').select('id').eq('role', 'production_control').neq('id', req.requester_id);
             (others || []).forEach(p => profileIds.add(p.id));
             await addP({ role: 'quality' }); // 品証（田中孝）
         } else {
