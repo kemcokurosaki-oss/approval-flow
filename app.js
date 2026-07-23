@@ -4086,6 +4086,12 @@ async function recordFlowNotifications(requestId, flowType) {
             }
             break;
 
+        case 'shipping_prep':
+            // 固定: 品証・製管
+            await addP({ role: 'quality' });
+            await addP({ role: 'production_control' });
+            break;
+
         case 'shipping':
             // 固定
             await addP({ role: 'assembly_director' });          // 常務
