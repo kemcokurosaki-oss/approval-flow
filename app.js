@@ -206,7 +206,7 @@ function canApplyFlow(flowType) {
     if (flowType === 'test_run')         return (role === 'staff' && dept === '操業') || role === 'operations_manager';
     if (flowType === 'shipping_prep')    return dept === '組立' || dept === '営業';
     if (flowType === 'simple_inspection' || flowType === 'inspection' ||
-        flowType === 'shipping_meeting'  || flowType === 'tentative_shipping' || flowType === 'shipping')  return isQorS;
+        flowType === 'shipping_meeting'  || flowType === 'shipping')  return isQorS;
     return false;
 }
 
