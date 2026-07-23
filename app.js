@@ -1845,9 +1845,11 @@ async function submitRequest() {
         const count = machineNums.length;
         const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
                                 (currentFlowType === 'test_run'  && submitterRole !== 'operations_manager');
-        const approverLabel = isParallelStaff
-            ? (currentFlowType === 'assembly' ? '組立課長・部長' : '操業課長・部長')
-            : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
+        const approverLabel = currentFlowType === 'shipping_prep'
+            ? '品証・製管'
+            : isParallelStaff
+                ? (currentFlowType === 'assembly' ? '組立課長・部長' : '操業課長・部長')
+                : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
         showToast(`${count}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`, 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
