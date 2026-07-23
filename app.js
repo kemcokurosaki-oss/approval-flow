@@ -1763,6 +1763,13 @@ async function submitRequest() {
     const projectNum = currentProjectNum;
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)          { showToast('工事番号が設定されていません', 'error'); return; }
+    if (currentFlowType === 'shipping_prep') {
+        const blockerLists = await Promise.all(machineNums.map(m => _getPrepBlockers(projectNum, m)));
+        if (blockerLists.some(list => list.length > 0)) {
+            showToast('前フローに未完了のペンディングが残っているため申請できません', 'error');
+            return;
+        }
+    }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
 
     const note    = document.getElementById('submit_note').value.trim();
