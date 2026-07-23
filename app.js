@@ -540,10 +540,13 @@ function _renderPrepBlockerWarning(blockers) {
     const btn = document.getElementById('submit_btn');
     if (btn) btn.disabled = blockers.length > 0;
     if (blockers.length === 0) return;
-    const msg = blockers.map(b => `${FLOW_LABELS[b.flowType] || b.flowType}（${b.count}件）`).join('、');
+    const msg = blockers.map(b => b.notApproved
+        ? `${FLOW_LABELS[b.flowType] || b.flowType}（未確定）`
+        : `${FLOW_LABELS[b.flowType] || b.flowType}（${b.count}件）`
+    ).join('、');
     const listEl = document.getElementById('flow_detect_list');
     if (listEl) {
-        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:13px; margin-top:8px;">⚠ 前フローに未完了のペンディングが残っているため申請できません: ${msg}</div>`;
+        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:13px; margin-top:8px;">⚠ 前フローが未完了のため申請できません: ${msg}</div>`;
     }
 }
 
