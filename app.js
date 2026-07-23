@@ -3240,7 +3240,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     };
 
     // 全開催案内共通
-    await addP({ department: '製管', role: 'staff' });
+    await addP({ role: 'production_control' });
     await addP({ role: 'assembly_director' });
     for (const o of kumitateOwners) await addPbyName(o);
     for (const o of shiuntenOwnersFallback) await addPbyName(o);
@@ -3970,7 +3970,7 @@ async function recordFlowNotifications(requestId, flowType) {
             (others || []).forEach(p => profileIds.add(p.id));
             await addP({ role: 'quality' }); // 品証（田中孝）
         } else {
-            await addP({ department: '製管', role: 'staff' }); // 森村・黒崎
+            await addP({ role: 'production_control' }); // 森村・黒崎
         }
     };
 
@@ -3999,7 +3999,7 @@ async function recordFlowNotifications(requestId, flowType) {
         case 'assembly':
             // 固定: 品保・製管
             await addP({ role: 'quality' });
-            await addP({ department: '製管', role: 'staff' });
+            await addP({ role: 'production_control' });
             // 工番担当者（profiles）: 組立（複数人対応）
             for (const o of kumitateOwners) await addPbyName(o);
             // 試運転タスクがある場合のみ試運転担当者も追加
@@ -4018,7 +4018,7 @@ async function recordFlowNotifications(requestId, flowType) {
         case 'test_run':
             // 固定: 品保・製管・常務
             await addP({ role: 'quality' });
-            await addP({ department: '製管', role: 'staff' });
+            await addP({ role: 'production_control' });
             await addP({ role: 'assembly_director' });
             if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
             if (shiuntenOwners.length > 0) {
@@ -4089,7 +4089,7 @@ async function recordFlowNotifications(requestId, flowType) {
         case 'shipping':
             // 固定
             await addP({ role: 'assembly_director' });          // 常務
-            await addP({ department: '製管', role: 'staff' });  // 森村・黒崎
+            await addP({ role: 'production_control' });  // 森村・黒崎
             await addE({ department: '技戦' });                 // 小笠原
             await addE({ department: '物流' });                 // 物流課
             // 設計管理職: 担当者の上長を members テーブルから取得
