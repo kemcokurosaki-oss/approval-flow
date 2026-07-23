@@ -2213,7 +2213,8 @@ async function openDetailModal(requestId) {
             if      (s.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
             else if (s.status === 'rejected') { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
             else if (s.status === 'pending' &&
-                     ((s.step_order === 1 && req.status === 'submitted') ||
+                     (((req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'shipping_prep') && req.status === 'submitted') ||
+                      (s.step_order === 1 && req.status === 'submitted') ||
                       (s.step_order === 2 && req.status === 'in_review')))
                                               { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
             else                              { icon = '○';  sc = 'sc-waiting'; }
