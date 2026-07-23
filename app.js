@@ -2543,12 +2543,14 @@ async function _notifyPendingOwner(requestId, owner, isFixed = false, content = 
 }
 
 async function addQaPendingItem(requestId) {
-    const contentEl = document.getElementById('qa_pending_content');
-    const ownerEl   = document.getElementById('qa_pending_owner');
-    const dueEl     = document.getElementById('qa_pending_due');
-    const content   = contentEl ? contentEl.value.trim() : '';
-    const owner     = ownerEl ? ownerEl.value.trim() : '';
-    const due       = dueEl ? dueEl.value : '';
+    const contentEl    = document.getElementById('qa_pending_content');
+    const ownerEl      = document.getElementById('qa_pending_owner');
+    const dueEl        = document.getElementById('qa_pending_due');
+    const shipAfterEl  = document.getElementById('qa_pending_ship_after');
+    const content      = contentEl ? contentEl.value.trim() : '';
+    const owner        = ownerEl ? ownerEl.value.trim() : '';
+    const due          = dueEl ? dueEl.value : '';
+    const shipAfter    = shipAfterEl ? shipAfterEl.checked : false;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('追加中...');
@@ -2556,7 +2558,7 @@ async function addQaPendingItem(requestId) {
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
-        items.push({ content, due, owner: owner || null, completed: false, completed_date: null });
+        items.push({ content, due, owner: owner || null, completed: false, completed_date: null, ship_after: shipAfter });
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
