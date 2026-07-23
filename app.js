@@ -2600,11 +2600,12 @@ function cancelEditQaPendingItem() {
 }
 
 async function saveEditQaPendingItem(requestId, idx) {
-    const contentEl = document.getElementById(`qa_edit_content_${idx}`);
-    const ownerEl   = document.getElementById(`qa_edit_owner_${idx}`);
-    const dueEl     = document.getElementById(`qa_edit_due_${idx}`);
-    const content   = contentEl ? contentEl.value.trim() : '';
-    const due       = dueEl ? dueEl.value : '';
+    const contentEl   = document.getElementById(`qa_edit_content_${idx}`);
+    const ownerEl     = document.getElementById(`qa_edit_owner_${idx}`);
+    const dueEl       = document.getElementById(`qa_edit_due_${idx}`);
+    const shipAfterEl = document.getElementById(`qa_edit_ship_after_${idx}`);
+    const content     = contentEl ? contentEl.value.trim() : '';
+    const due         = dueEl ? dueEl.value : '';
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('更新中...');
@@ -2613,9 +2614,10 @@ async function saveEditQaPendingItem(requestId, idx) {
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         if (!items[idx]) return;
-        const prevOwner = items[idx].owner || '';
-        const newOwner  = ownerEl ? ownerEl.value.trim() : prevOwner;
-        items[idx] = { ...items[idx], content, due, ...(ownerEl ? { owner: newOwner || null } : {}) };
+        const prevOwner  = items[idx].owner || '';
+        const newOwner   = ownerEl ? ownerEl.value.trim() : prevOwner;
+        const shipAfter  = shipAfterEl ? shipAfterEl.checked : !!items[idx].ship_after;
+        items[idx] = { ...items[idx], content, due, ship_after: shipAfter, ...(ownerEl ? { owner: newOwner || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
