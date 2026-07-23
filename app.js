@@ -3464,7 +3464,6 @@ async function submitInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
-            await _seedPrepItemIfLast(req.id, num, machine, 'inspection');
             await recordFlowNotifications(req.id, 'inspection');
             // 追加宛先を挿入
             if (extraRecipients.inspection.length > 0) {
