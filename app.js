@@ -1353,7 +1353,10 @@ function renderProgressCards() {
 
         return `<div class="prog-card">
             <div class="prog-card-header">
-                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}${(packingDateLabel || shippingDateLabel) ? `<div class="prog-card-dates">${packingDateLabel}${shippingDateLabel}</div>` : ''}
+                <div class="prog-card-header-left">
+                    <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
+                </div>
+                ${(packingDateLabel || shippingDateLabel) ? `<div class="prog-card-dates">${packingDateLabel}${shippingDateLabel}</div>` : ''}
             </div>
             ${machineRows}
         </div>`;
