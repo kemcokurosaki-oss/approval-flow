@@ -2659,6 +2659,56 @@ function buildTentativeDateFooterInner(req, hasPackingShipping) {
     `;
 }
 
+// ===== 「日付を変更する」クリック時にフッターを編集フォームへ切り替える =====
+function showChangeConfirmedDateFooter(requestId) {
+    if (!currentDetailReq || currentDetailReq.id !== requestId) return;
+    document.getElementById('detail_footer').innerHTML = buildChangeConfirmedDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
+}
+function showChangeTentativeDateFooter(requestId) {
+    if (!currentDetailReq || currentDetailReq.id !== requestId) return;
+    document.getElementById('detail_footer').innerHTML = buildChangeTentativeDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
+}
+
+// ===== 確定出荷日の変更フォーム（現在値をプリフィルし、常務承認済み等であれば再承認が必要になる） =====
+function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
+    const packingBox = hasPackingShipping ? `
+        <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を変更してください</span>
+            <input type="date" id="packing_sales_date_input" value="${req.packing_confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        </div>` : '';
+    return `
+        <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
+            ${packingBox}
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を変更してください</span>
+                <input type="date" id="sales_date_input" value="${req.confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn btn-success"   onclick="changeConfirmedShippingDate('${req.id}')">変更する</button>
+    `;
+}
+
+// ===== 仮出荷予定日の変更フォーム（現在値をプリフィルし、品証・製管確認済みであれば再確認が必要になる） =====
+function buildChangeTentativeDateFooterInner(req, hasPackingShipping) {
+    const packingBox = hasPackingShipping ? `
+        <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を変更してください</span>
+            <input type="date" id="packing_tentative_date_input" value="${req.packing_tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        </div>` : '';
+    return `
+        <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
+            ${packingBox}
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を変更してください</span>
+                <input type="date" id="tentative_date_input" value="${req.tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn btn-success"   onclick="changeTentativeShippingDate('${req.id}')">変更する</button>
+    `;
+}
+
 // ===== 開催結果・ペンディング確認の下部フッターボタン生成（簡易検査・外観検査・出荷確認会議） =====
 function buildQaFooterInner(req) {
     return `
