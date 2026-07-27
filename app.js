@@ -4112,13 +4112,24 @@ async function submitShipping() {
 
 // 営業: 確定出荷日を入力（品証の確認待ちへ）
 async function submitSalesShippingDate(requestId) {
-    const dateVal = document.getElementById('sales_date_input')?.value;
+    const dateVal        = document.getElementById('sales_date_input')?.value;
+    const packingInputEl = document.getElementById('packing_sales_date_input');
+    const packingDateVal = packingInputEl?.value || null;
+
     if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
 
     showLoading('処理中...');
     try {
+        const updatePayload = {
+            confirmed_shipping_date: dateVal,
+            status: 'awaiting_shipping_confirm',
+            updated_at: new Date().toISOString()
+        };
+        if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
+
         const { data: req, error } = await db.from('approval_requests')
-            .update({ confirmed_shipping_date: dateVal, status: 'awaiting_shipping_confirm', updated_at: new Date().toISOString() })
+            .update(updatePayload)
             .eq('id', requestId).eq('status', 'awaiting_shipping_date')
             .select().single();
         if (error) throw error;
@@ -4136,6 +4147,8 @@ async function submitSalesShippingDate(requestId) {
                 [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done' }))
             );
         }
+
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
 
         closeDetailModal();
         await refreshAll();
