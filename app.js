@@ -2467,17 +2467,17 @@ async function openDetailModal(requestId) {
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) eventInfoParts.push(`場所: ${esc(req.inspection_location)}`);
 
     const shippingInfoParts = [];
-    if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
-        shippingInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
-    }
     if (req.flow_type === 'shipping' && req.packing_confirmed_shipping_date) {
         shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
     }
-    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.tentative_shipping_date && req.tentative_shipping_confirmed_at) {
-        shippingInfoParts.push(`${req.packing_tentative_shipping_date ? '工場出荷予定日' : '仮出荷予定日'}: ${fmtDate(req.tentative_shipping_date)}`);
+    if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
+        shippingInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
     }
     if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.packing_tentative_shipping_date && req.tentative_shipping_confirmed_at) {
         shippingInfoParts.push(`梱包出荷予定日: ${fmtDate(req.packing_tentative_shipping_date)}`);
+    }
+    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.tentative_shipping_date && req.tentative_shipping_confirmed_at) {
+        shippingInfoParts.push(`${req.packing_tentative_shipping_date ? '工場出荷予定日' : '仮出荷予定日'}: ${fmtDate(req.tentative_shipping_date)}`);
     }
 
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
