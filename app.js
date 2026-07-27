@@ -2534,9 +2534,9 @@ async function openDetailModal(requestId) {
         ${shippingInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
         ${req.note ? `<div style="font-size:14px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
         ${shippingDateMismatches.length ? `
-        <div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:14px;color:#a33a2c;margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
-            <span style="flex:1;min-width:200px;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。</span>
-            ${changeDateLinkHtml ? `<button type="button" class="btn btn-outline" style="flex-shrink:0;" onclick="${changeDateOnclick}">日付を変更する</button>` : ''}
+        <div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:14px;color:#a33a2c;margin-top:8px;">
+            <div style="white-space:nowrap;overflow-x:auto;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。</div>
+            ${changeDateBannerButtonHtml ? `<div style="margin-top:8px;">${changeDateBannerButtonHtml}</div>` : ''}
         </div>` : ''}
         ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:14px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
