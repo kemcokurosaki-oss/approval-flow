@@ -462,6 +462,12 @@
             gap: 4px;
         }
         .prog-card-date {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            min-width: 160px;
+            box-sizing: border-box;
             color: #5a7080;
             background: #f0f4fa;
             border: 1px solid #d0dae8;
