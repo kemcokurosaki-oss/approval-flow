@@ -2605,7 +2605,7 @@ async function openDetailModal(requestId) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
-            ${changeDateLinkHtml}
+            ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
@@ -2615,7 +2615,7 @@ async function openDetailModal(requestId) {
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
         footer.innerHTML = `
-            ${changeDateLinkHtml}
+            ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmTentativeShippingDate('${req.id}')">確認して確定する</button>
         `;
@@ -2623,7 +2623,7 @@ async function openDetailModal(requestId) {
         footer.innerHTML = buildQaFooterInner(req);
     } else if (changeDateLinkHtml) {
         footer.innerHTML = `
-            ${changeDateLinkHtml}
+            ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         `;
     }
