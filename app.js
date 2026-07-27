@@ -2254,11 +2254,12 @@ async function openDetailModal(requestId) {
     const cls    = STATUS_CLASSES[req.status] || 's-pending';
 
     // 梱包出荷タスクの有無判定（工程表に梱包出荷タスクがあれば梱包出荷日の入力欄も表示する）
+    // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
     let hasPackingShipping = false;
-    if (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type) && req.machine_name) {
+    if (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type)) {
         const { data: pkgRows } = await db.from('tasks')
             .select('id')
-            .eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '梱包出荷')
+            .eq('project_number', pNum).eq('text', '梱包出荷')
             .limit(1);
         hasPackingShipping = !!(pkgRows && pkgRows.length > 0);
     }
