@@ -2547,11 +2547,20 @@ async function openDetailModal(requestId) {
 }
 
 // ===== 営業: 確定出荷日入力フッター =====
-function buildSalesDateFooterInner(req) {
+// hasPackingShipping=true の場合、梱包出荷日（確定）の入力欄も並べて表示する
+function buildSalesDateFooterInner(req, hasPackingShipping) {
+    const packingBox = hasPackingShipping ? `
+        <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
+            <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        </div>` : '';
     return `
-        <div class="sales-date-highlight" style="margin-right:auto;display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 確定出荷日を入力してください</span>
-            <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
+            ${packingBox}
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
+                <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
@@ -2559,11 +2568,20 @@ function buildSalesDateFooterInner(req) {
 }
 
 // ===== 営業: 仮出荷予定日入力フッター =====
-function buildTentativeDateFooterInner(req) {
+// hasPackingShipping=true の場合、梱包出荷日（仮）の入力欄も並べて表示する
+function buildTentativeDateFooterInner(req, hasPackingShipping) {
+    const packingBox = hasPackingShipping ? `
+        <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
+            <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        </div>` : '';
     return `
-        <div class="sales-date-highlight" style="margin-right:auto;display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 仮出荷予定日を入力してください</span>
-            <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+        <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
+            ${packingBox}
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
+                <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="submitTentativeShippingDate('${req.id}')">入力する</button>
