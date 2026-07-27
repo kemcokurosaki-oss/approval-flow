@@ -2307,6 +2307,18 @@ async function openDetailModal(requestId) {
         && (isMyRequest || isQualityOrSeikan)
         && req.status === 'submitted';
 
+    // 出荷日変更リンク（品証・製管の確認や常務の承認が済んだ後でも、日付を変更できるようにする）
+    const isSales = getEffectiveRole() === 'staff' && getEffectiveDept() === '営業';
+    const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
+        && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
+        && (isSales || isQualityOrSeikan) && !myStep;
+    const canChangeTentativeDate = (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection')
+        && !!req.tentative_shipping_date && (isSales || isQualityOrSeikan) && !myStep;
+    const changeDateOnclick = canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`;
+    const changeDateLinkHtml = (canChangeConfirmedDate || canChangeTentativeDate)
+        ? `<button type="button" class="btn btn-outline" style="margin-right:auto;" onclick="${changeDateOnclick}">日付を変更する</button>`
+        : '';
+
     // プロフィール名を取得
     const approverIds = steps.filter(s => s.approver_id).map(s => s.approver_id);
     let approverNames = {};
