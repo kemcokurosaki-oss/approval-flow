@@ -2534,7 +2534,7 @@ async function openDetailModal(requestId) {
         `;
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && !req.tentative_shipping_date && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildTentativeDateFooterInner(req);
+        footer.innerHTML = buildTentativeDateFooterInner(req, hasPackingShipping);
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
         footer.innerHTML = `
