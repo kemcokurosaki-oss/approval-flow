@@ -2567,6 +2567,17 @@ async function openDetailModal(requestId) {
     // フッターボタン
     const footer = document.getElementById('detail_footer');
     const isSales = getEffectiveRole() === 'staff' && getEffectiveDept() === '営業';
+
+    // 出荷日変更リンク（品証・製管の確認や常務の承認が済んだ後でも、日付を変更できるようにする）
+    const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
+        && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
+        && (isSales || isQualityOrSeikan) && !myStep;
+    const canChangeTentativeDate = (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection')
+        && !!req.tentative_shipping_date && (isSales || isQualityOrSeikan) && !myStep;
+    const changeDateLinkHtml = (canChangeConfirmedDate || canChangeTentativeDate)
+        ? `<button type="button" class="btn-link-sm" style="margin-right:auto;" onclick="${canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`}">日付を変更する</button>`
+        : '';
+
     if (myStep) {
         footer.innerHTML = `
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -2582,6 +2593,7 @@ async function openDetailModal(requestId) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
+            ${changeDateLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
@@ -2591,11 +2603,17 @@ async function openDetailModal(requestId) {
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
         footer.innerHTML = `
+            ${changeDateLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmTentativeShippingDate('${req.id}')">確認して確定する</button>
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
+    } else if (changeDateLinkHtml) {
+        footer.innerHTML = `
+            ${changeDateLinkHtml}
+            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        `;
     }
 }
 
