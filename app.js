@@ -1232,10 +1232,20 @@ function renderProgressCards() {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
+        const hasAnyPacking = machines.some(m => hasTask(num, m, '梱包出荷'));
+
         const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
         const shippingDateLabel = effectiveShippingDate
-            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${shippingDateConfirmed ? '確定出荷日' : '出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
+            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${shippingDateConfirmed ? '確定出荷日' : '出荷予定日'}${hasAnyPacking ? '（工場出荷）' : ''}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
             : '';
+
+        let packingDateLabel = '';
+        if (hasAnyPacking) {
+            const { date: effectivePackingDate, isConfirmed: packingDateConfirmed } = getEffectivePackingShippingDate(num);
+            packingDateLabel = effectivePackingDate
+                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${packingDateConfirmed ? '確定梱包出荷日' : '梱包出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
+                : '';
+        }
 
         const machineRows = machines.map(machine => {
             const mData = projectData[num][machine];
