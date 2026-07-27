@@ -2575,7 +2575,7 @@ async function openDetailModal(requestId) {
     const canChangeTentativeDate = (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection')
         && !!req.tentative_shipping_date && (isSales || isQualityOrSeikan) && !myStep;
     const changeDateLinkHtml = (canChangeConfirmedDate || canChangeTentativeDate)
-        ? `<button type="button" class="btn-link-sm" style="margin-right:auto;" onclick="${canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`}">日付を変更する</button>`
+        ? `<button type="button" class="btn btn-outline" style="margin-right:auto;" onclick="${canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`}">日付を変更する</button>`
         : '';
 
     if (myStep) {
