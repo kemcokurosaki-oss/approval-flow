@@ -2582,17 +2582,6 @@ async function openDetailModal(requestId) {
 
     // フッターボタン
     const footer = document.getElementById('detail_footer');
-    const isSales = getEffectiveRole() === 'staff' && getEffectiveDept() === '営業';
-
-    // 出荷日変更リンク（品証・製管の確認や常務の承認が済んだ後でも、日付を変更できるようにする）
-    const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
-        && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
-        && (isSales || isQualityOrSeikan) && !myStep;
-    const canChangeTentativeDate = (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection')
-        && !!req.tentative_shipping_date && (isSales || isQualityOrSeikan) && !myStep;
-    const changeDateLinkHtml = (canChangeConfirmedDate || canChangeTentativeDate)
-        ? `<button type="button" class="btn btn-outline" style="margin-right:auto;" onclick="${canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`}">日付を変更する</button>`
-        : '';
 
     if (myStep) {
         footer.innerHTML = `
