@@ -4396,6 +4396,114 @@ async function confirmTentativeShippingDate(requestId) {
     }
 }
 
+// 営業・品証・製管: 確定出荷日を後から変更する。既に常務へ申請・承認済み（status: submitted/approved）の場合は
+// 承認ステップをリセットして常務の再承認を必須にする
+async function changeConfirmedShippingDate(requestId) {
+    const dateVal        = document.getElementById('sales_date_input')?.value;
+    const packingInputEl = document.getElementById('packing_sales_date_input');
+    const packingDateVal = packingInputEl?.value || null;
+
+    if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        const { data: current, error: fetchErr } = await db.from('approval_requests')
+            .select('status').eq('id', requestId).single();
+        if (fetchErr) throw fetchErr;
+        if (!current) { showToast('データが見つかりません', 'error'); return; }
+
+        const needsReapproval = current.status === 'submitted' || current.status === 'approved';
+
+        const updatePayload = { confirmed_shipping_date: dateVal, updated_at: new Date().toISOString() };
+        if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
+        if (needsReapproval) {
+            updatePayload.status      = 'submitted';
+            updatePayload.is_resubmit = true;
+        }
+
+        const { data: req, error } = await db.from('approval_requests')
+            .update(updatePayload).eq('id', requestId).select().single();
+        if (error) throw error;
+
+        if (needsReapproval) {
+            // 常務の承認ステップをリセットして再承認を依頼する
+            await db.from('approval_steps').update({
+                status: 'pending', approver_id: null, comment: null, decided_at: null
+            }).eq('request_id', requestId);
+
+            const { data: directors } = await db.from('profiles').select('id').eq('role', 'assembly_director');
+            if (directors?.length > 0) {
+                await db.from('approval_notifications').insert(
+                    directors.map(d => ({ request_id: requestId, recipient_id: d.id, notification_type: 'approval_request' }))
+                );
+            }
+        }
+
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
+
+        closeDetailModal();
+        await refreshAll();
+        showToast(needsReapproval ? '出荷日を変更しました。常務に再承認を依頼します。' : '出荷日を変更しました。', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 営業・品証・製管: 仮出荷予定日を後から変更する。既に品証・製管が確認済みの場合は確認済みフラグをリセットして再確認を必須にする
+async function changeTentativeShippingDate(requestId) {
+    const dateVal        = document.getElementById('tentative_date_input')?.value;
+    const packingInputEl = document.getElementById('packing_tentative_date_input');
+    const packingDateVal = packingInputEl?.value || null;
+
+    if (!dateVal) { showToast('仮出荷予定日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（仮）を入力してください', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        const { data: current, error: fetchErr } = await db.from('approval_requests')
+            .select('tentative_shipping_confirmed_at').eq('id', requestId).single();
+        if (fetchErr) throw fetchErr;
+        if (!current) { showToast('データが見つかりません', 'error'); return; }
+
+        const wasConfirmed = !!current.tentative_shipping_confirmed_at;
+
+        const updatePayload = { tentative_shipping_date: dateVal, updated_at: new Date().toISOString() };
+        if (packingInputEl) updatePayload.packing_tentative_shipping_date = packingDateVal;
+        if (wasConfirmed) updatePayload.tentative_shipping_confirmed_at = null;
+
+        const { data: req, error } = await db.from('approval_requests')
+            .update(updatePayload).eq('id', requestId).select().single();
+        if (error) throw error;
+
+        if (wasConfirmed) {
+            // 品証・製管全体へ再確認依頼を通知
+            const notifIds = new Set();
+            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+            (qRows || []).forEach(p => notifIds.add(p.id));
+            const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+            (sRows || []).forEach(p => notifIds.add(p.id));
+            if (notifIds.size > 0) {
+                await db.from('approval_notifications').insert(
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'tentative_shipping_date_input_done' }))
+                );
+            }
+        }
+
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
+
+        closeDetailModal();
+        await refreshAll();
+        showToast(wasConfirmed ? '仮出荷予定日を変更しました。品証・製管に再確認を依頼します。' : '仮出荷予定日を変更しました。', 'success');
+    } catch (e) {
+        showToast('更新に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== Notifications =====
 
 async function recordFlowNotifications(requestId, flowType) {
