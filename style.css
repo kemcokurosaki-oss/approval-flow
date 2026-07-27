@@ -695,10 +695,12 @@
             padding: 12px 18px;
             display: flex;
             justify-content: flex-end;
+            align-items: flex-end;
             gap: 8px;
             border-top: 1px solid #eee;
             flex-shrink: 0;
         }
+        .modal-footer .btn { flex-shrink: 0; }
 
         /* ===== Form ===== */
         .form-group { margin-bottom: 12px; }
