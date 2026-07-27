@@ -2514,6 +2514,7 @@ async function openDetailModal(requestId) {
         ${eventInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${eventInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
         ${shippingInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
         ${req.note ? `<div style="font-size:14px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
+        ${shippingDateMismatches.length ? `<div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:14px;color:#a33a2c;margin-top:8px;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。「日付を変更する」から更新してください。</div>` : ''}
         ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:14px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
         <hr class="section-divider">
