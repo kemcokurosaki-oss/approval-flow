@@ -1210,7 +1210,7 @@ function renderProgressCards() {
         const machines = Object.keys(projectData[num]).sort();
         const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
         const shippingDateLabel = effectiveShippingDate
-            ? `<span class="prog-card-date"><span class="prog-card-date-label">${shippingDateConfirmed ? '確定出荷日' : '出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
+            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${shippingDateConfirmed ? '確定出荷日' : '出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
             : '';
 
         const machineRows = machines.map(machine => {
