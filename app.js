@@ -3095,18 +3095,18 @@ const SHIPPING_DATE_TASK_SYNC_ENABLED = true;
 
 async function syncShippingDateToTasks(req, { factoryDate, packingDate } = {}) {
     if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
-    if (!req?.project_number || !req?.machine_name) return;
+    if (!req?.project_number) return;
     try {
-        if (factoryDate) {
+        if (factoryDate && req.machine_name) {
             await db.from('tasks').update({ end_date: factoryDate })
                 .eq('project_number', req.project_number)
                 .eq('machine', req.machine_name)
                 .eq('text', '工場出荷');
         }
         if (packingDate) {
+            // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
             await db.from('tasks').update({ end_date: packingDate })
                 .eq('project_number', req.project_number)
-                .eq('machine', req.machine_name)
                 .eq('text', '梱包出荷');
         }
     } catch (e) {
