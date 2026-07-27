@@ -1119,7 +1119,24 @@ function renderProgressCards() {
         return { date: confirmed || tentative || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
     };
 
-    // 未申請・未承認判定（組立・試運転・出荷確定）
+    // 梱包出荷日表示: 工程表（梱包出荷タスク終了日）をベースに、梱包仮出荷日→梱包確定出荷日の順で上書きする
+    const getEffectivePackingShippingDate = (num) => {
+        let tentative = null, confirmed = null;
+        Object.values(projectData[num] || {}).forEach(mData => {
+            const shipReq = mData.flows['shipping'];
+            if (shipReq?.packing_confirmed_shipping_date && (!confirmed || shipReq.packing_confirmed_shipping_date < confirmed)) {
+                confirmed = shipReq.packing_confirmed_shipping_date;
+            }
+            [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
+                if (req?.packing_tentative_shipping_date && (!tentative || req.packing_tentative_shipping_date < tentative)) {
+                    tentative = req.packing_tentative_shipping_date;
+                }
+            });
+        });
+        return { date: confirmed || tentative || projectsMap[num]?.packing_shipping_date || null, isConfirmed: !!confirmed };
+    };
+
+    // 未申請・未承認判定(組立・試運転・出荷確定)
     const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const isFlowOverdue = (num, machine, flowType, req) => {
