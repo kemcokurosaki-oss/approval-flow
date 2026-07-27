@@ -4197,13 +4197,20 @@ async function confirmAndSubmitShipping(requestId) {
 // 営業: 仮出荷予定日を入力（品証・製管の確認待ちへ）
 // 営業: 仮出荷予定日を入力（簡易検査・外観検査の申請そのものに付随。品証・製管の確認待ちへ）
 async function submitTentativeShippingDate(requestId) {
-    const dateVal = document.getElementById('tentative_date_input')?.value;
+    const dateVal        = document.getElementById('tentative_date_input')?.value;
+    const packingInputEl = document.getElementById('packing_tentative_date_input');
+    const packingDateVal = packingInputEl?.value || null;
+
     if (!dateVal) { showToast('仮出荷予定日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（仮）を入力してください', 'error'); return; }
 
     showLoading('処理中...');
     try {
+        const updatePayload = { tentative_shipping_date: dateVal, updated_at: new Date().toISOString() };
+        if (packingInputEl) updatePayload.packing_tentative_shipping_date = packingDateVal;
+
         const { data: req, error } = await db.from('approval_requests')
-            .update({ tentative_shipping_date: dateVal, updated_at: new Date().toISOString() })
+            .update(updatePayload)
             .eq('id', requestId).is('tentative_shipping_date', null)
             .select().single();
         if (error) throw error;
@@ -4220,6 +4227,8 @@ async function submitTentativeShippingDate(requestId) {
                 [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'tentative_shipping_date_input_done' }))
             );
         }
+
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
 
         closeDetailModal();
         await refreshAll();
