@@ -3095,7 +3095,8 @@ async function syncTaskCompletionOnFlowApproval(req) {
     }
 }
 
-// 出荷日（仮/確定、工場出荷/梱包出荷）を工程表(tasksテーブル)のend_dateへ書き戻す（承認フロー→工程表の一方向反映）
+// 出荷日（仮/確定、工場出荷/梱包出荷）を工程表(tasksテーブル)のstart_date・end_dateへ書き戻す（承認フロー→工程表の一方向反映）
+// 承認フロー対象（2000番台以外）の出荷タスクは単日のため、開始日・終了日を同じ日付に揃える
 // FLOW_TASK_SYNC_ENABLED（完了フラグ連携用）とは独立したフラグ
 const SHIPPING_DATE_TASK_SYNC_ENABLED = true;
 
@@ -3104,14 +3105,14 @@ async function syncShippingDateToTasks(req, { factoryDate, packingDate } = {}) {
     if (!req?.project_number) return;
     try {
         if (factoryDate && req.machine_name) {
-            await db.from('tasks').update({ end_date: factoryDate })
+            await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate })
                 .eq('project_number', req.project_number)
                 .eq('machine', req.machine_name)
                 .eq('text', '工場出荷');
         }
         if (packingDate) {
             // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
-            await db.from('tasks').update({ end_date: packingDate })
+            await db.from('tasks').update({ start_date: packingDate, end_date: packingDate })
                 .eq('project_number', req.project_number)
                 .eq('text', '梱包出荷');
         }
