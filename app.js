@@ -509,6 +509,7 @@ const assemblyProjectNums      = new Set(); // 機械組立タスクがある工
 const testRunProjectNums       = new Set(); // 試運転タスクがある工番
 const shippingMeetingProjectNums = new Set(); // 出荷確認会議タスクがある工番
 const shippingProjectNums      = new Set(); // 工場出荷タスクがある工番
+const packingShippingProjectNums = new Set(); // 梱包出荷タスクがある工番
 
 async function onProjectChange() {
     const num    = currentProjectNum;
