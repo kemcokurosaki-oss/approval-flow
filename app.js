@@ -1232,7 +1232,7 @@ function renderProgressCards() {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
-        const hasAnyPacking = machines.some(m => hasTask(num, m, '梱包出荷'));
+        const hasAnyPacking = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
 
         const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
         const shippingDateLabel = effectiveShippingDate
