@@ -2259,14 +2259,31 @@ async function openDetailModal(requestId) {
 
     // 梱包出荷タスクの有無判定（工程表に梱包出荷タスクがあれば梱包出荷日の入力欄も表示する）
     // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
+    // あわせて工程表側のタスク日付を取得し、承認フロー側の日付とのズレを検知する
     let hasPackingShipping = false;
+    const shippingDateMismatches = [];
     if (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type)) {
-        const { data: pkgRows } = await db.from('tasks')
-            .select('id')
-            .eq('project_number', pNum).eq('text', '梱包出荷')
-            .limit(1);
-        hasPackingShipping = !!(pkgRows && pkgRows.length > 0);
+        const [{ data: factoryTasks }, { data: packingTasks }] = await Promise.all([
+            req.machine_name
+                ? db.from('tasks').select('end_date').eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '工場出荷').limit(1)
+                : Promise.resolve({ data: [] }),
+            db.from('tasks').select('end_date').eq('project_number', pNum).eq('text', '梱包出荷').limit(1)
+        ]);
+        hasPackingShipping = !!(packingTasks && packingTasks.length > 0);
+
+        const factoryTaskDate = factoryTasks?.[0]?.end_date || null;
+        const packingTaskDate = packingTasks?.[0]?.end_date || null;
+        const approvalFactoryDate = req.flow_type === 'shipping' ? req.confirmed_shipping_date : req.tentative_shipping_date;
+        const approvalPackingDate = req.flow_type === 'shipping' ? req.packing_confirmed_shipping_date : req.packing_tentative_shipping_date;
+
+        if (approvalFactoryDate && factoryTaskDate && approvalFactoryDate !== factoryTaskDate) {
+            shippingDateMismatches.push(`工場出荷: 承認フロー ${fmtDate(approvalFactoryDate)} / 工程表 ${fmtDate(factoryTaskDate)}`);
+        }
+        if (approvalPackingDate && packingTaskDate && approvalPackingDate !== packingTaskDate) {
+            shippingDateMismatches.push(`梱包出荷: 承認フロー ${fmtDate(approvalPackingDate)} / 工程表 ${fmtDate(packingTaskDate)}`);
+        }
     }
+    currentDetailHasPackingShipping = hasPackingShipping;
     const slbl   = (req.flow_type === 'shipping' && req.status === 'submitted')
         ? '常務承認待ち'
         : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
