@@ -1095,6 +1095,7 @@ function renderProgressCards() {
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
 
     // 出荷予定日表示: 工程表（工場出荷タスク終了日）をベースに、仮出荷予定日→確定出荷日の順で上書きする
+    // 確定出荷日が入ったらラベルも「出荷予定日」→「確定出荷日」に切り替える
     const getEffectiveShippingDate = (num) => {
         let tentative = null, confirmed = null;
         Object.values(projectData[num] || {}).forEach(mData => {
@@ -1108,7 +1109,7 @@ function renderProgressCards() {
                 }
             });
         });
-        return confirmed || tentative || projectsMap[num]?.shipping_date || null;
+        return { date: confirmed || tentative || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
     };
 
     // 未申請・未承認判定（組立・試運転・出荷確定）
