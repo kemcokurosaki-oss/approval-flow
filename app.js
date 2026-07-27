@@ -176,6 +176,7 @@ let currentDetailReq     = null;
 let devRole = ''; // 開発用ロール上書き
 let devDept = ''; // 開発用部署上書き
 let currentDetailFlowType = '';
+let currentDetailHasPackingShipping = false;
 let qaEditingPendingIdx  = null; // 開催結果セクションで編集中のペンディング項目インデックス
 
 // デモ用ロール→{role, department, flowTypes} マッピング
