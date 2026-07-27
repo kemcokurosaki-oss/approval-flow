@@ -2459,25 +2459,26 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
 
-    // ヘッダー下の補足情報（開催日・場所・備考など、頻度の低い項目をまとめて1行に）
-    const subInfoParts = [];
+    // ヘッダー下の補足情報（1行目: 開催日・場所、2行目: 出荷予定日。仮出荷予定日は品証・製管の確認が完了するまでは表示しない）
+    const eventInfoParts = [];
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date) {
-        subInfoParts.push(`開催日: ${fmtDate(req.inspection_date)}${req.inspection_time ? ' ' + req.inspection_time : ''}`);
+        eventInfoParts.push(`開催日: ${fmtDate(req.inspection_date)}${req.inspection_time ? ' ' + req.inspection_time : ''}`);
     }
-    if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) subInfoParts.push(`場所: ${esc(req.inspection_location)}`);
+    if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) eventInfoParts.push(`場所: ${esc(req.inspection_location)}`);
+
+    const shippingInfoParts = [];
     if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
-        subInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
+        shippingInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
     }
     if (req.flow_type === 'shipping' && req.packing_confirmed_shipping_date) {
-        subInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
+        shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
     }
-    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.tentative_shipping_date) {
-        subInfoParts.push(`${req.packing_tentative_shipping_date ? '工場出荷予定日（仮）' : '仮出荷予定日'}: ${fmtDate(req.tentative_shipping_date)}${req.tentative_shipping_confirmed_at ? '' : '（品証・製管確認待ち）'}`);
+    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.tentative_shipping_date && req.tentative_shipping_confirmed_at) {
+        shippingInfoParts.push(`${req.packing_tentative_shipping_date ? '工場出荷予定日' : '仮出荷予定日'}: ${fmtDate(req.tentative_shipping_date)}`);
     }
-    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.packing_tentative_shipping_date) {
-        subInfoParts.push(`梱包出荷予定日（仮）: ${fmtDate(req.packing_tentative_shipping_date)}${req.tentative_shipping_confirmed_at ? '' : '（品証・製管確認待ち）'}`);
+    if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.packing_tentative_shipping_date && req.tentative_shipping_confirmed_at) {
+        shippingInfoParts.push(`梱包出荷予定日: ${fmtDate(req.packing_tentative_shipping_date)}`);
     }
-    if (req.note) subInfoParts.push(`備考: ${esc(req.note)}`);
 
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
     const headerLine1Left = `${esc(pNum)}${req.machine_name ? `【${esc(req.machine_name)}】` : ''}`;
