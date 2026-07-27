@@ -968,10 +968,10 @@ async function loadProgress() {
         taskInfoMap[`${t.project_number}__${t.machine}__${t.text}`] = { end_date: t.end_date, is_completed: t.is_completed };
     });
 
-    // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議はproject全体に1つの場合がある
+    // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議/梱包出荷はproject全体に1つの場合がある
     const { data: projectFlowTasks } = await db.from('tasks')
         .select('project_number, text, end_date, is_completed')
-        .in('text', ['簡易検査', '外観検査', '出荷確認会議']);
+        .in('text', ['簡易検査', '外観検査', '出荷確認会議', '梱包出荷']);
     const projectFlowSet = new Set(
         (projectFlowTasks || []).map(t => `${(t.project_number||'').toString().trim()}__${t.text}`)
     );
