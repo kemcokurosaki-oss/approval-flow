@@ -2621,7 +2621,7 @@ async function openDetailModal(requestId) {
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
-    } else if (changeDateLinkHtml) {
+    } else if (changeDateFooterLinkHtml) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
