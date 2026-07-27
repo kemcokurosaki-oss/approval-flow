@@ -2434,9 +2434,14 @@ async function openDetailModal(requestId) {
         subInfoParts.push(`開催日: ${fmtDate(req.inspection_date)}${req.inspection_time ? ' ' + req.inspection_time : ''}`);
     }
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) subInfoParts.push(`場所: ${esc(req.inspection_location)}`);
-    if (req.flow_type === 'shipping' && req.confirmed_shipping_date) subInfoParts.push(`確定出荷日: ${fmtDate(req.confirmed_shipping_date)}`);
+    if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
+        subInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
+    }
+    if (req.flow_type === 'shipping' && req.packing_confirmed_shipping_date) {
+        subInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
+    }
     if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.tentative_shipping_date) {
-        subInfoParts.push(`仮出荷予定日: ${fmtDate(req.tentative_shipping_date)}${req.tentative_shipping_confirmed_at ? '' : '（品証・製管確認待ち）'}`);
+        subInfoParts.push(`${req.packing_tentative_shipping_date ? '工場出荷予定日（仮）' : '仮出荷予定日'}: ${fmtDate(req.tentative_shipping_date)}${req.tentative_shipping_confirmed_at ? '' : '（品証・製管確認待ち）'}`);
     }
     if (req.note) subInfoParts.push(`備考: ${esc(req.note)}`);
 
