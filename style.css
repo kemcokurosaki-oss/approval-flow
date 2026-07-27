@@ -664,6 +664,8 @@
         .btn-danger:hover:not(:disabled)   { background: #c0392b; }
         .btn-secondary { background: #95a5a6; color: #fff; }
         .btn-secondary:hover:not(:disabled){ background: #7f8c8d; }
+        .btn-outline   { background: #fff; color: #1e3a5f; border: 1px solid #1e3a5f; }
+        .btn-outline:hover:not(:disabled)  { background: #f0f4fa; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
         .approver-btn { background: #f0f0f0; color: #555; border: 2px solid #ddd; }
         .approver-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
