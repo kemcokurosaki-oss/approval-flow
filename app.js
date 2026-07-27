@@ -3061,6 +3061,31 @@ async function syncTaskCompletionOnFlowApproval(req) {
     }
 }
 
+// 出荷日（仮/確定、工場出荷/梱包出荷）を工程表(tasksテーブル)のend_dateへ書き戻す（承認フロー→工程表の一方向反映）
+// FLOW_TASK_SYNC_ENABLED（完了フラグ連携用）とは独立したフラグ
+const SHIPPING_DATE_TASK_SYNC_ENABLED = true;
+
+async function syncShippingDateToTasks(req, { factoryDate, packingDate } = {}) {
+    if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
+    if (!req?.project_number || !req?.machine_name) return;
+    try {
+        if (factoryDate) {
+            await db.from('tasks').update({ end_date: factoryDate })
+                .eq('project_number', req.project_number)
+                .eq('machine', req.machine_name)
+                .eq('text', '工場出荷');
+        }
+        if (packingDate) {
+            await db.from('tasks').update({ end_date: packingDate })
+                .eq('project_number', req.project_number)
+                .eq('machine', req.machine_name)
+                .eq('text', '梱包出荷');
+        }
+    } catch (e) {
+        console.warn('工程表への出荷日書き戻しに失敗:', e);
+    }
+}
+
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
