@@ -1236,14 +1236,14 @@ function renderProgressCards() {
 
         const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
         const shippingDateLabel = effectiveShippingDate
-            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${shippingDateConfirmed ? '確定出荷日' : '出荷予定日'}${hasAnyPacking ? '（工場出荷）' : ''}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
+            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${hasAnyPacking ? (shippingDateConfirmed ? '工場出荷確定日' : '工場出荷予定日') : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日')}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
             : '';
 
         let packingDateLabel = '';
         if (hasAnyPacking) {
             const { date: effectivePackingDate, isConfirmed: packingDateConfirmed } = getEffectivePackingShippingDate(num);
             packingDateLabel = effectivePackingDate
-                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${packingDateConfirmed ? '確定梱包出荷日' : '梱包出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
+                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${packingDateConfirmed ? '梱包出荷確定日' : '梱包出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : '';
         }
 
