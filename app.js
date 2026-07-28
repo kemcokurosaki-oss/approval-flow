@@ -2926,18 +2926,24 @@ async function addQaPendingItem(requestId) {
     const ownerEl      = document.getElementById('qa_pending_owner');
     const dueEl        = document.getElementById('qa_pending_due');
     const shipAfterEl  = document.getElementById('qa_pending_ship_after');
+    const photoEl      = document.getElementById('qa_pending_photo');
     const content      = contentEl ? contentEl.value.trim() : '';
     const owner        = ownerEl ? ownerEl.value.trim() : '';
     const due          = dueEl ? dueEl.value : '';
     const shipAfter    = shipAfterEl ? shipAfterEl.checked : false;
+    const photoFile    = photoEl?.files?.[0] || null;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('追加中...');
     try {
+        const id = crypto.randomUUID();
+        let photoPath = null;
+        if (photoFile) photoPath = await _uploadPendingPhoto(requestId, id, photoFile);
+
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
-        items.push({ content, due, owner: owner || null, completed: false, completed_date: null, ship_after: shipAfter });
+        items.push({ id, content, due, owner: owner || null, completed: false, completed_date: null, ship_after: shipAfter, photo_path: photoPath });
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
