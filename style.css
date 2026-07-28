@@ -1301,9 +1301,10 @@
         .pending-detail-content { flex: 1; min-width: 0; }
         .pending-detail-text { font-size: 15px; color: #333; font-weight: bold; }
         .pending-detail-machine { font-size: 14px; color: #888; font-weight: normal; }
+        /* 状態はマーク(丸アイコン)で表現するため、テキストは常に担当と同じ色に統一する */
         .pending-detail-owner { font-size: 13px; color: #444; margin-top: 2px; }
-        .pending-detail-due { font-size: 13px; color: #e67e22; margin-top: 2px; }
-        .pending-detail-date { font-size: 13px; color: #27ae60; margin-top: 2px; }
+        .pending-detail-due { font-size: 13px; color: #444; margin-top: 2px; }
+        .pending-detail-date { font-size: 13px; color: #444; margin-top: 2px; }
         .pending-detail-photo-thumb {
             width: 64px;
             height: 64px;
