@@ -1359,6 +1359,13 @@
             border-radius: 4px; cursor: pointer; flex-shrink: 0;
         }
         .btn-success-xs:hover { background: #27ae60; color: #fff; }
+        /* ペンディング項目「完了にする」: 状態色(オレンジ/緑)と紛れないよう、アプリのプライマリカラーで統一 */
+        .btn-primary-xs {
+            padding: 5px 12px; font-size: 13px;
+            background: #fff; border: 1px solid #1e3a5f; color: #1e3a5f;
+            border-radius: 4px; cursor: pointer; flex-shrink: 0;
+        }
+        .btn-primary-xs:hover { background: #1e3a5f; color: #fff; }
         .btn-undo-xs {
             padding: 5px 12px; font-size: 13px;
             background: #fff; border: 1px solid #aaa; color: #888;
