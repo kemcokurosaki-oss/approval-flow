@@ -139,22 +139,25 @@ Deno.serve(async (req) => {
         await client.send({
             from: GMAIL_USER,
             to: allEmails,
-            subject: `【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
+            subject: `${TEST_MODE ? "【テスト】" : ""}【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
             html,
         });
         await client.close();
 
-        const now = new Date().toISOString();
-        await admin.from("approval_notifications").insert(
-            allEmails.map((email) => ({
-                request_id: requestId,
-                recipient_email: email,
-                notification_type: "fix_card_sent",
-                emailed_at: now,
-            }))
-        );
+        // テストモード時は本番の通知履歴を汚さないよう監査ログへの記録をスキップする
+        if (!TEST_MODE) {
+            const now = new Date().toISOString();
+            await admin.from("approval_notifications").insert(
+                allEmails.map((email) => ({
+                    request_id: requestId,
+                    recipient_email: email,
+                    notification_type: "fix_card_sent",
+                    emailed_at: now,
+                }))
+            );
+        }
 
-        return json({ success: true, sentTo: allEmails.length });
+        return json({ success: true, sentTo: allEmails.length, testMode: TEST_MODE });
     } catch (e) {
         console.error(e);
         return json({ error: e instanceof Error ? e.message : String(e) }, 500);
