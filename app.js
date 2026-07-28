@@ -2864,6 +2864,38 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg, opts = {}) {
     openDetailModal(requestId).then(() => showToast(toastMsg, 'success', true));
 }
 
+const PENDING_PHOTO_BUCKET = 'pending-item-photos';
+
+// ペンディング項目の修正箇所写真をアップロードし、Storage内のパスを返す
+async function _uploadPendingPhoto(requestId, itemId, file) {
+    const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${requestId}/${itemId}.${ext}`;
+    const { error } = await db.storage.from(PENDING_PHOTO_BUCKET).upload(path, file, { upsert: true });
+    if (error) throw error;
+    return path;
+}
+
+// ペンディング項目の写真をStorageから削除
+async function _deletePendingPhoto(photoPath) {
+    if (!photoPath) return;
+    await db.storage.from(PENDING_PHOTO_BUCKET).remove([photoPath]);
+}
+
+function pendingPhotoUrl(photoPath) {
+    if (!photoPath) return '';
+    return db.storage.from(PENDING_PHOTO_BUCKET).getPublicUrl(photoPath).data.publicUrl;
+}
+
+function openPhotoLightbox(url) {
+    document.getElementById('photo_lightbox_img').src = url;
+    document.getElementById('photo_lightbox').classList.add('open');
+}
+
+function closePhotoLightbox() {
+    document.getElementById('photo_lightbox').classList.remove('open');
+    document.getElementById('photo_lightbox_img').src = '';
+}
+
 // ===== 開催結果・ペンディング確認（簡易検査・外観検査・出荷確認会議） =====
 // ペンディング項目の担当者に「割り当てられた」ことを通知（profilesに無ければnotification_recipientsへメールのみ）
 // isFixed: 固定の「出荷準備」項目なら true、通常のペンディング項目なら false
