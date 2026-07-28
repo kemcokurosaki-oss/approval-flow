@@ -4955,13 +4955,6 @@ function pendingDueSoon(dueStr) {
     return diffDays <= 3;
 }
 
-// ペンディング項目の状態マークHTML（完了=緑チェック／未完了で期日間近=オレンジ警告／それ以外=マークなし）
-function pendingStatusIconHtml(item) {
-    if (item.completed) return `<div class="pending-status-icon sc-approved">✓</div>`;
-    if (pendingDueSoon(item.due)) return `<div class="pending-status-icon sc-pending">!</div>`;
-    return `<div class="pending-status-icon-empty"></div>`;
-}
-
 let _profilesCache = null;
 async function getProfileByRole(role) {
     if (!_profilesCache) {
