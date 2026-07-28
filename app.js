@@ -2198,7 +2198,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
             </div>
         ` : '';
         const addFormHtml = canManage ? `
-            <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
+            <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;flex-wrap:wrap;">
                 <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
                     <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
                     <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
@@ -2215,9 +2215,9 @@ function buildQaResultSectionInner(req, isMyRequest) {
                     <span style="font-size:13px;color:#999;">出荷後対応</span>
                     <input type="checkbox" id="qa_pending_ship_after">
                 </label>
-                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                <div style="display:flex;flex-direction:column;flex-shrink:0;max-width:160px;">
                     <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真（任意）</span>
-                    <input type="file" accept="image/*" capture="environment" id="qa_pending_photo">
+                    <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="max-width:160px;font-size:12px;">
                 </div>
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
             </div>
