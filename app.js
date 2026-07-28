@@ -1417,9 +1417,8 @@ function renderShipAfterPendingList(wrap) {
             const canComplete = _canCompletePendingItem(r.req, r.item);
             return `
             <div class="pending-detail-row">
-                ${pendingStatusIconHtml(r.item)}
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
+                    <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}${pendingDueSoon(r.item.due) ? ' <span style="font-size:11px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : ''}</div>
                     ${r.item.owner ? `<div class="pending-detail-owner">担当: ${esc(r.item.owner)}</div>` : ''}
                     ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
                 </div>
