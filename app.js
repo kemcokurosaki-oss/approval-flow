@@ -2109,7 +2109,7 @@ function buildPendingSectionInner(req, isMyRequest) {
             if (canManage && qaEditingPendingIdx === idx) {
                 return `
             <div class="pending-detail-row pending-detail-editing">
-                <div class="pending-detail-icon">●</div>
+                <div class="pending-detail-icon">⚠️</div>
                 <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
                     <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
                         <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
