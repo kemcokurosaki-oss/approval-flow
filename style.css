@@ -1328,6 +1328,12 @@
             box-shadow: 0 0 0 2px #1e3a5f;
             transform: scale(1.03);
         }
+        /* 写真未添付の項目でも、添付ありの項目と内容テキストの先頭位置が揃うよう同じ大きさの空枠を確保する */
+        .pending-detail-photo-placeholder {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+        }
         .photo-lightbox {
             background: rgba(0,0,0,0.8);
             cursor: zoom-out;
