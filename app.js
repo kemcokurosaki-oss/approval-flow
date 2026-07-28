@@ -2110,7 +2110,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 return `
             <div class="pending-detail-row pending-detail-editing">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
-                <div class="pending-status-icon sc-pending">!</div>
+                ${pendingStatusIconHtml(item)}
                 <div class="pending-detail-content qa-pending-row" style="display:flex;flex-direction:column;gap:8px;">
                     <div style="display:flex;gap:6px;">
                         <div style="display:flex;flex-direction:column;flex:1;">
