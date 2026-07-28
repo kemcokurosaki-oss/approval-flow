@@ -2239,7 +2239,6 @@ function buildQaResultSectionInner(req, isMyRequest) {
     }
 
     return `<hr class="section-divider">
-        <div class="section-title">開催結果・ペンディング確認</div>
         ${body}`;
 }
 
