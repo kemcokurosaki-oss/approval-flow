@@ -1278,11 +1278,23 @@
         }
         .pending-detail-row:last-child { border-bottom: none; }
         .pending-detail-row.pending-done { opacity: 0.55; }
-        .pending-detail-icon { font-size: 13px; color: #e74c3c; width: 16px; flex-shrink: 0; margin-top: 2px; }
-        .pending-detail-row.pending-done .pending-detail-icon { color: #27ae60; }
+        /* 状態マークは「申請・承認状況」のステップ丸(.step-circle/.sc-pending/.sc-approved)と同じ配色に統一する */
+        .pending-status-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
         .pending-detail-content { flex: 1; min-width: 0; }
         .pending-detail-text { font-size: 15px; color: #333; font-weight: bold; }
         .pending-detail-machine { font-size: 14px; color: #888; font-weight: normal; }
+        .pending-detail-owner { font-size: 13px; color: #444; margin-top: 2px; }
         .pending-detail-due { font-size: 13px; color: #e67e22; margin-top: 2px; }
         .pending-detail-date { font-size: 13px; color: #27ae60; margin-top: 2px; }
         .pending-detail-photo-thumb {
