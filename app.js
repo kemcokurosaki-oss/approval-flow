@@ -3047,7 +3047,7 @@ async function saveEditQaPendingItem(requestId, idx) {
             photoPath = null;
         }
 
-        items[idx] = { ...items[idx], content, due, ship_after: shipAfter, photo_path: photoPath, ...(ownerEl ? { owner: newOwner || null } : {}) };
+        items[idx] = { ...items[idx], content, location: location || null, due, ship_after: shipAfter, photo_path: photoPath, ...(ownerEl ? { owner: newOwner || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
