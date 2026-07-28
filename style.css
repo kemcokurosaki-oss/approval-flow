@@ -1291,6 +1291,13 @@
             flex-shrink: 0;
             margin-top: 1px;
         }
+        .pending-detail-num {
+            font-size: 13px;
+            font-weight: bold;
+            color: #999;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
         .pending-detail-content { flex: 1; min-width: 0; }
         .pending-detail-text { font-size: 15px; color: #333; font-weight: bold; }
         .pending-detail-machine { font-size: 14px; color: #888; font-weight: normal; }
