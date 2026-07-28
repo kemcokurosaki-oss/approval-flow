@@ -1413,7 +1413,7 @@ function renderShipAfterPendingList(wrap) {
         const label = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const isCompletedProject = completedProjectNums.has(num);
         const rowsHtml = grouped[num].map(r => {
-            const flowLabel = FLOW_LABELS[r.req.flow_type] || r.req.flow_type;
+            const flowLabel = QA_DETAIL_TITLE_LABELS[r.req.flow_type] || FLOW_LABELS[r.req.flow_type] || r.req.flow_type;
             const canComplete = _canCompletePendingItem(r.req, r.item);
             return `
             <div class="pending-detail-row">
