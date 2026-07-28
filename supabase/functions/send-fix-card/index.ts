@@ -87,8 +87,12 @@ Deno.serve(async (req) => {
             const { data: profs } = await admin.from("profiles").select("email").in("id", recipientIds);
             profileEmails = (profs || []).map((p) => p.email).filter(Boolean);
         }
-        const allEmails = [...new Set([...directEmails, ...profileEmails])] as string[];
-        if (allEmails.length === 0) return json({ error: "送信先が見つかりません（開催案内の宛先が未登録です）" }, 400);
+        let allEmails = [...new Set([...directEmails, ...profileEmails])] as string[];
+        if (TEST_MODE) {
+            allEmails = [TEST_EMAIL];
+        } else if (allEmails.length === 0) {
+            return json({ error: "送信先が見つかりません（開催案内の宛先が未登録です）" }, 400);
+        }
 
         const rowsHtml = items.map((it: any) => `
             <tr>
