@@ -3014,12 +3014,14 @@ function cancelEditQaPendingItem() {
 
 async function saveEditQaPendingItem(requestId, idx) {
     const contentEl     = document.getElementById(`qa_edit_content_${idx}`);
+    const locationEl    = document.getElementById(`qa_edit_location_${idx}`);
     const ownerEl       = document.getElementById(`qa_edit_owner_${idx}`);
     const dueEl         = document.getElementById(`qa_edit_due_${idx}`);
     const shipAfterEl   = document.getElementById(`qa_edit_ship_after_${idx}`);
     const photoEl       = document.getElementById(`qa_edit_photo_${idx}`);
     const photoRemoveEl = document.getElementById(`qa_edit_photo_remove_${idx}`);
     const content       = contentEl ? contentEl.value.trim() : '';
+    const location      = locationEl ? locationEl.value.trim() : '';
     const due           = dueEl ? dueEl.value : '';
     const photoFile     = photoEl?.files?.[0] || null;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
