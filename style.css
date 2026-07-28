@@ -1308,6 +1308,20 @@
             max-height: 90vh;
             border-radius: 4px;
         }
+        /* ===== ペンディング新規追加フォーム: 一覧との境目を明確にする枠 ===== */
+        .qa-pending-add-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #f7f8fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .qa-pending-add-label {
+            font-size: 12px;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
         /* ===== ペンディング写真: ドラッグ&ドロップ選択欄 ===== */
         .photo-dropzone {
             border: 1px dashed #bbb;
