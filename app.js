@@ -2127,6 +2127,15 @@ function buildPendingSectionInner(req, isMyRequest) {
                         <span style="font-size:13px;color:#999;">出荷後対応</span>
                         <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
                     </label>
+                    <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真</span>
+                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
+                        <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}">
+                        ${item.photo_path ? `
+                        <label style="font-size:12px;color:#999;display:flex;align-items:center;gap:2px;">
+                            <input type="checkbox" id="qa_edit_photo_remove_${idx}"> 写真を削除
+                        </label>` : ''}
+                    </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
                     <button class="btn-success-xs" onclick="saveEditQaPendingItem('${req.id}', ${idx})">保存</button>
