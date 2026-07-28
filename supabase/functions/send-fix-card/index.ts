@@ -43,6 +43,7 @@ function photoUrl(path: string | null) {
 }
 
 Deno.serve(async (req) => {
+    if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     try {
