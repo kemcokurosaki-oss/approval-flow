@@ -2215,7 +2215,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
                 <div class="qa-pending-add-label">ペンディングを追加</div>
                 <div class="pending-row qa-pending-row" style="flex-direction:column;align-items:stretch;gap:8px;">
                     <div style="display:flex;gap:6px;">
-                        <div style="display:flex;flex-direction:column;flex:0 0 35%;">
+                        <div style="display:flex;flex-direction:column;flex:1;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所（任意）</span>
                             <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
                         </div>
