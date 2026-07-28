@@ -4,8 +4,9 @@ import { SMTPClient } from "https://deno.land/x/denomailer/mod.ts";
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GMAIL_USER           = Deno.env.get("GMAIL_USER")!;
-const GMAIL_APP_PASSWORD   = Deno.env.get("GMAIL_APP_PASSWORD")!;
+// secrets欄に貼り付けた際の前後の空白・改行が原因でSMTP認証や送信元アドレスの検証に失敗することがあるためtrimする
+const GMAIL_USER           = (Deno.env.get("GMAIL_USER") ?? "").trim();
+const GMAIL_APP_PASSWORD   = (Deno.env.get("GMAIL_APP_PASSWORD") ?? "").trim();
 const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
 const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
