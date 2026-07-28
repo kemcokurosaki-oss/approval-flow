@@ -1280,16 +1280,22 @@
         .pending-detail-row.pending-done { opacity: 0.55; }
         /* 状態マークは「申請・承認状況」のステップ丸(.step-circle/.sc-pending/.sc-approved)と同じ配色に統一する */
         .pending-status-icon {
-            width: 21px;
-            height: 21px;
+            width: 19px;
+            height: 19px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             flex-shrink: 0;
             margin-top: 1px;
+        }
+        /* 期日に余裕がある場合はマークを表示しないが、通し番号の位置がズレないよう同じ大きさの空枠を確保する */
+        .pending-status-icon-empty {
+            width: 19px;
+            height: 19px;
+            flex-shrink: 0;
         }
         .pending-detail-num {
             font-size: 19px;
