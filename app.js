@@ -2122,7 +2122,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                             <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
                         </div>
                     </div>
-                    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;">
+                    <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
                         <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
                             <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
@@ -2224,7 +2224,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
                             <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
                         </div>
                     </div>
-                    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;">
+                    <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
                         <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
                             <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
