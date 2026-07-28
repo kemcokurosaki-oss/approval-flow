@@ -10,6 +10,13 @@ const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
 const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
 
+// ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー。無いとプリフライト(OPTIONS)で弾かれ、
+// supabase-js側には「Failed to send a request to the Edge Function」という不透明なエラーになる
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 // 開催案内メールの notification_type と揃え、同じ宛先を再利用する
 const FLOW_NOTIF_TYPE: Record<string, string> = {
     inspection:        "inspection_invite",
