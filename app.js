@@ -2987,12 +2987,15 @@ function cancelEditQaPendingItem() {
 }
 
 async function saveEditQaPendingItem(requestId, idx) {
-    const contentEl   = document.getElementById(`qa_edit_content_${idx}`);
-    const ownerEl     = document.getElementById(`qa_edit_owner_${idx}`);
-    const dueEl       = document.getElementById(`qa_edit_due_${idx}`);
-    const shipAfterEl = document.getElementById(`qa_edit_ship_after_${idx}`);
-    const content     = contentEl ? contentEl.value.trim() : '';
-    const due         = dueEl ? dueEl.value : '';
+    const contentEl     = document.getElementById(`qa_edit_content_${idx}`);
+    const ownerEl       = document.getElementById(`qa_edit_owner_${idx}`);
+    const dueEl         = document.getElementById(`qa_edit_due_${idx}`);
+    const shipAfterEl   = document.getElementById(`qa_edit_ship_after_${idx}`);
+    const photoEl       = document.getElementById(`qa_edit_photo_${idx}`);
+    const photoRemoveEl = document.getElementById(`qa_edit_photo_remove_${idx}`);
+    const content       = contentEl ? contentEl.value.trim() : '';
+    const due           = dueEl ? dueEl.value : '';
+    const photoFile     = photoEl?.files?.[0] || null;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('更新中...');
@@ -3004,7 +3007,19 @@ async function saveEditQaPendingItem(requestId, idx) {
         const prevOwner  = items[idx].owner || '';
         const newOwner   = ownerEl ? ownerEl.value.trim() : prevOwner;
         const shipAfter  = shipAfterEl ? shipAfterEl.checked : !!items[idx].ship_after;
-        items[idx] = { ...items[idx], content, due, ship_after: shipAfter, ...(ownerEl ? { owner: newOwner || null } : {}) };
+
+        let photoPath = items[idx].photo_path || null;
+        if (photoFile) {
+            const itemId = items[idx].id || crypto.randomUUID();
+            photoPath = await _uploadPendingPhoto(requestId, itemId, photoFile);
+            if (items[idx].photo_path && items[idx].photo_path !== photoPath) await _deletePendingPhoto(items[idx].photo_path);
+            items[idx] = { ...items[idx], id: itemId };
+        } else if (photoRemoveEl?.checked && photoPath) {
+            await _deletePendingPhoto(photoPath);
+            photoPath = null;
+        }
+
+        items[idx] = { ...items[idx], content, due, ship_after: shipAfter, photo_path: photoPath, ...(ownerEl ? { owner: newOwner || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
