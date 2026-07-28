@@ -2159,7 +2159,9 @@ function buildPendingSectionInner(req, isMyRequest) {
             <div class="pending-detail-row ${item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
                 ${pendingStatusIconHtml(item)}
-                ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
+                ${item.photo_path
+                    ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">`
+                    : `<div class="pending-detail-photo-placeholder"></div>`}
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${(item.machine || item.location) ? `<span class="pending-detail-machine">${esc(item.machine || item.location)}</span> ` : ''}${esc(item.content || '—')}${item.ship_after ? ' <span class="badge-ship-after" style="font-size:11px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
                     ${item.owner ? `<div class="pending-detail-owner">担当: ${esc(item.owner)}</div>` : ''}
