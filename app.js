@@ -2207,35 +2207,39 @@ function buildQaResultSectionInner(req, isMyRequest) {
         const addFormHtml = canManage ? `
             <div class="qa-pending-add-box">
                 <div class="qa-pending-add-label">ペンディングを追加</div>
-                <div class="pending-row qa-pending-row" style="align-items:flex-end;flex-wrap:wrap;">
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所（任意）</span>
-                        <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
+                <div class="pending-row qa-pending-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+                    <div style="display:flex;gap:6px;">
+                        <div style="display:flex;flex-direction:column;flex:0 0 35%;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所（任意）</span>
+                            <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
+                        </div>
+                        <div style="display:flex;flex-direction:column;flex:1;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
+                            <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
+                        </div>
                     </div>
-                    <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
-                        <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
+                    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;">
+                        <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
+                            <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
+                        </div>
+                        <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
+                            <input type="date" id="qa_pending_due" class="pending-due">
+                        </div>
+                        <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                            <span style="font-size:13px;color:#999;">出荷後対応</span>
+                            <input type="checkbox" id="qa_pending_ship_after">
+                        </label>
                     </div>
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
-                        <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
-                    </div>
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
-                        <input type="date" id="qa_pending_due" class="pending-due">
-                    </div>
-                    <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
-                        <span style="font-size:13px;color:#999;">出荷後対応</span>
-                        <input type="checkbox" id="qa_pending_ship_after">
-                    </label>
-                    <div style="display:flex;flex-direction:column;flex-basis:100%;margin-top:4px;">
+                    <div style="display:flex;flex-direction:column;">
                         <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真（任意）</span>
                         <div class="photo-dropzone">
                             <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="display:none;">
                             <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
                         </div>
                     </div>
-                    <div style="flex-basis:100%;display:flex;justify-content:flex-end;margin-top:6px;">
+                    <div style="display:flex;justify-content:flex-end;">
                         <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ ペンディングを追加</button>
                     </div>
                 </div>
