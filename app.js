@@ -2199,6 +2199,10 @@ function buildQaResultSectionInner(req, isMyRequest) {
                     <span style="font-size:13px;color:#999;">出荷後対応</span>
                     <input type="checkbox" id="qa_pending_ship_after">
                 </label>
+                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                    <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真（任意）</span>
+                    <input type="file" accept="image/*" capture="environment" id="qa_pending_photo">
+                </div>
                 <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
             </div>
         ` : '';
