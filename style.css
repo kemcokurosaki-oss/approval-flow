@@ -1279,7 +1279,6 @@
         .pending-detail-row:last-child { border-bottom: none; }
         /* 完了項目は一目で分かるよう、薄暗くする＋取り消し線＋写真をグレースケール化する */
         .pending-detail-row.pending-done { opacity: 0.45; }
-        .pending-detail-row.pending-done .pending-detail-text { text-decoration: line-through; }
         .pending-detail-row.pending-done .pending-detail-photo-thumb { filter: grayscale(0.7); }
         .pending-detail-num {
             width: 19px;
