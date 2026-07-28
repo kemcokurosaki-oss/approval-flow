@@ -2191,6 +2191,12 @@ function buildQaResultSectionInner(req, isMyRequest) {
         body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
     } else {
         const pendingHtml = buildPendingSectionInner(req, isMyRequest);
+        const hasSendableItems = (req.sheet_data?.pending_items || []).some(it => it.content);
+        const sendCardBtnHtml = (isQualityOrSeikan && hasSendableItems) ? `
+            <div style="margin-top:8px;">
+                <button type="button" class="btn-xs" onclick="sendFixCard('${req.id}')">✉ 手直しカードを送信</button>
+            </div>
+        ` : '';
         const addFormHtml = canManage ? `
             <div class="pending-row qa-pending-row" style="margin-top:8px;align-items:flex-end;">
                 <div style="display:flex;flex-direction:column;flex:1;min-width:100px;">
