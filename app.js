@@ -1420,7 +1420,7 @@ function renderShipAfterPendingList(wrap) {
                 <div class="pending-status-icon sc-pending">!</div>
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
-                    ${r.item.owner ? `<div class="pending-detail-due">担当: ${esc(r.item.owner)}</div>` : ''}
+                    ${r.item.owner ? `<div class="pending-detail-owner">担当: ${esc(r.item.owner)}</div>` : ''}
                     ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
                 </div>
                 ${canComplete ? `<button class="btn-success-xs" onclick="completePendingItem('${r.req.id}', ${r.idx}, {skipModalFallback:true})">完了にする</button>` : ''}
