@@ -3074,7 +3074,7 @@ async function sendFixCard(requestId) {
             } catch (_) { /* ignore parse failure, fall back to error.message */ }
             throw new Error(msg);
         }
-        showToast(`手直しカードを送信しました（${data?.sentTo ?? 0}件）`, 'success');
+        showToast(`手直しカードを送信しました（${data?.sentTo ?? 0}件）${data?.testMode ? ' ※テストモード' : ''}`, 'success');
     } catch (e) {
         showToast('送信に失敗しました: ' + e.message, 'error');
     } finally {
