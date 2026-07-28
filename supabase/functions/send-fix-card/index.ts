@@ -7,6 +7,8 @@ const SERVICE_ROLE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GMAIL_USER           = Deno.env.get("GMAIL_USER")!;
 const GMAIL_APP_PASSWORD   = Deno.env.get("GMAIL_APP_PASSWORD")!;
 const PHOTO_BUCKET         = "pending-item-photos";
+const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
+const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
 
 // 開催案内メールの notification_type と揃え、同じ宛先を再利用する
 const FLOW_NOTIF_TYPE: Record<string, string> = {
