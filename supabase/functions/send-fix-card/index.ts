@@ -9,7 +9,8 @@ const RESEND_API_KEY       = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
 const RESEND_FROM          = "承認フロー <onboarding@resend.dev>";
 const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
-const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
+// Resendはドメイン未認証の間、アカウント登録に使ったメールアドレス宛にしか送信できないため、テスト中はそちらに合わせる
+const TEST_EMAIL           = "kemco.kurosaki@gmail.com";
 
 // ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー
 const corsHeaders = {
