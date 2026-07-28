@@ -4936,6 +4936,12 @@ function esc(str) {
         .replace(/"/g, '&quot;');
 }
 
+// ペンディング項目一覧の通し番号表示（①②③...、21件目以降は「21.」のようにフォールバック）
+const CIRCLED_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+function circledNum(n) {
+    return CIRCLED_NUMS[n - 1] || `${n}.`;
+}
+
 let _profilesCache = null;
 async function getProfileByRole(role) {
     if (!_profilesCache) {
