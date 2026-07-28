@@ -4865,6 +4865,41 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// ペンディング項目の写真選択欄（.photo-dropzone）: クリック・ドラッグ＆ドロップの両方に対応
+// 動的に再描画されるHTMLのため、個別要素へのバインドではなくdocument委譲で処理する
+function _photoDropzoneLabel(zone) {
+    const input = zone.querySelector('input[type="file"]');
+    const label = zone.querySelector('.photo-dropzone-label');
+    if (label) label.textContent = input?.files?.[0]?.name || 'クリックまたはドラッグ＆ドロップで写真を選択';
+}
+document.addEventListener('click', (e) => {
+    const zone = e.target.closest('.photo-dropzone');
+    if (zone) zone.querySelector('input[type="file"]')?.click();
+});
+document.addEventListener('change', (e) => {
+    const zone = e.target.closest('.photo-dropzone');
+    if (zone && e.target.matches('input[type="file"]')) _photoDropzoneLabel(zone);
+});
+document.addEventListener('dragover', (e) => {
+    const zone = e.target.closest('.photo-dropzone');
+    if (zone) { e.preventDefault(); zone.classList.add('drag-over'); }
+});
+document.addEventListener('dragleave', (e) => {
+    const zone = e.target.closest('.photo-dropzone');
+    if (zone) zone.classList.remove('drag-over');
+});
+document.addEventListener('drop', (e) => {
+    const zone = e.target.closest('.photo-dropzone');
+    if (!zone) return;
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const input = zone.querySelector('input[type="file"]');
+    if (input && e.dataTransfer.files.length > 0) {
+        input.files = e.dataTransfer.files;
+        _photoDropzoneLabel(zone);
+    }
+});
+
 function fmtDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
