@@ -25,6 +25,13 @@ const FLOW_NOTIF_TYPE: Record<string, string> = {
     shipping_meeting:  "shipping_meeting_invite",
 };
 
+// メール件名・本文見出し用のフロー短縮名（app.js側のQA_DETAIL_TITLE_LABELSと同じ表記に揃える）
+const FLOW_SHORT_LABEL: Record<string, string> = {
+    inspection:        "外観検査",
+    simple_inspection: "簡易検査",
+    shipping_meeting:  "出荷確認会議",
+};
+
 function json(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
