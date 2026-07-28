@@ -2219,21 +2219,21 @@ function buildQaResultSectionInner(req, isMyRequest) {
                             <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
                         </div>
                         <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
-                            <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
+                            <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
                         </div>
                     </div>
                     <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;">
                         <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
-                            <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
+                            <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
                         </div>
                         <div style="display:flex;flex-direction:column;flex-shrink:0;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
                             <input type="date" id="qa_pending_due" class="pending-due">
                         </div>
                         <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
-                            <span style="font-size:13px;color:#999;">出荷後対応</span>
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">出荷後対応</span>
                             <input type="checkbox" id="qa_pending_ship_after">
                         </label>
                     </div>
