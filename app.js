@@ -3042,9 +3042,10 @@ async function deleteQaPendingItem(requestId, idx) {
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
-        items.splice(idx, 1);
+        const [removed] = items.splice(idx, 1);
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
+        if (removed?.photo_path) await _deletePendingPhoto(removed.photo_path);
 
         _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を削除しました');
     } catch (e) {
