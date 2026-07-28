@@ -304,11 +304,13 @@ const FLOW_LABELS = {
     shipping:            '出荷確定申請'
 };
 
-// 開催案内送信後の詳細モーダルヘッダー用（「開催案内」を省いた表記）
+// 開催案内送信後の詳細モーダルヘッダー用（「開催案内」を省いた表記）。出荷後対応ペンディング一覧のフロー名短縮でも流用する
 const QA_DETAIL_TITLE_LABELS = {
     simple_inspection: '簡易検査',
     inspection:        '外観検査',
-    shipping_meeting:  '出荷確認会議'
+    shipping_meeting:  '出荷確認会議',
+    assembly:          '組立',
+    test_run:          '試運転'
 };
 
 // タスク名 → フロー種別（工程表の実タスクからフロー構成・順序を導出するための対応表）
