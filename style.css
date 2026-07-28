@@ -1333,8 +1333,14 @@
             text-align: center;
             transition: border-color .15s, background .15s, color .15s;
         }
-        .photo-dropzone:hover { border-color: #999; background: #fafafa; }
-        .photo-dropzone.drag-over { border-color: #1e3a5f; background: #eef3f8; color: #1e3a5f; }
+        .photo-dropzone:hover { border-color: #1e3a5f; background: #eef3f8; color: #1e3a5f; }
+        .photo-dropzone.drag-over {
+            border-width: 2px;
+            border-color: #27ae60;
+            background: #eafaf0;
+            color: #1c8f4d;
+            font-weight: bold;
+        }
         .btn-success-xs {
             padding: 5px 12px; font-size: 13px;
             background: #fff; border: 1px solid #27ae60; color: #27ae60;
