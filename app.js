@@ -4944,6 +4944,24 @@ function circledNum(n) {
     return CIRCLED_NUMS[n - 1] || `${n}.`;
 }
 
+// ペンディング項目の完了予定日が迫っている（3日以内・期限切れ含む）かどうか。未設定の場合はfalse
+function pendingDueSoon(dueStr) {
+    if (!dueStr) return false;
+    const [y, m, d] = dueStr.split('-').map(Number);
+    const dueUTC = Date.UTC(y, m - 1, d);
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((dueUTC - todayUTC) / 86400000);
+    return diffDays <= 3;
+}
+
+// ペンディング項目の状態マークHTML（完了=緑チェック／未完了で期日間近=オレンジ警告／それ以外=マークなし）
+function pendingStatusIconHtml(item) {
+    if (item.completed) return `<div class="pending-status-icon sc-approved">✓</div>`;
+    if (pendingDueSoon(item.due)) return `<div class="pending-status-icon sc-pending">!</div>`;
+    return `<div class="pending-status-icon-empty"></div>`;
+}
+
 let _profilesCache = null;
 async function getProfileByRole(role) {
     if (!_profilesCache) {
