@@ -2127,10 +2127,13 @@ function buildPendingSectionInner(req, isMyRequest) {
                         <span style="font-size:13px;color:#999;">出荷後対応</span>
                         <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
                     </label>
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                    <div style="display:flex;flex-direction:column;flex-basis:100%;margin-top:4px;">
                         <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真</span>
-                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
-                        <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}" style="font-size:12px;">
+                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
+                        <div class="photo-dropzone">
+                            <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}" style="display:none;">
+                            <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                        </div>
                         ${item.photo_path ? `
                         <label style="font-size:12px;color:#999;display:flex;align-items:center;gap:2px;">
                             <input type="checkbox" id="qa_edit_photo_remove_${idx}"> 写真を削除
