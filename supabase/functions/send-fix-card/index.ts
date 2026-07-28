@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
                     <thead>
                         <tr style="background:#f5f5f5;">
                             <th style="padding:8px;border:1px solid #ddd;">写真</th>
+                            <th style="padding:8px;border:1px solid #ddd;">場所</th>
                             <th style="padding:8px;border:1px solid #ddd;">内容</th>
                             <th style="padding:8px;border:1px solid #ddd;">担当者</th>
                             <th style="padding:8px;border:1px solid #ddd;">完了予定日</th>
