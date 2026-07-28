@@ -27,7 +27,7 @@ const FLOW_NOTIF_TYPE: Record<string, string> = {
 function json(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
     });
 }
 
