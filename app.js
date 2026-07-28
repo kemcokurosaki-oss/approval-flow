@@ -2233,9 +2233,9 @@ function buildQaResultSectionInner(req, isMyRequest) {
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
                             <input type="date" id="qa_pending_due" class="pending-due">
                         </div>
-                        <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                        <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">出荷後対応</span>
-                            <input type="checkbox" id="qa_pending_ship_after">
+                            <input type="checkbox" id="qa_pending_ship_after" style="margin-top:2px;">
                         </label>
                     </div>
                     <div style="display:flex;flex-direction:column;">
