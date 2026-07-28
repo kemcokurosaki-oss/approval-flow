@@ -2110,28 +2110,32 @@ function buildPendingSectionInner(req, isMyRequest) {
                 return `
             <div class="pending-detail-row pending-detail-editing">
                 <div class="pending-status-icon sc-pending">!</div>
-                <div class="pending-detail-content qa-pending-row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所</span>
-                        <input type="text" id="qa_edit_location_${idx}" class="pending-content" placeholder="場所" value="${esc(item.location || '')}">
+                <div class="pending-detail-content qa-pending-row" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;gap:6px;">
+                        <div style="display:flex;flex-direction:column;flex:0 0 35%;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所</span>
+                            <input type="text" id="qa_edit_location_${idx}" class="pending-content" placeholder="場所" value="${esc(item.location || '')}">
+                        </div>
+                        <div style="display:flex;flex-direction:column;flex:1;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
+                            <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
+                        </div>
                     </div>
-                    <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
-                        <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
+                    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;">
+                        <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
+                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者</span>
+                            <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
+                        </div>
+                        <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                            ${editLbl}
+                            <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
+                        </div>
+                        <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                            <span style="font-size:13px;color:#999;">出荷後対応</span>
+                            <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
+                        </label>
                     </div>
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;min-width:90px;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者</span>
-                        <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
-                    </div>
-                    <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                        ${editLbl}
-                        <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
-                    </div>
-                    <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
-                        <span style="font-size:13px;color:#999;">出荷後対応</span>
-                        <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
-                    </label>
-                    <div style="display:flex;flex-direction:column;flex-basis:100%;margin-top:4px;">
+                    <div style="display:flex;flex-direction:column;">
                         <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真</span>
                         ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
                         <div class="photo-dropzone">
