@@ -147,12 +147,19 @@ Deno.serve(async (req) => {
             },
         });
 
+        // content/html の自動multipart生成でGmail側が本文を正しく解釈できない事例があったため、
+        // 添付ファイルもないことだし、text/htmlの単一パートを明示的に指定してmultipart化を避ける
         await client.send({
             from: GMAIL_USER,
             to: allEmails,
             subject: `${TEST_MODE ? "【テスト】" : ""}【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
-            content: "auto",
-            html,
+            mimeContent: [
+                {
+                    mimeType: "text/html",
+                    content: html,
+                    encoding: "base64",
+                },
+            ],
         });
         await client.close();
 
