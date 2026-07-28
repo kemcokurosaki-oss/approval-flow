@@ -2113,7 +2113,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-status-icon sc-pending">!</div>
                 <div class="pending-detail-content qa-pending-row" style="display:flex;flex-direction:column;gap:8px;">
                     <div style="display:flex;gap:6px;">
-                        <div style="display:flex;flex-direction:column;flex:0 0 35%;">
+                        <div style="display:flex;flex-direction:column;flex:1;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所</span>
                             <input type="text" id="qa_edit_location_${idx}" class="pending-content" placeholder="場所" value="${esc(item.location || '')}">
                         </div>
