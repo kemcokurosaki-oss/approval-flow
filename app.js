@@ -1417,7 +1417,7 @@ function renderShipAfterPendingList(wrap) {
             const canComplete = _canCompletePendingItem(r.req, r.item);
             return `
             <div class="pending-detail-row">
-                <div class="pending-status-icon sc-pending">!</div>
+                ${pendingStatusIconHtml(r.item)}
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}</div>
                     ${r.item.owner ? `<div class="pending-detail-owner">担当: ${esc(r.item.owner)}</div>` : ''}
