@@ -3061,6 +3061,27 @@ async function deleteQaPendingItem(requestId, idx) {
     }
 }
 
+async function sendFixCard(requestId) {
+    if (!confirm('手直しカードをメールで送信します。よろしいですか？')) return;
+    showLoading('送信中...');
+    try {
+        const { data, error } = await db.functions.invoke('send-fix-card', { body: { requestId } });
+        if (error) {
+            let msg = error.message;
+            try {
+                const body = await error.context.json();
+                if (body?.error) msg = body.error;
+            } catch (_) { /* ignore parse failure, fall back to error.message */ }
+            throw new Error(msg);
+        }
+        showToast(`手直しカードを送信しました（${data?.sentTo ?? 0}件）`, 'success');
+    } catch (e) {
+        showToast('送信に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 async function finalizeQaMeeting(requestId) {
     if (!confirm('この開催案内を完了にします。よろしいですか？')) return;
 
