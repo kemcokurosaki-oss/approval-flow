@@ -2131,9 +2131,9 @@ function buildPendingSectionInner(req, isMyRequest) {
                             ${editLbl}
                             <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
                         </div>
-                        <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                        <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
                             <span style="display:block;font-size:13px;line-height:1.4;color:#999;">出荷後対応</span>
-                            <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>
+                            <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''} style="margin-top:2px;">
                         </label>
                     </div>
                     <div style="display:flex;flex-direction:column;">
