@@ -3100,7 +3100,7 @@ async function deleteQaPendingItem(requestId, idx) {
 }
 
 async function sendFixCard(requestId) {
-    if (!confirm('手直しカードをメールで送信します。よろしいですか？')) return;
+    if (!confirm('手直しカードをメールで送信します。\n宛先はこの検査の開催案内と同じです。よろしいですか？')) return;
     showLoading('送信中...');
     try {
         const { data, error } = await db.functions.invoke('send-fix-card', { body: { requestId } });
