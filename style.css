@@ -963,7 +963,7 @@
         .machine-checkbox-list input[type="checkbox"] { cursor: pointer; width: 15px; height: 15px; }
         .machine-checkbox-bar { display: flex; gap: 6px; margin-bottom: 4px; }
         .btn-xs { padding: 4px 10px; font-size: 13px; border-radius: 3px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
-        .btn-xs:hover { background: #e8e8e8; }
+        .btn-xs:hover { background: #cfcfcf; border-color: #999; }
         /* モーダルサイズ固定（submit_modalはコンテンツに合わせて自動調整） */
         #inspection_modal .modal,
         #simple_inspection_modal .modal,
