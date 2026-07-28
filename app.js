@@ -1428,7 +1428,9 @@ function renderShipAfterPendingList(wrap) {
         return `
         <div class="prog-card">
             <div class="prog-card-header">
-                <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
+                <div class="prog-card-header-left">
+                    <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">　${esc(label)}</span>` : ''}
+                </div>
                 ${isCompletedProject ? '<span class="si-badge si-gray" style="width:auto;border-radius:4px;padding:2px 8px;margin-left:8px;">完了済み工番</span>' : ''}
             </div>
             ${rowsHtml}
