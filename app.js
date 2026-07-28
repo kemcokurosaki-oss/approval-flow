@@ -2223,7 +2223,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
             </div>
         ` : '';
         body = (pendingHtml || addFormHtml)
-            ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}`
+            ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}${sendCardBtnHtml}`
             : `<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
