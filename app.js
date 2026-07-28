@@ -2246,7 +2246,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
                         </div>
                     </div>
                     <div style="display:flex;justify-content:flex-end;">
-                        <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ ペンディングを追加</button>
+                        <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">✓ 確定</button>
                     </div>
                 </div>
             </div>
