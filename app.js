@@ -2215,11 +2215,16 @@ function buildQaResultSectionInner(req, isMyRequest) {
                     <span style="font-size:13px;color:#999;">出荷後対応</span>
                     <input type="checkbox" id="qa_pending_ship_after">
                 </label>
-                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                <div style="display:flex;flex-direction:column;flex-basis:100%;margin-top:4px;">
                     <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真（任意）</span>
-                    <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="font-size:12px;">
+                    <div class="photo-dropzone">
+                        <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="display:none;">
+                        <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                    </div>
                 </div>
-                <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ 追加</button>
+                <div style="flex-basis:100%;display:flex;justify-content:flex-end;margin-top:6px;">
+                    <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">＋ ペンディングを追加</button>
+                </div>
             </div>
         ` : '';
         body = (pendingHtml || addFormHtml)
