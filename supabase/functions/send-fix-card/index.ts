@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
                         ? `<img src="${esc(photoUrl(it.photo_path))}" width="100" style="display:block;border-radius:4px;">`
                         : "—"
                 }</td>
+                <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || "—")}</td>
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || "—")}</td>
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.due || "—")}</td>
