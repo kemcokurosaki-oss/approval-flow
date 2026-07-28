@@ -37,6 +37,10 @@ Deno.serve(async (req) => {
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     try {
+        if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+            return json({ error: "GMAIL_USER / GMAIL_APP_PASSWORD が Edge Function の secrets に設定されていません" }, 500);
+        }
+
         const authHeader = req.headers.get("Authorization") ?? "";
         const jwt = authHeader.replace(/^Bearer\s+/i, "");
         const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
