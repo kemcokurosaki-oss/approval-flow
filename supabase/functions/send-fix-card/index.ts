@@ -1,18 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer/mod.ts";
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// secrets欄に貼り付けた際の前後の空白・改行が原因でSMTP認証や送信元アドレスの検証に失敗することがあるためtrimする
-const GMAIL_USER           = (Deno.env.get("GMAIL_USER") ?? "").trim();
-const GMAIL_APP_PASSWORD   = (Deno.env.get("GMAIL_APP_PASSWORD") ?? "").trim();
+const RESEND_API_KEY       = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
+// ドメイン(kusakabe.com)をResendで認証するまでは、この送信元アドレスからのみ送信可能。
+// 未認証の間は、Resendアカウント登録に使ったメールアドレス宛にしか届かない制約がある
+const RESEND_FROM          = "承認フロー <onboarding@resend.dev>";
 const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
 const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
 
-// ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー。無いとプリフライト(OPTIONS)で弾かれ、
-// supabase-js側には「Failed to send a request to the Edge Function」という不透明なエラーになる
+// ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -43,13 +42,34 @@ function photoUrl(path: string | null) {
     return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
 }
 
+// 完了予定日が3日以内(期限切れ含む)かどうか。アプリ側のpendingDueSoon()と同じ基準
+function isDueSoon(dueStr: string | null) {
+    if (!dueStr) return false;
+    const [y, m, d] = dueStr.split("-").map(Number);
+    const dueUTC = Date.UTC(y, m - 1, d);
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((dueUTC - todayUTC) / 86400000);
+    return diffDays <= 3;
+}
+
+function statusCellHtml(it: any) {
+    if (it.completed) {
+        return `<span style="color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:2px 8px;">完了: ${esc(it.completed_date || "—")}</span>`;
+    }
+    if (isDueSoon(it.due)) {
+        return `<span style="color:#c0392b;background:#fde8e8;border-radius:4px;padding:2px 8px;">期日間近: ${esc(it.due || "—")}</span>`;
+    }
+    return `期日: ${esc(it.due || "—")}`;
+}
+
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     try {
-        if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-            return json({ error: "GMAIL_USER / GMAIL_APP_PASSWORD が Edge Function の secrets に設定されていません" }, 500);
+        if (!RESEND_API_KEY) {
+            return json({ error: "RESEND_API_KEY が Edge Function の secrets に設定されていません" }, 500);
         }
 
         const authHeader = req.headers.get("Authorization") ?? "";
@@ -113,7 +133,7 @@ Deno.serve(async (req) => {
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || "—")}</td>
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
                 <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || "—")}</td>
-                <td style="padding:8px;border:1px solid #ddd;">${esc(it.due || "—")}</td>
+                <td style="padding:8px;border:1px solid #ddd;">${statusCellHtml(it)}</td>
             </tr>`).join("");
 
         const html = `
@@ -131,37 +151,32 @@ Deno.serve(async (req) => {
                             <th style="padding:8px;border:1px solid #ddd;">場所</th>
                             <th style="padding:8px;border:1px solid #ddd;">内容</th>
                             <th style="padding:8px;border:1px solid #ddd;">担当者</th>
-                            <th style="padding:8px;border:1px solid #ddd;">完了予定日</th>
+                            <th style="padding:8px;border:1px solid #ddd;">状態</th>
                         </tr>
                     </thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
             </div>`;
 
-        const client = new SMTPClient({
-            connection: {
-                hostname: "smtp.gmail.com",
-                port: 465,
-                tls: true,
-                auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
+        const resendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${RESEND_API_KEY}`,
             },
+            body: JSON.stringify({
+                from: RESEND_FROM,
+                to: allEmails,
+                subject: `${TEST_MODE ? "【テスト】" : ""}【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
+                html,
+            }),
         });
 
-        // content/html の自動multipart生成でGmail側が本文を正しく解釈できない事例があったため、
-        // 添付ファイルもないことだし、text/htmlの単一パートを明示的に指定してmultipart化を避ける
-        await client.send({
-            from: GMAIL_USER,
-            to: allEmails,
-            subject: `${TEST_MODE ? "【テスト】" : ""}【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
-            mimeContent: [
-                {
-                    mimeType: "text/html",
-                    content: html,
-                    encoding: "base64",
-                },
-            ],
-        });
-        await client.close();
+        if (!resendRes.ok) {
+            const errBody = await resendRes.text();
+            console.error("Resend error:", errBody);
+            return json({ error: `メール送信に失敗しました: ${errBody}` }, 502);
+        }
 
         // テストモード時は本番の通知履歴を汚さないよう監査ログへの記録をスキップする
         if (!TEST_MODE) {
