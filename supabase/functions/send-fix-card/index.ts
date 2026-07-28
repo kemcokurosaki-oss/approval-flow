@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
             from: GMAIL_USER,
             to: allEmails,
             subject: `${TEST_MODE ? "【テスト】" : ""}【外観検査】手直しカード（${reqRow.project_number || ""} ${reqRow.machine_name || ""}）`,
+            content: "auto",
             html,
         });
         await client.close();
