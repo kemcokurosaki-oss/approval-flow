@@ -1277,7 +1277,10 @@
             border-bottom: 1px solid #f0f2f6;
         }
         .pending-detail-row:last-child { border-bottom: none; }
-        .pending-detail-row.pending-done { opacity: 0.55; }
+        /* 完了項目は一目で分かるよう、薄暗くする＋取り消し線＋写真をグレースケール化する */
+        .pending-detail-row.pending-done { opacity: 0.45; }
+        .pending-detail-row.pending-done .pending-detail-text { text-decoration: line-through; }
+        .pending-detail-row.pending-done .pending-detail-photo-thumb { filter: grayscale(0.7); }
         /* 状態マークは「申請・承認状況」のステップ丸(.step-circle/.sc-pending/.sc-approved)と同じ配色に統一する */
         .pending-status-icon {
             width: 19px;
