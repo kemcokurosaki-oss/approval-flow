@@ -144,9 +144,11 @@ Deno.serve(async (req) => {
                 <td style="padding:8px;border:1px solid #ddd;">${statusCellHtml(it)}</td>
             </tr>`).join("");
 
+        const flowLabel = FLOW_SHORT_LABEL[reqRow.flow_type as string] || "検査";
+
         const html = `
             <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
-                <h2 style="margin-bottom:4px;">外観検査 手直しカード</h2>
+                <h2 style="margin-bottom:4px;">${esc(flowLabel)} ペンディングリスト</h2>
                 <p style="margin-top:0;color:#666;">
                     工事番号: ${esc(reqRow.project_number || "—")} ／
                     機械: ${esc(reqRow.machine_name || "—")} ／
