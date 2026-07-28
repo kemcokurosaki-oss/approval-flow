@@ -2260,7 +2260,9 @@ function buildQaResultSectionInner(req, isMyRequest) {
             : `<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
-    return `<hr class="section-divider">
+    // 開催案内が過ぎておりペンディング項目がある場合は、buildPendingSectionInner側の区切り線が使われるため、ここでは重ねて出さない
+    const needsOwnDivider = !meetingPassed || !(req.sheet_data?.pending_items || []).some(it => it.content || it.machine);
+    return `${needsOwnDivider ? '<hr class="section-divider">' : ''}
         ${body}`;
 }
 
