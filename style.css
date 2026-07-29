@@ -1033,6 +1033,21 @@
         .settings-check-row input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
         .settings-flow-group { border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; background: #fafafa; }
         .settings-flow-title { font-weight: bold; font-size: 13px; color: #1e3a5f; margin-bottom: 4px; }
+        .settings-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .settings-menu-card {
+            display: block; text-align: left; border: 1px solid #e0e0e0; border-radius: 6px;
+            padding: 14px; background: #fff; cursor: pointer; font-family: inherit;
+        }
+        .settings-menu-card:hover { border-color: #1e3a5f; background: #f5f8fb; }
+        .settings-menu-icon  { font-size: 22px; margin-bottom: 4px; }
+        .settings-menu-title { font-weight: bold; font-size: 14px; color: #1e3a5f; }
+        .settings-menu-desc  { font-size: 12px; color: #888; margin-top: 4px; }
+        .settings-search-results { max-height: 220px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 10px; }
+        .settings-search-item { display: flex; gap: 10px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+        .settings-search-item:last-child { border-bottom: none; }
+        .settings-search-item:hover { background: #f5f8fb; }
+        .settings-search-num   { font-weight: bold; min-width: 70px; }
+        .settings-search-label { color: #888; }
 
         /* ===== Location Dropdown ===== */
         .location-checkbox-area { position: relative; }
