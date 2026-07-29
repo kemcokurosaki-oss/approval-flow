@@ -4994,8 +4994,7 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'simple_inspection':
             notifType = 'simple_inspection_invite';
-            if (fixed.assembly_director) await addP({ role: 'assembly_director' });    // 常務
-            if (fixed.seikan_quality_reciprocal) await addSeikanOrQuality();            // 森村・黒崎 or 品証（申請者に応じて）
+            await addFixedRecipients();                             // 設定画面で個人単位に選択
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
