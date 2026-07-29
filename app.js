@@ -5006,14 +5006,12 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'inspection':
             notifType = 'inspection_invite';
-            if (fixed.assembly_director) await addP({ role: 'assembly_director' });    // 常務
-            if (fixed.seikan_quality_reciprocal) await addSeikanOrQuality();            // 森村・黒崎 or 品証（申請者に応じて）
+            await addFixedRecipients();                             // 設定画面で個人単位に選択
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
             await addSekkeiSupervisors();                           // 設計課長・部長
-            if (fixed.gijutsu) await addE({ department: '技戦' });  // 技戦
             if (kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
