@@ -214,6 +214,9 @@ function canApplyFlow(flowType) {
 // 承認者ロール一覧
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
+// 設定画面を開けるユーザー（製管2名）。開発用ロール切替バーの表示条件としても使う
+const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com'];
+
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
