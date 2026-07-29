@@ -1,6 +1,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; overflow: hidden; }
-        body { font-family: "メイリオ", Meiryo, sans-serif; background: #edf1f7; color: #333; font-size: 13px; }
+        body { font-family: "メイリオ", Meiryo, sans-serif; background: #edf1f7; color: #333; font-size: 13px; font-weight: 600; }
 
         /* ===== Header ===== */
         .header {
