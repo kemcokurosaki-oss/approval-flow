@@ -4937,13 +4937,11 @@ async function recordFlowNotifications(requestId, flowType) {
     };
 
     let notifType = 'completed';
-    const fixed = getFixedRecipientPlan(flowType); // 設定画面でON/OFFできる固定宛先枠
 
     switch (flowType) {
         case 'assembly':
-            // 固定: 品保・製管（設定でON/OFF可）
-            if (fixed.quality)            await addP({ role: 'quality' });
-            if (fixed.production_control) await addP({ role: 'production_control' });
+            // 固定宛先（設定画面で個人単位に選択）
+            await addFixedRecipients();
             // 工番担当者（profiles）: 組立（複数人対応）
             for (const o of kumitateOwners) await addPbyName(o);
             // 試運転タスクがある場合のみ試運転担当者も追加
