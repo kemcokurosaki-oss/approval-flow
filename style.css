@@ -391,6 +391,13 @@
             font-weight: bold;
             color: #1e3a5f;
         }
+        .mine-col-machine,
+        .side-card-machine {
+            font-size: 13px;
+            font-weight: normal;
+            color: #5a7ba6;
+            margin-left: 4px;
+        }
         .mine-col-date {
             font-size: 14px;
             color: #555;
