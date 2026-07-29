@@ -1259,16 +1259,32 @@ function renderProgressCards() {
         { type: 'shipping',           label: '出荷',       alwaysShow: true }
     ];
 
+    const buildShipDateSpan = (labelText, dateVal, isConfirmed) => {
+        const cls = 'prog-card-date' + (isConfirmed ? ' is-confirmed' : '');
+        return '<span class="' + cls + '"><span class="prog-card-date-label">' + esc(labelText) + '</span> <span class="prog-card-date-value">' + fmtDate(dateVal) + '</span></span>';
+    };
+
     const html = nums.map(num => {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
         const hasAnyPacking = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
 
-        const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
-        const shippingDateLabel = effectiveShippingDate
-            ? `<span class="prog-card-date${shippingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${hasAnyPacking ? '工場出荷日' : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日')}</span> <span class="prog-card-date-value">${fmtDate(effectiveShippingDate)}</span></span>`
-            : '';
+        // 機械ごとに出荷日が異なる場合は機械名付きで個別表示し、揃っている場合は従来通り1本にまとめる
+        const machineShipDates = machines.map(m => Object.assign({ machine: m }, getEffectiveShippingDateForMachine(num, m)));
+        const uniqueShipDates = new Set(machineShipDates.filter(d => d.date).map(d => d.date));
+
+        let shippingDateLabel;
+        if (machines.length > 1 && uniqueShipDates.size > 1) {
+            shippingDateLabel = machineShipDates.filter(d => d.date).map(d => {
+                const baseLabel = hasAnyPacking ? '工場出荷日' : (d.isConfirmed ? '確定出荷日' : '出荷予定日');
+                return buildShipDateSpan('【' + d.machine + '】' + baseLabel, d.date, d.isConfirmed);
+            }).join('');
+        } else {
+            const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
+            const baseLabel = hasAnyPacking ? '工場出荷日' : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日');
+            shippingDateLabel = effectiveShippingDate ? buildShipDateSpan(baseLabel, effectiveShippingDate, shippingDateConfirmed) : '';
+        }
 
         let packingDateLabel = '';
         if (hasAnyPacking) {
