@@ -662,6 +662,7 @@ async function loadPendingSide() {
     }).map(s => ({
         id:         s.approval_requests.id,
         pNum:       s.approval_requests.project_number || '—',
+        machineName: s.approval_requests.machine_name || '',
         flowType:   s.approval_requests.flow_type,
         flowLabel:  FLOW_LABELS[s.approval_requests.flow_type] || s.approval_requests.flow_type,
         date:       s.approval_requests.created_at,
