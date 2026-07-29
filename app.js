@@ -3880,16 +3880,17 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
         }
     };
 
-    // 全開催案内共通
-    await addP({ role: 'production_control' });
-    await addP({ role: 'assembly_director' });
+    // 全開催案内共通（常務・製管⇔品証・技戦は設定でON/OFF可）
+    const fixed = getFixedRecipientPlan(flowType);
+    if (fixed.seikan_quality_reciprocal) await addSeikanOrQualityPreview();
+    if (fixed.assembly_director)         await addP({ role: 'assembly_director' });
     for (const o of kumitateOwners) await addPbyName(o);
     for (const o of shiuntenOwnersFallback) await addPbyName(o);
     await addEbyName(salesOwner);
     for (const o of sekkeiOwnersFallback) await addEbyName(o);
     // 設計管理職: 担当者の上長を members テーブルから取得
     await addSekkeiSupervisors();
-    if (flowType !== 'simple_inspection') await addE({ department: '技戦' }); // 簡易検査は技戦を宛先から除外
+    if (fixed.gijutsu) await addE({ department: '技戦' });
 
     // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
     if (kumitateOwners.length > 0) {
