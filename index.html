@@ -690,6 +690,23 @@
     </div>
 </div>
 
+<!-- ===== 設定画面（製管2名のみ） ===== -->
+<div id="settings_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>⚙ 設定</h2>
+            <button class="modal-close" onclick="closeSettingsModal()">×</button>
+        </div>
+        <div class="modal-body" id="settings_body">
+            <div class="loading-indicator">読み込み中...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeSettingsModal()">閉じる</button>
+            <button class="btn btn-primary" onclick="saveFlowSettings()">保存する</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== ペンディング写真ライトボックス ===== -->
 <div id="photo_lightbox" class="modal-overlay photo-lightbox" onclick="closePhotoLightbox()">
     <img id="photo_lightbox_img" src="" alt="修正箇所の写真">
