@@ -4859,13 +4859,6 @@ async function recordFlowNotifications(requestId, flowType) {
     const machineName = req?.machine_name;
     if (!projectNum) return;
 
-    // 申請者のプロファイルを取得（製管スタッフが代理申請した場合の宛先判定に使用）
-    let requesterProfile = null;
-    if (req?.requester_id) {
-        const { data: rp } = await db.from('profiles').select('id, role, department').eq('id', req.requester_id).single();
-        requesterProfile = rp;
-    }
-
     // 対象機械のタスクオーナーを取得（機械名がある場合は機械でフィルタ）
     let taskQuery = db.from('tasks').select('text, owner, major_item').eq('project_number', projectNum);
     if (machineName) taskQuery = taskQuery.eq('machine', machineName);
