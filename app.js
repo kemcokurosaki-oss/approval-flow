@@ -472,7 +472,7 @@ async function loadProjects() {
     // 工事番号ごとに情報を収集（既存アプリと同じく複数タスクから補完）
     tasks.forEach(t => {
         const num = (t.project_number || '').toString().trim();
-        if (!num || is2000sSeries(num)) return;
+        if (!num) return;
         if (!projectsMap[num]) {
             projectsMap[num] = { customer_name: '', project_details: '' };
         }
