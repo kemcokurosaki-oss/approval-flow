@@ -295,51 +295,58 @@ async function switchDevRole(value) {
 // 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
-// ===== 設定画面（flow_settings） =====
+// ===== 設定画面（flow_settings / flow_overrides） =====
 // ON/OFF設定の対象フロー種別（組立・出荷確定は工程の先頭・末尾に固定されるため対象外）
 const TOGGLABLE_FLOWS = ['test_run', 'simple_inspection', 'inspection', 'shipping_meeting', 'shipping_prep'];
-// フロー種別ごとに設定画面でON/OFFできる固定宛先枠（担当者ベースの動的な宛先は対象外）
-const FIXED_RECIPIENT_SLOTS = {
-    assembly:          [{ key: 'quality',                   label: '品証' },
-                         { key: 'production_control',       label: '製管' }],
-    test_run:          [{ key: 'quality',                   label: '品証' },
-                         { key: 'production_control',       label: '製管' },
-                         { key: 'assembly_director',         label: '常務' }],
-    shipping_meeting:  [{ key: 'assembly_director',         label: '常務' },
-                         { key: 'gijutsu',                   label: '技戦部門' },
-                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
-    simple_inspection: [{ key: 'assembly_director',         label: '常務' },
-                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
-    inspection:        [{ key: 'assembly_director',         label: '常務' },
-                         { key: 'gijutsu',                   label: '技戦部門' },
-                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
-    shipping_prep:     [{ key: 'quality',                   label: '品証' }],
-    shipping:          [{ key: 'assembly_director',         label: '常務' },
-                         { key: 'production_control',       label: '製管' },
-                         { key: 'gijutsu',                   label: '技戦部門' },
-                         { key: 'logistics',                 label: '物流課' }]
+// フロー種別ごとに設定画面で個人単位に選べる固定宛先の候補グループ（担当者ベースの動的な宛先は対象外）
+const FIXED_RECIPIENT_GROUPS = {
+    assembly:          [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' }],
+    test_run:          [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
+                         { key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' }],
+    shipping_meeting:  [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
+                         { key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
+                         { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' }],
+    simple_inspection: [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
+                         { key: 'quality',            label: '品証', kind: 'role',       role: 'quality' }],
+    inspection:        [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
+                         { key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
+                         { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' }],
+    shipping_prep:     [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' }],
+    shipping:          [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
+                         { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
+                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
 };
-let flowSettings = { enabled: {}, fixedRecipients: {} };
+let flowSettings   = { fixedRecipients: {} };
+let flowOverrides  = new Set(); // 工事番号・機械ごとにOFFにされたフロー（"projectmachineflow_type"）
+const FLOW_OVERRIDE_SEP = '';
 
 async function loadFlowSettings() {
-    const { data } = await db.from('flow_settings').select('key, value').in('key', ['flow_enabled', 'flow_fixed_recipients']);
-    const rows = Object.fromEntries((data || []).map(r => [r.key, r.value]));
-    flowSettings = {
-        enabled:         rows.flow_enabled || {},
-        fixedRecipients: rows.flow_fixed_recipients || {}
-    };
+    const [{ data: settingsRows }, { data: overrideRows }] = await Promise.all([
+        db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients'),
+        db.from('flow_overrides').select('project_number, machine, flow_type')
+    ]);
+    const rows = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
+    flowSettings  = { fixedRecipients: rows.flow_fixed_recipients || {} };
+    flowOverrides = new Set((overrideRows || []).map(r => `${r.project_number}${FLOW_OVERRIDE_SEP}${r.machine}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
 }
 
-// 中間5フロー（試運転・簡易検査・外観検査・出荷確認会議・出荷準備）のみ設定でOFFにできる。
-// 組立・出荷確定は常に有効（未設定キーはデフォルトで有効）
-function isFlowEnabled(flowType) {
+// 中間5フロー（試運転・簡易検査・外観検査・出荷確認会議・出荷準備）のみ、工事番号・機械単位でOFFにできる。
+// 組立・出荷確定は常に有効。exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
+function isFlowEnabledFor(flowType, projectNum, machine) {
     if (!TOGGLABLE_FLOWS.includes(flowType)) return true;
-    return flowSettings.enabled[flowType] !== false;
+    return !flowOverrides.has(`${projectNum}${FLOW_OVERRIDE_SEP}${machine}${FLOW_OVERRIDE_SEP}${flowType}`);
 }
 
-// フロー種別ごとの固定宛先枠（常務・品証・製管・技戦部門・物流課・製管⇔品証相互通知）の有効状態
+// フロー種別ごとの固定宛先（個人のprofile ID・notification_recipients ID）
 function getFixedRecipientPlan(flowType) {
-    return flowSettings.fixedRecipients[flowType] || {};
+    const plan = flowSettings.fixedRecipients[flowType] || {};
+    return { profileIds: plan.profileIds || [], recipientIds: plan.recipientIds || [] };
 }
 
 const FLOW_LABELS = {
