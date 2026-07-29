@@ -294,6 +294,32 @@ async function switchDevRole(value) {
 // 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
+// ===== 設定画面（flow_settings） =====
+// ON/OFF設定の対象フロー種別（組立・出荷確定は工程の先頭・末尾に固定されるため対象外）
+const TOGGLABLE_FLOWS = ['test_run', 'simple_inspection', 'inspection', 'shipping_meeting', 'shipping_prep'];
+let flowSettings = { enabled: {}, fixedRecipients: {} };
+
+async function loadFlowSettings() {
+    const { data } = await db.from('flow_settings').select('key, value').in('key', ['flow_enabled', 'flow_fixed_recipients']);
+    const rows = Object.fromEntries((data || []).map(r => [r.key, r.value]));
+    flowSettings = {
+        enabled:         rows.flow_enabled || {},
+        fixedRecipients: rows.flow_fixed_recipients || {}
+    };
+}
+
+// 中間5フロー（試運転・簡易検査・外観検査・出荷確認会議・出荷準備）のみ設定でOFFにできる。
+// 組立・出荷確定は常に有効（未設定キーはデフォルトで有効）
+function isFlowEnabled(flowType) {
+    if (!TOGGLABLE_FLOWS.includes(flowType)) return true;
+    return flowSettings.enabled[flowType] !== false;
+}
+
+// フロー種別ごとの固定宛先枠（常務・品証・製管・技戦部門・物流課・製管⇔品証相互通知）の有効状態
+function getFixedRecipientPlan(flowType) {
+    return flowSettings.fixedRecipients[flowType] || {};
+}
+
 const FLOW_LABELS = {
     assembly:            '組立完了申請',
     test_run:            '試運転完了申請',
