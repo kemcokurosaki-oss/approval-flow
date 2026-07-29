@@ -3772,8 +3772,8 @@ async function _getMiddleFlowChain(projectNum, machine) {
         if (text === '試運転' && r.machine !== machine) continue;
         if (best[flow] === undefined || r.sort_order < best[flow]) best[flow] = r.sort_order;
     }
-    // 設定でOFFにされたフローは、出荷準備等の前提チェックの対象から除外する
-    return Object.keys(best).filter(isFlowEnabled).sort((a, b) => best[a] - best[b]);
+    // 設定（工事番号・機械単位）でOFFにされたフローは、出荷準備等の前提チェックの対象から除外する
+    return Object.keys(best).filter(ft => isFlowEnabledFor(ft, projectNum, machine)).sort((a, b) => best[a] - best[b]);
 }
 
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
