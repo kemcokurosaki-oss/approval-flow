@@ -1270,16 +1270,16 @@ function renderProgressCards() {
         const machines = Object.keys(projectData[num]).sort();
         const hasAnyPacking = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
 
-        // 機械ごとに出荷日が異なる場合は機械名付きで個別表示し、揃っている場合は従来通り1本にまとめる
+        // 機械ごとに出荷日が異なる場合は右上にまとめず各機械行に個別表示し、揃っている場合は従来通り右上に1本表示する
         const machineShipDates = machines.map(m => Object.assign({ machine: m }, getEffectiveShippingDateForMachine(num, m)));
         const uniqueShipDates = new Set(machineShipDates.filter(d => d.date).map(d => d.date));
+        const perMachineShipDateDiffers = machines.length > 1 && uniqueShipDates.size > 1;
+        const machineShipDateMap = {};
+        machineShipDates.forEach(d => { machineShipDateMap[d.machine] = d; });
 
         let shippingDateLabel;
-        if (machines.length > 1 && uniqueShipDates.size > 1) {
-            shippingDateLabel = machineShipDates.filter(d => d.date).map(d => {
-                const baseLabel = hasAnyPacking ? '工場出荷日' : (d.isConfirmed ? '確定出荷日' : '出荷予定日');
-                return buildShipDateSpan('【' + d.machine + '】' + baseLabel, d.date, d.isConfirmed);
-            }).join('');
+        if (perMachineShipDateDiffers) {
+            shippingDateLabel = '';
         } else {
             const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
             const baseLabel = hasAnyPacking ? '工場出荷日' : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日');
