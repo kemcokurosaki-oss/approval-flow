@@ -4830,12 +4830,13 @@ async function recordFlowNotifications(requestId, flowType) {
     };
 
     let notifType = 'completed';
+    const fixed = getFixedRecipientPlan(flowType); // 設定画面でON/OFFできる固定宛先枠
 
     switch (flowType) {
         case 'assembly':
-            // 固定: 品保・製管
-            await addP({ role: 'quality' });
-            await addP({ role: 'production_control' });
+            // 固定: 品保・製管（設定でON/OFF可）
+            if (fixed.quality)            await addP({ role: 'quality' });
+            if (fixed.production_control) await addP({ role: 'production_control' });
             // 工番担当者（profiles）: 組立（複数人対応）
             for (const o of kumitateOwners) await addPbyName(o);
             // 試運転タスクがある場合のみ試運転担当者も追加
@@ -4852,10 +4853,10 @@ async function recordFlowNotifications(requestId, flowType) {
             break;
 
         case 'test_run':
-            // 固定: 品保・製管・常務
-            await addP({ role: 'quality' });
-            await addP({ role: 'production_control' });
-            await addP({ role: 'assembly_director' });
+            // 固定: 品保・製管・常務（設定でON/OFF可）
+            if (fixed.quality)            await addP({ role: 'quality' });
+            if (fixed.production_control) await addP({ role: 'production_control' });
+            if (fixed.assembly_director)  await addP({ role: 'assembly_director' });
             if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
             if (shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
@@ -4873,14 +4874,14 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'shipping_meeting':
             notifType = 'shipping_meeting_invite';
-            await addP({ role: 'assembly_director' });              // 常務
-            await addSeikanOrQuality();                             // 森村・黒崎 or 品証（申請者に応じて）
+            if (fixed.assembly_director) await addP({ role: 'assembly_director' });    // 常務
+            if (fixed.seikan_quality_reciprocal) await addSeikanOrQuality();            // 森村・黒崎 or 品証（申請者に応じて）
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
             await addSekkeiSupervisors();                           // 設計課長・部長
-            await addE({ department: '技戦' });                     // 技戦
+            if (fixed.gijutsu) await addE({ department: '技戦' });  // 技戦
             if (kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
@@ -4892,8 +4893,8 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'simple_inspection':
             notifType = 'simple_inspection_invite';
-            await addP({ role: 'assembly_director' });              // 常務
-            await addSeikanOrQuality();                             // 森村・黒崎 or 品証（申請者に応じて）
+            if (fixed.assembly_director) await addP({ role: 'assembly_director' });    // 常務
+            if (fixed.seikan_quality_reciprocal) await addSeikanOrQuality();            // 森村・黒崎 or 品証（申請者に応じて）
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
@@ -4905,14 +4906,14 @@ async function recordFlowNotifications(requestId, flowType) {
 
         case 'inspection':
             notifType = 'inspection_invite';
-            await addP({ role: 'assembly_director' });              // 常務
-            await addSeikanOrQuality();                             // 森村・黒崎 or 品証（申請者に応じて）
+            if (fixed.assembly_director) await addP({ role: 'assembly_director' });    // 常務
+            if (fixed.seikan_quality_reciprocal) await addSeikanOrQuality();            // 森村・黒崎 or 品証（申請者に応じて）
             for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             await addEbyName(salesOwner);                           // 営業担当者
             for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
             await addSekkeiSupervisors();                           // 設計課長・部長
-            await addE({ department: '技戦' });                     // 技戦
+            if (fixed.gijutsu) await addE({ department: '技戦' });  // 技戦
             if (kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
@@ -4923,16 +4924,16 @@ async function recordFlowNotifications(requestId, flowType) {
             break;
 
         case 'shipping_prep':
-            // 品証のみ宛先（製管へはメール送信時にCCで届く）
-            await addP({ role: 'quality' });
+            // 品証のみ宛先（設定でON/OFF可、製管へはメール送信時にCCで届く）
+            if (fixed.quality) await addP({ role: 'quality' });
             break;
 
         case 'shipping':
-            // 固定
-            await addP({ role: 'assembly_director' });          // 常務
-            await addP({ role: 'production_control' });  // 森村・黒崎
-            await addE({ department: '技戦' });                 // 小笠原
-            await addE({ department: '物流' });                 // 物流課
+            // 固定（設定でON/OFF可）
+            if (fixed.assembly_director)  await addP({ role: 'assembly_director' });  // 常務
+            if (fixed.production_control) await addP({ role: 'production_control' }); // 森村・黒崎
+            if (fixed.gijutsu)            await addE({ department: '技戦' });          // 小笠原
+            if (fixed.logistics)          await addE({ department: '物流' });          // 物流課
             // 設計管理職: 担当者の上長を members テーブルから取得
             await addSekkeiSupervisors();
             // 機械組立タスクがある場合: 組立課長
