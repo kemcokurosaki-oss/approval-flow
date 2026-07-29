@@ -429,13 +429,14 @@ async function bootApp(session) {
     document.getElementById('user_name_display').textContent =
         `${profile.name}（${ROLE_LABELS[profile.role] || profile.role}）`;
 
-    // 黒崎のみ開発用ロール切替バーを表示
-    const DEMO_USERS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com'];
-    if (DEMO_USERS.includes(currentUser.email)) {
+    // 製管2名のみ開発用ロール切替バー・設定ボタンを表示
+    if (ADMIN_EMAILS.includes(currentUser.email)) {
         document.getElementById('dev_bar').style.display = 'flex';
         document.getElementById('app').classList.add('has-dev-bar');
+        document.getElementById('settings_btn').style.display = '';
     }
 
+    await loadFlowSettings();
     await loadProjects();
     await refreshAll();
 
