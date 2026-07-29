@@ -142,7 +142,7 @@ const ROOM_EMAILS = {
     '第5会議室': 'Room05@kusakabe.com',
 };
 
-// 2000番台（2000〜2999）の工番判定（現在は承認フロー対象外）
+// 2000番台（2000〜2999）の工番判定（組立・試運転フローのみ承認フロー対象）
 const is2000sSeries = num => { const n = parseInt(num, 10); return n >= 2000 && n <= 2999; };
 // テンプレートC（3C/4C）の工番判定
 const isTemplateC = num => /^[34]C/i.test(num);
