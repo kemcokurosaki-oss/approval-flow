@@ -3952,11 +3952,21 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
             if (key && !extEmails.has(key)) { extEmails.add(key); extList.push(r); }
         });
     };
-    // 製管⇔品証の相互通知（recordFlowNotificationsのaddSeikanOrQuality相当のプレビュー版。
-    // 申請前のため申請者=現在ログイン中のユーザーとして判定する）
-    const addSeikanOrQualityPreview = async () => {
-        await addP({ role: 'production_control' });
-        if (getEffectiveRole() === 'production_control') await addP({ role: 'quality' });
+    // 設定画面で個人単位に選ばれた固定宛先を追加（プレビューのため申請者=現在ログイン中のユーザーとして除外する）
+    const addFixedRecipientsPreview = async () => {
+        const plan = getFixedRecipientPlan(flowType);
+        const ids = plan.profileIds.filter(id => id !== currentUser?.id);
+        if (ids.length > 0) {
+            const { data } = await db.from('profiles').select('id, name, email, role, department').in('id', ids);
+            (data || []).forEach(p => { if (!profileIds.has(p.id)) { profileIds.add(p.id); profileList.push(p); } });
+        }
+        if (plan.recipientIds.length > 0) {
+            const { data } = await db.from('notification_recipients').select('name, email, department, role').in('id', plan.recipientIds).eq('active', true);
+            (data || []).forEach(r => {
+                const key = r.email || r.name;
+                if (key && !extEmails.has(key)) { extEmails.add(key); extList.push(r); }
+            });
+        }
     };
     // members テーブルから設計担当者の上長を取得（プレビュー用）
     // 担当者不明・未登録の場合は設計全管理職にフォールバック
