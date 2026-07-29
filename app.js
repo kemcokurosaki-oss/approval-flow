@@ -1393,11 +1393,15 @@ function renderProgressCards() {
                 </div>${connector}`;
             }).join('');
 
-            const machineLabel = machines.length > 1 ? `<div class="prog-machine-label">【${esc(machine)}】</div>` : '';
-            return `<div class="prog-machine-row">
-                ${machineLabel}
-                <div class="flow-steps">${nodes}</div>
-            </div>`;
+            const machineLabel = machines.length > 1 ? '<div class="prog-machine-label">【' + esc(machine) + '】</div>' : '';
+            const machineShipInfo = perMachineShipDateDiffers ? machineShipDateMap[machine] : null;
+            const machineShipHtml = (machineShipInfo && machineShipInfo.date)
+                ? buildShipDateSpan(hasAnyPacking ? '工場出荷日' : (machineShipInfo.isConfirmed ? '確定出荷日' : '出荷予定日'), machineShipInfo.date, machineShipInfo.isConfirmed)
+                : '';
+            const rowHeader = (machineLabel || machineShipHtml)
+                ? '<div class="prog-machine-row-header">' + machineLabel + machineShipHtml + '</div>'
+                : '';
+            return '<div class="prog-machine-row">' + rowHeader + '<div class="flow-steps">' + nodes + '</div></div>';
         }).join('');
 
         return `<div class="prog-card">
