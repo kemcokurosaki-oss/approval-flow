@@ -744,12 +744,15 @@ async function loadPendingSide() {
     });
 
     // フロー名は見出し側で表示済みのため、カード内では省略して申請タブのカードと行数を揃える
-    const renderPendingCard = item => `
+    const renderPendingCard = item => {
+        const machineHtml = item.machineName ? '<span class="side-card-machine">' + esc(item.machineName) + '</span>' : '';
+        return `
         <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
-            <div class="side-card-title">${esc(item.pNum)}</div>
+            <div class="side-card-title">${esc(item.pNum)}${machineHtml}</div>
             <div class="side-card-sub">${fmtDate(item.date)}</div>
             <div class="side-card-status">${item.statusText}</div>
         </div>`;
+    };
 
     el.innerHTML = Object.keys(FLOW_LABELS).filter(ft => groups[ft]).map(flowType => {
         const items = groups[flowType];
