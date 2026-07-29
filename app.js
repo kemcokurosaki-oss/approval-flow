@@ -4907,16 +4907,13 @@ async function recordFlowNotifications(requestId, flowType) {
         const { data } = await db.from('notification_recipients').select('email').eq('name', name).eq('active', true);
         (data || []).map(r => r.email).filter(Boolean).forEach(e => extEmails.add(e));
     };
-    // 製管スタッフが開催案内を送った場合：相方の製管スタッフ＋品証（田中孝）を宛先に追加
-    // 品証が送った場合：製管スタッフ全員（森村・黒崎）を追加
-    const addSeikanOrQuality = async () => {
-        const isSeikanApplicant = requesterProfile?.role === 'production_control';
-        if (isSeikanApplicant) {
-            const { data: others } = await db.from('profiles').select('id').eq('role', 'production_control').neq('id', req.requester_id);
-            (others || []).forEach(p => profileIds.add(p.id));
-            await addP({ role: 'quality' }); // 品証（田中孝）
-        } else {
-            await addP({ role: 'production_control' }); // 森村・黒崎
+    // 設定画面で個人単位に選ばれた固定宛先を追加（申請者自身は宛先から除く）
+    const addFixedRecipients = async () => {
+        const plan = getFixedRecipientPlan(flowType);
+        plan.profileIds.filter(id => id !== req.requester_id).forEach(id => profileIds.add(id));
+        if (plan.recipientIds.length > 0) {
+            const { data } = await db.from('notification_recipients').select('email').in('id', plan.recipientIds).eq('active', true);
+            (data || []).map(r => r.email).filter(Boolean).forEach(e => extEmails.add(e));
         }
     };
 
