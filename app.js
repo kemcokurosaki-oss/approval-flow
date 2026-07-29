@@ -3842,6 +3842,12 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
             if (key && !extEmails.has(key)) { extEmails.add(key); extList.push(r); }
         });
     };
+    // 製管⇔品証の相互通知（recordFlowNotificationsのaddSeikanOrQuality相当のプレビュー版。
+    // 申請前のため申請者=現在ログイン中のユーザーとして判定する）
+    const addSeikanOrQualityPreview = async () => {
+        await addP({ role: 'production_control' });
+        if (getEffectiveRole() === 'production_control') await addP({ role: 'quality' });
+    };
     // members テーブルから設計担当者の上長を取得（プレビュー用）
     // 担当者不明・未登録の場合は設計全管理職にフォールバック
     const addSekkeiSupervisors = async () => {
