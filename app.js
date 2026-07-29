@@ -1330,6 +1330,8 @@ function renderProgressCards() {
             const tplC  = isTemplateC(num);
 
             const applicable = FLOW_DEFS.filter(f => {
+                // 設定でOFFにされたフローは非表示（ただし既存の申請済みデータがあれば継続して表示する）
+                if (!isFlowEnabled(f.type) && !mData.flows[f.type]) return false;
                 // 2000番台工事は組立・試運転フローのみ対象（出荷系・検査系は非表示）
                 if (is2000sSeries(num) && f.type !== 'assembly' && f.type !== 'test_run') return false;
                 if (f.alwaysShow) return true;
