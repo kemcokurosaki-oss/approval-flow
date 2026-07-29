@@ -4958,10 +4958,8 @@ async function recordFlowNotifications(requestId, flowType) {
             break;
 
         case 'test_run':
-            // 固定: 品保・製管・常務（設定でON/OFF可）
-            if (fixed.quality)            await addP({ role: 'quality' });
-            if (fixed.production_control) await addP({ role: 'production_control' });
-            if (fixed.assembly_director)  await addP({ role: 'assembly_director' });
+            // 固定宛先（設定画面で個人単位に選択）
+            await addFixedRecipients();
             if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
             if (shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
