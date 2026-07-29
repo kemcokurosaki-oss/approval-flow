@@ -2901,81 +2901,247 @@ function closeDetailModal() {
 }
 
 // ===== 設定画面（製管2名のみ） =====
+let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail'
+let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
+let settingsTogglePending   = {};     // 未保存の変更差分 { "machineflow_type": boolean(有効か) }
+
 async function openSettingsModal() {
     if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
     document.getElementById('settings_modal').classList.add('open');
     await loadFlowSettings();
-    renderSettingsModal();
+    showSettingsMenu();
 }
 
 function closeSettingsModal() {
     document.getElementById('settings_modal').classList.remove('open');
 }
 
-function renderSettingsModal() {
-    const body = document.getElementById('settings_body');
-
-    const enabledHtml = TOGGLABLE_FLOWS.map(ft => `
-        <label class="settings-check-row">
-            <input type="checkbox" data-flow-enabled="${ft}" ${flowSettings.enabled[ft] !== false ? 'checked' : ''}>
-            <span>${esc(FLOW_LABELS[ft] || ft)}</span>
-        </label>
-    `).join('');
-
-    const recipientsHtml = Object.keys(FIXED_RECIPIENT_SLOTS).map(ft => {
-        const plan = flowSettings.fixedRecipients[ft] || {};
-        const rows = FIXED_RECIPIENT_SLOTS[ft].map(slot => `
-            <label class="settings-check-row">
-                <input type="checkbox" data-flow-recipient="${ft}" data-slot="${slot.key}" ${plan[slot.key] !== false ? 'checked' : ''}>
-                <span>${esc(slot.label)}</span>
-            </label>
-        `).join('');
-        return `
-            <div class="settings-flow-group">
-                <div class="settings-flow-title">${esc(FLOW_LABELS[ft] || ft)}</div>
-                ${rows}
-            </div>`;
-    }).join('');
-
-    body.innerHTML = `
-        <div class="settings-section">
-            <div class="section-title">フローのON/OFF</div>
-            <div class="settings-note">OFFにすると、そのフローの新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
-            ${enabledHtml}
-        </div>
-        <hr class="section-divider">
-        <div class="settings-section">
-            <div class="section-title">開催案内・完了通知の固定宛先</div>
-            <div class="settings-note">工番の担当者（組立・設計・営業など）を宛先に含めるかどうかはここでは変更できません。</div>
-            ${recipientsHtml}
+function showSettingsMenu() {
+    settingsView = 'menu';
+    document.getElementById('settings_body').innerHTML = `
+        <div class="settings-menu">
+            <button class="settings-menu-card" onclick="showFlowToggleScreen()">
+                <div class="settings-menu-icon">🔀</div>
+                <div class="settings-menu-title">フローのON/OFF</div>
+                <div class="settings-menu-desc">工事番号・機械ごとに、不要なフローを飛ばす</div>
+            </button>
+            <button class="settings-menu-card" onclick="showRecipientsListScreen()">
+                <div class="settings-menu-icon">📧</div>
+                <div class="settings-menu-title">固定宛先の設定</div>
+                <div class="settings-menu-desc">開催案内・完了通知の宛先を個人単位で指定する</div>
+            </button>
         </div>
     `;
 }
 
-async function saveFlowSettings() {
-    const enabled = {};
-    document.querySelectorAll('#settings_body [data-flow-enabled]').forEach(cb => {
-        enabled[cb.dataset.flowEnabled] = cb.checked;
-    });
-    const fixedRecipients = {};
-    document.querySelectorAll('#settings_body [data-flow-recipient]').forEach(cb => {
-        const ft = cb.dataset.flowRecipient;
-        if (!fixedRecipients[ft]) fixedRecipients[ft] = {};
-        fixedRecipients[ft][cb.dataset.slot] = cb.checked;
-    });
+// ----- フローのON/OFF（工事番号・機械ごと） -----
+function showFlowToggleScreen() {
+    settingsView          = 'flow_toggle';
+    settingsToggleProject = '';
+    settingsTogglePending = {};
+    document.getElementById('settings_body').innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
+        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
+        <div class="form-group">
+            <label>工事番号を検索</label>
+            <input type="text" id="settings_project_search" placeholder="工事番号または客先名で検索" oninput="renderSettingsProjectResults(this.value)">
+        </div>
+        <div id="settings_project_results"></div>
+        <div id="settings_project_selected"></div>
+    `;
+}
+
+function renderSettingsProjectResults(query) {
+    const resultsEl = document.getElementById('settings_project_results');
+    const q = query.trim().toLowerCase();
+    if (!q) { resultsEl.innerHTML = ''; return; }
+    const matches = Object.keys(projectsMap)
+        .filter(num => num.toLowerCase().includes(q) || (projectsMap[num].customer_name || '').toLowerCase().includes(q))
+        .slice(0, 20);
+    resultsEl.innerHTML = matches.length
+        ? `<div class="settings-search-results">${matches.map(num => {
+            const p = projectsMap[num] || {};
+            const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+            return `<div class="settings-search-item" onclick="selectSettingsProject('${esc(num)}')">
+                <span class="settings-search-num">${esc(num)}</span>
+                <span class="settings-search-label">${esc(label)}</span>
+            </div>`;
+        }).join('')}</div>`
+        : `<div class="settings-note">該当する工事番号がありません</div>`;
+}
+
+async function selectSettingsProject(num) {
+    settingsToggleProject = num;
+    settingsTogglePending = {};
+    document.getElementById('settings_project_search').value = num;
+    document.getElementById('settings_project_results').innerHTML = '';
+
+    const p     = projectsMap[num] || {};
+    const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+    document.getElementById('settings_project_selected').innerHTML = `
+        <div class="settings-flow-group">
+            <div class="settings-flow-title">${esc(num)}　${esc(label)}</div>
+            <div class="machine-checkbox-bar">
+                <button class="btn-xs" onclick="toggleAllMachines('settings_machine_list', this)">全選択</button>
+            </div>
+            <div class="machine-checkbox-list" id="settings_machine_list"></div>
+        </div>
+        <div id="settings_toggle_grid"></div>
+        <div style="margin-top:10px;">
+            <button class="btn btn-primary" onclick="confirmFlowToggles()">確定</button>
+        </div>
+    `;
+    showLoading('読み込み中...');
+    try {
+        await _loadMachineCheckboxes(num, 'settings_machine_list', 'onSettingsMachineChange');
+    } finally {
+        hideLoading();
+    }
+    onSettingsMachineChange();
+}
+
+function onSettingsMachineChange() {
+    const machines = getSelectedMachines('settings_machine_list');
+    const gridEl   = document.getElementById('settings_toggle_grid');
+    if (!gridEl) return;
+    if (machines.length === 0) { gridEl.innerHTML = ''; return; }
+
+    gridEl.innerHTML = machines.map(machine => {
+        const rows = TOGGLABLE_FLOWS.map(ft => {
+            const key = `${machine}${ft}`;
+            const enabled = settingsTogglePending.hasOwnProperty(key)
+                ? settingsTogglePending[key]
+                : isFlowEnabledFor(ft, settingsToggleProject, machine);
+            return `
+                <label class="settings-check-row">
+                    <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
+                           ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
+                    <span>${esc(FLOW_LABELS[ft] || ft)}</span>
+                </label>`;
+        }).join('');
+        return `
+            <div class="settings-flow-group">
+                <div class="settings-flow-title">${esc(machine)}</div>
+                ${rows}
+            </div>`;
+    }).join('');
+}
+
+function onSettingsToggleChange(cb) {
+    const key = `${cb.dataset.settingsMachine}${cb.dataset.settingsFlow}`;
+    settingsTogglePending[key] = cb.checked;
+}
+
+async function confirmFlowToggles() {
+    const keys = Object.keys(settingsTogglePending);
+    if (keys.length === 0) { showToast('変更がありません', 'error'); return; }
 
     showLoading('保存中...');
     try {
-        const meta = { updated_at: new Date().toISOString(), updated_by: currentUser.email };
-        const { error: e1 } = await db.from('flow_settings').update({ value: enabled, ...meta }).eq('key', 'flow_enabled');
-        if (e1) throw e1;
-        const { error: e2 } = await db.from('flow_settings').update({ value: fixedRecipients, ...meta }).eq('key', 'flow_fixed_recipients');
-        if (e2) throw e2;
-
-        flowSettings = { enabled, fixedRecipients };
-        closeSettingsModal();
+        const toDelete = [];
+        const toUpsert = [];
+        for (const key of keys) {
+            const [machine, flowType] = key.split('');
+            if (settingsTogglePending[key]) {
+                toDelete.push({ machine, flowType }); // ON=デフォルトに戻す → 例外行を削除
+            } else {
+                toUpsert.push({
+                    project_number: settingsToggleProject, machine, flow_type: flowType,
+                    updated_by: currentUser.email, updated_at: new Date().toISOString()
+                });
+            }
+        }
+        for (const d of toDelete) {
+            await db.from('flow_overrides').delete()
+                .eq('project_number', settingsToggleProject).eq('machine', d.machine).eq('flow_type', d.flowType);
+        }
+        if (toUpsert.length > 0) {
+            await db.from('flow_overrides').upsert(toUpsert, { onConflict: 'project_number,machine,flow_type' });
+        }
+        await loadFlowSettings();
+        settingsTogglePending = {};
+        onSettingsMachineChange();
         await refreshAll();
         showToast('設定を保存しました。', 'success');
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ----- 固定宛先の設定（個人単位） -----
+function showRecipientsListScreen() {
+    settingsView = 'recipients_list';
+    const cards = Object.keys(FIXED_RECIPIENT_GROUPS).map(ft => `
+        <button class="settings-menu-card" onclick="showRecipientsDetailScreen('${ft}')">
+            <div class="settings-menu-title">${esc(FLOW_LABELS[ft] || ft)}</div>
+        </button>
+    `).join('');
+    document.getElementById('settings_body').innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">固定宛先の設定</div>
+        <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます（工番の担当者は別途自動で追加されます）。</div>
+        <div class="settings-menu">${cards}</div>
+    `;
+}
+
+async function showRecipientsDetailScreen(flowType) {
+    settingsView = 'recipients_detail';
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const groups = FIXED_RECIPIENT_GROUPS[flowType] || [];
+    const plan   = getFixedRecipientPlan(flowType);
+    const groupsHtml = [];
+    for (const g of groups) {
+        let candidates;
+        if (g.kind === 'role') {
+            const { data } = await db.from('profiles').select('id, name, email').eq('role', g.role);
+            candidates = (data || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile', checked: plan.profileIds.includes(p.id) }));
+        } else {
+            const { data } = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
+            candidates = (data || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }));
+        }
+        groupsHtml.push(`
+            <div class="settings-flow-group">
+                <div class="settings-flow-title">${esc(g.label)}</div>
+                ${candidates.length ? candidates.map(c => `
+                    <label class="settings-check-row">
+                        <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}>
+                        <span>${esc(c.name || '—')}</span>
+                        <span style="color:#999; font-size:12px;">${esc(c.email || '')}</span>
+                    </label>
+                `).join('') : '<div class="settings-note">該当者がいません</div>'}
+            </div>`);
+    }
+
+    body.innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showRecipientsListScreen()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">${esc(FLOW_LABELS[flowType] || flowType)}の固定宛先</div>
+        ${groupsHtml.join('')}
+        <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
+    `;
+}
+
+async function saveRecipientDetail(flowType) {
+    const profileIds   = [...document.querySelectorAll('#settings_body [data-recipient-kind="profile"]:checked')].map(cb => cb.dataset.recipientId);
+    const recipientIds = [...document.querySelectorAll('#settings_body [data-recipient-kind="recipient"]:checked')].map(cb => cb.dataset.recipientId);
+
+    showLoading('保存中...');
+    try {
+        const { data } = await db.from('flow_settings').select('value').eq('key', 'flow_fixed_recipients').single();
+        const value = data?.value || {};
+        value[flowType] = { profileIds, recipientIds };
+        const { error } = await db.from('flow_settings')
+            .update({ value, updated_at: new Date().toISOString(), updated_by: currentUser.email })
+            .eq('key', 'flow_fixed_recipients');
+        if (error) throw error;
+
+        flowSettings.fixedRecipients = value;
+        showToast('固定宛先を保存しました。', 'success');
+        showRecipientsListScreen();
     } catch (e) {
         showToast('保存に失敗しました: ' + e.message, 'error');
     } finally {
