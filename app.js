@@ -673,11 +673,12 @@ async function loadPendingSide() {
     let salesItems = [];
     if (isSales) {
         const { data: salesReqs } = await db.from('approval_requests')
-            .select('id, project_number, created_at')
+            .select('id, project_number, machine_name, created_at')
             .eq('flow_type', 'shipping').eq('status', 'awaiting_shipping_date');
         salesItems = (salesReqs || []).map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
+            machineName: r.machine_name || '',
             flowType:   'shipping',
             flowLabel:  '出荷確定申請',
             date:       r.created_at,
@@ -686,12 +687,13 @@ async function loadPendingSide() {
 
         // 仮出荷予定日は簡易検査/外観検査の申請そのものに付随（開催完了済み・未入力のもの）
         const { data: tentativeReqs } = await db.from('approval_requests')
-            .select('id, project_number, created_at')
+            .select('id, project_number, machine_name, created_at')
             .in('flow_type', ['simple_inspection', 'inspection']).eq('status', 'approved')
             .is('tentative_shipping_date', null);
         salesItems.push(...(tentativeReqs || []).map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
+            machineName: r.machine_name || '',
             flowType:   'tentative_shipping',
             flowLabel:  '仮出荷予定日',
             date:       r.created_at,
