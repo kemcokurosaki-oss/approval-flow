@@ -1259,6 +1259,8 @@ function renderProgressCards() {
             const tplC  = isTemplateC(num);
 
             const applicable = FLOW_DEFS.filter(f => {
+                // 2000番台工事は組立・試運転フローのみ対象（出荷系・検査系は非表示）
+                if (is2000sSeries(num) && f.type !== 'assembly' && f.type !== 'test_run') return false;
                 if (f.alwaysShow) return true;
                 if (f.type === 'test_run')          return hasTask(num, machine, '試運転')     || !!mData.flows['test_run'];
                 if (f.type === 'simple_inspection') return hasProjectFlow(num, '簡易検査')     || hasTask(num, machine, '簡易検査')     || !!mData.flows['simple_inspection'];
