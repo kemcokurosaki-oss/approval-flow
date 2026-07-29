@@ -5022,16 +5022,13 @@ async function recordFlowNotifications(requestId, flowType) {
             break;
 
         case 'shipping_prep':
-            // 品証のみ宛先（設定でON/OFF可、製管へはメール送信時にCCで届く）
-            if (fixed.quality) await addP({ role: 'quality' });
+            // 固定宛先（設定画面で個人単位に選択、製管へはメール送信時にCCで届く）
+            await addFixedRecipients();
             break;
 
         case 'shipping':
-            // 固定（設定でON/OFF可）
-            if (fixed.assembly_director)  await addP({ role: 'assembly_director' });  // 常務
-            if (fixed.production_control) await addP({ role: 'production_control' }); // 森村・黒崎
-            if (fixed.gijutsu)            await addE({ department: '技戦' });          // 小笠原
-            if (fixed.logistics)          await addE({ department: '物流' });          // 物流課
+            // 固定宛先（設定画面で個人単位に選択）
+            await addFixedRecipients();
             // 設計管理職: 担当者の上長を members テーブルから取得
             await addSekkeiSupervisors();
             // 機械組立タスクがある場合: 組立課長
