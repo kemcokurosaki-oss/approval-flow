@@ -200,6 +200,7 @@ function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
 function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
 
 function canApplyFlow(flowType) {
+    if (!isFlowEnabled(flowType)) return false;
     const role  = getEffectiveRole();
     const dept  = getEffectiveDept();
     const isQorS = role === 'quality' || role === 'production_control';
