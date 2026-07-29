@@ -1009,9 +1009,13 @@ async function loadProgress() {
 
     const baseNums = Object.keys(projectData).filter(num => {
         if (projectsMap[num] === undefined) return false;
-        if (is2000sSeries(num))       return false;
         if (isTInspectionSeries(num)) return false;
         if (is5or7Series(num))        return false;
+        if (is2000sSeries(num)) {
+            // 2000番台は組立・試運転フローのみ対象のため、いずれかのタスクがある工番だけ表示する
+            const machines = Object.keys(projectData[num]);
+            return machines.some(m => hasTask(num, m, '機械組立') || hasTask(num, m, '試運転'));
+        }
         if (isDSeries(num)) {
             const machines = Object.keys(projectData[num]);
             return machines.some(m => hasTask(num, m, '機械組立'));
