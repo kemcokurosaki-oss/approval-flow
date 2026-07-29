@@ -1135,6 +1135,21 @@ function renderProgressCards() {
         return { date: confirmed || tentative || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
     };
 
+    // 出荷予定日表示（機械単位）: 同工番内でも機械ごとに出荷日が異なる場合に個別表示するための算出
+    const getEffectiveShippingDateForMachine = (num, machine) => {
+        const mData = projectData[num][machine];
+        let tentative = null, confirmed = null;
+        const shipReq = mData.flows['shipping'];
+        if (shipReq?.confirmed_shipping_date) confirmed = shipReq.confirmed_shipping_date;
+        [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
+            if (req?.tentative_shipping_date && (!tentative || req.tentative_shipping_date < tentative)) {
+                tentative = req.tentative_shipping_date;
+            }
+        });
+        const fallback = (taskInfoMap || {})[`${num}__${machine}__工場出荷`]?.end_date || null;
+        return { date: confirmed || tentative || fallback || null, isConfirmed: !!confirmed };
+    };
+
     // 梱包出荷日表示: 工程表（梱包出荷タスク終了日）をベースに、梱包仮出荷日→梱包確定出荷日の順で上書きする
     const getEffectivePackingShippingDate = (num) => {
         let tentative = null, confirmed = null;
