@@ -298,6 +298,27 @@ const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting']
 // ===== 設定画面（flow_settings） =====
 // ON/OFF設定の対象フロー種別（組立・出荷確定は工程の先頭・末尾に固定されるため対象外）
 const TOGGLABLE_FLOWS = ['test_run', 'simple_inspection', 'inspection', 'shipping_meeting', 'shipping_prep'];
+// フロー種別ごとに設定画面でON/OFFできる固定宛先枠（担当者ベースの動的な宛先は対象外）
+const FIXED_RECIPIENT_SLOTS = {
+    assembly:          [{ key: 'quality',                   label: '品証' },
+                         { key: 'production_control',       label: '製管' }],
+    test_run:          [{ key: 'quality',                   label: '品証' },
+                         { key: 'production_control',       label: '製管' },
+                         { key: 'assembly_director',         label: '常務' }],
+    shipping_meeting:  [{ key: 'assembly_director',         label: '常務' },
+                         { key: 'gijutsu',                   label: '技戦部門' },
+                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
+    simple_inspection: [{ key: 'assembly_director',         label: '常務' },
+                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
+    inspection:        [{ key: 'assembly_director',         label: '常務' },
+                         { key: 'gijutsu',                   label: '技戦部門' },
+                         { key: 'seikan_quality_reciprocal', label: '製管⇔品証 相互通知' }],
+    shipping_prep:     [{ key: 'quality',                   label: '品証' }],
+    shipping:          [{ key: 'assembly_director',         label: '常務' },
+                         { key: 'production_control',       label: '製管' },
+                         { key: 'gijutsu',                   label: '技戦部門' },
+                         { key: 'logistics',                 label: '物流課' }]
+};
 let flowSettings = { enabled: {}, fixedRecipients: {} };
 
 async function loadFlowSettings() {
