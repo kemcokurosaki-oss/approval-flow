@@ -832,9 +832,10 @@ async function loadMineSide() {
             ? `openDraftInSubmitModal('${req.id}')`
             : `openDetailModal('${req.id}')`;
         const flowLabel = esc(isNotifFlow ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type) : (FLOW_LABELS[req.flow_type] || req.flow_type));
+        const machineHtml = req.machine_name ? '<span class="mine-col-machine">' + esc(req.machine_name) + '</span>' : '';
         return `
         <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
-            <div class="mine-col-num">${esc(pNum)}${resubmitBadge}</div>
+            <div class="mine-col-num">${esc(pNum)}${machineHtml}${resubmitBadge}</div>
             <div class="mine-col-date">${fmtDate(req.created_at)}</div>
             <div class="mine-col-status">${statusText}</div>
         </div>`;
