@@ -705,12 +705,13 @@ async function loadPendingSide() {
     let qorsItems = [];
     if (isQorS) {
         const { data: confirmReqs } = await db.from('approval_requests')
-            .select('id, project_number, created_at')
+            .select('id, project_number, machine_name, created_at')
             .in('flow_type', ['simple_inspection', 'inspection']).eq('status', 'approved')
             .not('tentative_shipping_date', 'is', null).is('tentative_shipping_confirmed_at', null);
         qorsItems = (confirmReqs || []).map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
+            machineName: r.machine_name || '',
             flowType:   'tentative_shipping',
             flowLabel:  '仮出荷予定日',
             date:       r.created_at,
