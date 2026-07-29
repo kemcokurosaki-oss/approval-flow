@@ -473,7 +473,8 @@
             justify-content: space-between;
             align-items: baseline;
             gap: 8px;
-            min-width: 185px;
+            width: 195px;
+            flex-shrink: 0;
             box-sizing: border-box;
             color: #5a7080;
             background: #f0f4fa;
@@ -487,8 +488,22 @@
             background: #d4edda;
             border-color: #b7dfc1;
         }
-        .prog-card-date-label { font-size: 13px; }
-        .prog-card-date-value { font-size: 15px; }
+        .prog-card-date-label {
+            font-size: 13px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .prog-card-date-value { font-size: 15px; flex-shrink: 0; }
+
+        .prog-machine-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 7px;
+        }
+        .prog-machine-row-header .prog-machine-label { margin-bottom: 0; }
 
         .prog-machine-row {
             margin-top: 9px;
