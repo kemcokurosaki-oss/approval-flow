@@ -2894,6 +2894,89 @@ function closeDetailModal() {
     ui.send('CLOSE');
 }
 
+// ===== 設定画面（製管2名のみ） =====
+async function openSettingsModal() {
+    if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
+    document.getElementById('settings_modal').classList.add('open');
+    await loadFlowSettings();
+    renderSettingsModal();
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings_modal').classList.remove('open');
+}
+
+function renderSettingsModal() {
+    const body = document.getElementById('settings_body');
+
+    const enabledHtml = TOGGLABLE_FLOWS.map(ft => `
+        <label class="settings-check-row">
+            <input type="checkbox" data-flow-enabled="${ft}" ${flowSettings.enabled[ft] !== false ? 'checked' : ''}>
+            <span>${esc(FLOW_LABELS[ft] || ft)}</span>
+        </label>
+    `).join('');
+
+    const recipientsHtml = Object.keys(FIXED_RECIPIENT_SLOTS).map(ft => {
+        const plan = flowSettings.fixedRecipients[ft] || {};
+        const rows = FIXED_RECIPIENT_SLOTS[ft].map(slot => `
+            <label class="settings-check-row">
+                <input type="checkbox" data-flow-recipient="${ft}" data-slot="${slot.key}" ${plan[slot.key] !== false ? 'checked' : ''}>
+                <span>${esc(slot.label)}</span>
+            </label>
+        `).join('');
+        return `
+            <div class="settings-flow-group">
+                <div class="settings-flow-title">${esc(FLOW_LABELS[ft] || ft)}</div>
+                ${rows}
+            </div>`;
+    }).join('');
+
+    body.innerHTML = `
+        <div class="settings-section">
+            <div class="section-title">フローのON/OFF</div>
+            <div class="settings-note">OFFにすると、そのフローの新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
+            ${enabledHtml}
+        </div>
+        <hr class="section-divider">
+        <div class="settings-section">
+            <div class="section-title">開催案内・完了通知の固定宛先</div>
+            <div class="settings-note">工番の担当者（組立・設計・営業など）を宛先に含めるかどうかはここでは変更できません。</div>
+            ${recipientsHtml}
+        </div>
+    `;
+}
+
+async function saveFlowSettings() {
+    const enabled = {};
+    document.querySelectorAll('#settings_body [data-flow-enabled]').forEach(cb => {
+        enabled[cb.dataset.flowEnabled] = cb.checked;
+    });
+    const fixedRecipients = {};
+    document.querySelectorAll('#settings_body [data-flow-recipient]').forEach(cb => {
+        const ft = cb.dataset.flowRecipient;
+        if (!fixedRecipients[ft]) fixedRecipients[ft] = {};
+        fixedRecipients[ft][cb.dataset.slot] = cb.checked;
+    });
+
+    showLoading('保存中...');
+    try {
+        const meta = { updated_at: new Date().toISOString(), updated_by: currentUser.email };
+        const { error: e1 } = await db.from('flow_settings').update({ value: enabled, ...meta }).eq('key', 'flow_enabled');
+        if (e1) throw e1;
+        const { error: e2 } = await db.from('flow_settings').update({ value: fixedRecipients, ...meta }).eq('key', 'flow_fixed_recipients');
+        if (e2) throw e2;
+
+        flowSettings = { enabled, fixedRecipients };
+        closeSettingsModal();
+        await refreshAll();
+        showToast('設定を保存しました。', 'success');
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 async function completePendingItem(requestId, idx, opts = {}) {
     if (!confirm('このペンディング項目を完了にします。よろしいですか？')) return;
     showLoading('更新中...');
