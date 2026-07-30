@@ -1100,7 +1100,7 @@
         .user-menu-divider { border-top: 1px solid #eee; }
         .user-menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-size: 13px; color: #333; cursor: pointer; }
         .user-menu-item:hover { background: #f5f8fb; }
-        .user-menu-item-icon { width: 18px; text-align: center; }
+        .user-menu-item-icon { width: 20px; font-size: 17px; text-align: center; }
 
         /* ===== Location Dropdown ===== */
         .location-checkbox-area { position: relative; }
