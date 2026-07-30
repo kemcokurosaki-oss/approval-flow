@@ -3107,7 +3107,7 @@ function renderSettingsToggleGrid() {
                 : isFlowEnabledFor(ft, settingsToggleProject, machine);
             return `
                 <label class="settings-toggle-row">
-                    <span>${esc(FLOW_LABELS[ft] || ft)}</span>
+                    <span class="settings-toggle-label">${esc(FLOW_LABELS[ft] || ft)}</span>
                     <span class="settings-toggle-switch">
                         <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
                                ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
