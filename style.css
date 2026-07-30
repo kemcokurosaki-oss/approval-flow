@@ -1051,12 +1051,15 @@
             background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
         .settings-sticky-project-label { margin-top: 8px; font-weight: bold; color: #1e3a5f; font-size: 13px; }
-        /* 設定画面はモーダルではなく全画面表示にする（内容によって大きさが変わらないように） */
-        #settings_modal.modal-overlay { background: rgba(0,0,0,0.25); }
-        #settings_modal .modal {
-            width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; border-radius: 0;
+        /* 設定画面はモーダルではなく、承認フローのヘッダーを表示したままの全画面表示にする */
+        .settings-page {
+            display: none;
+            height: calc(100vh - 80px);
+            background: #fff;
         }
-        #settings_modal .modal-body { overflow-y: auto; }
+        #app.has-dev-bar .settings-page { height: calc(100vh - 108px); }
+        .settings-page.open { display: block; }
+        .settings-page-body { height: 100%; overflow-y: auto; padding: 18px; }
 
         /* ===== 工事番号の階層選択（フローのON/OFF） ===== */
         .settings-project-tree { border: 1px solid #e0e0e0; border-radius: 4px; }
