@@ -2970,17 +2970,50 @@ function showSettingsMenu() {
 }
 
 // ----- フローのON/OFF（工事番号・機械ごと） -----
+// フローのON/OFF画面で使う工番区分（進捗一覧のprefix-panelと同じ区分・同じmatchesPrefix()を使う）
+const SETTINGS_PROJECT_CATEGORIES = [
+    { key: '2000', label: '2000番' }, { key: '3', label: '3000番' }, { key: '4', label: '4000番' },
+    { key: '3C',   label: '3C番' },   { key: '4C', label: '4C番' },   { key: 'D', label: 'D番' }
+];
+
+function buildSettingsProjectCategories() {
+    const nums = Object.keys(projectsMap)
+        .filter(num => !completedProjectNums.has(num)) // 完了済み工番は対象外
+        .filter(num => !isTInspectionSeries(num) && !is5or7Series(num)) // 承認フロー対象外の工番は除外
+        .sort();
+    const buckets = SETTINGS_PROJECT_CATEGORIES.map(c => ({ ...c, nums: [] }));
+    const others = [];
+    nums.forEach(num => {
+        const b = buckets.find(b => matchesPrefix(num, b.key));
+        (b ? b.nums : others).push(num);
+    });
+    if (others.length > 0) buckets.push({ key: '__other__', label: 'その他', nums: others });
+    return buckets.filter(b => b.nums.length > 0);
+}
+
 function showFlowToggleScreen() {
     settingsView          = 'flow_toggle';
     settingsToggleProject = '';
     settingsTogglePending = {};
-    const options = Object.keys(projectsMap)
-        .filter(num => !completedProjectNums.has(num)) // 完了済み工番は対象外
-        .sort().map(num => {
-            const p = projectsMap[num] || {};
-            const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-            return `<option value="${esc(num)}">${esc(num)}${label ? '　' + esc(label) : ''}</option>`;
-        }).join('');
+    const categoriesHtml = buildSettingsProjectCategories().map(cat => `
+        <div class="settings-project-category">
+            <button class="settings-project-category-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="settings-project-category-arrow">▶</span>
+                <span>${esc(cat.label)}</span>
+                <span class="settings-project-category-count">${cat.nums.length}件</span>
+            </button>
+            <div class="settings-project-category-body">
+                ${cat.nums.map(num => {
+                    const p = projectsMap[num] || {};
+                    const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+                    return `<div class="settings-project-item" onclick="selectSettingsProject('${esc(num)}')">
+                        <span class="settings-project-item-num">${esc(num)}</span>
+                        <span class="settings-project-item-label">${esc(label)}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `).join('');
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header">
             <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
@@ -2990,10 +3023,7 @@ function showFlowToggleScreen() {
         <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
         <div class="form-group">
             <label>工事番号を選択</label>
-            <select id="settings_project_select" onchange="selectSettingsProject(this.value)">
-                <option value="">選択してください</option>
-                ${options}
-            </select>
+            <div class="settings-project-tree">${categoriesHtml}</div>
         </div>
         <div id="settings_project_selected"></div>
     `;
