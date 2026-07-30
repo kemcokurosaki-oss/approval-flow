@@ -3057,7 +3057,7 @@ function showFlowToggleScreen() {
     `).join('');
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header">
-            <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+            <button class="btn btn-sm btn-secondary" onclick="showSettingsCategory(settingsCategory)">← 戻る</button>
             <div id="settings_project_context"></div>
         </div>
         <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
