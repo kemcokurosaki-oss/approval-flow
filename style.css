@@ -1041,6 +1041,26 @@
         .settings-menu-icon  { font-size: 22px; margin-bottom: 4px; }
         .settings-menu-title { font-weight: bold; font-size: 14px; color: #1e3a5f; }
         .settings-menu-desc  { font-size: 12px; color: #888; margin-top: 4px; }
+        .settings-menu-groups { display: flex; flex-direction: column; gap: 10px; }
+        .settings-menu-group { border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
+        .settings-menu-group-header {
+            width: 100%; display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px; background: #f7f9fb; border: none; cursor: pointer;
+            font-size: 14px; font-weight: bold; color: #1e3a5f; text-align: left; font-family: inherit;
+        }
+        .settings-menu-group-header:hover { background: #eef3f8; }
+        .settings-menu-group-arrow { display: inline-block; font-size: 11px; transition: transform 0.15s; }
+        .settings-menu-group.open .settings-menu-group-arrow { transform: rotate(90deg); }
+        .settings-menu-group-icon  { font-size: 18px; }
+        .settings-menu-group-body { display: none; }
+        .settings-menu-group.open .settings-menu-group-body { display: block; }
+        .settings-menu-item {
+            display: block; width: 100%; text-align: left; border: none; border-top: 1px solid #eee;
+            padding: 10px 14px 10px 36px; background: #fff; cursor: pointer; font-family: inherit;
+        }
+        .settings-menu-item:hover { background: #f5f8fb; }
+        .settings-menu-item-title { font-weight: bold; font-size: 13px; color: #1e3a5f; }
+        .settings-menu-item-desc  { font-size: 12px; color: #888; margin-top: 2px; }
         .settings-sticky-header {
             position: sticky; top: -18px; z-index: 5;
             margin: -18px -18px 10px; padding: 10px 18px;
