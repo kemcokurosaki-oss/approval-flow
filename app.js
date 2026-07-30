@@ -3241,7 +3241,7 @@ async function editRecipientMaster(id) {
     const isKnownDept = departments.includes(record.department);
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showRecipientMasterScreen()">← 戻る</button>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRecipientMasterScreen()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">${id ? '担当者を編集' : '担当者を追加'}</div>
         <div class="form-group">
             <label>名前</label>
