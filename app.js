@@ -3016,7 +3016,7 @@ async function buildSettingsProjectCategories() {
     const taskTextsByProject = {}; // num -> Set(text)（機械単位までは問わず、工番に存在するかだけ見る）
     (taskRows || []).forEach(t => {
         const num = (t.project_number || '').toString().trim();
-        if (!num) return;
+        if (!num || !t.machine) return; // 号機（machine）が未入力のタスクは対象外（メインの進捗一覧と同条件）
         if (!taskTextsByProject[num]) taskTextsByProject[num] = new Set();
         taskTextsByProject[num].add(t.text);
     });
