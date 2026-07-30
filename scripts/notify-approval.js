@@ -589,7 +589,7 @@ async function main() {
         const icsSeq       = (isCancel || isReschedule) ? (icsSequenceMap[notif.request_id] || 1) : 0;
         const isSmMeeting  = ['shipping_meeting_invite','shipping_meeting_reschedule','shipping_meeting_cancel']
           .includes(notif.notification_type);
-        const roomEmail    = isSmMeeting ? (ROOM_EMAILS[req.inspection_location] || null) : null;
+        const roomEmail    = isSmMeeting ? (roomEmails[req.inspection_location] || null) : null;
         const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq);
         if (icsContent) {
           attachments.push({
