@@ -3118,7 +3118,7 @@ function showRecipientsListScreen() {
         </button>
     `).join('');
     document.getElementById('settings_body').innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">固定宛先の設定</div>
         <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます（工番の担当者は別途自動で追加されます）。</div>
         <div class="settings-menu">${cards}</div>
@@ -3220,7 +3220,7 @@ async function showRecipientMasterScreen() {
     }).join('');
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">宛先候補の管理</div>
         <div class="settings-note">開催案内・完了通知の宛先候補となる担当者を管理します。削除はできません（不要になった場合は編集画面で「無効」にしてください）。</div>
         <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="editRecipientMaster(null)">＋ 新規追加</button>
@@ -3335,7 +3335,7 @@ async function showAuditLogScreen() {
     }).join('') : '<div class="settings-note">まだ変更履歴がありません</div>';
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
         ${rowsHtml}
     `;
