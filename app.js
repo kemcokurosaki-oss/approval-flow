@@ -3179,6 +3179,214 @@ async function saveRecipientDetail(flowType) {
     }
 }
 
+// ----- 宛先候補の管理（notification_recipients） -----
+async function showRecipientMasterScreen() {
+    settingsView = 'recipient_master';
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const { data } = await db.from('notification_recipients')
+        .select('id, name, email, department, role, active').order('department').order('name');
+    const rows = data || [];
+    const departments = [...new Set(rows.map(r => r.department))].sort();
+
+    const groupsHtml = departments.map(dept => {
+        const items = rows.filter(r => r.department === dept);
+        const itemsHtml = items.map(r => `
+            <div class="settings-check-row" style="justify-content:space-between;">
+                <span>${esc(r.name)}${r.active ? '' : ' <span style="color:#e74c3c;">（無効）</span>'}
+                    <span style="color:#999; font-size:12px;">${esc(r.email)}・${esc(r.role)}</span></span>
+                <button class="btn btn-xs btn-secondary" onclick="editRecipientMaster('${r.id}')">編集</button>
+            </div>
+        `).join('');
+        return `
+            <div class="settings-flow-group">
+                <div class="settings-flow-title">${esc(dept)}</div>
+                ${itemsHtml}
+            </div>`;
+    }).join('');
+
+    body.innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">宛先候補の管理</div>
+        <div class="settings-note">開催案内・完了通知の宛先候補となる担当者を管理します。削除はできません（不要になった場合は編集画面で「無効」にしてください）。</div>
+        <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="editRecipientMaster(null)">＋ 新規追加</button>
+        ${groupsHtml}
+    `;
+}
+
+async function editRecipientMaster(id) {
+    const body = document.getElementById('settings_body');
+    let record = { name: '', email: '', department: '', role: 'staff', active: true };
+    if (id) {
+        const { data } = await db.from('notification_recipients')
+            .select('id, name, email, department, role, active').eq('id', id).single();
+        if (data) record = data;
+    }
+    const { data: deptRows } = await db.from('notification_recipients').select('department');
+    const departments = [...new Set((deptRows || []).map(r => r.department))].sort();
+    const isKnownDept = departments.includes(record.department);
+
+    body.innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showRecipientMasterScreen()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">${id ? '担当者を編集' : '担当者を追加'}</div>
+        <div class="form-group">
+            <label>名前</label>
+            <input type="text" id="rm_name" value="${esc(record.name)}">
+        </div>
+        <div class="form-group">
+            <label>メールアドレス</label>
+            <input type="text" id="rm_email" value="${esc(record.email)}">
+        </div>
+        <div class="form-group">
+            <label>部署</label>
+            <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
+                ${departments.map(d => `<option value="${esc(d)}" ${d === record.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}
+                <option value="__other__" ${isKnownDept ? '' : 'selected'}>その他（自由入力）</option>
+            </select>
+            <input type="text" id="rm_department_other" placeholder="部署名を入力" value="${isKnownDept ? '' : esc(record.department)}"
+                   style="margin-top:6px; ${isKnownDept ? 'display:none;' : ''}">
+        </div>
+        <div class="form-group">
+            <label>役割</label>
+            <select id="rm_role">
+                ${['staff', 'manager', 'director'].map(r => `<option value="${r}" ${r === record.role ? 'selected' : ''}>${r}</option>`).join('')}
+            </select>
+        </div>
+        <label class="settings-check-row">
+            <input type="checkbox" id="rm_active" ${record.active ? 'checked' : ''}>
+            <span>有効</span>
+        </label>
+        <button class="btn btn-primary" onclick="saveRecipientMaster(${id ? `'${id}'` : 'null'})">保存する</button>
+    `;
+}
+
+function onRmDepartmentSelectChange() {
+    const sel = document.getElementById('rm_department_select');
+    document.getElementById('rm_department_other').style.display = sel.value === '__other__' ? '' : 'none';
+}
+
+async function saveRecipientMaster(id) {
+    const name  = document.getElementById('rm_name').value.trim();
+    const email = document.getElementById('rm_email').value.trim();
+    const deptSel = document.getElementById('rm_department_select').value;
+    const department = deptSel === '__other__' ? document.getElementById('rm_department_other').value.trim() : deptSel;
+    const role   = document.getElementById('rm_role').value;
+    const active = document.getElementById('rm_active').checked;
+
+    if (!name || !email || !department) { showToast('名前・メールアドレス・部署は必須です', 'error'); return; }
+
+    showLoading('保存中...');
+    try {
+        if (id) {
+            const { error } = await db.from('notification_recipients').update({ name, email, department, role, active }).eq('id', id);
+            if (error) throw error;
+            await logSettingsChange('recipient_master', `${department}の${name}を編集`);
+        } else {
+            const { error } = await db.from('notification_recipients').insert({ name, email, department, role, active });
+            if (error) throw error;
+            await logSettingsChange('recipient_master', `${department}に${name}を追加`);
+        }
+        showToast('保存しました。', 'success');
+        showRecipientMasterScreen();
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ----- 会議室の管理 -----
+function showRoomEmailsScreen() {
+    settingsView = 'room_emails';
+    const rooms = flowSettings.roomEmails || {};
+    const rows = Object.entries(rooms).map(([name, email]) => `
+        <div class="settings-check-row" data-room-row>
+            <input type="text" class="room-name-input" value="${esc(name)}" placeholder="会議室名" style="flex:1;">
+            <input type="text" class="room-email-input" value="${esc(email)}" placeholder="メールアドレス" style="flex:2;">
+            <button class="btn btn-xs btn-secondary" onclick="this.closest('[data-room-row]').remove()">削除</button>
+        </div>
+    `).join('');
+
+    document.getElementById('settings_body').innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">会議室の管理</div>
+        <div class="settings-note">出荷確認会議の開催案内で選べる会議室と、招待状(ICS)送信先のメールアドレスです。</div>
+        <div id="room_emails_list">${rows}</div>
+        <button class="btn btn-sm btn-secondary" style="margin:8px 0;" onclick="addRoomEmailRow()">＋ 会議室を追加</button>
+        <div><button class="btn btn-primary" onclick="saveRoomEmails()">保存する</button></div>
+    `;
+}
+
+function addRoomEmailRow() {
+    const list = document.getElementById('room_emails_list');
+    const div = document.createElement('div');
+    div.className = 'settings-check-row';
+    div.setAttribute('data-room-row', '');
+    div.innerHTML = `
+        <input type="text" class="room-name-input" placeholder="会議室名" style="flex:1;">
+        <input type="text" class="room-email-input" placeholder="メールアドレス" style="flex:2;">
+        <button class="btn btn-xs btn-secondary" onclick="this.closest('[data-room-row]').remove()">削除</button>
+    `;
+    list.appendChild(div);
+}
+
+async function saveRoomEmails() {
+    const rowsEl = [...document.querySelectorAll('#room_emails_list [data-room-row]')];
+    const value = {};
+    for (const row of rowsEl) {
+        const name  = row.querySelector('.room-name-input').value.trim();
+        const email = row.querySelector('.room-email-input').value.trim();
+        if (name && email) value[name] = email;
+    }
+    showLoading('保存中...');
+    try {
+        const { error } = await db.from('flow_settings')
+            .update({ value, updated_at: new Date().toISOString(), updated_by: currentUser.email })
+            .eq('key', 'room_emails');
+        if (error) throw error;
+        flowSettings.roomEmails = value;
+        await logSettingsChange('room_email', `会議室一覧を更新（${Object.keys(value).join('、') || 'なし'}）`);
+        showToast('保存しました。', 'success');
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ----- 変更履歴 -----
+async function showAuditLogScreen() {
+    settingsView = 'audit_log';
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const { data } = await db.from('settings_audit_log')
+        .select('changed_at, changed_by, category, summary').order('changed_at', { ascending: false }).limit(100);
+    const rows = data || [];
+    const CATEGORY_LABELS = {
+        flow_toggle: 'フローON/OFF', fixed_recipients: '固定宛先',
+        recipient_master: '宛先候補', room_email: '会議室'
+    };
+    const rowsHtml = rows.length ? rows.map(r => {
+        const d = new Date(r.changed_at);
+        const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        return `
+            <div class="settings-check-row" style="align-items:flex-start;">
+                <span style="min-width:120px; color:#999; font-size:12px;">${esc(dateStr)}</span>
+                <span style="min-width:90px; font-size:12px;">${esc(r.changed_by)}</span>
+                <span class="recipient-tag" style="margin-right:6px;">${esc(CATEGORY_LABELS[r.category] || r.category)}</span>
+                <span>${esc(r.summary)}</span>
+            </div>`;
+    }).join('') : '<div class="settings-note">まだ変更履歴がありません</div>';
+
+    body.innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
+        ${rowsHtml}
+    `;
+}
+
 async function completePendingItem(requestId, idx, opts = {}) {
     if (!confirm('このペンディング項目を完了にします。よろしいですか？')) return;
     showLoading('更新中...');
