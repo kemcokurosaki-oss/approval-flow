@@ -4674,10 +4674,8 @@ function openShippingMeetingModal() {
     document.getElementById('sm_date_input').value     = '';
     document.getElementById('sm_time_hour').value      = '';
     document.getElementById('sm_time_min').value       = '';
-    const locationSelect = document.getElementById('sm_location_input');
-    locationSelect.innerHTML = '<option value="">選択してください</option>' +
-        Object.keys(flowSettings.roomEmails || {}).map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
-    document.getElementById('sm_note_input').value = '';
+    document.getElementById('sm_location_input').value = '';
+    document.getElementById('sm_note_input').value     = '';
 
     document.getElementById('shipping_meeting_modal').classList.add('open');
 }
