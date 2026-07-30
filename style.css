@@ -723,7 +723,7 @@
         }
         .modal-header {
             padding: 13px 18px;
-            background: #1e3a5f;
+            background: linear-gradient(180deg, #34495e, #2c3e50);
             color: #fff;
             display: flex;
             justify-content: space-between;
