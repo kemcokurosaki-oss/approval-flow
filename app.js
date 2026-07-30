@@ -335,6 +335,11 @@ async function loadFlowSettings() {
     flowOverrides = new Set((overrideRows || []).map(r => `${r.project_number}${FLOW_OVERRIDE_SEP}${r.machine}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
 }
 
+// 設定変更を履歴テーブルに記録する（保存系の関数から呼び出す）
+async function logSettingsChange(category, summary) {
+    await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
+}
+
 // 中間5フロー（試運転・簡易検査・外観検査・出荷確認会議・出荷準備）のみ、工事番号・機械単位でOFFにできる。
 // 組立・出荷確定は常に有効。exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
 function isFlowEnabledFor(flowType, projectNum, machine) {
