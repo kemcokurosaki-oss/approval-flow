@@ -3150,7 +3150,9 @@ async function showRecipientsDetailScreen(flowType) {
                         <span>${esc(c.name || '—')}</span>
                         <span style="color:#999; font-size:12px;">${esc(c.email || '')}</span>
                     </label>
-                `).join('') : '<div class="settings-note">該当者がいません</div>'}
+                `).join('') : (g.kind === 'department'
+                    ? '<div class="settings-note">該当者がいません。<button class="btn btn-xs btn-secondary" onclick="showRecipientMasterScreen()">「宛先候補の管理」で追加する →</button></div>'
+                    : '<div class="settings-note">該当者がいません（この項目は担当ロールを持つ社内ログインユーザーが対象です）</div>')}
             </div>`);
     }
 
