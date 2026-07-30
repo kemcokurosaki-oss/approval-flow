@@ -1048,9 +1048,10 @@
         .settings-back-btn {
             position: sticky; top: -18px; z-index: 5;
             margin: -18px -18px 10px; padding: 12px 18px;
-            width: calc(100% + 36px); border-radius: 0;
-            background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            width: calc(100% + 36px); border-radius: 0; text-align: left;
+            background: #fff; color: #1e3a5f; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
+        .settings-back-btn:hover { background: #f5f8fb; }
         /* 表示内容によって大きさが変わらないよう、設定モーダルだけ固定サイズにする */
         #settings_modal .modal { width: 760px; height: 680px; }
         #settings_modal .modal-body { overflow-y: auto; }
