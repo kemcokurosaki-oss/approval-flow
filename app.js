@@ -3095,9 +3095,11 @@ function renderSettingsToggleGrid() {
     const gridEl = document.getElementById('settings_toggle_grid');
     if (!gridEl) return;
     if (settingsToggleMachines.length === 0) {
+        gridEl.className = '';
         gridEl.innerHTML = '<div style="color:#aaa;font-size:12px;">機械が見つかりません</div>';
         return;
     }
+    gridEl.className = settingsToggleMachines.length > 1 ? 'settings-toggle-grid-cols' : '';
 
     gridEl.innerHTML = settingsToggleMachines.map(machine => {
         const rows = TOGGLABLE_FLOWS.map(ft => {
