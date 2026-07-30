@@ -327,11 +327,11 @@ const FLOW_OVERRIDE_SEP = '';
 
 async function loadFlowSettings() {
     const [{ data: settingsRows }, { data: overrideRows }] = await Promise.all([
-        db.from('flow_settings').select('key, value').in('key', ['flow_fixed_recipients', 'room_emails']),
+        db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients'),
         db.from('flow_overrides').select('project_number, machine, flow_type')
     ]);
     const rows = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
-    flowSettings  = { fixedRecipients: rows.flow_fixed_recipients || {}, roomEmails: rows.room_emails || {} };
+    flowSettings  = { fixedRecipients: rows.flow_fixed_recipients || {} };
     flowOverrides = new Set((overrideRows || []).map(r => `${r.project_number}${FLOW_OVERRIDE_SEP}${r.machine}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
 }
 
