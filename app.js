@@ -3151,7 +3151,7 @@ async function showRecipientsDetailScreen(flowType) {
                         <span style="color:#999; font-size:12px;">${esc(c.email || '')}</span>
                     </label>
                 `).join('') : (g.kind === 'department'
-                    ? '<div class="settings-note">該当者がいません。<button class="btn btn-xs btn-secondary" onclick="showRecipientMasterScreen()">「宛先候補の管理」で追加する →</button></div>'
+                    ? '<div class="settings-note">該当者がいません。<button class="btn btn-xs btn-outline" onclick="showRecipientMasterScreen()">「宛先候補の管理」で追加する →</button></div>'
                     : '<div class="settings-note">該当者がいません（この項目は担当ロールを持つ社内ログインユーザーが対象です）</div>')}
             </div>`);
     }
@@ -3208,7 +3208,7 @@ async function showRecipientMasterScreen() {
             <div class="settings-check-row" style="justify-content:space-between;">
                 <span>${esc(r.name)}${r.active ? '' : ' <span style="color:#e74c3c;">（無効）</span>'}
                     <span style="color:#999; font-size:12px;">${esc(r.email)}・${esc(r.role)}</span></span>
-                <button class="btn btn-xs btn-secondary" onclick="editRecipientMaster('${r.id}')">編集</button>
+                <button class="btn btn-xs btn-outline" onclick="editRecipientMaster('${r.id}')">編集</button>
             </div>
         `).join('');
         return `
