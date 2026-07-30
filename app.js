@@ -2972,43 +2972,30 @@ function showFlowToggleScreen() {
     settingsView          = 'flow_toggle';
     settingsToggleProject = '';
     settingsTogglePending = {};
+    const options = Object.keys(projectsMap).sort().map(num => {
+        const p = projectsMap[num] || {};
+        const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+        return `<option value="${esc(num)}">${esc(num)}${label ? '　' + esc(label) : ''}</option>`;
+    }).join('');
     document.getElementById('settings_body').innerHTML = `
         <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
         <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
         <div class="form-group">
-            <label>工事番号を検索</label>
-            <input type="text" id="settings_project_search" placeholder="工事番号または客先名で検索" oninput="renderSettingsProjectResults(this.value)">
+            <label>工事番号を選択</label>
+            <select id="settings_project_select" onchange="selectSettingsProject(this.value)">
+                <option value="">選択してください</option>
+                ${options}
+            </select>
         </div>
-        <div id="settings_project_results"></div>
         <div id="settings_project_selected"></div>
     `;
-}
-
-function renderSettingsProjectResults(query) {
-    const resultsEl = document.getElementById('settings_project_results');
-    const q = query.trim().toLowerCase();
-    if (!q) { resultsEl.innerHTML = ''; return; }
-    const matches = Object.keys(projectsMap)
-        .filter(num => num.toLowerCase().includes(q) || (projectsMap[num].customer_name || '').toLowerCase().includes(q))
-        .slice(0, 20);
-    resultsEl.innerHTML = matches.length
-        ? `<div class="settings-search-results">${matches.map(num => {
-            const p = projectsMap[num] || {};
-            const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-            return `<div class="settings-search-item" onclick="selectSettingsProject('${esc(num)}')">
-                <span class="settings-search-num">${esc(num)}</span>
-                <span class="settings-search-label">${esc(label)}</span>
-            </div>`;
-        }).join('')}</div>`
-        : `<div class="settings-note">該当する工事番号がありません</div>`;
 }
 
 async function selectSettingsProject(num) {
     settingsToggleProject = num;
     settingsTogglePending = {};
-    document.getElementById('settings_project_search').value = num;
-    document.getElementById('settings_project_results').innerHTML = '';
+    if (!num) { document.getElementById('settings_project_selected').innerHTML = ''; return; }
 
     const p     = projectsMap[num] || {};
     const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
