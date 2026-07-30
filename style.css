@@ -53,8 +53,7 @@
         .dev-bar select option { color: #333; background: #fff; }
 
         /* ===== Main ===== */
-        .main { margin: 0; padding: 0; height: calc(100vh - 80px); overflow: hidden; position: relative; }
-        #app.has-dev-bar .main { height: calc(100vh - 108px); }
+        .main { margin: 0; padding: 0; height: calc(100vh - var(--header-height, 80px)); overflow: hidden; position: relative; }
 
         /* ===== New Main Layout ===== */
         .main-layout {
