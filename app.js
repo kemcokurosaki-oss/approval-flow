@@ -2960,6 +2960,7 @@ function isFlowApplicableForToggle(num, machine, ft, machineTaskSet, projectFlow
     const hasMachineTask = machineTaskSet.has(`${machine}${FLOW_OVERRIDE_SEP}${taskText}`);
     if (ft === 'test_run' || ft === 'shipping_prep') return hasMachineTask; // 機械単位のタスクのみ
     return projectFlowSet.has(taskText) || hasMachineTask; // 工番単位のタスクでも可
+}
 
 function toggleUserMenu() {
     document.getElementById('user_menu_btn').classList.toggle('open');
