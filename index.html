@@ -46,8 +46,20 @@
         <div class="header-row1">
             <h1>✅ 承認フロー</h1>
             <div class="header-user">
-                <span id="user_name_display"></span>
-                <button class="header-nav-toggle-btn" onclick="openNavDrawer()" title="メニュー">⚙</button>
+                <button id="user_menu_btn" class="header-user-btn" onclick="toggleUserMenu()">
+                    <span id="user_name_display"></span>
+                    <span class="header-user-caret">▾</span>
+                </button>
+                <div id="user_menu_dropdown" class="user-menu-dropdown">
+                    <div class="user-menu-email" id="user_menu_email"></div>
+                    <div class="user-menu-divider"></div>
+                    <div id="nav_settings_item" class="user-menu-item" style="display:none;" onclick="closeUserMenu(); openSettingsModal();">
+                        <span class="user-menu-item-icon">⚙</span><span>設定</span>
+                    </div>
+                    <div class="user-menu-item" onclick="closeUserMenu(); doLogout();">
+                        <span class="user-menu-item-icon">🚪</span><span>ログアウト</span>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="header-row2">
