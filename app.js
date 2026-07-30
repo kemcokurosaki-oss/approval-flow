@@ -443,6 +443,15 @@ async function doLogout() {
     location.reload();
 }
 
+// ヘッダーの実際の高さ（dev_bar表示の有無やフォント環境で変わる）を測って、
+// マイページ・設定パネルの位置合わせに使う --header-height に反映する
+function updateHeaderHeightVar() {
+    const header = document.querySelector('.header');
+    if (!header) return;
+    document.documentElement.style.setProperty('--header-height', `${header.getBoundingClientRect().height}px`);
+}
+window.addEventListener('resize', updateHeaderHeightVar);
+
 async function bootApp(session) {
     currentUser = session.user;
 
