@@ -2909,6 +2909,9 @@ let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_li
 let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
 let settingsTogglePending   = {};     // 未保存の変更差分 { "machineflow_type": boolean(有効か) }
 
+function openNavDrawer()  { document.getElementById('nav_drawer').classList.add('open'); }
+function closeNavDrawer() { document.getElementById('nav_drawer').classList.remove('open'); }
+
 async function openSettingsModal() {
     if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
     document.getElementById('settings_modal').classList.add('open');
