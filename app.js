@@ -3079,6 +3079,13 @@ async function confirmFlowToggles() {
         if (toUpsert.length > 0) {
             await db.from('flow_overrides').upsert(toUpsert, { onConflict: 'project_number,machine,flow_type' });
         }
+        const changeDescs = keys.map(key => {
+            const [machine, flowType] = key.split('');
+            const action = settingsTogglePending[key] ? 'ON' : 'OFF';
+            return `${machine}:${FLOW_LABELS[flowType] || flowType}を${action}`;
+        });
+        await logSettingsChange('flow_toggle', `${settingsToggleProject} — ${changeDescs.join('、')}`);
+
         await loadFlowSettings();
         settingsTogglePending = {};
         onSettingsMachineChange();
