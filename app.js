@@ -3006,10 +3006,31 @@ const SETTINGS_PROJECT_CATEGORIES = [
     { key: '3C',   label: '3C番' },   { key: '4C', label: '4C番' },   { key: 'D', label: 'D番' }
 ];
 
-function buildSettingsProjectCategories() {
+// メインの進捗一覧（loadProgress()のbaseNums）と同じ条件で対象工番を絞り込む：
+// 機械組立・試運転タスクが実在する工番のみを対象にし、2000番台・D番はさらにタスクの有無で絞る
+async function buildSettingsProjectCategories() {
+    const { data: taskRows } = await db.from('tasks')
+        .select('project_number, machine, text')
+        .in('text', ['機械組立', '試運転'])
+        .not('machine', 'is', null);
+    const taskTextsByProject = {}; // num -> Set(text)（機械単位までは問わず、工番に存在するかだけ見る）
+    (taskRows || []).forEach(t => {
+        const num = (t.project_number || '').toString().trim();
+        if (!num) return;
+        if (!taskTextsByProject[num]) taskTextsByProject[num] = new Set();
+        taskTextsByProject[num].add(t.text);
+    });
+
     const nums = Object.keys(projectsMap)
         .filter(num => !completedProjectNums.has(num)) // 完了済み工番は対象外
         .filter(num => !isTInspectionSeries(num) && !is5or7Series(num)) // 承認フロー対象外の工番は除外
+        .filter(num => {
+            const texts = taskTextsByProject[num];
+            if (!texts) return false; // 機械組立・試運転タスクが無い工番は対象外
+            if (is2000sSeries(num)) return texts.has('機械組立') || texts.has('試運転');
+            if (isDSeries(num))     return texts.has('機械組立');
+            return true;
+        })
         .sort();
     const buckets = SETTINGS_PROJECT_CATEGORIES.map(c => ({ ...c, nums: [] }));
     const others = [];
@@ -3021,12 +3042,16 @@ function buildSettingsProjectCategories() {
     return buckets.filter(b => b.nums.length > 0);
 }
 
-function showFlowToggleScreen() {
+async function showFlowToggleScreen() {
     settingsView          = 'flow_toggle';
     settingsToggleProject = '';
     settingsToggleMachines = [];
     settingsTogglePending = {};
-    const categoriesHtml = buildSettingsProjectCategories().map(cat => `
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const categories = await buildSettingsProjectCategories();
+    const categoriesHtml = categories.map(cat => `
         <div class="settings-project-category">
             <button class="settings-project-category-header" onclick="this.parentElement.classList.toggle('open')">
                 <span class="settings-project-category-arrow">▶</span>
@@ -3045,7 +3070,7 @@ function showFlowToggleScreen() {
             </div>
         </div>
     `).join('');
-    document.getElementById('settings_body').innerHTML = `
+    body.innerHTML = `
         <div class="settings-sticky-header">
             <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
         </div>
