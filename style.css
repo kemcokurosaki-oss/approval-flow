@@ -1086,7 +1086,7 @@
             border-radius: 16px; padding: 5px 12px; font-size: 13px; cursor: pointer; font-family: inherit;
         }
         .header-user-btn:hover { background: rgba(255,255,255,0.28); }
-        .header-user-caret { font-size: 10px; transition: transform 0.15s; }
+        .header-user-caret { font-size: 16px; line-height: 1; transition: transform 0.15s; }
         .header-user-btn.open .header-user-caret { transform: rotate(180deg); }
 
         .user-menu-dropdown {
