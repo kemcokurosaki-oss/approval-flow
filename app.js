@@ -2973,7 +2973,7 @@ function showFlowToggleScreen() {
     settingsToggleProject = '';
     settingsTogglePending = {};
     document.getElementById('settings_body').innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
         <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
         <div class="form-group">
@@ -3120,7 +3120,7 @@ function showRecipientsListScreen() {
         </button>
     `).join('');
     document.getElementById('settings_body').innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">固定宛先の設定</div>
         <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます（工番の担当者は別途自動で追加されます）。</div>
         <div class="settings-menu">${cards}</div>
@@ -3160,7 +3160,7 @@ async function showRecipientsDetailScreen(flowType) {
     }
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showRecipientsListScreen()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showRecipientsListScreen()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">${esc(FLOW_LABELS[flowType] || flowType)}の固定宛先</div>
         ${groupsHtml.join('')}
         <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
@@ -3222,7 +3222,7 @@ async function showRecipientMasterScreen() {
     }).join('');
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">宛先候補の管理</div>
         <div class="settings-note">開催案内・完了通知の宛先候補となる担当者を管理します。削除はできません（不要になった場合は編集画面で「無効」にしてください）。</div>
         <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="editRecipientMaster(null)">＋ 新規追加</button>
@@ -3243,7 +3243,7 @@ async function editRecipientMaster(id) {
     const isKnownDept = departments.includes(record.department);
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showRecipientMasterScreen()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showRecipientMasterScreen()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">${id ? '担当者を編集' : '担当者を追加'}</div>
         <div class="form-group">
             <label>名前</label>
@@ -3337,7 +3337,7 @@ async function showAuditLogScreen() {
     }).join('') : '<div class="settings-note">まだ変更履歴がありません</div>';
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
         <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
         ${rowsHtml}
     `;
