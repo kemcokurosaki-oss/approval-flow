@@ -504,6 +504,7 @@ async function bootApp(session) {
         document.getElementById('app').classList.add('has-dev-bar');
         document.getElementById('nav_settings_item').style.display = '';
     }
+    updateHeaderHeightVar();
 
     await loadFlowSettings();
     await loadProjects();
