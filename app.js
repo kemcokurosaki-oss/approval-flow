@@ -3153,8 +3153,10 @@ async function showRecipientsDetailScreen(flowType) {
 }
 
 async function saveRecipientDetail(flowType) {
-    const profileIds   = [...document.querySelectorAll('#settings_body [data-recipient-kind="profile"]:checked')].map(cb => cb.dataset.recipientId);
-    const recipientIds = [...document.querySelectorAll('#settings_body [data-recipient-kind="recipient"]:checked')].map(cb => cb.dataset.recipientId);
+    const checkedBoxes = [...document.querySelectorAll('#settings_body [data-recipient-kind]:checked')];
+    const profileIds   = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'profile').map(cb => cb.dataset.recipientId);
+    const recipientIds = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'recipient').map(cb => cb.dataset.recipientId);
+    const names = checkedBoxes.map(cb => cb.closest('label')?.querySelector('span')?.textContent || '').filter(Boolean);
 
     showLoading('保存中...');
     try {
@@ -3167,6 +3169,7 @@ async function saveRecipientDetail(flowType) {
         if (error) throw error;
 
         flowSettings.fixedRecipients = value;
+        await logSettingsChange('fixed_recipients', `${FLOW_LABELS[flowType] || flowType}の固定宛先を「${names.join('、') || 'なし'}」に変更`);
         showToast('固定宛先を保存しました。', 'success');
         showRecipientsListScreen();
     } catch (e) {
