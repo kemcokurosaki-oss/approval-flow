@@ -1050,6 +1050,9 @@
         .settings-search-item:hover { background: #f5f8fb; }
         .settings-search-num   { font-weight: bold; min-width: 70px; }
         .settings-search-label { color: #888; }
+        /* 表示内容によって大きさが変わらないよう、設定モーダルだけ固定サイズにする */
+        #settings_modal .modal { width: 760px; height: 680px; }
+        #settings_modal .modal-body { overflow-y: auto; }
 
         /* ===== Location Dropdown ===== */
         .location-checkbox-area { position: relative; }
