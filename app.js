@@ -3296,65 +3296,6 @@ async function saveRecipientMaster(id) {
     }
 }
 
-// ----- 会議室の管理 -----
-function showRoomEmailsScreen() {
-    settingsView = 'room_emails';
-    const rooms = flowSettings.roomEmails || {};
-    const rows = Object.entries(rooms).map(([name, email]) => `
-        <div class="settings-check-row" data-room-row>
-            <input type="text" class="room-name-input" value="${esc(name)}" placeholder="会議室名" style="flex:1;">
-            <input type="text" class="room-email-input" value="${esc(email)}" placeholder="メールアドレス" style="flex:2;">
-            <button class="btn btn-xs btn-secondary" onclick="this.closest('[data-room-row]').remove()">削除</button>
-        </div>
-    `).join('');
-
-    document.getElementById('settings_body').innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
-        <div class="section-title" style="margin-top:10px;">会議室の管理</div>
-        <div class="settings-note">出荷確認会議の開催案内で選べる会議室と、招待状(ICS)送信先のメールアドレスです。</div>
-        <div id="room_emails_list">${rows}</div>
-        <button class="btn btn-sm btn-secondary" style="margin:8px 0;" onclick="addRoomEmailRow()">＋ 会議室を追加</button>
-        <div><button class="btn btn-primary" onclick="saveRoomEmails()">保存する</button></div>
-    `;
-}
-
-function addRoomEmailRow() {
-    const list = document.getElementById('room_emails_list');
-    const div = document.createElement('div');
-    div.className = 'settings-check-row';
-    div.setAttribute('data-room-row', '');
-    div.innerHTML = `
-        <input type="text" class="room-name-input" placeholder="会議室名" style="flex:1;">
-        <input type="text" class="room-email-input" placeholder="メールアドレス" style="flex:2;">
-        <button class="btn btn-xs btn-secondary" onclick="this.closest('[data-room-row]').remove()">削除</button>
-    `;
-    list.appendChild(div);
-}
-
-async function saveRoomEmails() {
-    const rowsEl = [...document.querySelectorAll('#room_emails_list [data-room-row]')];
-    const value = {};
-    for (const row of rowsEl) {
-        const name  = row.querySelector('.room-name-input').value.trim();
-        const email = row.querySelector('.room-email-input').value.trim();
-        if (name && email) value[name] = email;
-    }
-    showLoading('保存中...');
-    try {
-        const { error } = await db.from('flow_settings')
-            .update({ value, updated_at: new Date().toISOString(), updated_by: currentUser.email })
-            .eq('key', 'room_emails');
-        if (error) throw error;
-        flowSettings.roomEmails = value;
-        await logSettingsChange('room_email', `会議室一覧を更新（${Object.keys(value).join('、') || 'なし'}）`);
-        showToast('保存しました。', 'success');
-    } catch (e) {
-        showToast('保存に失敗しました: ' + e.message, 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
 // ----- 変更履歴 -----
 async function showAuditLogScreen() {
     settingsView = 'audit_log';
