@@ -1033,6 +1033,8 @@
         .settings-check-row input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
         .settings-flow-group { border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; background: #fafafa; }
         .settings-flow-title { font-weight: bold; font-size: 13px; color: #1e3a5f; margin-bottom: 4px; }
+        .settings-menu-section { margin-bottom: 18px; }
+        .settings-menu-section:last-child { margin-bottom: 0; }
         .settings-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .settings-menu-card {
             display: block; text-align: left; border: 1px solid #e0e0e0; border-radius: 6px;
