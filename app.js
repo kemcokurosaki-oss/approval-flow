@@ -3105,6 +3105,7 @@ async function selectSettingsProject(num) {
     settingsView          = 'flow_toggle_detail';
     settingsToggleProject = num;
     settingsToggleMachines = [];
+    settingsToggleApplicable = {};
     settingsTogglePending = {};
 
     const p     = projectsMap[num] || {};
@@ -3115,7 +3116,7 @@ async function selectSettingsProject(num) {
             <button class="btn btn-sm btn-secondary" onclick="showFlowToggleScreen()">← 戻る</button>
             <div class="settings-sticky-project-label">📌 ${esc(num)}　${esc(label)}</div>
         </div>
-        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
+        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。工程表にタスクが無いフローは、そもそも表示されません。</div>
         <div id="settings_toggle_grid" class="loading-indicator">読み込み中...</div>
         <div style="margin-top:10px;">
             <button class="btn btn-primary" onclick="confirmFlowToggles()">確定</button>
@@ -3123,9 +3124,34 @@ async function selectSettingsProject(num) {
     `;
     showLoading('読み込み中...');
     try {
-        const { data } = await db.from('tasks')
-            .select('machine').eq('project_number', num).eq('text', '機械組立').not('machine', 'is', null);
-        settingsToggleMachines = [...new Set((data || []).map(t => t.machine).filter(Boolean))].sort();
+        // メインの進捗一覧（ステップ表示）のapplicable判定と同じ材料を、この工番だけに絞って取得する
+        const [{ data: machineTaskRows }, { data: projectFlowRows }, { data: existingReqs }] = await Promise.all([
+            db.from('tasks').select('machine, text').eq('project_number', num)
+                .in('text', ['機械組立', '試運転', '外観検査', '出荷確認会議', '出荷準備'])
+                .not('machine', 'is', null),
+            db.from('tasks').select('text').eq('project_number', num)
+                .in('text', ['簡易検査', '外観検査', '出荷確認会議']),
+            db.from('approval_requests').select('machine_name, flow_type').eq('project_number', num)
+        ]);
+
+        settingsToggleMachines = [...new Set((machineTaskRows || [])
+            .filter(t => t.text === '機械組立' && t.machine)
+            .map(t => t.machine))].sort();
+
+        const machineTaskSet = new Set((machineTaskRows || [])
+            .filter(t => t.machine)
+            .map(t => `${t.machine}${FLOW_OVERRIDE_SEP}${t.text}`));
+        const projectFlowSet = new Set((projectFlowRows || []).map(t => t.text));
+        const existingFlowSet = new Set((existingReqs || [])
+            .filter(r => r.machine_name)
+            .map(r => `${r.machine_name}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
+
+        settingsToggleApplicable = {};
+        settingsToggleMachines.forEach(machine => {
+            settingsToggleApplicable[machine] = new Set(
+                TOGGLABLE_FLOWS.filter(ft => isFlowApplicableForToggle(num, machine, ft, machineTaskSet, projectFlowSet, existingFlowSet))
+            );
+        });
     } finally {
         hideLoading();
     }
@@ -3143,23 +3169,26 @@ function renderSettingsToggleGrid() {
     gridEl.className = 'settings-toggle-grid-cols';
 
     gridEl.innerHTML = settingsToggleMachines.map(machine => {
-        const rows = TOGGLABLE_FLOWS.map(ft => {
-            const pendingForMachine = settingsTogglePending[machine] || {};
-            const enabled = pendingForMachine.hasOwnProperty(ft)
-                ? pendingForMachine[ft]
-                : isFlowEnabledFor(ft, settingsToggleProject, machine);
-            return `
-                <label class="settings-toggle-row">
-                    <span class="settings-toggle-label">${esc(FLOW_LABELS[ft] || ft)}</span>
-                    <span class="settings-toggle-switch">
-                        <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
-                               ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
-                        <span class="settings-toggle-ui">
-                            <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
+        const applicableFlows = TOGGLABLE_FLOWS.filter(ft => settingsToggleApplicable[machine]?.has(ft));
+        const rows = applicableFlows.length === 0
+            ? '<div style="color:#aaa;font-size:12px;">対象フローがありません（工程表にタスクがありません）</div>'
+            : applicableFlows.map(ft => {
+                const pendingForMachine = settingsTogglePending[machine] || {};
+                const enabled = pendingForMachine.hasOwnProperty(ft)
+                    ? pendingForMachine[ft]
+                    : isFlowEnabledFor(ft, settingsToggleProject, machine);
+                return `
+                    <label class="settings-toggle-row">
+                        <span class="settings-toggle-label">${esc(FLOW_LABELS[ft] || ft)}</span>
+                        <span class="settings-toggle-switch">
+                            <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
+                                   ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
+                            <span class="settings-toggle-ui">
+                                <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
+                            </span>
                         </span>
-                    </span>
-                </label>`;
-        }).join('');
+                    </label>`;
+            }).join('');
         return `
             <div class="settings-flow-group">
                 <div class="settings-flow-title">${esc(machine)}</div>
