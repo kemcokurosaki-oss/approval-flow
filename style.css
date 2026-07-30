@@ -1051,10 +1051,10 @@
         /* 設定画面はモーダルではなく、マイページと同じ「進捗一覧を隠さない側面パネル」として表示する */
         .settings-page {
             position: fixed;
-            top: 80px;
+            top: var(--header-height, 80px);
             right: 0;
             width: 740px;
-            height: calc(100vh - 80px);
+            height: calc(100vh - var(--header-height, 80px));
             background: #fff;
             box-shadow: -4px 0 20px rgba(0,0,0,0.18);
             transform: translateX(100%);
@@ -1065,7 +1065,6 @@
             overflow: hidden;
         }
         .settings-page.open { transform: translateX(0); }
-        #app.has-dev-bar .settings-page { top: 108px; height: calc(100vh - 108px); }
         .settings-page-header {
             height: 44px;
             padding: 0 14px;
