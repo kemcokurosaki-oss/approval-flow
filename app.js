@@ -2943,7 +2943,8 @@ const SETTINGS_CATEGORIES = [
     }
 ];
 let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
-let settingsTogglePending   = {};     // 未保存の変更差分 { "machineflow_type": boolean(有効か) }
+let settingsToggleMachines  = [];     // フローON/OFF画面で表示中の機械一覧
+let settingsTogglePending   = {};     // 未保存の変更差分 { machine: { flow_type: boolean(有効か) } }
 
 function toggleUserMenu() {
     document.getElementById('user_menu_btn').classList.toggle('open');
@@ -3023,6 +3024,7 @@ function buildSettingsProjectCategories() {
 function showFlowToggleScreen() {
     settingsView          = 'flow_toggle';
     settingsToggleProject = '';
+    settingsToggleMachines = [];
     settingsTogglePending = {};
     const categoriesHtml = buildSettingsProjectCategories().map(cat => `
         <div class="settings-project-category">
@@ -3046,7 +3048,6 @@ function showFlowToggleScreen() {
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header">
             <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
-            <div id="settings_project_context"></div>
         </div>
         <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
         <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
@@ -3054,62 +3055,66 @@ function showFlowToggleScreen() {
             <label>工事番号を選択</label>
             <div class="settings-project-tree">${categoriesHtml}</div>
         </div>
-        <div id="settings_project_selected"></div>
     `;
 }
 
+// 工事番号を選択した時点で、工事番号選択ツリーから機械ごとのフローON/OFF切り替え画面へ丸ごと切り替える
+// （選択後もツリーを表示したままにすると、どの工事番号を操作中か分かりにくいため）
 async function selectSettingsProject(num) {
+    settingsView          = 'flow_toggle_detail';
     settingsToggleProject = num;
+    settingsToggleMachines = [];
     settingsTogglePending = {};
-    const contextEl = document.getElementById('settings_project_context');
-    if (!num) {
-        contextEl.innerHTML = '';
-        document.getElementById('settings_project_selected').innerHTML = '';
-        return;
-    }
 
     const p     = projectsMap[num] || {};
     const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-    contextEl.innerHTML = `<div class="settings-sticky-project-label">📌 ${esc(num)}　${esc(label)}</div>`;
-    document.getElementById('settings_project_selected').innerHTML = `
-        <div class="settings-flow-group">
-            <div class="settings-flow-title">対象の機械を選択</div>
-            <div class="machine-checkbox-bar">
-                <button class="btn-xs" onclick="toggleAllMachines('settings_machine_list', this)">全選択</button>
-            </div>
-            <div class="machine-checkbox-list" id="settings_machine_list"></div>
+    const body  = document.getElementById('settings_body');
+    body.innerHTML = `
+        <div class="settings-sticky-header">
+            <button class="btn btn-sm btn-secondary" onclick="showFlowToggleScreen()">← 戻る</button>
+            <div class="settings-sticky-project-label">📌 ${esc(num)}　${esc(label)}</div>
         </div>
-        <div id="settings_toggle_grid"></div>
+        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
+        <div id="settings_toggle_grid" class="loading-indicator">読み込み中...</div>
         <div style="margin-top:10px;">
             <button class="btn btn-primary" onclick="confirmFlowToggles()">確定</button>
         </div>
     `;
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'settings_machine_list', 'onSettingsMachineChange');
+        const { data } = await db.from('tasks')
+            .select('machine').eq('project_number', num).eq('text', '機械組立').not('machine', 'is', null);
+        settingsToggleMachines = [...new Set((data || []).map(t => t.machine).filter(Boolean))].sort();
     } finally {
         hideLoading();
     }
-    onSettingsMachineChange();
+    renderSettingsToggleGrid();
 }
 
-function onSettingsMachineChange() {
-    const machines = getSelectedMachines('settings_machine_list');
-    const gridEl   = document.getElementById('settings_toggle_grid');
+function renderSettingsToggleGrid() {
+    const gridEl = document.getElementById('settings_toggle_grid');
     if (!gridEl) return;
-    if (machines.length === 0) { gridEl.innerHTML = ''; return; }
+    if (settingsToggleMachines.length === 0) {
+        gridEl.innerHTML = '<div style="color:#aaa;font-size:12px;">機械が見つかりません</div>';
+        return;
+    }
 
-    gridEl.innerHTML = machines.map(machine => {
+    gridEl.innerHTML = settingsToggleMachines.map(machine => {
         const rows = TOGGLABLE_FLOWS.map(ft => {
-            const key = `${machine}${ft}`;
-            const enabled = settingsTogglePending.hasOwnProperty(key)
-                ? settingsTogglePending[key]
+            const pendingForMachine = settingsTogglePending[machine] || {};
+            const enabled = pendingForMachine.hasOwnProperty(ft)
+                ? pendingForMachine[ft]
                 : isFlowEnabledFor(ft, settingsToggleProject, machine);
             return `
-                <label class="settings-check-row">
-                    <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
-                           ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
+                <label class="settings-toggle-row">
                     <span>${esc(FLOW_LABELS[ft] || ft)}</span>
+                    <span class="settings-toggle-switch">
+                        <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
+                               ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
+                        <span class="settings-toggle-ui">
+                            <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
+                        </span>
+                    </span>
                 </label>`;
         }).join('');
         return `
@@ -3121,25 +3126,31 @@ function onSettingsMachineChange() {
 }
 
 function onSettingsToggleChange(cb) {
-    const key = `${cb.dataset.settingsMachine}${cb.dataset.settingsFlow}`;
-    settingsTogglePending[key] = cb.checked;
+    const machine  = cb.dataset.settingsMachine;
+    const flowType = cb.dataset.settingsFlow;
+    if (!settingsTogglePending[machine]) settingsTogglePending[machine] = {};
+    settingsTogglePending[machine][flowType] = cb.checked;
 }
 
 async function confirmFlowToggles() {
-    const keys = Object.keys(settingsTogglePending);
-    if (keys.length === 0) { showToast('変更がありません', 'error'); return; }
+    const changes = [];
+    for (const machine of Object.keys(settingsTogglePending)) {
+        for (const flowType of Object.keys(settingsTogglePending[machine])) {
+            changes.push({ machine, flowType, enabled: settingsTogglePending[machine][flowType] });
+        }
+    }
+    if (changes.length === 0) { showToast('変更がありません', 'error'); return; }
 
     showLoading('保存中...');
     try {
         const toDelete = [];
         const toUpsert = [];
-        for (const key of keys) {
-            const [machine, flowType] = key.split('');
-            if (settingsTogglePending[key]) {
-                toDelete.push({ machine, flowType }); // ON=デフォルトに戻す → 例外行を削除
+        for (const c of changes) {
+            if (c.enabled) {
+                toDelete.push(c); // ON=デフォルトに戻す → 例外行を削除
             } else {
                 toUpsert.push({
-                    project_number: settingsToggleProject, machine, flow_type: flowType,
+                    project_number: settingsToggleProject, machine: c.machine, flow_type: c.flowType,
                     updated_by: currentUser.email, updated_at: new Date().toISOString()
                 });
             }
@@ -3151,16 +3162,12 @@ async function confirmFlowToggles() {
         if (toUpsert.length > 0) {
             await db.from('flow_overrides').upsert(toUpsert, { onConflict: 'project_number,machine,flow_type' });
         }
-        const changeDescs = keys.map(key => {
-            const [machine, flowType] = key.split('');
-            const action = settingsTogglePending[key] ? 'ON' : 'OFF';
-            return `${machine}:${FLOW_LABELS[flowType] || flowType}を${action}`;
-        });
+        const changeDescs = changes.map(c => `${c.machine}:${FLOW_LABELS[c.flowType] || c.flowType}を${c.enabled ? 'ON' : 'OFF'}`);
         await logSettingsChange('flow_toggle', `${settingsToggleProject} — ${changeDescs.join('、')}`);
 
         await loadFlowSettings();
         settingsTogglePending = {};
-        onSettingsMachineChange();
+        renderSettingsToggleGrid();
         await refreshAll();
         showToast('設定を保存しました。', 'success');
     } catch (e) {
