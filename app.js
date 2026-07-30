@@ -3009,9 +3009,10 @@ async function selectSettingsProject(num) {
 
     const p     = projectsMap[num] || {};
     const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+    contextEl.innerHTML = `<div class="settings-sticky-project-label">📌 ${esc(num)}　${esc(label)}</div>`;
     document.getElementById('settings_project_selected').innerHTML = `
         <div class="settings-flow-group">
-            <div class="settings-flow-title">${esc(num)}　${esc(label)}</div>
+            <div class="settings-flow-title">対象の機械を選択</div>
             <div class="machine-checkbox-bar">
                 <button class="btn-xs" onclick="toggleAllMachines('settings_machine_list', this)">全選択</button>
             </div>
