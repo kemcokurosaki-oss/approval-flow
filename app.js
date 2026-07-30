@@ -134,6 +134,13 @@ document.addEventListener('click', function(e) {
     }
 });
 
+const ROOM_EMAILS = {
+    '第1会議室': 'Room01@kusakabe.com',
+    '第2会議室': 'Room02@kusakabe.com',
+    '第3会議室': 'Room03@kusakabe.com',
+    '第4会議室': 'Room04@kusakabe.com',
+    '第5会議室': 'Room05@kusakabe.com',
+};
 
 // 2000番台（2000〜2999）の工番判定（組立・試運転フローのみ承認フロー対象）
 const is2000sSeries = num => { const n = parseInt(num, 10); return n >= 2000 && n <= 2999; };
