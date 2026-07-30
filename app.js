@@ -2976,35 +2976,24 @@ function closeSettingsModal() {
 
 function showSettingsMenu() {
     settingsView = 'menu';
-    settingsCategory = '';
     document.getElementById('settings_body').innerHTML = `
-        <div class="settings-menu">
+        <div class="settings-menu-groups">
             ${SETTINGS_CATEGORIES.map(cat => `
-                <button class="settings-menu-card" onclick="showSettingsCategory('${cat.key}')">
-                    <div class="settings-menu-icon">${cat.icon}</div>
-                    <div class="settings-menu-title">${esc(cat.label)}</div>
-                    <div class="settings-menu-desc">${esc(cat.desc)}</div>
-                </button>
-            `).join('')}
-        </div>
-    `;
-}
-
-function showSettingsCategory(categoryKey) {
-    const cat = SETTINGS_CATEGORIES.find(c => c.key === categoryKey);
-    if (!cat) { showSettingsMenu(); return; }
-    settingsView = 'category';
-    settingsCategory = categoryKey;
-    document.getElementById('settings_body').innerHTML = `
-        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
-        <div class="section-title" style="margin-top:10px;">${esc(cat.label)}</div>
-        <div class="settings-menu">
-            ${cat.items.map(item => `
-                <button class="settings-menu-card" onclick="${item.fn}()">
-                    <div class="settings-menu-icon">${item.icon}</div>
-                    <div class="settings-menu-title">${esc(item.label)}</div>
-                    <div class="settings-menu-desc">${esc(item.desc)}</div>
-                </button>
+                <div class="settings-menu-group">
+                    <button class="settings-menu-group-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="settings-menu-group-arrow">▶</span>
+                        <span class="settings-menu-group-icon">${cat.icon}</span>
+                        <span class="settings-menu-group-title">${esc(cat.label)}</span>
+                    </button>
+                    <div class="settings-menu-group-body">
+                        ${cat.items.map(item => `
+                            <button class="settings-menu-item" onclick="${item.fn}()">
+                                <div class="settings-menu-item-title">${esc(item.label)}</div>
+                                <div class="settings-menu-item-desc">${esc(item.desc)}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
             `).join('')}
         </div>
     `;
