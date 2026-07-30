@@ -200,10 +200,16 @@
             flex-shrink: 0;
         }
         .side-panel-header > span,
-        .side-panel-close-btn {
-            margin-top: 8px;
+        .settings-page-header > span {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
         }
         .side-panel-close-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
             background: none;
             border: none;
             font-size: 16px;
