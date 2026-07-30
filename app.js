@@ -2934,9 +2934,10 @@ async function openSettingsModal() {
     showSettingsMenu();
 }
 
-// 設定画面を閉じる（ヘッダーの「✅ 承認フロー」クリックからも呼ばれる）
+// 設定画面を閉じる（ヘッダーの「✅ 承認フロー」クリック・パネル右上の×からも呼ばれる）
 function closeSettingsModal() {
     document.getElementById('settings_modal').classList.remove('open');
+    document.getElementById('side_panel').classList.remove('open'); // マイページも閉じた状態で表示する
 }
 
 function showSettingsMenu() {
