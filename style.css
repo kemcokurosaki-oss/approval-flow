@@ -1071,6 +1071,15 @@
         }
         .settings-page.open { transform: translateX(0); }
         #app.has-dev-bar .settings-page { top: 108px; height: calc(100vh - 108px); }
+        .settings-page-header {
+            padding: 10px 14px;
+            background: #1e3a5f;
+            border-bottom: 1px solid #152c4a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
         .settings-page-body { flex: 1; overflow-y: auto; padding: 18px; }
 
         /* ===== 工事番号の階層選択（フローのON/OFF） ===== */
