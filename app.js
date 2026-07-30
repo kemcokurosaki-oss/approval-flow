@@ -2953,45 +2953,27 @@ function closeSettingsModal() {
 function showSettingsMenu() {
     settingsView = 'menu';
     document.getElementById('settings_body').innerHTML = `
-        <div class="settings-menu-section">
-            <div class="section-title">フロー制御</div>
-            <div class="settings-section-desc">承認フローの各ステップを、工事番号・機械ごとにON/OFFできます。</div>
-            <div class="settings-menu">
-                <button class="settings-menu-card" onclick="showFlowToggleScreen()">
-                    <div class="settings-menu-icon">🔀</div>
-                    <div class="settings-menu-title">フローのON/OFF</div>
-                    <div class="settings-menu-desc">工事番号・機械ごとに、不要なフローを飛ばす</div>
-                </button>
-            </div>
-        </div>
-
-        <div class="settings-menu-section">
-            <div class="section-title">宛先まわり</div>
-            <div class="settings-section-desc">開催案内・完了通知を受け取る担当者を管理します。まず「宛先候補の管理」で名簿に登録し、次に「固定宛先の設定」でフローごとに使う人を選びます。</div>
-            <div class="settings-menu">
-                <button class="settings-menu-card" onclick="showRecipientMasterScreen()">
-                    <div class="settings-menu-icon">👥</div>
-                    <div class="settings-menu-title">宛先候補の管理</div>
-                    <div class="settings-menu-desc">技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）</div>
-                </button>
-                <button class="settings-menu-card" onclick="showRecipientsListScreen()">
-                    <div class="settings-menu-icon">📧</div>
-                    <div class="settings-menu-title">固定宛先の設定</div>
-                    <div class="settings-menu-desc">名簿の中から、フローごとに実際に使う人を選ぶ</div>
-                </button>
-            </div>
-        </div>
-
-        <div class="settings-menu-section">
-            <div class="section-title">その他</div>
-            <div class="settings-section-desc">これまでの設定変更が、いつ・誰によって行われたかを確認できます。</div>
-            <div class="settings-menu">
-                <button class="settings-menu-card" onclick="showAuditLogScreen()">
-                    <div class="settings-menu-icon">📜</div>
-                    <div class="settings-menu-title">変更履歴</div>
-                    <div class="settings-menu-desc">いつ・誰が設定を変更したかを確認する</div>
-                </button>
-            </div>
+        <div class="settings-menu">
+            <button class="settings-menu-card" onclick="showFlowToggleScreen()">
+                <div class="settings-menu-icon">🔀</div>
+                <div class="settings-menu-title">フローのON/OFF</div>
+                <div class="settings-menu-desc">工事番号・機械ごとに、不要なフローを飛ばす</div>
+            </button>
+            <button class="settings-menu-card" onclick="showRecipientMasterScreen()">
+                <div class="settings-menu-icon">👥</div>
+                <div class="settings-menu-title">宛先候補の管理</div>
+                <div class="settings-menu-desc">技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）</div>
+            </button>
+            <button class="settings-menu-card" onclick="showRecipientsListScreen()">
+                <div class="settings-menu-icon">📧</div>
+                <div class="settings-menu-title">固定宛先の設定</div>
+                <div class="settings-menu-desc">名簿の中から、フローごとに実際に使う人を選ぶ</div>
+            </button>
+            <button class="settings-menu-card" onclick="showAuditLogScreen()">
+                <div class="settings-menu-icon">📜</div>
+                <div class="settings-menu-title">変更履歴</div>
+                <div class="settings-menu-desc">いつ・誰が設定を変更したかを確認する</div>
+            </button>
         </div>
     `;
 }
