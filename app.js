@@ -2976,28 +2976,36 @@ function closeSettingsModal() {
 
 function showSettingsMenu() {
     settingsView = 'menu';
+    settingsCategory = '';
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-menu">
-            <button class="settings-menu-card" onclick="showFlowToggleScreen()">
-                <div class="settings-menu-icon">🔀</div>
-                <div class="settings-menu-title">フローのON/OFF</div>
-                <div class="settings-menu-desc">工事番号・機械ごとに、不要なフローを飛ばす</div>
-            </button>
-            <button class="settings-menu-card" onclick="showRecipientMasterScreen()">
-                <div class="settings-menu-icon">👥</div>
-                <div class="settings-menu-title">宛先候補の管理</div>
-                <div class="settings-menu-desc">技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）</div>
-            </button>
-            <button class="settings-menu-card" onclick="showRecipientsListScreen()">
-                <div class="settings-menu-icon">📧</div>
-                <div class="settings-menu-title">固定宛先の設定</div>
-                <div class="settings-menu-desc">名簿の中から、フローごとに実際に使う人を選ぶ</div>
-            </button>
-            <button class="settings-menu-card" onclick="showAuditLogScreen()">
-                <div class="settings-menu-icon">📜</div>
-                <div class="settings-menu-title">変更履歴</div>
-                <div class="settings-menu-desc">いつ・誰が設定を変更したかを確認する</div>
-            </button>
+            ${SETTINGS_CATEGORIES.map(cat => `
+                <button class="settings-menu-card" onclick="showSettingsCategory('${cat.key}')">
+                    <div class="settings-menu-icon">${cat.icon}</div>
+                    <div class="settings-menu-title">${esc(cat.label)}</div>
+                    <div class="settings-menu-desc">${esc(cat.desc)}</div>
+                </button>
+            `).join('')}
+        </div>
+    `;
+}
+
+function showSettingsCategory(categoryKey) {
+    const cat = SETTINGS_CATEGORIES.find(c => c.key === categoryKey);
+    if (!cat) { showSettingsMenu(); return; }
+    settingsView = 'category';
+    settingsCategory = categoryKey;
+    document.getElementById('settings_body').innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">${esc(cat.label)}</div>
+        <div class="settings-menu">
+            ${cat.items.map(item => `
+                <button class="settings-menu-card" onclick="${item.fn}()">
+                    <div class="settings-menu-icon">${item.icon}</div>
+                    <div class="settings-menu-title">${esc(item.label)}</div>
+                    <div class="settings-menu-desc">${esc(item.desc)}</div>
+                </button>
+            `).join('')}
         </div>
     `;
 }
