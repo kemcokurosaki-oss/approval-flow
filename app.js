@@ -2927,18 +2927,15 @@ document.addEventListener('click', function(e) {
 
 async function openSettingsModal() {
     if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
-    document.querySelector('.main').style.display        = 'none';
-    document.querySelector('.header-row2').style.display  = 'none';
+    closeSidePanel(); // マイページと同じ側面に表示されるため、開いていれば閉じておく
     document.getElementById('settings_modal').classList.add('open');
     await loadFlowSettings();
     showSettingsMenu();
 }
 
-// 設定画面を閉じて進捗一覧に戻る（ヘッダーの「✅ 承認フロー」クリックからも呼ばれる）
+// 設定画面を閉じる（ヘッダーの「✅ 承認フロー」クリックからも呼ばれる）
 function closeSettingsModal() {
     document.getElementById('settings_modal').classList.remove('open');
-    document.querySelector('.main').style.display       = '';
-    document.querySelector('.header-row2').style.display = '';
 }
 
 function showSettingsMenu() {
