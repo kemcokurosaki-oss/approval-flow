@@ -2909,8 +2909,19 @@ let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_li
 let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
 let settingsTogglePending   = {};     // 未保存の変更差分 { "machineflow_type": boolean(有効か) }
 
-function openNavDrawer()  { document.getElementById('nav_drawer').classList.add('open'); }
-function closeNavDrawer() { document.getElementById('nav_drawer').classList.remove('open'); }
+function toggleUserMenu() {
+    document.getElementById('user_menu_btn').classList.toggle('open');
+    document.getElementById('user_menu_dropdown').classList.toggle('open');
+}
+function closeUserMenu() {
+    document.getElementById('user_menu_btn').classList.remove('open');
+    document.getElementById('user_menu_dropdown').classList.remove('open');
+}
+
+// ユーザーメニュー外クリックで閉じる
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.header-user')) closeUserMenu();
+});
 
 async function openSettingsModal() {
     if (!ADMIN_EMAILS.includes(currentUser?.email)) return;
