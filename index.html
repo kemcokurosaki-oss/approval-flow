@@ -687,6 +687,22 @@
     </div>
 </div>
 
+<!-- ===== ナビゲーションドロワー（設定・ログアウト） ===== -->
+<div id="nav_drawer" class="nav-drawer">
+    <div class="nav-drawer-header">
+        <span>メニュー</span>
+        <button class="nav-drawer-close" onclick="closeNavDrawer()">×</button>
+    </div>
+    <div class="nav-drawer-body">
+        <div id="nav_settings_item" class="nav-drawer-item" style="display:none;" onclick="closeNavDrawer(); openSettingsModal();">
+            <span class="nav-drawer-item-icon">⚙</span><span>設定</span>
+        </div>
+        <div class="nav-drawer-item" onclick="closeNavDrawer(); doLogout();">
+            <span class="nav-drawer-item-icon">🚪</span><span>ログアウト</span>
+        </div>
+    </div>
+</div>
+
 <!-- ===== 設定画面（製管2名のみ） ===== -->
 <div id="settings_modal" class="modal-overlay">
     <div class="modal">
