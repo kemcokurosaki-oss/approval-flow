@@ -436,6 +436,10 @@ async function main() {
   console.log(`====== 承認フロー通知 ======`);
   console.log(`テストモード: ${TEST_MODE}`);
 
+  // 会議室メール（設定画面で編集される）を取得
+  const roomEmailsRows = await supabaseFetch('flow_settings?key=eq.room_emails&select=value');
+  roomEmails = roomEmailsRows[0]?.value || {};
+
   // 未送信の通知を取得
   const notifications = await supabaseFetch(
     'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type,detail'
