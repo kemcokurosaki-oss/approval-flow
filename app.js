@@ -321,7 +321,7 @@ const FIXED_RECIPIENT_GROUPS = {
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
                          { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
 };
-let flowSettings   = { fixedRecipients: {}, roomEmails: {} };
+let flowSettings   = { fixedRecipients: {} };
 let flowOverrides  = new Set(); // 工事番号・機械ごとにOFFにされたフロー（"projectmachineflow_type"）
 const FLOW_OVERRIDE_SEP = '';
 
