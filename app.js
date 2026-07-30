@@ -3158,7 +3158,7 @@ async function showRecipientsDetailScreen(flowType) {
     }
 
     body.innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showRecipientsListScreen()">← 戻る</button>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRecipientsListScreen()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">${esc(FLOW_LABELS[flowType] || flowType)}の固定宛先</div>
         ${groupsHtml.join('')}
         <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
