@@ -3293,7 +3293,7 @@ async function showRecipientMasterScreen() {
     }).join('');
 
     body.innerHTML = `
-        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsCategory(settingsCategory)">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">宛先候補の管理</div>
         <div class="settings-note">開催案内・完了通知の宛先候補となる担当者を管理します。削除はできません（不要になった場合は編集画面で「無効」にしてください）。</div>
         <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="editRecipientMaster(null)">＋ 新規追加</button>
