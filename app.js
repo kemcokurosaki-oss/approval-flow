@@ -485,7 +485,8 @@ async function bootApp(session) {
     currentProfile = profile;
     document.getElementById('login_overlay').classList.remove('visible');
     document.getElementById('app').style.display = 'block';
-    document.getElementById('user_name_display').textContent = profile.name;
+    document.getElementById('user_name_display').textContent =
+        profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;
 
     // 製管2名のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
