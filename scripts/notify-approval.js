@@ -9,6 +9,9 @@ const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 
+// 会議室メールは設定画面（flow_settingsのroom_emailsキー）から取得する。main()冒頭で読み込む
+let roomEmails = {};
+
 const FLOW_LABELS = {
   assembly:           '組立',
   test_run:           '試運転',
