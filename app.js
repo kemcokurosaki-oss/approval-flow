@@ -2972,13 +2972,18 @@ function showFlowToggleScreen() {
     settingsView          = 'flow_toggle';
     settingsToggleProject = '';
     settingsTogglePending = {};
-    const options = Object.keys(projectsMap).sort().map(num => {
-        const p = projectsMap[num] || {};
-        const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-        return `<option value="${esc(num)}">${esc(num)}${label ? '　' + esc(label) : ''}</option>`;
-    }).join('');
+    const options = Object.keys(projectsMap)
+        .filter(num => !completedProjectNums.has(num)) // 完了済み工番は対象外
+        .sort().map(num => {
+            const p = projectsMap[num] || {};
+            const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
+            return `<option value="${esc(num)}">${esc(num)}${label ? '　' + esc(label) : ''}</option>`;
+        }).join('');
     document.getElementById('settings_body').innerHTML = `
-        <button class="btn btn-sm btn-secondary settings-back-btn" onclick="showSettingsMenu()">← 戻る</button>
+        <div class="settings-sticky-header">
+            <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
+            <div id="settings_project_context"></div>
+        </div>
         <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
         <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
         <div class="form-group">
@@ -2995,7 +3000,12 @@ function showFlowToggleScreen() {
 async function selectSettingsProject(num) {
     settingsToggleProject = num;
     settingsTogglePending = {};
-    if (!num) { document.getElementById('settings_project_selected').innerHTML = ''; return; }
+    const contextEl = document.getElementById('settings_project_context');
+    if (!num) {
+        contextEl.innerHTML = '';
+        document.getElementById('settings_project_selected').innerHTML = '';
+        return;
+    }
 
     const p     = projectsMap[num] || {};
     const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
