@@ -2918,28 +2918,27 @@ function closeDetailModal() {
 }
 
 // ===== 設定画面（製管2名のみ） =====
-let settingsView            = 'menu'; // 'menu' | 'category' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
-let settingsCategory        = '';     // 選択中のカテゴリキー（SETTINGS_CATEGORIESのkey）。各画面の「戻る」で使う
+let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
 
 // 設定画面のカテゴリ構成。項目を増やす時はここに追記するだけでよい
 const SETTINGS_CATEGORIES = [
     {
-        key: 'flow', icon: '🔀', label: 'フロー設定', desc: 'フローの可否や条件などの設定',
+        icon: '🔀', label: 'フロー設定',
         items: [
-            { icon: '🔀', label: 'フローのON/OFF', desc: '工事番号・機械ごとに、不要なフローを飛ばす', fn: 'showFlowToggleScreen' }
+            { label: 'フローのON/OFF', desc: '工事番号・機械ごとに、不要なフローを飛ばす', fn: 'showFlowToggleScreen' }
         ]
     },
     {
-        key: 'notifications', icon: '📧', label: '通知・宛先設定', desc: '通知の宛先や送付先の管理',
+        icon: '📧', label: '通知・宛先設定',
         items: [
-            { icon: '👥', label: '宛先候補の管理', desc: '技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）', fn: 'showRecipientMasterScreen' },
-            { icon: '📧', label: '固定宛先の設定', desc: '名簿の中から、フローごとに実際に使う人を選ぶ', fn: 'showRecipientsListScreen' }
+            { label: '宛先候補の管理', desc: '技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）', fn: 'showRecipientMasterScreen' },
+            { label: '固定宛先の設定', desc: '名簿の中から、フローごとに実際に使う人を選ぶ', fn: 'showRecipientsListScreen' }
         ]
     },
     {
-        key: 'log', icon: '📜', label: '履歴', desc: '設定の変更履歴を確認する',
+        icon: '📜', label: '履歴',
         items: [
-            { icon: '📜', label: '変更履歴', desc: 'いつ・誰が設定を変更したかを確認する', fn: 'showAuditLogScreen' }
+            { label: '変更履歴', desc: 'いつ・誰が設定を変更したかを確認する', fn: 'showAuditLogScreen' }
         ]
     }
 ];
