@@ -1045,13 +1045,12 @@
         .settings-menu-title { font-weight: bold; font-size: 14px; color: #1e3a5f; }
         .settings-menu-desc  { font-size: 12px; color: #888; margin-top: 4px; }
         .settings-section-desc { font-size: 12px; color: #666; margin: 4px 0 10px; }
-        .settings-back-btn {
+        .settings-sticky-header {
             position: sticky; top: -18px; z-index: 5;
-            margin: -18px -18px 10px; padding: 12px 18px;
-            width: calc(100% + 36px); border-radius: 0; text-align: left;
-            background: #fff; color: #1e3a5f; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            margin: -18px -18px 10px; padding: 10px 18px;
+            background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
-        .settings-back-btn:hover:not(:disabled) { background: #f5f8fb; }
+        .settings-sticky-project-label { margin-top: 8px; font-weight: bold; color: #1e3a5f; font-size: 13px; }
         /* 表示内容によって大きさが変わらないよう、設定モーダルだけ固定サイズにする */
         #settings_modal .modal { width: 760px; height: 680px; }
         #settings_modal .modal-body { overflow-y: auto; }
