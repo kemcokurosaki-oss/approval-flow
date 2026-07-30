@@ -191,7 +191,8 @@
         #app.has-dev-bar .side-panel { top: 108px; height: calc(100vh - 108px); }
 
         .side-panel-header {
-            padding: 10px 14px;
+            height: 44px;
+            padding: 0 14px;
             background: #546e7a;
             border-bottom: 1px solid #152c4a;
             display: flex;
@@ -199,17 +200,7 @@
             justify-content: space-between;
             flex-shrink: 0;
         }
-        .side-panel-header > span,
-        .settings-page-header > span {
-            display: inline-flex;
-            align-items: center;
-            line-height: 1;
-        }
         .side-panel-close-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
             background: none;
             border: none;
             font-size: 16px;
