@@ -3408,7 +3408,7 @@ async function showAuditLogScreen() {
     }).join('') : '<div class="settings-note">まだ変更履歴がありません</div>';
 
     body.innerHTML = `
-        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsCategory(settingsCategory)">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
         ${rowsHtml}
     `;
