@@ -485,14 +485,13 @@ async function bootApp(session) {
     currentProfile = profile;
     document.getElementById('login_overlay').classList.remove('visible');
     document.getElementById('app').style.display = 'block';
-    document.getElementById('user_name_display').textContent =
-        `${profile.name}（${ROLE_LABELS[profile.role] || profile.role}）`;
+    document.getElementById('user_name_display').textContent = profile.name;
 
-    // 製管2名のみ開発用ロール切替バー・設定ボタンを表示
+    // 製管2名のみ開発用ロール切替バー・ナビゲーションドロワーの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
         document.getElementById('dev_bar').style.display = 'flex';
         document.getElementById('app').classList.add('has-dev-bar');
-        document.getElementById('settings_btn').style.display = '';
+        document.getElementById('nav_settings_item').style.display = '';
     }
 
     await loadFlowSettings();
