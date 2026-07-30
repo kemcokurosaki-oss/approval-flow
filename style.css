@@ -189,7 +189,7 @@
         .main:has(.side-panel.open, .settings-page.open) .main-content { margin-right: calc(740px - 130px); }
 
         .side-panel-header {
-            height: 44px;
+            height: 38px;
             padding: 0 14px;
             background: #546e7a;
             border-bottom: 1px solid #152c4a;
@@ -1066,7 +1066,7 @@
         }
         .settings-page.open { transform: translateX(0); }
         .settings-page-header {
-            height: 44px;
+            height: 38px;
             padding: 0 14px;
             background: #1e3a5f;
             border-bottom: 1px solid #152c4a;
