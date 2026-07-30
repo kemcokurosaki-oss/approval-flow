@@ -1634,6 +1634,7 @@ async function openFlowModalPreset(el) {
 
 // ===== Side Panel =====
 function openSidePanelTo(section) {
+    closeSettingsModal(); // 設定画面と同じ側面に表示されるため、開いていれば閉じておく
     const panel = document.getElementById('side_panel');
     panel.classList.add('open');
 
