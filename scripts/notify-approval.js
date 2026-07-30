@@ -9,8 +9,13 @@ const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 
-// 会議室メールは設定画面（flow_settingsのroom_emailsキー）から取得する。main()冒頭で読み込む
-let roomEmails = {};
+const ROOM_EMAILS = {
+  '第1会議室': 'Room01@kusakabe.com',
+  '第2会議室': 'Room02@kusakabe.com',
+  '第3会議室': 'Room03@kusakabe.com',
+  '第4会議室': 'Room04@kusakabe.com',
+  '第5会議室': 'Room05@kusakabe.com',
+};
 
 const FLOW_LABELS = {
   assembly:           '組立',
