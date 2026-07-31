@@ -127,6 +127,12 @@
                 <span style="font-size:13px; font-weight:bold; color:#fff;">マイページ</span>
                 <button class="side-panel-close-btn" onclick="closeSidePanel()">✕</button>
             </div>
+            <div class="side-panel-filter">
+                <label class="pfilter-label">
+                    <input type="checkbox" id="mypage_filter_assembly" onchange="setMypageFilterAssembly(this.checked)">
+                    <span>2000番完了報告のみ表示</span>
+                </label>
+            </div>
             <div id="side_half_mine" class="side-half">
                 <div class="side-half-header" onclick="toggleSideHalf('mine')">
                     申請
