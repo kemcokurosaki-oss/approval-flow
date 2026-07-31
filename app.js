@@ -3708,7 +3708,7 @@ async function addQaPendingItem(requestId) {
 
         if (owner) await _notifyPendingOwner(requestId, owner, false, content);
 
-        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を追加しました');
+        _applyPendingUpdate(requestId, newSheetData, 'タスクを追加しました');
     } catch (e) {
         showToast('追加に失敗しました: ' + e.message, 'error');
     } finally {
