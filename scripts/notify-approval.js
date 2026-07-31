@@ -501,11 +501,11 @@ async function main() {
     profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
   }
 
-  // 出荷準備フロー: 品証宛の通知に製管をCCで追加するため、製管のメールアドレスを事前取得
+  // 出荷準備フロー: 品証宛の完了通知に製管をCCで追加するため、製管のメールアドレスを事前取得
+  // （出荷準備は承認不要のため、発生する通知は completed のみ）
   const productionControlProfiles = await supabaseFetch(`profiles?role=eq.production_control&select=email`);
   const productionControlEmails = (productionControlProfiles || []).map(p => p.email).filter(Boolean);
-  // CC対象の通知種別（申請時・承認完了時・再申請時）
-  const SHIPPING_PREP_CC_TYPES = ['approval_request', 'completed', 'resubmit'];
+  const SHIPPING_PREP_CC_TYPES = ['completed'];
 
   // notification_recipients の名前マップを取得（外部宛先の宛名に使用）
   const recipientEmails = [...new Set(notifications.map(n => n.recipient_email).filter(Boolean))];
