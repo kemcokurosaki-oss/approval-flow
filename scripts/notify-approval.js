@@ -27,6 +27,9 @@ const FLOW_LABELS = {
   shipping:           '出荷確定',
 };
 
+// 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
+const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
+
 // 承認依頼・再申請・却下・他者完了の件名用ラベル（申請系表記）
 const FLOW_LABELS_REQUEST = {
   assembly:      '組立完了申請',
