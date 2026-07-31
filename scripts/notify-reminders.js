@@ -400,10 +400,12 @@ async function runPendingItemReminders() {
       if (!item.due || item.due >= todayStr) continue; // 期日翌日から対象（当日はまだ超過していない）
       if (!item.owner) continue;
 
-      const label = item.content || item.machine || 'ペンディング項目';
+      const isQaFlow  = QA_MEETING_FLOWS.includes(req.flow_type);
+      const itemLabel = isQaFlow ? 'タスク' : 'ペンディング項目';
+      const label = item.content || item.machine || itemLabel;
       const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
       const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
-      const subject = `【ペンディング期日超過】${pStr}　${label}`;
+      const subject = `【${itemLabel}期日超過】${pStr}　${label}`;
 
       const recipients = await resolveOwnerRecipients(item.owner);
       for (const recipient of recipients) {
@@ -412,7 +414,7 @@ async function runPendingItemReminders() {
 
         const text =
           `${recipient.name} 様\n\n` +
-          `${pStr}（${flow}）のペンディング項目「${label}」の完了予定日（${item.due}）を過ぎていますが、` +
+          `${pStr}（${flow}）の${itemLabel}「${label}」の完了予定日（${item.due}）を過ぎていますが、` +
           `まだ完了になっていません。\n` +
           `承認フロー管理システムにログインし、対応後は「完了にする」を押してください。\n\n` +
           `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
