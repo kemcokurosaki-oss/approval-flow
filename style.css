@@ -566,6 +566,17 @@
             text-overflow: ellipsis;
         }
         .prog-card-date-value { font-size: 15px; flex-shrink: 0; }
+        .prog-card-badge-warning {
+            display: inline-block;
+            box-sizing: border-box;
+            color: #8a6100;
+            background: #fdf3d9;
+            border: 1px solid #f0d999;
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
 
         .prog-machine-row-header {
             display: flex;
