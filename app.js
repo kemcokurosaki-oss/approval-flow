@@ -4275,9 +4275,10 @@ async function _getMiddleFlowChain(projectNum, machine) {
 }
 
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
+// 設定（工事番号・機械単位）でOFFにされたフローは組立・出荷確定も含めて除外する
 async function _getMachineFlowChain(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
-    return ['assembly', ...middle, 'shipping'];
+    return ['assembly', ...middle, 'shipping'].filter(ft => isFlowEnabledFor(ft, projectNum, machine));
 }
 
 // 複数機械選択時: 各機械のフロー構成を、工程順を保ったまま合成する
