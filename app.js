@@ -3531,7 +3531,7 @@ async function completePendingItem(requestId, idx, opts = {}) {
             );
         }
 
-        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を完了にしました', opts);
+        _applyPendingUpdate(requestId, newSheetData, `${itemLabel}を完了にしました`, opts);
     } catch(e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
