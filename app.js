@@ -3791,7 +3791,16 @@ async function saveEditQaPendingItem(requestId, idx) {
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
-        if (newOwner && newOwner !== prevOwner) await _notifyPendingOwner(requestId, newOwner, false, content);
+        if (newOwner && newOwner !== prevOwner) {
+            // 直前の担当者への未送信の割り当て通知が残っていれば取り消す（担当者変更が誤操作からの訂正だった場合に誤送信を防ぐ）
+            await db.from('approval_notifications')
+                .delete()
+                .eq('request_id', requestId)
+                .eq('notification_type', 'pending_item_assigned')
+                .eq('detail', prevContent)
+                .is('emailed_at', null);
+            await _notifyPendingOwner(requestId, newOwner, false, content);
+        }
 
         qaEditingPendingIdx = null;
         _applyPendingUpdate(requestId, newSheetData, 'タスクを更新しました');
