@@ -1119,6 +1119,9 @@ async function loadProgress() {
 }
 
 function _syncProgressControls() {
+    document.querySelectorAll('.ptab-btn').forEach(btn => {
+        btn.classList.toggle('active', (btn.getAttribute('data-tab') ?? 'progress') === progressTab);
+    });
     document.getElementById('psort_job')?.classList.toggle('active', progressSort === 'job');
     document.getElementById('psort_shipping')?.classList.toggle('active', progressSort === 'shipping');
     const cb = document.getElementById('pfilter_mine');
