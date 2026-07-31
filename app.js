@@ -2353,7 +2353,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
         ` : '';
         const addFormHtml = canManage ? `
             <div class="qa-pending-add-box">
-                <div class="qa-pending-add-label">ペンディングを追加</div>
+                <div class="qa-pending-add-label">タスクを追加</div>
                 <div class="pending-row qa-pending-row" style="flex-direction:column;align-items:stretch;gap:8px;">
                     <div style="display:flex;gap:6px;">
                         <div style="display:flex;flex-direction:column;flex:1;">
