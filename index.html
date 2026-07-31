@@ -128,10 +128,11 @@
                 <button class="side-panel-close-btn" onclick="closeSidePanel()">✕</button>
             </div>
             <div class="side-panel-filter">
-                <label class="pfilter-label">
-                    <input type="checkbox" id="mypage_filter_assembly" onchange="setMypageFilterAssembly(this.checked)">
-                    <span>2000番完了報告のみ表示</span>
-                </label>
+                <div class="mypage-filter-group">
+                    <button id="mypage_filter_all"      class="mypage-filter-btn active" onclick="setMypageFilterMode('all')">全て</button>
+                    <button id="mypage_filter_main"      class="mypage-filter-btn"        onclick="setMypageFilterMode('main')">2000番以外</button>
+                    <button id="mypage_filter_assembly"  class="mypage-filter-btn"        onclick="setMypageFilterMode('assembly')">2000番のみ</button>
+                </div>
             </div>
             <div id="side_half_mine" class="side-half">
                 <div class="side-half-header" onclick="toggleSideHalf('mine')">
