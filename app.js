@@ -952,7 +952,9 @@ async function loadMineSide() {
 
     // 組立・試運転（承認ステップあり）: 承認は pending の有無に関わらず可能なため、
     // 「承認済み」は未完了ペンディングが0件のものだけとし、残っているものは手前の「ペンディング」列に表示する
-    const buildAssemblyLikeColumns = (list) => {
+    const buildAssemblyLikeColumns = (list, flowType) => {
+        // shipping_prep は承認ステップを持たないため「申請＝完了」。列見出しもそれに合わせる
+        const isNoApprovalFlow = flowType === 'shipping_prep';
         const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
         list.forEach(req => {
             const unresolvedPending = (req.sheet_data?.pending_items || [])
@@ -971,9 +973,9 @@ async function loadMineSide() {
         });
         return [
             ['入力中', groups.inprogress, false],
-            ['承認待ち', groups.waiting, false],
+            [isNoApprovalFlow ? '完了待ち' : '承認待ち', groups.waiting, false],
             ['ペンディング', groups.pending, true],
-            ['承認済み', groups.approved, false],
+            [isNoApprovalFlow ? '完了' : '承認済み', groups.approved, false],
         ];
     };
 
