@@ -579,16 +579,11 @@
         }
         .prog-card-badge-warning.is-clickable { cursor: pointer; }
         .prog-card-badge-warning.is-clickable:hover { background: #fbe8b8; }
-        .prog-card-packing-wrap {
-            position: relative;
-            display: inline-block;
-        }
+        /* 他のカード表示と重ならないよう、position:fixed でクリックされたバッジの真下に動的配置する（app.js側でtop/rightを設定） */
         .prog-card-packing-popup {
             display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            right: 0;
-            z-index: 50;
+            position: fixed;
+            z-index: 500;
             flex-direction: column;
             background: #fff;
             border: 1px solid #d0dae8;
@@ -596,6 +591,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             min-width: 90px;
             overflow: hidden;
+            font-family: inherit;
         }
         .prog-card-packing-popup.is-open { display: flex; }
         .prog-card-packing-popup button {
@@ -603,6 +599,7 @@
             background: none;
             padding: 7px 12px;
             font-size: 13px;
+            font-family: inherit;
             text-align: left;
             cursor: pointer;
             color: #333;
