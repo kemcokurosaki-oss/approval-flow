@@ -2187,11 +2187,14 @@ async function submitRequest() {
                 .select('text').eq('project_number', projectNum).eq('machine', machineNum);
             const mNames = (mTasks || []).map(t => t.text);
 
+            // shipping_prep は承認不要。申請＝完了のため、最初から completed 相当の approved で作成する
+            const initialStatus = currentFlowType === 'shipping_prep' ? 'approved' : 'submitted';
+
             let req, e1;
             if (currentDraftId && machineNum === machineNums[0]) {
                 // 下書きを更新して提出（sheet_data は sheet.html で保存済み）
                 ({ data: req, error: e1 } = await db.from('approval_requests').update({
-                    status:         'submitted',
+                    status:         initialStatus,
                     note:           note || null,
                     test_run:       mNames.includes('試運転'),
                     has_inspection: mNames.includes('外観検査')
@@ -2202,7 +2205,7 @@ async function submitRequest() {
                     project_number: projectNum,
                     machine_name:   machineNum,
                     flow_type:      currentFlowType,
-                    status:         'submitted',
+                    status:         initialStatus,
                     requester_id:   currentUser.id,
                     note:           note || null,
                     test_run:       mNames.includes('試運転'),
@@ -2211,6 +2214,12 @@ async function submitRequest() {
                 }).select().single());
             }
             if (e1) throw e1;
+
+            if (currentFlowType === 'shipping_prep') {
+                // 承認ステップは作らず、関係者へ完了通知のみ記録する
+                await recordFlowNotifications(req.id, 'shipping_prep');
+                continue;
+            }
 
             // 承認ステップ設定
             let stepsToInsert;
