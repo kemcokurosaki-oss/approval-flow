@@ -164,6 +164,7 @@ let currentUser    = null;
 let currentProfile = null;
 let projectsMap    = {}; // project_number → { customer_name, project_details }
 let currentTab          = 'pending';
+let progressTab          = 'progress'; // 'progress'（進捗一覧） | 'assembly_report'（組立・試運転 完了報告＝2000番台）
 let progressSort         = 'job';   // 'job' | 'shipping'
 let progressFilterMine   = false;
 let progressFilterPrefix = '';
