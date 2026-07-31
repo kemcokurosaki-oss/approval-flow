@@ -2270,14 +2270,16 @@ async function submitRequest() {
         await refreshAll();
         ui.send('SAVED');
         const count = machineNums.length;
-        const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
-                                (currentFlowType === 'test_run'  && submitterRole !== 'operations_manager');
-        const approverLabel = currentFlowType === 'shipping_prep'
-            ? '品証（製管にもCCで届きます）'
-            : isParallelStaff
+        if (currentFlowType === 'shipping_prep') {
+            showToast(`${count}機械の出荷準備完了を申請しました。\n関係者に完了通知が届きます。`, 'success');
+        } else {
+            const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
+                                    (currentFlowType === 'test_run'  && submitterRole !== 'operations_manager');
+            const approverLabel = isParallelStaff
                 ? (currentFlowType === 'assembly' ? '組立課長・部長' : '操業課長・部長')
                 : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
-        showToast(`${count}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`, 'success');
+            showToast(`${count}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`, 'success');
+        }
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
