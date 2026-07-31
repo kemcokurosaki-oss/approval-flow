@@ -2237,7 +2237,7 @@ async function submitRequest() {
                     ];
                     notifyRoles = ['assembly_manager', 'assembly_director'];
                 }
-            } else if (currentFlowType === 'test_run') {
+            } else {
                 // test_run: assemblyと同じ並列承認（どちらかが承認で完了）
                 if (submitterRole === 'operations_manager') {
                     // 課長申請: 部長のみ1ステップ
@@ -2251,10 +2251,6 @@ async function submitRequest() {
                     ];
                     notifyRoles = ['operations_manager', 'operations_director'];
                 }
-            } else {
-                // operations_manager申請: 部長のみ1ステップ（test_runと同型のためここには到達しない想定だが念のため）
-                stepsToInsert = [];
-                notifyRoles = [];
             }
             if (!firstApproverRole) firstApproverRole = notifyRoles[0];
             await db.from('approval_steps').insert(stepsToInsert);
