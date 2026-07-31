@@ -3518,6 +3518,14 @@ async function completePendingItem(requestId, idx, opts = {}) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
+        // 直前の「完了取消」がまだ未送信なら取り消す（誤って取消→すぐ完了に戻した場合に古い通知を送らないため）
+        await db.from('approval_notifications')
+            .delete()
+            .eq('request_id', requestId)
+            .eq('notification_type', 'pending_item_uncompleted')
+            .eq('detail', items[idx].content)
+            .is('emailed_at', null);
+
         // ペンディング項目が完了したら品証・製管へ通知（組立/試運転/QAフロー共通）
         const notifIds = new Set();
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
