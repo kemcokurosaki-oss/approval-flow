@@ -3563,6 +3563,14 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
+        // 直前の「完了」がまだ未送信なら取り消す（誤操作で完了にしてすぐ取り消した場合にメール自体を飛ばさないため）
+        await db.from('approval_notifications')
+            .delete()
+            .eq('request_id', requestId)
+            .eq('notification_type', 'pending_item_completed')
+            .eq('detail', items[idx].content)
+            .is('emailed_at', null);
+
         // ペンディング項目の完了が取り消されたら品証・製管へ通知
         const notifIds = new Set();
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
