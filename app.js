@@ -3824,6 +3824,16 @@ async function deleteQaPendingItem(requestId, idx) {
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
         if (removed?.photo_path) await _deletePendingPhoto(removed.photo_path);
 
+        // 削除した項目宛の未送信の割り当て通知が残っていれば取り消す（誤って追加してすぐ削除した場合に誤送信を防ぐ）
+        if (removed?.content) {
+            await db.from('approval_notifications')
+                .delete()
+                .eq('request_id', requestId)
+                .eq('notification_type', 'pending_item_assigned')
+                .eq('detail', removed.content)
+                .is('emailed_at', null);
+        }
+
         _applyPendingUpdate(requestId, newSheetData, 'タスクを削除しました');
     } catch (e) {
         showToast('削除に失敗しました: ' + e.message, 'error');
