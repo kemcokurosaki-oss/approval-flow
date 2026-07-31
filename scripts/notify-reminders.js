@@ -602,7 +602,7 @@ async function runQaFinalizeReminders() {
         `${approver.name} 様\n\n` +
         `${pStr} の「${flow}」について、開催日（${req.inspection_date}）を過ぎていますが、` +
         `まだ「完了にする」の処理がされていません。\n` +
-        `承認フロー管理システムにログインし、開催結果・ペンディングを確認のうえ完了処理をお願いします。\n\n` +
+        `承認フロー管理システムにログインし、開催結果・タスクリストを確認のうえ完了処理をお願いします。\n\n` +
         `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
       const ccEmails = ccEmailsAll.filter(e => e !== approver.email);
