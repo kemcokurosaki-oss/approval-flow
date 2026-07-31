@@ -124,7 +124,9 @@ function buildEmail(type, req, recipientName, extra = {}) {
   const flow       = FLOW_LABELS[req?.flow_type]         || req?.flow_type || '—';
   const flowReq    = FLOW_LABELS_REQUEST[req?.flow_type] || flow; // 承認依頼・再申請用
   const note       = req?.note ? `\nコメント: ${req.note}` : '';
-  const detailLine = extra?.detail ? `\nペンディング内容: ${extra.detail}` : '';
+  const isQaFlow   = QA_MEETING_FLOWS.includes(req?.flow_type);
+  const itemLabel  = isQaFlow ? 'タスク' : 'ペンディング項目';
+  const detailLine = extra?.detail ? `\n${itemLabel}内容: ${extra.detail}` : '';
   const from       = `"工事工程 通知" <${GMAIL_USER}>`;
   const parallelNote = req?.flow_type === 'assembly'
     ? '\n\n※組立課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
