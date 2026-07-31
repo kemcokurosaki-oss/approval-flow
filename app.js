@@ -2288,7 +2288,7 @@ async function submitRequest() {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
         btn.disabled    = false;
-        btn.textContent = '申請する';
+        btn.textContent = currentFlowType === 'shipping_prep' ? '完了申請する' : '申請する';
         hideLoading();
     }
 }
