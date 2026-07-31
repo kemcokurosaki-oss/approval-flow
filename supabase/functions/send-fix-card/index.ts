@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
 
         const html = `
             <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
-                <h2 style="margin-bottom:4px;">${esc(flowLabel)} ペンディングリスト</h2>
+                <h2 style="margin-bottom:4px;">${esc(flowLabel)} タスクリスト</h2>
                 <p style="margin-top:0;color:#666;">
                     工事番号: ${esc(reqRow.project_number || "—")} ／
                     機械: ${esc(reqRow.machine_name || "—")} ／
