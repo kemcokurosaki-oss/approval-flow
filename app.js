@@ -2596,6 +2596,9 @@ async function openDetailModal(requestId) {
         if (approvalPackingDate && packingTaskDate && approvalPackingDate !== packingTaskDate) {
             shippingDateMismatches.push(`梱包出荷: 承認フロー ${fmtDate(approvalPackingDate)} / 工程表 ${fmtDate(packingTaskDate)}`);
         }
+        if (packingState === 'yes' && !hasPackingShipping) {
+            shippingDateMismatches.push('梱包出荷が「あり」に設定されていますが、工程表に梱包出荷タスクが未登録です');
+        }
     }
     currentDetailHasPackingShipping = hasPackingShipping;
     const slbl   = (req.flow_type === 'shipping' && req.status === 'submitted')
