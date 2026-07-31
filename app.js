@@ -2240,7 +2240,7 @@ function buildPendingSectionInner(req, isMyRequest) {
     const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
         <hr class="section-divider">
-        <div class="section-title">ペンディング項目</div>
+        <div class="section-title">${isQaFlow ? 'タスクリスト' : 'ペンディング項目'}</div>
         ${items.map(({ item, idx }, pos) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             const itemCanComplete = isQaFlow
