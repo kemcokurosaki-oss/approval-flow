@@ -138,14 +138,24 @@
             overflow-y: auto;
         }
         .main-layout.assembly-report-mode .assembly-nav-panel { display: flex; }
-        /* 工事番号・機械の各行は進捗一覧の左フィルター（.prefix-btn）と同じ見た目・選択状態を共用する */
+        /* 工事番号・機械の各行は進捗一覧の左フィルター（.prefix-btn）の配色・選択状態をベースにしつつ、
+           機械側は一段小さく・薄い背景色にして「工事番号の下にぶら下がっている」ことが分かるようにする */
         .prefix-btn.anav-project-header { display: flex; align-items: center; gap: 4px; }
         .anav-caret { font-size: 11px; color: #78909c; width: 11px; flex-shrink: 0; }
         .prefix-btn.active .anav-caret { color: #fff; }
         .prefix-btn.anav-all-btn { font-size: 14px; }
-        .anav-machines { display: none; flex-direction: column; }
+        .anav-machines { display: none; flex-direction: column; background: #e9edf4; }
         .anav-machines.open { display: flex; }
-        .prefix-btn.anav-machine { padding-left: 28px; }
+        .prefix-btn.anav-machine {
+            padding: 8px 8px 8px 30px;
+            font-size: 13px;
+            font-weight: normal;
+            color: #5a7080;
+            background: transparent;
+            border-left: 3px solid #c4cedd;
+        }
+        .prefix-btn.anav-machine:hover { background: #dde6f2; }
+        .prefix-btn.anav-machine.active { background: #546e7a; color: #fff; border-left-color: #fff; }
         /* 2000番台は組立・試運転の2ステップしかないため、カード幅を縮めて余白を減らす（縮めすぎない程度に） */
         .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); }
         /* 組立⇔試運転のマーク間をもう少し広げる */
