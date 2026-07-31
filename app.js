@@ -2956,7 +2956,7 @@ async function openDetailModal(requestId) {
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping);
+        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
