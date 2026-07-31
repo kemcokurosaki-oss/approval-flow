@@ -3992,6 +3992,18 @@ async function cancelMeeting(requestId, flowType) {
             .update({ status: 'cancelled', updated_at: new Date().toISOString() })
             .eq('id', requestId);
 
+        // まだ送信されていない開催案内が残っていれば削除する（キャンセル済みの会議への招待が後から届くのを防ぐ）
+        const inviteType = flowType === 'shipping_meeting'
+            ? 'shipping_meeting_invite'
+            : flowType === 'inspection'
+            ? 'inspection_invite'
+            : 'simple_inspection_invite';
+        await db.from('approval_notifications')
+            .delete()
+            .eq('request_id', requestId)
+            .eq('notification_type', inviteType)
+            .is('emailed_at', null);
+
         const { data: existingNotifs } = await db.from('approval_notifications')
             .select('recipient_id, recipient_email')
             .eq('request_id', requestId)
