@@ -2348,7 +2348,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
         const hasSendableItems = (req.sheet_data?.pending_items || []).some(it => it.content);
         const sendCardBtnHtml = (isQualityOrSeikan && hasSendableItems) ? `
             <div style="margin-top:10px;">
-                <button type="button" class="btn btn-primary" title="検査の開催案内と同じ宛先に送信されます" onclick="sendFixCard('${req.id}')">✉ 手直しカードを送信</button>
+                <button type="button" class="btn btn-primary" title="検査の開催案内と同じ宛先に送信されます" onclick="sendFixCard('${req.id}')">✉ タスクリストを送信</button>
             </div>
         ` : '';
         const addFormHtml = canManage ? `
