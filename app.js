@@ -1525,57 +1525,26 @@ function renderProgressCards() {
 }
 
 // ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
-// 進捗一覧の左フィルターパネル（.prefix-btn）と同じ見た目・選択状態になるようスタイルを共用する
-function renderAssemblyNavPanel(nums, projectData) {
+// 進捗一覧の左フィルターパネル（.prefix-btn）と同じ見た目・選択状態になるようスタイルを共用する。
+// 絞り込みは行わず、押した工事番号のカードまでスクロールするだけの単純なジャンプ一覧。
+function renderAssemblyNavPanel(nums) {
     const panel = document.getElementById('assembly_nav_panel');
     if (!panel) return;
     if (progressTab !== 'assembly_report') { panel.innerHTML = ''; return; }
 
-    const allActive = assemblyNavExpandedNums.size === 0;
-    const allBtn = `<button class="prefix-btn anav-all-btn${allActive ? ' active' : ''}" onclick="clearAssemblyNavFilter()">全て</button>`;
-
-    const projectsHtml = nums.map(num => {
-        const isOpen = assemblyNavExpandedNums.has(num);
-        const machines = Object.keys(projectData[num]).sort();
-        const machineItems = machines.map(m => {
-            const isActiveMachine = assemblyNavSelectedMachineKey === `${num}__${m}`;
-            return `<button class="prefix-btn anav-machine${isActiveMachine ? ' active' : ''}" onclick="jumpToAssemblyMachine(this, '${esc(num)}', '${esc(m)}')">${esc(m)}</button>`;
-        }).join('');
-        return `<div class="anav-project">
-            <button class="prefix-btn anav-project-header${isOpen ? ' active' : ''}" onclick="toggleAssemblyNavProject('${esc(num)}')">
-                <span class="anav-caret">${isOpen ? '▼' : '▶'}</span><span>${esc(num)}</span>
-            </button>
-            <div class="anav-machines${isOpen ? ' open' : ''}">${machineItems}</div>
-        </div>`;
+    panel.innerHTML = nums.map(num => {
+        const isActive = assemblyNavActiveNum === num;
+        return `<button class="prefix-btn${isActive ? ' active' : ''}" onclick="jumpToAssemblyProject(this, '${esc(num)}')">${esc(num)}</button>`;
     }).join('');
-
-    panel.innerHTML = allBtn + projectsHtml;
 }
 
-// 左ナビ「全て」→ 展開中の工事番号をすべて閉じて全件表示に戻す
-function clearAssemblyNavFilter() {
-    assemblyNavExpandedNums.clear();
-    assemblyNavSelectedMachineKey = '';
-    renderProgressCards();
-}
-
-// 左ナビで工事番号を展開/折りたたみ（複数同時展開可）。展開中の工事番号群だけにカードを絞り込む
-function toggleAssemblyNavProject(num) {
-    if (assemblyNavExpandedNums.has(num)) {
-        assemblyNavExpandedNums.delete(num);
-    } else {
-        assemblyNavExpandedNums.add(num);
-    }
-    renderProgressCards();
-}
-
-// 左ナビで機械を選択 → 絞り込みはそのまま（同じ工事番号の他の機械も表示したまま）、該当行までスクロール
-function jumpToAssemblyMachine(btnEl, num, machine) {
-    assemblyNavSelectedMachineKey = `${num}__${machine}`;
-    document.querySelectorAll('.anav-machine.active').forEach(el => el.classList.remove('active'));
+// 左ナビで工事番号を選択 → 絞り込みはせず、該当カードまでスクロール
+function jumpToAssemblyProject(btnEl, num) {
+    assemblyNavActiveNum = num;
+    document.querySelectorAll('#assembly_nav_panel .prefix-btn.active').forEach(el => el.classList.remove('active'));
     btnEl.classList.add('active');
-    const row = document.querySelector(`.prog-machine-row[data-num="${CSS.escape(num)}"][data-machine="${CSS.escape(machine)}"]`);
-    row?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const card = document.querySelector(`.prog-card[data-num="${CSS.escape(num)}"]`);
+    card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===== 出荷後対応ペンディング一覧（完了済み工番も含めて全工番を横断表示） =====
