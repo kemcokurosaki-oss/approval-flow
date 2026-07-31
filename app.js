@@ -599,6 +599,30 @@ const testRunProjectNums       = new Set(); // 試運転タスクがある工番
 const shippingMeetingProjectNums = new Set(); // 出荷確認会議タスクがある工番
 const shippingProjectNums      = new Set(); // 工場出荷タスクがある工番
 const packingShippingProjectNums = new Set(); // 梱包出荷タスクがある工番
+const packingStatusMap = new Map(); // 工番 → 梱包出荷の有無('unknown'|'yes'|'no')。packing_shipping_status テーブルの内容
+
+// 梱包出荷の有無を3値で判定する。工程表に実タスクが存在する場合はそちらを優先し、
+// 無い場合のみ packing_shipping_status テーブルの意思表示（未定/なし）を見る
+function getPackingDisplayState(num, hasActualPackingTask) {
+    if (hasActualPackingTask) return 'yes';
+    return packingStatusMap.get(num) || 'unknown';
+}
+
+async function setPackingShippingStatus(projectNumber, status) {
+    try {
+        await db.from('packing_shipping_status').upsert({
+            project_number: projectNumber,
+            status,
+            updated_by:     currentUser.id,
+            updated_at:     new Date().toISOString()
+        }, { onConflict: 'project_number' });
+        packingStatusMap.set(projectNumber, status);
+        showToast('梱包出荷の有無を更新しました');
+    } catch (e) {
+        console.warn('梱包出荷有無の更新に失敗:', e);
+        showToast('更新に失敗しました', 'error');
+    }
+}
 
 async function onProjectChange() {
     const num    = currentProjectNum;
