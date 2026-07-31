@@ -3786,7 +3786,7 @@ async function saveEditQaPendingItem(requestId, idx) {
 }
 
 async function deleteQaPendingItem(requestId, idx) {
-    if (!confirm('このペンディング項目を削除します。よろしいですか？')) return;
+    if (!confirm('このタスクを削除します。よろしいですか？')) return;
 
     showLoading('削除中...');
     try {
