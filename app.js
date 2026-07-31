@@ -4342,8 +4342,7 @@ async function resubmit(requestId) {
             updated_at:   new Date().toISOString()
         }).eq('id', requestId);
 
-        // 全ステップの承認者に再申請通知を記録（assembly並列承認対応）
-        // shipping_prep（品証・製管）は品証のみへ通知（製管へはメール送信時にCCで届く）
+        // 全ステップの承認者に再申請通知を記録（assembly/test_run並列承認対応。shipping_prepは承認ステップを持たないため対象外）
         const { data: allSteps } = await db.from('approval_steps').select('approver_role').eq('request_id', requestId);
         const rolesToNotify = [...new Set((allSteps || []).map(s => s.approver_role))]
             .filter(r => r !== 'production_control');
