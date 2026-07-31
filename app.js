@@ -340,8 +340,8 @@ async function logSettingsChange(category, summary) {
     await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
 }
 
-// 中間5フロー（試運転・簡易検査・外観検査・出荷確認会議・出荷準備）のみ、工事番号・機械単位でOFFにできる。
-// 組立・出荷確定は常に有効。exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
+// 全フロー種別（組立・出荷確定含む）を工事番号・機械単位でOFFにできる。
+// exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
 function isFlowEnabledFor(flowType, projectNum, machine) {
     if (!TOGGLABLE_FLOWS.includes(flowType)) return true;
     return !flowOverrides.has(`${projectNum}${FLOW_OVERRIDE_SEP}${machine}${FLOW_OVERRIDE_SEP}${flowType}`);
