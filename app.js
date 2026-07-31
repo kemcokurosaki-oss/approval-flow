@@ -705,11 +705,21 @@ async function refreshAll() {
     await Promise.all(loads);
 }
 
-// マイページ：「2000番完了報告のみ表示」チェックボックス（進捗一覧側のタブとは独立して切り替え可能）
-function setMypageFilterAssembly(checked) {
-    mypageFilterAssembly = checked;
+// マイページ：表示切替（全て / 2000番以外 / 2000番のみ）。進捗一覧側のタブとは独立して切り替え可能
+function setMypageFilterMode(mode) {
+    mypageFilterMode = mode;
+    ['all', 'main', 'assembly'].forEach(m => {
+        document.getElementById(`mypage_filter_${m}`)?.classList.toggle('active', m === mode);
+    });
     loadMineSide();
     loadPendingSide();
+}
+
+// mypageFilterModeに応じた工事番号の絞り込み判定
+function matchesMypageFilterMode(num) {
+    if (mypageFilterMode === 'assembly') return is2000sSeries(num);
+    if (mypageFilterMode === 'main')     return !is2000sSeries(num);
+    return true;
 }
 
 async function loadPendingSide() {
