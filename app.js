@@ -1502,7 +1502,7 @@ function renderProgressCards() {
             const rowHeader = (machineLabel || machineShipHtml)
                 ? '<div class="prog-machine-row-header">' + machineLabel + machineShipHtml + '</div>'
                 : '';
-            return '<div class="prog-machine-row">' + rowHeader + '<div class="flow-steps">' + nodes + '</div></div>';
+            return '<div class="prog-machine-row" data-num="' + esc(num) + '" data-machine="' + esc(machine) + '">' + rowHeader + '<div class="flow-steps">' + nodes + '</div></div>';
         }).join('');
 
         return `<div class="prog-card">
