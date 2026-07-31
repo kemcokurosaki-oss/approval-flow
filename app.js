@@ -2552,14 +2552,16 @@ async function openDetailModal(requestId) {
         ? '開催待ち'
         : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'approved')
         ? '開催済み'
+        : (req.flow_type === 'shipping_prep' && req.status === 'approved')
+        ? '完了'
         : (STATUS_LABELS[req.status] || req.status);
 
-    // 自分が担当すべきステップか確認
+    // 自分が担当すべきステップか確認（shipping_prep は承認不要のため対象外）
     const myStep = steps.find(s =>
         s.approver_role === getEffectiveRole() &&
         s.status        === 'pending' &&
         (
-            ((req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'shipping_prep') && req.status === 'submitted') ||
+            ((req.flow_type === 'assembly' || req.flow_type === 'test_run') && req.status === 'submitted') ||
             (s.step_order === 1 && req.status === 'submitted') ||
             (s.step_order === 2 && req.status === 'in_review')
         )
