@@ -9,9 +9,9 @@
             z-index: 300;
         }
         .header-row1 {
-            background: linear-gradient(180deg, #34495e, #2c3e50);
+            background: linear-gradient(135deg, #1f3a5c, #16263b);
             color: #fff;
-            padding: 10px 16px;
+            padding: 11px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -26,26 +26,33 @@
             border-bottom: 1.5px solid #c4cedd;
         }
         .header-row-tabs {
-            background: #3d5468;
-            padding: 0 16px;
+            background: #223349;
+            padding: 8px 16px;
             display: flex;
-            gap: 4px;
+            gap: 6px;
         }
         .ptab-btn {
-            padding: 9px 16px;
+            display: flex;
+            align-items: center;
+            padding: 8px 18px;
             border: none;
-            border-bottom: 3px solid transparent;
+            border-radius: 20px;
             background: transparent;
             cursor: pointer;
             font-family: "メイリオ", Meiryo, sans-serif;
             font-size: 13px;
             font-weight: bold;
-            color: #b7c3d0;
-            transition: background 0.12s, color 0.12s, border-color 0.12s;
+            color: #9fb0c3;
+            transition: background 0.12s, color 0.12s, box-shadow 0.12s;
         }
-        .ptab-btn:hover { color: #fff; background: rgba(255,255,255,0.06); }
-        .ptab-btn.active { color: #fff; border-bottom-color: #4f9ddb; }
-        .header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.5px; }
+        .ptab-icon { margin-right: 6px; font-size: 14px; }
+        .ptab-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .ptab-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, #4f9ddb, #3d7dbd);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.28);
+        }
+        .header h1 { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
         .header-home-link { cursor: pointer; }
         .header-home-link:hover { opacity: 0.85; }
         .header-user { font-size: 13px; display: flex; align-items: center; gap: 12px; }
