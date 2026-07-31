@@ -882,7 +882,7 @@ async function loadMineSide() {
     // 完了済み工番は非表示（進捗一覧の「完了済み」ボタンからのみ確認可能）
     const reqs = (rawReqs || [])
         .filter(r => projectsMap[r.project_number] !== undefined && !completedProjectNums.has(r.project_number))
-        .filter(r => !mypageFilterAssembly || is2000sSeries(r.project_number));
+        .filter(r => matchesMypageFilterMode(r.project_number));
 
     // 自分が申請に関われるフロー種別だけをセクションとして表示する
     // （組立・試運転系と検査・会議系、出荷確定申請はそれぞれ進捗の構成が異なるため、フローごとに区分けする）
