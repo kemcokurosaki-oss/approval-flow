@@ -872,11 +872,15 @@ async function loadPendingSide() {
     });
 
     // フロー名は見出し側で表示済みのため、カード内では省略して申請タブのカードと行数を揃える
+    const PACKING_RELEVANT_FLOWS = ['shipping', 'simple_inspection', 'inspection', 'tentative_shipping'];
     const renderPendingCard = item => {
         const machineHtml = item.machineName ? '<span class="side-card-machine">' + esc(item.machineName) + '</span>' : '';
+        const packingWarningHtml = (PACKING_RELEVANT_FLOWS.includes(item.flowType)
+            && getPackingDisplayState(item.pNum, packingShippingProjectNums.has(item.pNum)) === 'unknown')
+            ? '<span class="prog-card-badge-warning" style="margin-left:6px;">⚠ 梱包未定</span>' : '';
         return `
         <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
-            <div class="side-card-title">${esc(item.pNum)}${machineHtml}</div>
+            <div class="side-card-title">${esc(item.pNum)}${machineHtml}${packingWarningHtml}</div>
             <div class="side-card-sub">${fmtDate(item.date)}</div>
             <div class="side-card-status">${item.statusText}</div>
         </div>`;
