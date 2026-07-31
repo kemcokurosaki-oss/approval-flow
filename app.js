@@ -796,7 +796,10 @@ async function loadPendingSide() {
         }));
     }
 
-    const combined = [...actionable, ...salesItems, ...qorsItems];
+    let combined = [...actionable, ...salesItems, ...qorsItems];
+    if (mypageFilterAssembly) {
+        combined = combined.filter(item => is2000sSeries(item.pNum));
+    }
 
     // バッジ更新（side_badge_pending と side_pending_count 両方）
     const badgePending = document.getElementById('side_badge_pending');
