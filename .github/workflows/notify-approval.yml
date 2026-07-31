@@ -1,6 +1,8 @@
 name: 承認フロー通知
 
 on:
+  # schedule:
+  #   - cron: '*/15 * * * *'  # 15分ごとに自動実行（合図があるまでコメントアウトで無効化）
   workflow_dispatch:
     inputs:
       test_mode:
@@ -11,6 +13,10 @@ on:
         options:
           - 'true'
           - 'false'
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   notify:
