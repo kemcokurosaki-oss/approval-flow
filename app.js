@@ -3777,7 +3777,7 @@ async function saveEditQaPendingItem(requestId, idx) {
         if (newOwner && newOwner !== prevOwner) await _notifyPendingOwner(requestId, newOwner, false, content);
 
         qaEditingPendingIdx = null;
-        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を更新しました');
+        _applyPendingUpdate(requestId, newSheetData, 'タスクを更新しました');
     } catch (e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
