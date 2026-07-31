@@ -624,6 +624,24 @@ async function setPackingShippingStatus(projectNumber, status) {
     }
 }
 
+// 進捗カードの「梱包出荷：未定」バッジをクリックした時に、あり・なしを選ぶポップアップを開閉する
+function togglePackingPopup(evt) {
+    const popup = evt.currentTarget.parentElement.querySelector('.prog-card-packing-popup');
+    if (!popup) return;
+    const wasOpen = popup.classList.contains('is-open');
+    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
+    if (!wasOpen) popup.classList.add('is-open');
+}
+document.addEventListener('click', () => {
+    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
+});
+
+async function choosePackingStatus(num, status) {
+    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
+    await setPackingShippingStatus(num, status);
+    renderProgressCards();
+}
+
 async function onProjectChange() {
     const num    = currentProjectNum;
     const infoEl = document.getElementById('submit_project_info');
