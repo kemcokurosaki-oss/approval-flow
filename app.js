@@ -166,6 +166,7 @@ let projectsMap    = {}; // project_number → { customer_name, project_details 
 let currentTab          = 'pending';
 let progressTab          = 'progress'; // 'progress'（進捗一覧） | 'assembly_report'（組立・試運転 完了報告＝2000番台）
 let assemblyNavActiveNum = ''; // 2000番完了報告タブ：左一覧で直近にジャンプした工事番号（ハイライト表示用。絞り込みはしない）
+let mypageFilterAssembly = false; // マイページ：2000番完了報告のみに絞り込むか（進捗一覧側のタブとは独立）
 let progressSort         = 'job';   // 'job' | 'shipping'
 let progressFilterMine   = false;
 let progressFilterPrefix = '';
