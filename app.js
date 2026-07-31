@@ -1022,7 +1022,7 @@ async function loadMineSide() {
         const list = reqs.filter(r => r.flow_type === flowType);
         const columns = QA_MEETING_FLOWS.includes(flowType) ? buildQaLikeColumns(list)
                        : flowType === 'shipping'              ? buildShippingColumns(list)
-                       : buildAssemblyLikeColumns(list);
+                       : buildAssemblyLikeColumns(list, flowType);
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
         // 対象案件が1件もないフローは最初から折りたたんでおく（見出しクリックで開閉可能）
         const isEmpty = columns.every(([, items]) => items.length === 0);
