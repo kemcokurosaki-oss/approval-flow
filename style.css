@@ -164,7 +164,11 @@
         }
         .anav-machine:hover { background: #e0eaf8; }
         /* 2000番台は組立・試運転の2ステップしかないため、カード幅を縮めて余白を減らす（縮めすぎない程度に） */
-        .main-layout.assembly-report-mode .prog-card { width: min(520px, 100%); }
+        .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); }
+        /* 組立⇔試運転のマーク間をもう少し広げる */
+        .main-layout.assembly-report-mode .flow-connector { min-width: 60px; }
+        /* 左の工事番号一覧とステップ表示の間隔を広げる */
+        .main-layout.assembly-report-mode .main-content { padding-left: 36px; }
 
         /* 再申請バッジ */
         .resubmit-badge {
