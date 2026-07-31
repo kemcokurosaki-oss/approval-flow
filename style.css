@@ -25,6 +25,26 @@
             gap: 16px;
             border-bottom: 1.5px solid #c4cedd;
         }
+        .header-row-tabs {
+            background: #3d5468;
+            padding: 0 16px;
+            display: flex;
+            gap: 4px;
+        }
+        .ptab-btn {
+            padding: 9px 16px;
+            border: none;
+            border-bottom: 3px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            font-family: "メイリオ", Meiryo, sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            color: #b7c3d0;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+        }
+        .ptab-btn:hover { color: #fff; background: rgba(255,255,255,0.06); }
+        .ptab-btn.active { color: #fff; border-bottom-color: #4f9ddb; }
         .header h1 { font-size: 17px; font-weight: bold; letter-spacing: 0.5px; }
         .header-home-link { cursor: pointer; }
         .header-home-link:hover { opacity: 0.85; }
