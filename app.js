@@ -2867,6 +2867,25 @@ async function openDetailModal(requestId) {
             <div style="white-space:nowrap;overflow-x:auto;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。</div>
             ${changeDateBannerButtonHtml ? `<div style="margin-top:8px;">${changeDateBannerButtonHtml}</div>` : ''}
         </div>` : ''}
+        ${(['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type) && !hasPackingShipping) ? (() => {
+            const canSetPacking = isSales || isQualityOrSeikan;
+            if (packingState === 'unknown') {
+                return `<div style="background:#fff3e0;border:1px solid #f0c078;border-radius:4px;padding:9px 12px;font-size:14px;color:#8a4b00;margin-top:8px;">
+                    <div>⚠ 梱包出荷の有無が未定です。</div>
+                    ${canSetPacking ? `<div style="margin-top:8px;display:flex;gap:8px;">
+                        <button type="button" class="btn btn-outline" onclick="handleSetPackingShippingStatus('${pNum}','yes','${req.id}')">梱包出荷：あり</button>
+                        <button type="button" class="btn btn-outline" onclick="handleSetPackingShippingStatus('${pNum}','no','${req.id}')">梱包出荷：なし</button>
+                    </div>` : ''}
+                </div>`;
+            }
+            if (canSetPacking) {
+                return `<div style="font-size:13px;color:#888;margin-top:6px;">
+                    梱包出荷：${packingState === 'yes' ? 'あり' : 'なし'}
+                    <button type="button" class="btn btn-outline" style="margin-left:8px;padding:2px 10px;font-size:12px;" onclick="handleSetPackingShippingStatus('${pNum}','unknown','${req.id}')">未定に戻す</button>
+                </div>`;
+            }
+            return '';
+        })() : ''}
         ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:14px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
         <hr class="section-divider">
