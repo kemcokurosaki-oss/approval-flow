@@ -138,31 +138,14 @@
             overflow-y: auto;
         }
         .main-layout.assembly-report-mode .assembly-nav-panel { display: flex; }
-        .anav-project-header {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px 8px 12px 12px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            color: #1e3a5f;
-            border-bottom: 1px solid #d8dde8;
-            background: #fff;
-        }
-        .anav-project-header:hover { background: #edf2fc; }
+        /* 工事番号・機械の各行は進捗一覧の左フィルター（.prefix-btn）と同じ見た目・選択状態を共用する */
+        .prefix-btn.anav-project-header { display: flex; align-items: center; gap: 4px; }
         .anav-caret { font-size: 11px; color: #78909c; width: 11px; flex-shrink: 0; }
-        .anav-machines { display: none; flex-direction: column; background: #f4f6fb; }
+        .prefix-btn.active .anav-caret { color: #fff; }
+        .prefix-btn.anav-all-btn { font-size: 14px; }
+        .anav-machines { display: none; flex-direction: column; }
         .anav-machines.open { display: flex; }
-        .anav-machine {
-            padding: 9px 8px 9px 22px;
-            font-size: 15px;
-            font-weight: bold;
-            color: #455a64;
-            cursor: pointer;
-            border-bottom: 1px solid #d8dde8;
-        }
-        .anav-machine:hover { background: #e0eaf8; }
+        .prefix-btn.anav-machine { padding-left: 28px; }
         /* 2000番台は組立・試運転の2ステップしかないため、カード幅を縮めて余白を減らす（縮めすぎない程度に） */
         .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); }
         /* 組立⇔試運転のマーク間をもう少し広げる */
