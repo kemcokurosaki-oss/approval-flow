@@ -1298,6 +1298,9 @@ function renderProgressCards() {
     // 完了済みフィルタ（通常時は完了済みを除外、完了済みモード時は完了済みのみ）
     let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted);
 
+    // タブによる絞り込み（進捗一覧＝2000番台以外、組立・試運転 完了報告＝2000番台のみ）
+    nums = nums.filter(num => is2000sSeries(num) === (progressTab === 'assembly_report'));
+
     // 未申請・未承認フィルタ
     if (progressFilterOverdue) {
         nums = nums.filter(num => projectHasOverdueFlow(num));
