@@ -1214,10 +1214,10 @@
         .header-user { position: relative; }
         .header-user-btn {
             display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+            background: #eef2f7; color: #1e3a5f; border: 1px solid #d5dce6;
             border-radius: 16px; padding: 5px 12px; font-size: 13px; cursor: pointer; font-family: inherit;
         }
-        .header-user-btn:hover { background: rgba(255,255,255,0.28); }
+        .header-user-btn:hover { background: #dfe6ef; }
         .header-user-caret { font-size: 16px; line-height: 1; transition: transform 0.15s; }
         .header-user-btn.open .header-user-caret { transform: rotate(180deg); }
 
