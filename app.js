@@ -1481,18 +1481,11 @@ function renderProgressCards() {
                 : '';
         } else if (packingState === 'unknown') {
             // 梱包出荷「未定」表示・あり／なし選択は4000番台・4C番の工番のみが対象（getPackingDisplayState内で判定）
-            // 権限があるロールはバッジをクリックしてその場で「あり・なし」を選択できる
+            // 権限があるロールはバッジをクリックしてその場で「あり・なし」を選択できる。
+            // ポップアップは他のカード表示と重ならないよう、共有要素を position:fixed でバッジの真下に動的配置する（togglePackingPopup参照）
             const badgeClass = canSetPacking ? 'prog-card-badge-warning is-clickable' : 'prog-card-badge-warning';
-            const badgeOnclick = canSetPacking ? ` onclick="event.stopPropagation(); togglePackingPopup(event)"` : '';
-            const popupHtml = canSetPacking ? `
-                <div class="prog-card-packing-popup">
-                    <button type="button" onclick="event.stopPropagation(); choosePackingStatus('${num}','yes')">あり</button>
-                    <button type="button" onclick="event.stopPropagation(); choosePackingStatus('${num}','no')">なし</button>
-                </div>` : '';
-            packingDateLabel = `<span class="prog-card-packing-wrap">
-                <span class="${badgeClass}"${badgeOnclick}>⚠ 梱包出荷：未定${canSetPacking ? ' ▾' : ''}</span>
-                ${popupHtml}
-            </span>`;
+            const badgeOnclick = canSetPacking ? ` onclick="event.stopPropagation(); togglePackingPopup(event, '${num}')"` : '';
+            packingDateLabel = `<span class="${badgeClass}"${badgeOnclick}>⚠ 梱包出荷：未定${canSetPacking ? ' ▾' : ''}</span>`;
         }
 
         const machineRows = machines.map(machine => {

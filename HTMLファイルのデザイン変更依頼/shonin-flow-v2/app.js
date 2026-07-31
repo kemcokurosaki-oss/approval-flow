@@ -496,7 +496,7 @@ async function bootApp(session) {
 
     currentProfile = profile;
     document.getElementById('login_overlay').classList.remove('visible');
-    document.getElementById('app').style.display = 'block';
+    document.getElementById('app').style.display = 'flex';
     document.getElementById('user_name_display').textContent =
         profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;

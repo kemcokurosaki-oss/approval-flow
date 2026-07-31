@@ -2126,3 +2126,19 @@
         .side-panel, .settings-page { position: absolute; top: 0; bottom: 0; right: 0; height: auto; }
 
         .rail-scroll { overflow-x: hidden; }
+
+
+        /* =========================================================
+           v2-f: レールのメニュー統合（マイページ1項目＋設定）と全高固定
+           ========================================================= */
+
+        #app { display: flex !important; }
+        #app[style*="display: none"] { display: none !important; }
+        .app-rail { height: 100%; }
+        /* 申請／承認の内部行はロール判定に使うため残し、表示だけ隠す */
+        .app-rail #side_tab { display: none !important; }
+        .app-rail .rail-group .side-tab-row { width: 100%; }
+        .app-rail #rail_mypage .badge { margin-left: auto; }
+
+        #app[style*="display:none"] { display: none !important; }
+        .app-main > .dev-bar { flex-shrink: 0; }
