@@ -130,7 +130,7 @@
         /* ===== 2000番完了報告：工事番号ジャンプ一覧（左サイド） ===== */
         .assembly-nav-panel {
             display: none;
-            width: 130px;
+            width: 90px;
             background: #f4f6fb;
             border-right: 2px solid #dce1ec;
             flex-direction: column;
