@@ -3771,9 +3771,10 @@ async function saveEditQaPendingItem(requestId, idx) {
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         if (!items[idx]) return;
-        const prevOwner  = items[idx].owner || '';
-        const newOwner   = ownerEl ? ownerEl.value.trim() : prevOwner;
-        const shipAfter  = shipAfterEl ? shipAfterEl.checked : !!items[idx].ship_after;
+        const prevOwner   = items[idx].owner || '';
+        const prevContent = items[idx].content;
+        const newOwner    = ownerEl ? ownerEl.value.trim() : prevOwner;
+        const shipAfter   = shipAfterEl ? shipAfterEl.checked : !!items[idx].ship_after;
 
         let photoPath = items[idx].photo_path || null;
         if (photoFile) {
