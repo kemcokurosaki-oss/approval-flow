@@ -577,6 +577,8 @@
             font-size: 13px;
             white-space: nowrap;
         }
+        .prog-card-badge-warning.is-clickable { cursor: pointer; }
+        .prog-card-badge-warning.is-clickable:hover { background: #fbe8b8; }
         .prog-card-packing-wrap {
             position: relative;
             display: inline-block;
