@@ -632,20 +632,50 @@ async function setPackingShippingStatus(projectNumber, status) {
     }
 }
 
+// 梱包出荷「あり・なし」選択ポップアップは、他のカード表示と重ならないよう
+// body直下に1つだけ共有要素を作り、クリックされたバッジの真下・右揃えに毎回位置を計算して表示する
+function ensurePackingPopupEl() {
+    let el = document.getElementById('shared_packing_popup');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'shared_packing_popup';
+    el.className = 'prog-card-packing-popup';
+    el.innerHTML = `
+        <button type="button" data-status="yes">あり</button>
+        <button type="button" data-status="no">なし</button>
+    `;
+    document.body.appendChild(el);
+    el.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', evt => {
+            evt.stopPropagation();
+            const num = el.dataset.num;
+            el.classList.remove('is-open');
+            if (num) choosePackingStatus(num, btn.dataset.status);
+        });
+    });
+    return el;
+}
+
 // 進捗カードの「梱包出荷：未定」バッジをクリックした時に、あり・なしを選ぶポップアップを開閉する
-function togglePackingPopup(evt) {
-    const popup = evt.currentTarget.parentElement.querySelector('.prog-card-packing-popup');
-    if (!popup) return;
-    const wasOpen = popup.classList.contains('is-open');
-    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
-    if (!wasOpen) popup.classList.add('is-open');
+function togglePackingPopup(evt, num) {
+    const el = ensurePackingPopupEl();
+    const wasOpenForSameCard = el.classList.contains('is-open') && el.dataset.num === num;
+    el.classList.remove('is-open');
+    if (wasOpenForSameCard) return;
+    const rect = evt.currentTarget.getBoundingClientRect();
+    el.style.top   = (rect.bottom + 4) + 'px';
+    el.style.right = (window.innerWidth - rect.right) + 'px';
+    el.dataset.num = num;
+    el.classList.add('is-open');
 }
 document.addEventListener('click', () => {
-    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
+    const el = document.getElementById('shared_packing_popup');
+    if (el) el.classList.remove('is-open');
 });
 
 async function choosePackingStatus(num, status) {
-    document.querySelectorAll('.prog-card-packing-popup.is-open').forEach(el => el.classList.remove('is-open'));
+    const el = document.getElementById('shared_packing_popup');
+    if (el) el.classList.remove('is-open');
     await setPackingShippingStatus(num, status);
     renderProgressCards();
 }
