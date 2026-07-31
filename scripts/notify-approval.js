@@ -171,6 +171,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
         ? `${pStr} の機械組立が完了しました。`
         : req?.flow_type === 'test_run'
         ? `${pStr} の試運転が完了しました。`
+        : req?.flow_type === 'shipping_prep'
+        ? `${pStr} の出荷準備が完了しました。`
         : isShipping
         ? `${pStr} の出荷日が確定しました。`
         : `${pStr} の「${flow}」が承認されました。`;
