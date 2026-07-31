@@ -1455,7 +1455,17 @@ function renderProgressCards() {
                 : '';
         } else if (packingState === 'unknown' && !is2000sSeries(num) && !isTInspectionSeries(num) && !is5or7Series(num)) {
             // 承認フロー対象外の工番（2000番台・点検系・5/7番台）は梱包出荷の概念自体が無関係なため対象外にする
-            packingDateLabel = `<span class="prog-card-badge-warning">⚠ 梱包出荷：未定</span>`;
+            // 権限があるロールはバッジをクリックしてその場で「あり・なし」を選択できる
+            const badgeOnclick = canSetPacking ? ` onclick="event.stopPropagation(); togglePackingPopup(event)"` : '';
+            const popupHtml = canSetPacking ? `
+                <div class="prog-card-packing-popup">
+                    <button type="button" onclick="event.stopPropagation(); choosePackingStatus('${num}','yes')">あり</button>
+                    <button type="button" onclick="event.stopPropagation(); choosePackingStatus('${num}','no')">なし</button>
+                </div>` : '';
+            packingDateLabel = `<span class="prog-card-packing-wrap">
+                <span class="prog-card-badge-warning"${badgeOnclick}>⚠ 梱包出荷：未定</span>
+                ${popupHtml}
+            </span>`;
         }
 
         const machineRows = machines.map(machine => {
