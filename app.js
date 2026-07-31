@@ -3497,7 +3497,8 @@ async function showAuditLogScreen() {
 }
 
 async function completePendingItem(requestId, idx, opts = {}) {
-    if (!confirm('このペンディング項目を完了にします。よろしいですか？')) return;
+    const itemLabel = opts.isQaFlow ? 'タスク' : 'ペンディング項目';
+    if (!confirm(`この${itemLabel}を完了にします。よろしいですか？`)) return;
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
