@@ -624,12 +624,6 @@ async function setPackingShippingStatus(projectNumber, status) {
     }
 }
 
-// 承認申請詳細画面の梱包出荷有無設定ボタンから呼ばれる。更新後に詳細画面を再描画する
-async function handleSetPackingShippingStatus(projectNumber, status, requestId) {
-    await setPackingShippingStatus(projectNumber, status);
-    await openDetailModal(requestId);
-}
-
 async function onProjectChange() {
     const num    = currentProjectNum;
     const infoEl = document.getElementById('submit_project_info');
