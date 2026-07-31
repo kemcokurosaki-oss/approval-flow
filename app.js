@@ -705,6 +705,13 @@ async function refreshAll() {
     await Promise.all(loads);
 }
 
+// マイページ：「2000番完了報告のみ表示」チェックボックス（進捗一覧側のタブとは独立して切り替え可能）
+function setMypageFilterAssembly(checked) {
+    mypageFilterAssembly = checked;
+    loadMineSide();
+    loadPendingSide();
+}
+
 async function loadPendingSide() {
     const role    = getEffectiveRole();
     const dept    = getEffectiveDept();
