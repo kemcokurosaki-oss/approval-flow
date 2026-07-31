@@ -139,7 +139,7 @@
         }
         .main-layout.assembly-report-mode .assembly-nav-panel { display: flex; }
         /* 2000番台は組立・試運転の2ステップしかないため、カード幅を縮めて余白を減らす（縮めすぎない程度に） */
-        .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); }
+        .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); scroll-margin-top: 16px; }
         /* 組立⇔試運転のマーク間をもう少し広げる */
         .main-layout.assembly-report-mode .flow-connector { min-width: 60px; }
         /* 左の工事番号一覧とステップ表示の間隔を広げる／末尾に近いカードでもスクロール先が画面上部に来るよう下に余白を確保する */
