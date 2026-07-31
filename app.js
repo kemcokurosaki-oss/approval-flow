@@ -1444,6 +1444,8 @@ function renderProgressCards() {
             packingDateLabel = effectivePackingDate
                 ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : '';
+        } else if (packingState === 'unknown') {
+            packingDateLabel = `<span class="prog-card-badge-warning">⚠ 梱包出荷：未定</span>`;
         }
 
         const machineRows = machines.map(machine => {
