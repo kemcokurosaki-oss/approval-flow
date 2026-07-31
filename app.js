@@ -537,6 +537,15 @@ async function loadProjects() {
         (completed || []).map(c => (c.project_number || '').toString().trim())
     );
 
+    // 梱包出荷の有無（未定/あり/なし）。工程表に実タスクが無い間の意思表示として保持する
+    const { data: packingStatuses } = await db
+        .from('packing_shipping_status')
+        .select('project_number, status');
+    packingStatusMap.clear();
+    (packingStatuses || []).forEach(p => {
+        packingStatusMap.set((p.project_number || '').toString().trim(), p.status);
+    });
+
     // sort_order付きでタスクを取得（工程表と同じ並び順にするため）
     const { data: tasks } = await db
         .from('tasks')
