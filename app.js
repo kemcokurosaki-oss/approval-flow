@@ -3798,7 +3798,7 @@ async function deleteQaPendingItem(requestId, idx) {
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
         if (removed?.photo_path) await _deletePendingPhoto(removed.photo_path);
 
-        _applyPendingUpdate(requestId, newSheetData, 'ペンディング項目を削除しました');
+        _applyPendingUpdate(requestId, newSheetData, 'タスクを削除しました');
     } catch (e) {
         showToast('削除に失敗しました: ' + e.message, 'error');
     } finally {
