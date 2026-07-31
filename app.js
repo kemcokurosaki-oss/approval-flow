@@ -2706,13 +2706,23 @@ async function openDetailModal(requestId) {
         </div>`;
         }
         stepsHtml = sentStep + resultStep;
+    } else if (req.flow_type === 'shipping_prep') {
+        // shipping_prep: 承認ステップなし。申請＝完了のため、常に完了表示
+        stepsHtml = `
+        <div class="step-item">
+            <div class="step-circle sc-approved">✓</div>
+            <div class="step-detail">
+                <div class="step-label">完了</div>
+                <div class="step-date">${fmtDate(req.updated_at)}</div>
+            </div>
+        </div>`;
     } else {
         stepsHtml = steps.map(s => {
             let icon, sc;
             if      (s.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
             else if (s.status === 'rejected') { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
             else if (s.status === 'pending' &&
-                     (((req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'shipping_prep') && req.status === 'submitted') ||
+                     ((req.flow_type === 'assembly' || req.flow_type === 'test_run') && req.status === 'submitted' ||
                       (s.step_order === 1 && req.status === 'submitted') ||
                       (s.step_order === 2 && req.status === 'in_review')))
                                               { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
