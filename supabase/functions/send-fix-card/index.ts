@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 from: RESEND_FROM,
                 to: allEmails,
-                subject: `${TEST_MODE ? "【テスト】" : ""}【${reqRow.project_number || ""} ${reqRow.machine_name || ""}】 ${flowLabel} ペンディングリスト`,
+                subject: `${TEST_MODE ? "【テスト】" : ""}【${reqRow.project_number || ""} ${reqRow.machine_name || ""}】 ${flowLabel} タスクリスト`,
                 html,
             }),
         });
