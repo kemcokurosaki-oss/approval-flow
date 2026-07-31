@@ -2394,7 +2394,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
         ` : '';
         body = (pendingHtml || addFormHtml)
             ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}${sendCardBtnHtml}`
-            : `<div style="color:#888; font-size:14px; padding:4px 0;">ペンディングなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
+            : `<div style="color:#888; font-size:14px; padding:4px 0;">タスクなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
     // 開催案内が過ぎておりペンディング項目がある場合は、buildPendingSectionInner側の区切り線が使われるため、ここでは重ねて出さない
