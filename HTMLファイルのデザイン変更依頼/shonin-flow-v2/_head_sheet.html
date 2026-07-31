@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>機械組立完了チェックシート</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @media screen {
+            body { zoom: 1.1; }
+        }
+        body {
+            font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f4f6fb;
+            color: #333;
+            padding-bottom: 64px;
+        }
+
+        /* ===== Doc title ===== */
+        .doc-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 6px; margin-bottom: 14px; }
+        .doc-date  { text-align: right; font-size: 13px; color: #666; margin-bottom: 4px; }
+        .save-status { font-size: 12px; color: #888; margin-right: auto; white-space: nowrap; }
+        .save-status.saving { color: #d35400; }
+        .save-status.error  { color: #c0392b; }
+
+        /* ===== Meta (担当者・作成日) ===== */
+        .sheet-meta-box {
+            display: flex;
+            gap: 28px;
+            background: #fff;
+            border: 1px solid #e0e5f0;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+        }
+        .sheet-meta-item { display: flex; align-items: center; gap: 8px; }
+        .sheet-meta-label { font-size: 12px; color: #999; }
+        .sheet-meta-value { font-size: 14px; color: #333; font-weight: bold; }
+        .sheet-meta-date-input {
+            font-size: 14px;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-family: inherit;
+            cursor: pointer;
+            background: #fff;
+        }
+        .sheet-meta-date-input:focus { outline: none; border-color: #1e3a5f; }
+        .sheet-meta-date-input.missing { border-color: #e74c3c; background: #fde8e8; }
+        .date-missing-text { display: none; color: #c0392b; font-size: 12px; font-weight: bold; }
+        .date-missing-text.show { display: inline; }
+
+        /* ===== Content ===== */
+        .sheet-content {
+            max-width: 840px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 28px 34px 90px;
+            background: #fff;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.13);
+        }
+        .sheet-legend {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 14px;
+            padding: 9px 14px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e0e5f0;
+        }
+
+        /* ===== Groups ===== */
+        .sheet-group {
+            margin-bottom: 12px;
+            border: 1px solid #dde3ee;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .sheet-group-label {
+            background: #eef2f8;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a5f;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sheet-bulk-btn {
+            font-size: 12px;
+            font-weight: normal;
+            color: #1e3a5f;
+            background: #fff;
+            border: 1px solid #b7c4d9;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .sheet-bulk-btn:hover { background: #eef2f8; }
+        body.view-mode .sheet-bulk-btn { display: none !important; }
+        .sheet-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .sheet-no {
+            font-size: 12px;
+            color: #bbb;
+            width: 22px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .sheet-text {
+            font-size: 14px;
+            flex: 0 1 190px;
+            line-height: 1.5;
+        }
+        .sheet-btns {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .sheet-btn {
+            width: 40px;
+            height: 34px;
+            border: 1.5px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            color: #555;
+            padding: 0;
+            transition: background 0.1s, color 0.1s, border-color 0.1s;
+        }
+        .sheet-btn-wide { width: 64px; font-size: 13px; }
+        .sheet-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+        .sheet-btn.active-maru  { background: #2a7a3a; color: #fff; border-color: #2a7a3a; }
+        .sheet-btn.active-batu  { background: #c0392b; color: #fff; border-color: #c0392b; }
+        .sheet-btn.active-dash  { background: #888;    color: #fff; border-color: #888;    }
+        .sheet-btn.active-wide1 { background: #2a7a3a; color: #fff; border-color: #2a7a3a; }
+        .sheet-btn.active-wide2 { background: #c0392b; color: #fff; border-color: #c0392b; }
+        .sheet-note-wrap {
+            display: flex;
+            flex: 1 1 160px;
+            min-width: 160px;
+        }
+        .sheet-note {
+            font-size: 13px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            width: 100%;
+            color: #555;
+            height: 32px;
+        }
+        .sheet-note:focus { outline: none; border-color: #1e3a5f; }
+        .sheet-note-print { display: none; }
+
+        /* ===== Pending ===== */
+        .pending-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 14px;
+            border-top: 1px solid #f0f2f6;
+        }
+        .pending-machine { width: 110px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .pending-content { flex: 1; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .pending-due     { width: 135px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-danger-xs {
+            padding: 4px 10px; font-size: 12px;
+            background: #fff; border: 1px solid #e74c3c; color: #e74c3c;
+            border-radius: 4px; cursor: pointer; flex-shrink: 0;
+        }
+        .btn-danger-xs:hover { background: #e74c3c; color: #fff; }
+        .pending-empty { color: #999; font-size: 13px; padding: 8px 14px; }
+
+        /* ===== Footer ===== */
+        .sheet-footer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #fff;
+            border-top: 1px solid #dde3ee;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+        .sheet-footer-inner {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn {
+            padding: 9px 22px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .btn-secondary { background: #f0f2f6; color: #555; border: 1px solid #ccc; }
+        .btn-secondary:hover { background: #e4e8f0; }
+        .btn-primary { background: #1e3a5f; color: #fff; }
+        .btn-primary:hover { background: #2a4f7f; }
+        .btn:disabled { opacity: 0.6; cursor: default; }
+
+        /* ===== 未入力警告 ===== */
+        .sheet-item-missing {
+            background: #fde8e8;
+            color: #c0392b;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 14px 4px 46px;
+            border-left: 3px solid #e74c3c;
+        }
+        .sheet-item.has-missing {
+            background: #fff8f8;
+            border-left: 3px solid #e74c3c;
+        }
+
+        /* ===== View Mode ===== */
+        body.view-mode .sheet-btn  { pointer-events: none; cursor: default; }
+        body.view-mode .sheet-note { pointer-events: none; background: #f8f9fa; cursor: default; }
+        body.view-mode .btn-add-sm { display: none !important; }
+
+        /* ===== Loading / Error ===== */
+        .loading-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #1e3a5f;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .loading-overlay.visible { display: flex; }
+        .error-screen {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+            font-size: 15px;
+            line-height: 2;
+        }
+
+        /* ===== 完了報告書レイアウト（通知書スタイル） ===== */
+        .report-doc {
+            background: #fff;
+            border: 1px solid #c8d0e0;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            padding: 18px 20px;
+        }
+        .report-doc-date {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .report-doc-body {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .report-doc-left { flex: 1; min-width: 0; }
+        .report-doc-notice {
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .report-info-tbl { width: 100%; border-collapse: collapse; }
+        .report-info-tbl th {
+            background: #eef2f8;
+            color: #1e3a5f;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 8px 12px;
+            border: 1px solid #c8d0e0;
+            width: 110px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .report-info-tbl td {
+            font-size: 17px;
+            font-weight: bold;
+            color: #222;
+            padding: 8px 12px;
+            border: 1px solid #c8d0e0;
+        }
+        .report-doc-right { width: 170px; flex-shrink: 0; }
+        .report-stmp-tbl { width: 100%; border-collapse: collapse; }
+        .report-stmp-tbl th {
+            background: #eef2f8;
+            color: #1e3a5f;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px 8px;
+            border: 1px solid #c8d0e0;
+            text-align: center;
+        }
+        .report-stmp-tbl td {
+            border: 1px solid #c8d0e0;
+            height: 64px;
+            padding: 8px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .report-stmp-tbl-td {
+            border: 1px solid #c8d0e0;
+            height: 64px;
+            padding: 8px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .stamp-inner-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2a7a3a;
+            margin-bottom: 4px;
+        }
+        .stamp-inner-date { font-size: 11px; color: #888; }
+        .report-section-heading {
+            font-size: 12px;
+            font-weight: bold;
+            color: #888;
+            padding: 0 4px 6px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #dde3ee;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== Add button in group header ===== */
+        .btn-add-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #aab;
+            background: #fff;
+            color: #1e3a5f;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn-add-sm:hover { background: #eef2f8; }
+
+        /* ===== 印刷ボタン ===== */
+        .b-print { border: 1px solid #1e3a5f; background: #fff; color: #1e3a5f; padding: 9px 22px; border-radius: 5px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; }
+        .b-print:hover { background: #eef2f8; }
+
+        /* ===== 印刷用スタイル ===== */
+        @media print {
+            @page { margin: 10mm 8mm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: #fff !important; }
+            .sheet-footer  { display: none !important; }
+            .sheet-legend  { display: none !important; }
+            .sheet-meta-box { display: none !important; }
+            .loading-overlay { display: none !important; }
+            /* 画面と同じ1カラムレイアウト。区切りが不自然な位置で切れないよう避ける */
+            .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
+            .report-doc              { margin-bottom: 8px !important; padding: 12px 14px !important; }
+            .report-section-heading  { margin-bottom: 6px !important; }
+            .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; }
+            .sheet-group-label { padding: 5px 10px !important; }
+            .sheet-bulk-btn { display: none !important; }
+            .sheet-item { padding: 5px 10px !important; page-break-inside: avoid; break-inside: avoid; }
+            /* 備考欄：印刷時は入力欄を隠し、画面と同じ見た目のまま折り返し可能なテキストに差し替える
+               （<input>は折り返せず長文が欠けるため） */
+            .sheet-note { display: none !important; }
+            .sheet-note-print {
+                display: block !important;
+                width: 100%;
+                min-height: 32px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 5px 8px;
+                box-sizing: border-box;
+                white-space: pre-wrap;
+                word-break: break-word;
+                color: #555 !important;
+                font-size: 13px !important;
+            }
+            /* 報告書ヘッダー */
+            .report-info-tbl th { background-color: #eef2f8 !important; }
+            .report-stmp-tbl  th { background-color: #eef2f8 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay visible" id="loading">
+    <div>読み込み中...</div>
+</div>
+
+
+<main class="sheet-content" id="sheet_content">
+    <div class="doc-date" id="doc_date_top" style="display:none"></div>
+    <div class="doc-title" id="doc_title_top">機械組立完了チェックシート</div>
+    <div class="sheet-legend">
+        ○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　<strong>入力内容は自動保存されます</strong>
+    </div>
+    <div class="sheet-meta-box">
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">工事番号</span>
+            <span class="sheet-meta-value" id="sheet_project_num">—</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">機械名</span>
+            <span class="sheet-meta-value" id="sheet_machine_name">—</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">担当者</span>
+            <span class="sheet-meta-value" id="sheet_author">—</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">組立完了日</span>
+            <input type="date" id="sheet_completion_date" class="sheet-meta-date-input" onchange="onCompletionDateChange(this.value)">
+            <span id="date_missing_warning" class="date-missing-text">▼ 未入力です</span>
+        </div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">組立作業確認<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">1</span><span class="sheet-text">Iマークは全てのボルトに付けられているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('1','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('1','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('1','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_1" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_1"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">2</span><span class="sheet-text">必要な場所に油を塗布しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('2','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('2','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('2','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_2" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_2"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">3</span><span class="sheet-text">必要な場所にグリスを充填しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('3','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('3','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('3','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_3" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_3"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">4</span><span class="sheet-text">グリスニップル口の向きは適切か？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('4','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('4','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('4','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_4" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_4"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">干渉チェック<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">5</span><span class="sheet-text">グリスニップルが回転軸・ハンドル等に干渉しないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('5','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('5','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('5','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_5" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_5"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">6</span><span class="sheet-text">可動部と固定部の干渉箇所はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('6','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('6','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('6','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_6" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_6"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">動作確認<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">7</span><span class="sheet-text">ハンドルはスムーズに回るか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('7','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('7','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('7','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_7" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_7"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">8</span><span class="sheet-text">その他回転物はスムーズに回るか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('8','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('8','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('8','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_8" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_8"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">9</span><span class="sheet-text">モーターは問題なく作動するか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('9','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('9','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('9','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_9" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_9"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">10</span><span class="sheet-text">空圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('10','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('10','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('10','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_10" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_10"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">11</span><span class="sheet-text">油圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('11','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('11','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('11','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_11" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_11"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">12</span><span class="sheet-text">クーラント経路をエアーで確認したか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('12','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('12','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('12','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_12" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_12"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">数値調整<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">13</span><span class="sheet-text">デジタルカウンターの数値はあっているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('13','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('13','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('13','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_13" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_13"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">14</span><span class="sheet-text">通り芯は公差内に収まっていたか？（ミルの場合）</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('14','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('14','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('14','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_14" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_14"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">15</span><span class="sheet-text">組図によるストロークチェックはしたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('15','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('15','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('15','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_15" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_15"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">16</span><span class="sheet-text">組図に指定のある各種設定値は公差内に収まっているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('16','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('16','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('16','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_16" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_16"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">外観チェック<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">18</span><span class="sheet-text">塗装色は社内製作仕様書と一致しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('18','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('18','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('18','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_18" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_18"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">19</span><span class="sheet-text">塗装が必要なすべての場所に塗装しているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('19','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('19','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('19','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_19" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_19"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">20</span><span class="sheet-text">塗装が剥げている箇所はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('20','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('20','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('20','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_20" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_20"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">21</span><span class="sheet-text">キズ・凹みなどないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('21','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('21','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('21','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_21" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_21"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">22</span><span class="sheet-text">錆はないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('22','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('22','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('22','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_22" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_22"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">据付用<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">23</span><span class="sheet-text">据付水平基準マークはあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('23','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('23','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('23','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_23" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_23"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">24</span><span class="sheet-text">据付センター基準線は入っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('24','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('24','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('24','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_24" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_24"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">25</span><span class="sheet-text">据付面（機械底面）に塗装していないか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('25','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('25','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('25','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_25" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_25"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">シール・銘板<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">26</span><span class="sheet-text">グリスシールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('26','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('26','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('26','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_26" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_26"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">27</span><span class="sheet-text">回転シールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('27','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('27','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('27','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_27" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_27"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">28</span><span class="sheet-text">社銘板・オーダー銘板は付いているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('28','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('28','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('28','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_28" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_28"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">29</span><span class="sheet-text">空圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('29','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('29','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('29','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_29" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_29"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">30</span><span class="sheet-text">油圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('30','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('30','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('30','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_30" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_30"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">31</span><span class="sheet-text">センサーの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('31','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('31','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('31','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_31" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_31"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">32</span><span class="sheet-text">ベンディングリストは取り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('32','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('32','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('32','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_32" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_32"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">外観検査準備<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">33</span><span class="sheet-text">検査のため、電源・エアー電源・油圧源を切っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('33','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('33','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('33','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_33" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_33"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">34</span><span class="sheet-text">組立で完了シールは？</span><div class="sheet-btns"><button class="sheet-btn sheet-btn-wide" onclick="setCheck('34','添付済',this,'wide1')">添付済</button><button class="sheet-btn sheet-btn-wide" onclick="setCheck('34','未添付',this,'wide2')">未添付</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_34" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_34"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">出荷準備<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
+        <div class="sheet-item"><span class="sheet-no">36</span><span class="sheet-text">単品納入品リストの部品は揃っているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('36','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('36','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('36','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_36" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_36"></span></span></div>
+    </div>
+
+    <div class="sheet-group">
+        <div class="sheet-group-label">
+            ペンディング項目リスト（任意）
+            <button class="btn-add-sm" onclick="addPendingItem()">＋ 追加</button>
+        </div>
+        <div id="pending_container">
+            <div class="pending-empty">ペンディング項目はありません</div>
+        </div>
+    </div>
+</main>
+
+<footer class="sheet-footer">
+    <div class="sheet-footer-inner">
+        <span class="save-status" id="save_status">保存済み ✓</span>
+        <button class="btn btn-secondary" onclick="suspendSheet()">一時保存して閉じる</button>
+        <button class="btn btn-primary" id="btn_complete" onclick="completeSheet()">入力完了・申請へ進む</button>
+        <button class="b-print" id="btn_print" onclick="window.print()" style="display:none">印刷 / PDF保存</button>
+    </div>
+</footer>
+
+<script>
+const S_URL = "https://dgekjzkrybrswsxlcbvh.supabase.co";
+const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU";
+
+const db = supabase.createClient(S_URL, S_KEY);
+const broadcastChannel = new BroadcastChannel('approval_sheet');
+
+let draftId = null;
+let checks = {};
+let pendingItems = [];
+let saveTimer = null;
+let isSaving = false;
+let sheetMeta = { author: '', date: '', completion_date: '' };
+
+const REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','36'];
+
+function esc(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function setSheetInfoHeader(projectNum, machineName) {
+    const pn = document.getElementById('sheet_project_num');
+    const mn = document.getElementById('sheet_machine_name');
+    if (pn) pn.textContent = projectNum;
+    if (mn) mn.textContent = machineName;
+}
+
+function fmtStampDate(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function fmtCompletionDate(isoStr) {
+    if (!isoStr) return '—';
+    const p = isoStr.split('-');
+    if (p.length !== 3) return isoStr;
+    return `${parseInt(p[0])}年${parseInt(p[1])}月${parseInt(p[2])}日`;
+}
+
+function buildReportHeader(projectNum, machineName, authorName, issueDate, completionDate, approvers) {
+    const approverCells = approvers.length > 0
+        ? approvers.map((a, i) => `
+            <td class="report-stmp-tbl-td">
+                <div class="stamp-inner-name">${esc(a.name)}</div>
+                <div class="stamp-inner-date">${esc(a.date)}</div>
+            </td>`).join('')
+        : `<td class="report-stmp-tbl-td"></td>`;
+    const approverHeaders = approvers.length > 1
+        ? approvers.map((_, i) => `<th>承認者${i+1}</th>`).join('')
+        : `<th>承認者</th>`;
+    return `<div class="report-doc">
+        <div class="report-doc-date">発行日: ${esc(issueDate || '—')}</div>
+        <div class="report-doc-body">
+            <div class="report-doc-left">
+                <div class="report-doc-notice">下記の機械の組立が完了しましたので、報告します。</div>
+                <table class="report-info-tbl">
+                    <tr><th>工事番号</th><td class="td-num">${esc(projectNum)}</td></tr>
+                    <tr><th>機械名</th><td class="td-mach">${esc(machineName)}</td></tr>
+                    <tr><th>組立完了日</th><td>${esc(fmtCompletionDate(completionDate))}</td></tr>
+                </table>
+            </div>
+            <div class="report-doc-right">
+                <table class="report-stmp-tbl">
+                    <tr>${approverHeaders}</tr>
+                    <tr>${approverCells}</tr>
+                </table>
+                <table class="report-stmp-tbl" style="margin-top:8px;">
+                    <tr><th colspan="2">作業担当者</th></tr>
+                    <tr><th>氏名</th><td style="font-weight:bold;">${esc(authorName || '—')}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="report-section-heading">確認項目</div>`;
+}
+
+async function init() {
+    const params   = new URLSearchParams(location.search);
+    const viewMode = params.get('view') === '1';
+    const viewId   = params.get('id');
+    draftId = params.get('draft_id');
+
+    if (viewMode && viewId) {
+        // ===== 閲覧モード =====
+        const { data: req, error } = await db
+            .from('approval_requests')
+            .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
+            .eq('id', viewId)
+            .single();
+
+        if (error || !req || !req.sheet_data) {
+            document.getElementById('loading').classList.remove('visible');
+            document.getElementById('sheet_content').innerHTML =
+                '<div class="error-screen">チェックシートデータが見つかりません。</div>';
+            return;
+        }
+
+        const isApproved = req.status === 'approved';
+        setSheetInfoHeader(req.project_number, req.machine_name);
+        checks       = req.sheet_data.check_items   || {};
+        pendingItems = req.sheet_data.pending_items || [];
+
+        const meta = req.sheet_data.meta || {};
+        let authorName = meta.author || '';
+        if (!authorName && req.requester_id) {
+            const { data: p } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
+            if (p?.name) authorName = p.name;
+        }
+
+        let approvers = [];
+        if (isApproved && req.approval_steps) {
+            const approvedSteps = (req.approval_steps || [])
+                .filter(s => s.status === 'approved' && s.approver_id)
+                .sort((a, b) => (a.step_order || 0) - (b.step_order || 0));
+            if (approvedSteps.length > 0) {
+                const ids = [...new Set(approvedSteps.map(s => s.approver_id))];
+                const { data: profiles } = await db.from('profiles').select('id, name').in('id', ids);
+                approvers = approvedSteps.map(s => ({
+                    name: (profiles || []).find(p => p.id === s.approver_id)?.name || '—',
+                    date: s.decided_at ? fmtStampDate(s.decided_at) : '—'
+                }));
+            }
+        }
+
+        const metaBox = document.querySelector('.sheet-meta-box');
+        if (metaBox) metaBox.style.display = 'none';
+
+        if (isApproved) {
+            document.getElementById('doc_title_top').textContent = '機械組立完了報告書';
+            document.getElementById('doc_date_top').textContent = meta.date || '';
+            document.getElementById('doc_date_top').style.display = '';
+            document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
+            const legend = document.querySelector('.sheet-legend');
+            if (legend) legend.insertAdjacentHTML('beforebegin',
+                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', approvers));
+        } else {
+            document.getElementById('doc_title_top').textContent = '機械組立完了チェックシート';
+            document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
+            const legend = document.querySelector('.sheet-legend');
+            if (legend) legend.insertAdjacentHTML('beforebegin',
+                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', []));
+        }
+
+        restoreChecks();
+        renderPendingItemsView();
+        setViewMode();
+        document.getElementById('loading').classList.remove('visible');
+        return;
+    }
+
+    // ===== 入力モード =====
+    if (!draftId) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">URLパラメータが不正です。<br>申請画面の「次へ」ボタンから開き直してください。</div>';
+        return;
+    }
+
+    const { data: draft, error } = await db
+        .from('approval_requests')
+        .select('project_number, machine_name, sheet_data, requester_id, status')
+        .eq('id', draftId)
+        .single();
+
+    if (error || !draft) {
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('sheet_content').innerHTML =
+            '<div class="error-screen">下書きデータが見つかりません。<br>申請画面から開き直してください。</div>';
+        return;
+    }
+
+    setSheetInfoHeader(draft.project_number, draft.machine_name);
+    document.title = `機械組立完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
+
+    // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
+    // （再申請自体は元の詳細画面の「再申請する」ボタンで行う）
+    if (draft.status && draft.status !== 'draft') {
+        const completeBtn = document.getElementById('btn_complete');
+        if (completeBtn) {
+            completeBtn.textContent = '保存して閉じる';
+            completeBtn.onclick = () => suspendSheet();
+        }
+        const legend = document.querySelector('.sheet-legend');
+        if (legend) legend.insertAdjacentHTML('afterend',
+            '<div style="font-size:12px; color:#c0392b; margin-bottom:14px;">却下された申請の内容を修正しています。保存後、元の申請画面の「再申請する」ボタンから再申請してください。</div>');
+    }
+
+    // 担当者名を取得（profiles から）
+    if (draft.requester_id) {
+        const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
+        if (profile?.name) {
+            sheetMeta.author = profile.name;
+            document.getElementById('sheet_author').textContent = profile.name;
+        }
+    }
+
+    // 発行日: 常に開いた日の日付を設定（申請時に確定保存）
+    const _d = new Date();
+    sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
+
+    if (draft.sheet_data) {
+        checks       = draft.sheet_data.check_items   || {};
+        pendingItems = draft.sheet_data.pending_items || [];
+        if (draft.sheet_data.meta?.author && !sheetMeta.author) {
+            sheetMeta.author = draft.sheet_data.meta.author;
+            document.getElementById('sheet_author').textContent = sheetMeta.author;
+        }
+        if (draft.sheet_data.meta?.completion_date) {
+            sheetMeta.completion_date = draft.sheet_data.meta.completion_date;
+            document.getElementById('sheet_completion_date').value = sheetMeta.completion_date;
+        }
+        restoreChecks();
+        renderPendingItems();
+    }
+
+    document.getElementById('loading').classList.remove('visible');
+}
+
+// 既存データを画面に反映
+function restoreChecks() {
+    const valToClass = {
+        '○': 'maru', '×': 'batu', '―': 'dash',
+        '添付済': 'wide1', '未添付': 'wide2'
+    };
+    Object.entries(checks).forEach(([itemId, data]) => {
+        if (!data || !data.result) return;
+        const cls = valToClass[data.result];
+        if (!cls) return;
+
+        document.querySelectorAll(`.sheet-btn[onclick*="'${itemId}',"]`).forEach(btn => {
+            if (btn.getAttribute('onclick').includes(`'${data.result}'`)) {
+                btn.classList.add(`active-${cls}`);
+            }
+        });
+
+        const noteEl = document.getElementById(`sn_${itemId}`);
+        if (noteEl && data.note) noteEl.value = data.note;
+    });
+}
+
+function setCheck(itemId, val, btn, cls) {
+    const already = checks[itemId]?.result === val;
+
+    // 同グループの全ボタンのactiveを解除
+    btn.parentElement.querySelectorAll('.sheet-btn').forEach(b => {
+        b.className = b.className.replace(/\bactive-\w+\b/g, '').trim();
+    });
+
+    if (already) {
+        checks[itemId] = null;
+    } else {
+        checks[itemId] = { result: val, note: document.getElementById(`sn_${itemId}`)?.value || '' };
+        btn.classList.add(`active-${cls}`);
+        // 未入力警告を消す
+        const item = btn.closest('.sheet-item');
+        if (item?.classList.contains('has-missing')) {
+            item.classList.remove('has-missing');
+            const prev = item.previousElementSibling;
+            if (prev?.classList.contains('sheet-item-missing')) prev.remove();
+        }
+    }
+
+    scheduleSave();
+}
+
+// グループ内の未入力項目だけを一括で○にする（既に入力済みの項目は上書きしない）
+function bulkSetGroupOK(btn) {
+    const group = btn.closest('.sheet-group');
+    if (!group) return;
+    group.querySelectorAll('.sheet-item').forEach(item => {
+        const itemId = item.querySelector('.sheet-no')?.textContent.trim();
+        if (!itemId || checks[itemId]) return;
+        const maruBtn = [...item.querySelectorAll('.sheet-btn')].find(b => b.textContent.trim() === '○');
+        if (maruBtn) setCheck(itemId, '○', maruBtn, 'maru');
+    });
+}
+
+function onCompletionDateChange(val) {
+    sheetMeta.completion_date = val;
+    if (val) {
+        document.getElementById('sheet_completion_date')?.classList.remove('missing');
+        document.getElementById('date_missing_warning')?.classList.remove('show');
+    }
+    scheduleSave();
+}
+
+function scheduleSave() {
+    setSaveStatus('saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 1200);
+}
+
+// 印刷時：一行入力欄では折り返せないため、隣接するテキストに複製して表示する
+function syncNotePrint() {
+    document.querySelectorAll('.sheet-note').forEach(input => {
+        const span = input.nextElementSibling;
+        if (span && span.classList.contains('sheet-note-print')) {
+            span.textContent = input.value;
+        }
+    });
+}
+window.addEventListener('beforeprint', syncNotePrint);
+
+function setSaveStatus(state) {
+    const el = document.getElementById('save_status');
+    if (!el) return;
+    if (state === 'saving') { el.textContent = '保存中...';  el.className = 'save-status saving'; }
+    else if (state === 'ok') { el.textContent = '保存済み ✓'; el.className = 'save-status'; }
+    else                     { el.textContent = '保存エラー ✕'; el.className = 'save-status error'; }
+}
+
+async function saveNow() {
+    if (isSaving || !draftId) return;
+    isSaving = true;
+
+    // 最新の備考値をchecksに反映
+    Object.keys(checks).forEach(itemId => {
+        if (checks[itemId]) {
+            const noteEl = document.getElementById(`sn_${itemId}`);
+            if (noteEl) checks[itemId].note = noteEl.value.trim();
+        }
+    });
+
+    const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
+    const { error } = await db.from('approval_requests')
+        .update({ sheet_data: sheetData })
+        .eq('id', draftId);
+
+    isSaving = false;
+    setSaveStatus(error ? 'error' : 'ok');
+}
+
+function addPendingItem() {
+    pendingItems.push({ machine: '', content: '', owner: '', due: '', ship_after: false });
+    renderPendingItems();
+    scheduleSave();
+}
+
+function removePendingItem(idx) {
+    pendingItems.splice(idx, 1);
+    renderPendingItems();
+    scheduleSave();
+}
+
+function renderPendingItems() {
+    const c = document.getElementById('pending_container');
+    if (!c) return;
+    if (pendingItems.length === 0) {
+        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        return;
+    }
+    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
+    c.innerHTML = pendingItems.map((item, i) => `
+        <div class="pending-row">
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
+                <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                       oninput="pendingItems[${i}].machine=this.value; scheduleSave()">
+            </div>
+            <div style="display:flex;flex-direction:column;flex:1;">
+                ${lbl}
+                <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                       oninput="pendingItems[${i}].content=this.value; scheduleSave()">
+            </div>
+            <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
+                <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
+                       oninput="pendingItems[${i}].owner=this.value; scheduleSave()">
+            </div>
+            <div style="display:flex;flex-direction:column;width:135px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>
+                <input type="date" class="pending-due" value="${esc(item.due)}"
+                       onchange="pendingItems[${i}].due=this.value; scheduleSave()">
+            </div>
+            <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
+                <span style="font-size:10px;color:#999;">出荷後対応</span>
+                <input type="checkbox" ${item.ship_after ? 'checked' : ''}
+                       onchange="pendingItems[${i}].ship_after=this.checked; scheduleSave()">
+            </label>
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
+                <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ===== 未入力マーク =====
+function clearMissingMarks() {
+    document.querySelectorAll('.sheet-item-missing').forEach(el => el.remove());
+    document.querySelectorAll('.sheet-item.has-missing').forEach(el => el.classList.remove('has-missing'));
+    document.getElementById('sheet_completion_date')?.classList.remove('missing');
+    document.getElementById('date_missing_warning')?.classList.remove('show');
+}
+
+function markMissingDate(isMissing = true, shouldScroll = true) {
+    const el = document.getElementById('sheet_completion_date');
+    if (!el) return;
+    el.classList.toggle('missing', isMissing);
+    document.getElementById('date_missing_warning')?.classList.toggle('show', isMissing);
+    if (isMissing && shouldScroll) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function markMissingItems(missingIds) {
+    clearMissingMarks();
+    missingIds.forEach(id => {
+        const btn = document.querySelector(`.sheet-btn[onclick*="setCheck('${id}',"]`);
+        if (!btn) return;
+        const item = btn.closest('.sheet-item');
+        if (!item) return;
+        item.classList.add('has-missing');
+        const warning = document.createElement('div');
+        warning.className = 'sheet-item-missing';
+        warning.textContent = '▼ 未入力です';
+        item.parentNode.insertBefore(warning, item);
+    });
+    const first = document.querySelector('.sheet-item-missing');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ===== 閲覧モード =====
+function setViewMode() {
+    document.body.classList.add('view-mode');
+    const legend = document.querySelector('.sheet-legend');
+    if (legend) legend.textContent = '○: 確認済み　×: NG　―: 対象外';
+    const footerInner = document.querySelector('.sheet-footer-inner');
+    if (footerInner) footerInner.innerHTML =
+        '<button class="b-print" onclick="window.print()">印刷 / PDF保存</button>' +
+        '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>';
+}
+
+function renderPendingItemsView() {
+    const c = document.getElementById('pending_container');
+    if (!c) return;
+    if (!pendingItems.length) {
+        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        return;
+    }
+    c.innerHTML = pendingItems.map(item => {
+        const done = !!item.completed;
+        const lineStyle = done ? 'text-decoration:line-through; color:#aaa;' : '';
+        const dateText = done
+            ? `<span style="font-size:12px; color:#27ae60; font-weight:bold;">完了 ${esc(item.completed_date || '')}</span>`
+            : `<span style="font-size:13px; color:#888;">${esc(item.due || '')}</span>`;
+        return `
+        <div class="pending-row" style="${done ? 'opacity:0.6;' : ''}">
+            <span style="width:16px; flex-shrink:0; font-size:13px; color:${done ? '#27ae60' : '#e74c3c'}; padding:5px 4px;">${done ? '✓' : '●'}</span>
+            <span style="width:100px; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.machine || '—')}</span>
+            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.content || '—')}${item.ship_after ? ' <span style="font-size:11px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</span>
+            <span style="width:110px; font-size:13px; color:#888; padding:5px 8px; ${lineStyle}">${item.owner ? '担当: ' + esc(item.owner) : ''}</span>
+            <span style="width:135px; font-size:13px; padding:5px 8px;">${dateText}</span>
+        </div>`;
+    }).join('');
+}
+
+// 中断: 保存してタブを閉じる（申請画面には通知しない）
+function suspendSheet() {
+    clearTimeout(saveTimer);
+    saveNow().then(() => window.close());
+}
+
+// 完了: 保存 → 申請画面に通知 → タブを閉じる
+async function completeSheet() {
+    // 未入力チェック: 各項目の直前に警告を表示
+    const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]?.result);
+    const dateMissing = !sheetMeta.completion_date;
+    if (missing.length > 0 || dateMissing) {
+        markMissingItems(missing);
+        markMissingDate(dateMissing, missing.length === 0);
+        return;
+    }
+    clearMissingMarks();
+
+    // 発行日を確定（この瞬間の日付で保存）
+    const d = new Date();
+    sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+
+    const btn = document.getElementById('btn_complete');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+    clearTimeout(saveTimer);
+    await saveNow();
+    broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
+    window.close();
+}
+
+// 日付入力欄はどこをクリックしてもカレンダーを開く
+document.addEventListener('click', (e) => {
+    const el = e.target.closest('input[type="date"]');
+    if (el && typeof el.showPicker === 'function') {
+        try { el.showPicker(); } catch (err) { /* 対応ブラウザ以外は無視 */ }
+    }
+});
+
+init();
+</script>
+</body>
+</html>

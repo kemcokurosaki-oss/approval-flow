@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程進捗ダッシュボード</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='80' text-anchor='middle'>📊</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css?v=17">
+</head>
+<body>
+
+<!-- ===== Login ===== -->
+<div id="login_overlay" class="visible">
+    <div id="login_dialog">
+        <h2>📊 工程進捗ダッシュボード</h2>
+        <p>メールアドレスとパスワードでログイン</p>
+        <input type="email" id="login_email" placeholder="メールアドレス" autocomplete="email">
+        <input type="password" id="login_password" placeholder="パスワード" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') doLogin()">
+        <div id="login_error"></div>
+        <button class="login-btn" onclick="doLogin()">ログイン</button>
+    </div>
+</div>
+
+<!-- ===== Main App ===== -->
+<div id="app" style="display:none;">
+    <div class="header">
+        <!-- 開発用ロール切替バー（黒崎のみ表示） -->
+        <div class="dev-bar" id="dev_bar" style="display:none;">
+            🛠 デモ用ロール切替：
+            <select id="dev_role_select" onchange="switchDevRole(this.value)">
+                <option value="">── 製管スタッフ（黒崎の実際の画面）──</option>
+                <option value="staff_kumitate">組立担当者</option>
+                <option value="staff_shiunten">試運転担当者（操業）</option>
+                <option value="assembly_manager">組立課長</option>
+                <option value="assembly_director">組立部長</option>
+                <option value="operations_manager">操業課長</option>
+                <option value="operations_director">操業部長</option>
+                <option value="quality">品質保証課</option>
+                <option value="production_control">製管</option>
+                <option value="sales">営業担当者</option>
+            </select>
+            <span id="dev_role_label" style="font-weight:bold;"></span>
+        </div>
+        <div class="header-row1">
+            <h1 class="header-home-link" onclick="closeSettingsModal()" title="案件ボードに戻る">工程進捗ダッシュボード</h1>
+            <div class="header-user">
+                <button id="user_menu_btn" class="header-user-btn" onclick="toggleUserMenu()">
+                    <span id="user_name_display"></span>
+                    <span class="header-user-caret">▾</span>
+                </button>
+                <div id="user_menu_dropdown" class="user-menu-dropdown">
+                    <div class="user-menu-email" id="user_menu_email"></div>
+                    <div class="user-menu-divider"></div>
+                    <div id="nav_settings_item" class="user-menu-item" style="display:none;" onclick="closeUserMenu(); openSettingsModal();">
+                        <span class="user-menu-item-icon">⚙</span><span>設定</span>
+                    </div>
+                    <div class="user-menu-item" onclick="closeUserMenu(); doLogout();">
+                        <span class="user-menu-item-icon">🚪</span><span>ログアウト</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-row-tabs">
+            <button class="ptab-btn active" data-tab="progress" onclick="setProgressTab('progress')"><span class="ptab-icon">📋</span>案件ボード</button>
+            <button class="ptab-btn" data-tab="assembly_report" onclick="setProgressTab('assembly_report')"><span class="ptab-icon">🔧</span>2000番 完了報告</button>
+        </div>
+        <div class="header-row2">
+            <span class="pfilter-group-label">並び替え</span>
+            <div class="psort-group">
+                <button id="psort_job"      class="psort-btn active" onclick="setProgressSort('job')">工事番号順</button>
+                <button id="psort_shipping" class="psort-btn"        onclick="setProgressSort('shipping')">出荷日順</button>
+            </div>
+            <span class="pfilter-group-label">状態</span>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
+                <span>自分の担当</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_completed" onchange="toggleCompletedView(this.checked)">
+                <span>完了済み</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_overdue" onchange="setProgressFilterOverdue(this.checked)">
+                <span>未申請・未承認</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_ship_after" onchange="setProgressFilterShipAfter(this.checked)">
+                <span>出荷後対応</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="main-layout">
+            <!-- 工番種別パネル（左サイド） -->
+            <div id="prefix_panel" class="prefix-panel">
+                <button class="prefix-btn active" data-prefix="" onclick="setProgressPrefix('')">全て</button>
+                <button class="prefix-btn" data-prefix="3" onclick="setProgressPrefix('3')">3000番</button>
+                <button class="prefix-btn" data-prefix="4" onclick="setProgressPrefix('4')">4000番</button>
+                <button class="prefix-btn" data-prefix="3C" onclick="setProgressPrefix('3C')">3C番</button>
+                <button class="prefix-btn" data-prefix="4C" onclick="setProgressPrefix('4C')">4C番</button>
+                <button class="prefix-btn" data-prefix="D" onclick="setProgressPrefix('D')">D番</button>
+            </div>
+            <!-- 2000番完了報告タブ専用：工事番号→機械のジャンプ一覧（左サイド） -->
+            <div id="assembly_nav_panel" class="assembly-nav-panel"></div>
+            <!-- メイン：進捗一覧 -->
+            <div class="main-content">
+                <div id="tab_content_progress"><div class="loading-indicator">読み込み中...</div></div>
+            </div>
+            <!-- サイドタブ（閉じた状態） -->
+            <div id="side_tab" class="side-tab">
+                <div class="side-tab-header">マイページ</div>
+                <div id="side_tab_mine" class="side-tab-row" onclick="openSidePanelTo('mine')">
+                    <span class="side-tab-row-text">申請</span>
+                </div>
+                <div id="side_tab_pending" class="side-tab-row" onclick="openSidePanelTo('pending')">
+                    <span class="side-tab-row-text">承認</span>
+                    <span id="side_badge_pending" class="badge" style="display:none;"></span>
+                </div>
+            </div>
+        </div>
+        <!-- サイドパネル本体 -->
+        <div id="side_panel" class="side-panel">
+            <div class="side-panel-header">
+                <span style="font-size:13px; font-weight:bold; color:#fff;">マイページ</span>
+                <button class="side-panel-close-btn" onclick="closeSidePanel()">✕</button>
+            </div>
+            <div class="side-panel-filter">
+                <div class="mypage-filter-group">
+                    <button id="mypage_filter_all"      class="mypage-filter-btn active" onclick="setMypageFilterMode('all')">全て</button>
+                    <button id="mypage_filter_main"      class="mypage-filter-btn"        onclick="setMypageFilterMode('main')">2000番以外</button>
+                    <button id="mypage_filter_assembly"  class="mypage-filter-btn"        onclick="setMypageFilterMode('assembly')">2000番のみ</button>
+                </div>
+            </div>
+            <div id="side_half_mine" class="side-half">
+                <div class="side-half-header" onclick="toggleSideHalf('mine')">
+                    申請
+                    <span class="side-half-arrow">▾</span>
+                </div>
+                <div class="side-half-content side-half-content-sections" id="side_content_mine">
+                    <div class="loading-indicator">読み込み中...</div>
+                </div>
+            </div>
+            <div id="side_half_pending" class="side-half">
+                <div class="side-half-header" onclick="toggleSideHalf('pending')">
+                    承認
+                    <span id="side_pending_count" class="badge" style="display:none;"></span>
+                    <span class="side-half-arrow">▾</span>
+                </div>
+                <div class="side-half-content side-half-content-sections" id="side_content_pending">
+                    <div class="loading-indicator">読み込み中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 設定画面（製管2名のみ、マイページと同じ幅の側面パネル） ===== -->
+        <div id="settings_modal" class="settings-page">
+            <div class="settings-page-header">
+                <span style="font-size:13px; font-weight:bold; color:#fff;">⚙ 設定画面</span>
+                <button class="side-panel-close-btn" onclick="closeSettingsModal()">✕</button>
+            </div>
+            <div class="settings-page-body" id="settings_body">
+                <div class="loading-indicator">読み込み中...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Submit Modal ===== -->
+<div id="submit_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="submit_modal_title">組立完了通知 — 申請</h2>
+            <button class="modal-close" onclick="closeSubmitModal()">×</button>
+        </div>
+
+        <!-- Step 1: 基本情報 -->
+        <div id="submit_step1">
+            <div class="modal-body">
+                <div class="mph-header">
+                    <div class="mph-pnum" id="submit_project_display"></div>
+                    <div id="submit_project_info" style="display:none;">
+                        <div class="mph-customer" id="submit_customer_display"></div>
+                        <div></div>
+                        <div class="mph-name" id="submit_project_name_display"></div>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div class="form-group" id="submit_machine_group" style="display:none;">
+                    <label>機械名 *（複数選択可）</label>
+                    <div class="machine-checkbox-bar">
+                        <button type="button" class="btn-xs" id="submit_machine_toggle" onclick="toggleAllMachines('submit_machine_list', this)">全選択</button>
+                    </div>
+                    <div class="machine-checkbox-list" id="submit_machine_list"></div>
+                </div>
+                <div class="form-group" id="flow_detect_group" style="display:none;">
+                    <label>申請・承認状況</label>
+                    <div id="flow_detect_list" class="flow-info-box"></div>
+                    <div class="form-hint">変更する場合は工程表のタスクを修正してください</div>
+                </div>
+                <div class="form-group" id="submit_approver_group" style="display:none;">
+                    <label>承認者</label>
+                    <div style="display:flex; gap:8px; margin-top:4px;">
+                        <button type="button" id="btn_approver_manager"  class="btn approver-btn" onclick="selectApprover('assembly_manager')">組立課長</button>
+                        <button type="button" id="btn_approver_director" class="btn approver-btn" onclick="selectApprover('assembly_director')">組立部長（課長不在時）</button>
+                    </div>
+                </div>
+                <div id="sheet_entry_indicator" style="display:none;" class="form-group">
+                    <div class="sheet-done-badge">
+                        <span class="sheet-done-text">✓ 自主点検シート入力済み</span>
+                        <button type="button" class="btn-link-sm" onclick="reopenSheetTab()">変更する</button>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div class="form-group">
+                    <label>コメント（任意）</label>
+                    <textarea id="submit_note" placeholder="特記事項があれば記入してください"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSubmitModal()">キャンセル</button>
+                <button class="btn btn-primary" id="btn_go_sheet" onclick="goToSheetStep()">次へ（自主点検シート）→</button>
+                <button class="btn btn-primary" id="submit_btn" style="display:none;" onclick="submitRequest()">申請する</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== Sheet Modal (組立完了自主点検シート) ===== -->
+<div id="sheet_modal" class="modal-overlay">
+    <div class="modal modal-sheet">
+        <div class="modal-header">
+            <h2>組立完了自主点検シート</h2>
+            <button class="modal-close" onclick="backFromSheetModal()">×</button>
+        </div>
+        <div class="modal-body sheet-body">
+            <div class="sheet-legend">○: 確認済み　×: NG　―: 対象外　（備考欄は任意）</div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">組立作業確認</div>
+                <div class="sheet-item"><span class="sheet-no">1</span><span class="sheet-text">Iマークは全てのボルトに付けられているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('1','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('1','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('1','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_1" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">2</span><span class="sheet-text">必要な場所に油を塗布しているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('2','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('2','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('2','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_2" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">3</span><span class="sheet-text">必要な場所にグリスを充填しているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('3','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('3','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('3','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_3" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">4</span><span class="sheet-text">グリスニップル口の向きは適切か？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('4','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('4','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('4','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_4" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">干渉チェック</div>
+                <div class="sheet-item"><span class="sheet-no">5</span><span class="sheet-text">グリスニップルが回転軸・ハンドル等に干渉しないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('5','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('5','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('5','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_5" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">6</span><span class="sheet-text">可動部と固定部の干渉箇所はないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('6','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('6','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('6','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_6" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">動作確認</div>
+                <div class="sheet-item"><span class="sheet-no">7</span><span class="sheet-text">ハンドルはスムーズに回るか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('7','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('7','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('7','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_7" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">8</span><span class="sheet-text">その他回転物はスムーズに回るか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('8','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('8','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('8','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_8" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">9</span><span class="sheet-text">モーターは問題なく作動するか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('9','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('9','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('9','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_9" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">10</span><span class="sheet-text">空圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('10','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('10','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('10','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_10" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">11</span><span class="sheet-text">油圧シリンダーはスムーズに動くか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('11','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('11','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('11','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_11" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">12</span><span class="sheet-text">クーラント経路をエアーで確認したか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('12','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('12','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('12','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_12" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">数値調整</div>
+                <div class="sheet-item"><span class="sheet-no">13</span><span class="sheet-text">デジタルカウンターの数値はあっているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('13','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('13','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('13','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_13" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">14</span><span class="sheet-text">通り芯は公差内に収まっていたか？（ミルの場合）</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('14','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('14','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('14','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_14" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">15</span><span class="sheet-text">組図によるストロークチェックはしたか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('15','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('15','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('15','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_15" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">16</span><span class="sheet-text">組図に指定のある各種設定値は公差内に収まっているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('16','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('16','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('16','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_16" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">外観チェック</div>
+                <div class="sheet-item"><span class="sheet-no">18</span><span class="sheet-text">塗装色は社内製作仕様書と一致しているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('18','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('18','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('18','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_18" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">19</span><span class="sheet-text">塗装が必要なすべての場所に塗装しているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('19','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('19','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('19','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_19" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">20</span><span class="sheet-text">塗装が剥げている箇所はないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('20','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('20','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('20','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_20" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">21</span><span class="sheet-text">キズ・凹みなどないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('21','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('21','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('21','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_21" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">22</span><span class="sheet-text">錆はないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('22','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('22','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('22','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_22" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">据付用</div>
+                <div class="sheet-item"><span class="sheet-no">23</span><span class="sheet-text">据付水平基準マークはあるか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('23','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('23','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('23','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_23" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">24</span><span class="sheet-text">据付センター基準線は入っているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('24','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('24','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('24','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_24" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">25</span><span class="sheet-text">据付面（機械底面）に塗装していないか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('25','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('25','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('25','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_25" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">シール・銘板</div>
+                <div class="sheet-item"><span class="sheet-no">26</span><span class="sheet-text">グリスシールは全て貼り付けたか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('26','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('26','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('26','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_26" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">27</span><span class="sheet-text">回転シールは全て貼り付けたか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('27','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('27','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('27','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_27" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">28</span><span class="sheet-text">社銘板・オーダー銘板は付いているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('28','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('28','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('28','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_28" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">29</span><span class="sheet-text">空圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('29','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('29','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('29','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_29" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">30</span><span class="sheet-text">油圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('30','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('30','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('30','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_30" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">31</span><span class="sheet-text">センサーの銘板はあるか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('31','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('31','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('31','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_31" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">32</span><span class="sheet-text">ベンディングリストは取り付けたか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('32','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('32','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('32','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_32" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">外観検査準備</div>
+                <div class="sheet-item"><span class="sheet-no">33</span><span class="sheet-text">検査のため、電源・エアー電源・油圧源を切っているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('33','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('33','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('33','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_33" placeholder="備考"></div>
+                <div class="sheet-item"><span class="sheet-no">34</span><span class="sheet-text">組立で完了シールは？</span><div class="sheet-btns"><button type="button" class="sheet-btn sheet-btn-wide" onclick="setSheetCheck('34','添付済',this)">添付済</button><button type="button" class="sheet-btn sheet-btn-wide" onclick="setSheetCheck('34','未添付',this)">未添付</button></div><input type="text" class="sheet-note" id="sn_34" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label">出荷準備</div>
+                <div class="sheet-item"><span class="sheet-no">36</span><span class="sheet-text">単品納入品リストの部品は揃っているか？</span><div class="sheet-btns"><button type="button" class="sheet-btn" onclick="setSheetCheck('36','○',this)">○</button><button type="button" class="sheet-btn" onclick="setSheetCheck('36','×',this)">×</button><button type="button" class="sheet-btn" onclick="setSheetCheck('36','―',this)">―</button></div><input type="text" class="sheet-note" id="sn_36" placeholder="備考"></div>
+            </div>
+
+            <div class="sheet-group">
+                <div class="sheet-group-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    ペンディング項目リスト（任意）
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="addPendingItem()">＋ 追加</button>
+                </div>
+                <div id="pending_items_container"><div style="color:#999;font-size:13px;padding:6px 0;">ペンディング項目はありません</div></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span id="sheet_save_status" class="sheet-save-status"></span>
+            <button class="btn btn-secondary" onclick="backFromSheetModal()">一時保存して閉じる</button>
+            <button class="btn btn-primary" onclick="finishSheetEntry()">入力完了・申請へ進む</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Inspection Modal (外観検査開催案内) ===== -->
+<div id="inspection_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>外観検査－開催案内作成</h2>
+            <button class="modal-close" onclick="closeInspectionModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mph-header">
+                <div class="mph-pnum" id="inspection_project_display"></div>
+                <div id="inspection_project_info" style="display:none;">
+                    <div class="mph-customer" id="inspection_customer_display"></div>
+                    <div></div>
+                    <div class="mph-name" id="inspection_project_name_display"></div>
+                </div>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group" id="inspection_machine_group" style="display:none;">
+                <label>機械名 *（複数選択可）</label>
+                <div class="machine-checkbox-bar">
+                    <button type="button" class="btn-xs" onclick="toggleAllMachines('inspection_machine_list', this)">全選択</button>
+                </div>
+                <div class="machine-checkbox-list" id="inspection_machine_list"></div>
+            </div>
+            <div id="inspection_flow_box" style="display:none;" class="form-group">
+                <label>申請・承認状況</label>
+                <div id="inspection_flow_list" class="flow-info-box"></div>
+            </div>
+            <hr class="section-divider">
+            <div class="section-title">開催情報</div>
+            <div class="form-group">
+                <label>外観検査日 *</label>
+                <input type="date" id="inspection_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="inspection_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="inspection_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>場所</label>
+                <div id="inspection_location_input" class="location-checkbox-area"></div>
+                <small style="color:#888; font-size:11px;">複数選択可</small>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group">
+                <label>コメント（任意）</label>
+                <textarea id="inspection_note_input" placeholder="参加者への連絡事項など"></textarea>
+            </div>
+            <!-- Step2: 宛先確認 -->
+            <div id="inspection_recipients_step" style="display:none;">
+                <hr class="section-divider">
+                <div class="section-title">送付先一覧</div>
+                <div class="recipient-list" id="inspection_recipients_list"></div>
+                <hr class="section-divider">
+                <div class="section-title">宛先を追加（任意）</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="inspection_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="inspection_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('inspection')">追加</button>
+                </div>
+                <div id="inspection_extra_list"></div>
+            </div>
+        </div>
+        <div class="modal-footer" id="inspection_footer_step1">
+            <button class="btn btn-secondary" onclick="closeInspectionModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="showRecipientsStep('inspection')">宛先を確認する →</button>
+        </div>
+        <div class="modal-footer" id="inspection_footer_step2" style="display:none;">
+            <button class="btn btn-secondary" onclick="showFormStep('inspection')">← 戻る</button>
+            <button class="btn btn-primary" id="inspection_submit_btn" onclick="submitInspection()">案内を送信</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Simple Inspection Modal (簡易検査開催案内) ===== -->
+<div id="simple_inspection_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>簡易検査－開催案内作成</h2>
+            <button class="modal-close" onclick="closeSimpleInspectionModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mph-header">
+                <div class="mph-pnum" id="si_project_display"></div>
+                <div id="si_project_info" style="display:none;">
+                    <div class="mph-customer" id="si_customer_display"></div>
+                    <div></div>
+                    <div class="mph-name" id="si_project_name_display"></div>
+                </div>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group" id="si_machine_group" style="display:none;">
+                <label>機械名 *（複数選択可）</label>
+                <div class="machine-checkbox-bar">
+                    <button type="button" class="btn-xs" onclick="toggleAllMachines('si_machine_list', this)">全選択</button>
+                </div>
+                <div class="machine-checkbox-list" id="si_machine_list"></div>
+            </div>
+            <div id="si_flow_box" style="display:none;" class="form-group">
+                <label>申請・承認状況</label>
+                <div id="si_flow_list" class="flow-info-box"></div>
+            </div>
+            <hr class="section-divider">
+            <div class="section-title">開催情報</div>
+            <div class="form-group">
+                <label>簡易検査日 *</label>
+                <input type="date" id="si_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="si_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="si_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>場所</label>
+                <div id="si_location_input" class="location-checkbox-area"></div>
+                <small style="color:#888; font-size:11px;">複数選択可</small>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group">
+                <label>コメント（任意）</label>
+                <textarea id="si_note_input" placeholder="参加者への連絡事項など"></textarea>
+            </div>
+            <!-- Step2: 宛先確認 -->
+            <div id="si_recipients_step" style="display:none;">
+                <hr class="section-divider">
+                <div class="section-title">送付先一覧</div>
+                <div class="recipient-list" id="si_recipients_list"></div>
+                <hr class="section-divider">
+                <div class="section-title">宛先を追加（任意）</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="si_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="si_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('si')">追加</button>
+                </div>
+                <div id="si_extra_list"></div>
+            </div>
+        </div>
+        <div class="modal-footer" id="si_footer_step1">
+            <button class="btn btn-secondary" onclick="closeSimpleInspectionModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="showRecipientsStep('si')">宛先を確認する →</button>
+        </div>
+        <div class="modal-footer" id="si_footer_step2" style="display:none;">
+            <button class="btn btn-secondary" onclick="showFormStep('si')">← 戻る</button>
+            <button class="btn btn-primary" id="si_submit_btn" onclick="submitSimpleInspection()">案内を送信</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Shipping Meeting Modal (フロー5) ===== -->
+<div id="shipping_meeting_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>出荷確認会議－開催案内作成</h2>
+            <button class="modal-close" onclick="closeShippingMeetingModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mph-header">
+                <div class="mph-pnum" id="sm_project_display"></div>
+                <div id="sm_project_info" style="display:none;">
+                    <div class="mph-customer" id="sm_customer_display"></div>
+                    <div></div>
+                    <div class="mph-name" id="sm_project_name_display"></div>
+                </div>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group" id="sm_machine_group" style="display:none;">
+                <label>機械名 *（複数選択可）</label>
+                <div class="machine-checkbox-bar">
+                    <button type="button" class="btn-xs" onclick="toggleAllMachines('sm_machine_list', this)">全選択</button>
+                </div>
+                <div class="machine-checkbox-list" id="sm_machine_list"></div>
+            </div>
+            <div id="sm_flow_box" style="display:none;" class="form-group">
+                <label>申請・承認状況</label>
+                <div id="sm_flow_list" class="flow-info-box"></div>
+            </div>
+            <hr class="section-divider">
+            <div class="section-title">開催情報</div>
+            <div class="form-group">
+                <label>開催日 *</label>
+                <input type="date" id="sm_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="sm_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="sm_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>場所（会議室）</label>
+                <select id="sm_location_input" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px; width:100%;">
+                    <option value="">選択してください</option>
+                    <option value="第1会議室">第1会議室</option>
+                    <option value="第2会議室">第2会議室</option>
+                    <option value="第3会議室">第3会議室</option>
+                    <option value="第4会議室">第4会議室</option>
+                    <option value="第5会議室">第5会議室</option>
+                </select>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group">
+                <label>コメント（任意）</label>
+                <textarea id="sm_note_input" placeholder="参加者への連絡事項など"></textarea>
+            </div>
+            <!-- Step2: 宛先確認 -->
+            <div id="sm_recipients_step" style="display:none;">
+                <hr class="section-divider">
+                <div class="section-title">送付先一覧</div>
+                <div class="recipient-list" id="sm_recipients_list"></div>
+                <hr class="section-divider">
+                <div class="section-title">宛先を追加（任意）</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="sm_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="sm_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('sm')">追加</button>
+                </div>
+                <div id="sm_extra_list"></div>
+            </div>
+        </div>
+        <div class="modal-footer" id="sm_footer_step1">
+            <button class="btn btn-secondary" onclick="closeShippingMeetingModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="showRecipientsStep('sm')">宛先を確認する →</button>
+        </div>
+        <div class="modal-footer" id="sm_footer_step2" style="display:none;">
+            <button class="btn btn-secondary" onclick="showFormStep('sm')">← 戻る</button>
+            <button class="btn btn-primary" id="sm_submit_btn" onclick="submitShippingMeeting()">案内を送信</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Shipping Modal (フロー3: 出荷完了通知) ===== -->
+<div id="shipping_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>出荷確定申請</h2>
+            <button class="modal-close" onclick="closeShippingModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mph-header">
+                <div class="mph-pnum" id="shipping_project_display"></div>
+                <div id="shipping_project_info" style="display:none;">
+                    <div class="mph-customer" id="shipping_customer_display"></div>
+                    <div></div>
+                    <div class="mph-name" id="shipping_project_name_display"></div>
+                </div>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group" id="shipping_machine_group" style="display:none;">
+                <label>機械名 *（複数選択可）</label>
+                <div class="machine-checkbox-bar">
+                    <button type="button" class="btn-xs" onclick="toggleAllMachines('shipping_machine_list', this)">全選択</button>
+                </div>
+                <div class="machine-checkbox-list" id="shipping_machine_list"></div>
+            </div>
+            <div id="shipping_approver_box" style="display:none;" class="form-group">
+                <label>担当者確認（簡易検査承認済み）</label>
+                <div id="shipping_approver_list" class="flow-info-box"></div>
+            </div>
+            <div id="shipping_flow_box" style="display:none;" class="form-group">
+                <label>申請・承認状況</label>
+                <div id="shipping_flow_list" class="flow-info-box"></div>
+            </div>
+            <div id="shipping_missing_warning" style="display:none;color:#c0392b;font-size:12px;padding:6px 0;"></div>
+            <hr class="section-divider">
+            <div class="form-group">
+                <div style="font-size:12px; color:#888; padding:6px 0;">確定出荷日は営業担当者が入力後、内容を確認して本申請します。</div>
+            </div>
+            <div class="form-group">
+                <label>特記事項（任意）</label>
+                <textarea id="shipping_note_input" placeholder="残件・注意事項など"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeShippingModal()">キャンセル</button>
+            <button class="btn btn-primary" id="shipping_submit_btn" onclick="submitShipping()">申請する</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Reschedule Modal (簡易検査・外観検査・出荷確認会議 日程変更) ===== -->
+<div id="reschedule_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="reschedule_modal_title">日程変更</h2>
+            <button class="modal-close" onclick="closeRescheduleModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>新しい開催日 *</label>
+                <input type="date" id="reschedule_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="reschedule_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="reschedule_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeRescheduleModal()">キャンセル</button>
+            <button class="btn btn-success"   id="btn_save_reschedule" onclick="saveReschedule()">保存して通知</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Detail Modal ===== -->
+<div id="detail_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="detail_title">詳細</h2>
+            <button class="modal-close" onclick="closeDetailModal()">×</button>
+        </div>
+        <div class="modal-body" id="detail_body">
+            <div class="loading-indicator">読み込み中...</div>
+        </div>
+        <div class="modal-footer" id="detail_footer">
+            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ペンディング写真ライトボックス ===== -->
+<div id="photo_lightbox" class="modal-overlay photo-lightbox" onclick="closePhotoLightbox()">
+    <img id="photo_lightbox_img" src="" alt="修正箇所の写真">
+</div>
+
+<!-- ローディングオーバーレイ -->
+<div id="app-loading-overlay">
+    <div class="app-loading-spinner">
+        <div></div><div></div><div></div><div></div>
+        <div></div><div></div><div></div><div></div>
+    </div>
+    <span class="app-loading-label" id="app-loading-label">処理中...</span>
+</div>
+
+<script src="app.js?v=8"></script>
+</body>
+</html>
