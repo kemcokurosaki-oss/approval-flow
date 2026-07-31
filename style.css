@@ -144,6 +144,8 @@
         .main-layout.assembly-report-mode .flow-connector { min-width: 60px; }
         /* 左の工事番号一覧とステップ表示の間隔を広げる */
         .main-layout.assembly-report-mode .main-content { padding-left: 36px; }
+        /* 末尾に近いカードでもスクロール先が画面上部に来るよう、下に余白を確保する */
+        .main-layout.assembly-report-mode .main-content { padding-bottom: 80vh; }
 
         /* 再申請バッジ */
         .resubmit-badge {
