@@ -970,7 +970,7 @@ async function loadMineSide() {
         });
         return [
             ['開催待ち', groups.waiting, false],
-            ['ペンディング', groups.pending, true],
+            ['タスク', groups.pending, true],
             ['完了', groups.approved, false],
         ];
     };
