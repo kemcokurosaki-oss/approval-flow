@@ -2342,7 +2342,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
 
     let body;
     if (!meetingPassed) {
-        body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にペンディング確認・完了操作ができます。</div>';
+        body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にタスク確認・完了操作ができます。</div>';
     } else {
         const pendingHtml = buildPendingSectionInner(req, isMyRequest);
         const hasSendableItems = (req.sheet_data?.pending_items || []).some(it => it.content);
