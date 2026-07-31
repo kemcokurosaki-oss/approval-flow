@@ -1514,10 +1514,10 @@ function renderProgressCards() {
             const rowHeader = (machineLabel || machineShipHtml)
                 ? '<div class="prog-machine-row-header">' + machineLabel + machineShipHtml + '</div>'
                 : '';
-            return '<div class="prog-machine-row" data-num="' + esc(num) + '" data-machine="' + esc(machine) + '">' + rowHeader + '<div class="flow-steps">' + nodes + '</div></div>';
+            return '<div class="prog-machine-row">' + rowHeader + '<div class="flow-steps">' + nodes + '</div></div>';
         }).join('');
 
-        return `<div class="prog-card">
+        return `<div class="prog-card" data-num="${esc(num)}">
             <div class="prog-card-header">
                 <div class="prog-card-header-left">
                     <span class="prog-card-num">${esc(num)}</span>${label ? `<span class="prog-card-label">${esc(label)}</span>` : ''}
