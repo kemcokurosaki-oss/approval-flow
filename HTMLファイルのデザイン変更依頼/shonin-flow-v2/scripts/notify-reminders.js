@@ -1,0 +1,614 @@
+/**
+ * リマインダー通知
+ * 1. 承認催促: 申請後24時間以上承認されていない場合、承認者に毎日通知
+ * 2. 申請催促: タスク終了日を過ぎても申請がない場合、担当者に毎日通知
+ * 3. 案内催促: 検査・会議の開催案内が未送付の場合、品証・製管に毎日通知
+ * 4. ペンディング期日超過催促: ペンディング項目の完了予定日（due）を過ぎても
+ *    完了になっていない場合、翌日から担当者へ毎日通知（完了にするまで継続）
+ * 5. 完了処理催促: 簡易検査・外観検査・出荷確認会議の開催日を過ぎても
+ *    「完了にする」が押されていない場合、翌日から品証（CC製管）へ毎日通知（完了にするまで継続）
+ *
+ * Secrets: SUPABASE_URL, SUPABASE_SECRET_KEY, GMAIL_USER, GMAIL_APP_PASSWORD
+ */
+
+const nodemailer = require('nodemailer');
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
+const GMAIL_USER   = process.env.GMAIL_USER;
+const GMAIL_PASS   = process.env.GMAIL_APP_PASSWORD;
+const TEST_MODE    = process.env.TEST_MODE === 'true';
+const APP_URL      = 'https://kemcokurosaki-oss.github.io/approval-flow/';
+const TEST_EMAIL   = 'e-kurosaki@kusakabe.com';
+const TEST_PROJECT = (process.env.TEST_PROJECT || '').trim();
+
+const FLOW_LABELS = {
+  assembly:      '組立完了申請',
+  test_run:      '試運転完了申請',
+  shipping_prep: '出荷準備完了申請',
+  shipping:      '出荷確定申請',
+};
+const TASK_TO_FLOW = {
+  '機械組立': 'assembly',
+  '試運転':   'test_run',
+  '出荷準備': 'shipping_prep',
+  '工場出荷': 'shipping',
+};
+const QA_MEETING_LABELS = {
+  simple_inspection: '簡易検査',
+  inspection:        '外観検査',
+  shipping_meeting:  '出荷確認会議',
+};
+// 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
+const QA_MEETING_FLOWS = Object.keys(QA_MEETING_LABELS);
+
+// ペンディング期日超過催促のCC固定宛先（品証・製管）
+const PENDING_REMINDER_CC = [
+  't-tanaka@kusakabe.com',    // 品証（田中）
+  's-morimura@kusakabe.com',  // 製管（森村）
+  'e-kurosaki@kusakabe.com',  // 製管（黒崎）
+];
+
+function requireEnv(name, v) {
+  if (!v) throw new Error(`環境変数 ${name} が未設定です`);
+}
+
+async function supabaseFetch(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type':  'application/json',
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase error [${res.status}]: ${await res.text()}`);
+  return res.json();
+}
+
+async function supabaseInsert(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=minimal',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Supabase insert error [${res.status}]: ${await res.text()}`);
+}
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: { user: GMAIL_USER, pass: GMAIL_PASS },
+});
+
+// 完了済み工番セット（main()でロード）
+let completedProjectsSet = new Set();
+
+async function loadCompletedProjects() {
+  const rows = await supabaseFetch('completed_projects?select=project_number');
+  completedProjectsSet = new Set((rows || []).map(r => String(r.project_number).trim()));
+  console.log(`完了済み工番: ${completedProjectsSet.size}件を除外対象にロード`);
+}
+
+async function sendEmail(toEmail, toName, subject, body, ccEmails = []) {
+  const actualTo = TEST_MODE ? TEST_EMAIL : toEmail;
+  const actualCc = TEST_MODE ? [] : ccEmails.filter(Boolean);
+  const mailOptions = {
+    from:    `"工事工程 通知" <${GMAIL_USER}>`,
+    to:      actualTo,
+    subject: TEST_MODE ? `[TEST] ${subject}` : subject,
+    text:    TEST_MODE
+      ? `【テスト送信】本来の宛先: ${toEmail}${ccEmails.length ? '\nCC: ' + ccEmails.join(', ') : ''}\n\n${body}`
+      : body,
+  };
+  if (actualCc.length > 0) mailOptions.cc = actualCc.join(',');
+  await transporter.sendMail(mailOptions);
+  const ccLog = actualCc.length ? ` CC: ${actualCc.join(', ')}` : '';
+  console.log(`✓ 送信完了: ${actualTo} (${toName} / ${subject})${ccLog}`);
+}
+
+function tokyoDateStr() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+}
+
+// JST翌日の日付文字列（YYYY-MM-DD）
+function tomorrowJSTStr() {
+  const [y, m, d] = tokyoDateStr().split('-').map(Number);
+  return new Date(y, m - 1, d + 1).toLocaleDateString('en-CA');
+}
+
+// JST当日0:00のISO文字列（前日中の申請をすべて対象にするcutoff用）
+function todayMidnightJST() {
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  return new Date(`${todayStr}T00:00:00+09:00`).toISOString();
+}
+
+// ===== 承認催促 =====
+async function runApprovalReminders() {
+  console.log('\n--- 承認催促チェック ---');
+
+  // 前日以前に申請されてまだ submitted のリクエスト（テストモードは時間制限なし）
+  // shipping_prep は承認不要（申請＝完了）のため対象外
+  const cutoff = TEST_MODE ? new Date().toISOString() : todayMidnightJST();
+  const requests = await supabaseFetch(
+    `approval_requests?status=eq.submitted&flow_type=in.(assembly,test_run,shipping)` +
+    `&created_at=lt.${encodeURIComponent(cutoff)}&select=id,project_number,machine_name,flow_type`
+  );
+
+  if (!requests || requests.length === 0) {
+    console.log('承認催促: 対象なし');
+    return;
+  }
+
+  // 今日すでに送ったリマインダーのセット
+  const todayStr = tokyoDateStr();
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.approval_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id`
+  );
+  const sentSet = new Set((sentToday || []).map(n => `${n.request_id}__${n.recipient_id}`));
+
+  let count = 0;
+  for (const req of requests) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+
+    const steps = await supabaseFetch(
+      `approval_steps?request_id=eq.${req.id}&status=eq.pending&select=approver_role`
+    );
+
+    for (const step of (steps || [])) {
+      const approvers = await supabaseFetch(
+        `profiles?role=eq.${step.approver_role}&select=id,name,email`
+      );
+
+      for (const approver of (approvers || [])) {
+        if (!approver.email) continue;
+        const key = `${req.id}__${approver.id}`;
+        if (sentSet.has(key)) continue;
+
+        const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
+        const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+        const subject = `【承認催促】${pStr}　${flow}`;
+        const text    =
+          `${approver.name} 様\n\n` +
+          `${pStr} の「${flow}」について、` +
+          `前日に承認依頼が届いていますが、まだ承認されていません。\n` +
+          `承認フロー管理システムにログインして承認をお願いします。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(approver.email, approver.name, subject, text);
+          await supabaseInsert('approval_notifications', {
+            request_id:        req.id,
+            recipient_id:      approver.id,
+            notification_type: 'approval_reminder',
+            emailed_at:        new Date().toISOString(),
+          });
+          sentSet.add(key);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${approver.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`承認催促: ${count}件送信`);
+}
+
+// ===== 申請催促 =====
+async function runSubmissionReminders() {
+  console.log('\n--- 申請催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  // 申請済みリクエストのセット（rejected以外）
+  const submitted = await supabaseFetch(
+    `approval_requests?flow_type=in.(assembly,test_run,shipping_prep,shipping)&status=neq.rejected` +
+    `&select=project_number,machine_name,flow_type`
+  );
+  const submittedSet = new Set(
+    (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
+  );
+
+  // 出荷確定申請の催促宛先（品証・製管スタッフ）をあらかじめ取得
+  let shippingRecipients = null;
+  async function getShippingRecipients() {
+    if (shippingRecipients) return shippingRecipients;
+    const qualityProfs = await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`);
+    const seikanProfs  = await supabaseFetch(`profiles?role=eq.production_control&select=id,name,email`);
+    const seen = new Set();
+    shippingRecipients = [...(qualityProfs || []), ...(seikanProfs || [])].filter(p => {
+      if (!p.id || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+    return shippingRecipients;
+  }
+
+  // 申請催促CCに含める上長（組立: 課長・部長 / 操業: 課長・部長）
+  const superiorCache = {};
+  async function getSuperiors(flowType) {
+    if (superiorCache[flowType]) return superiorCache[flowType];
+    const roleMap = {
+      assembly: 'assembly_manager,assembly_director',
+      test_run: 'operations_manager,operations_director',
+    };
+    const roles = roleMap[flowType];
+    if (!roles) return (superiorCache[flowType] = []);
+    const profs = await supabaseFetch(
+      `profiles?role=in.(${encodeURIComponent(roles)})&select=id,name,email`
+    );
+    superiorCache[flowType] = (profs || []).filter(p => p.email);
+    return superiorCache[flowType];
+  }
+
+  const tomorrowStr = tomorrowJSTStr();
+
+  // 今回の実行で送信済みの (タスクキー + 宛先ID) を記録（1実行内の重複防止）
+  const sentThisRun = new Set();
+
+  let count = 0;
+  for (const [taskText, flowType] of Object.entries(TASK_TO_FLOW)) {
+    // shipping は工場出荷の前日から通知、それ以外は終了日超過後に通知
+    const endDateFilter = flowType === 'shipping'
+      ? `end_date=lte.${tomorrowStr}`  // 前日以降（前日・当日・超過後も継続）
+      : `end_date=lt.${todayStr}`;      // 終了日超過後
+    const tasks = await supabaseFetch(
+      `tasks?text=eq.${encodeURIComponent(taskText)}&${endDateFilter}` +
+      `&select=project_number,machine,owner,end_date,is_completed`
+    );
+
+    for (const task of (tasks || [])) {
+      if (task.is_completed) continue;
+      if (completedProjectsSet.has(String(task.project_number).trim())) continue;
+      // assembly/test_run はタスクオーナーが必須、shipping は不問
+      if (flowType !== 'shipping' && !task.owner) continue;
+      // テストモードで工事番号が指定されている場合は絞り込み
+      if (TEST_MODE && TEST_PROJECT && String(task.project_number) !== TEST_PROJECT) continue;
+
+      const key = `${task.project_number}__${task.machine}__${flowType}`;
+      if (submittedSet.has(key)) continue;
+
+      // 宛先を決定: shipping は品証・製管スタッフ、それ以外はタスクオーナー
+      let recipients;
+      let ccProfiles = [];
+      if (flowType === 'shipping') {
+        recipients = await getShippingRecipients();
+      } else {
+        recipients = await supabaseFetch(
+          `profiles?name=eq.${encodeURIComponent(task.owner)}&select=id,name,email`
+        );
+        ccProfiles = await getSuperiors(flowType);
+      }
+
+      for (const profile of (recipients || [])) {
+        if (!profile.email) continue;
+        const dedupKey = `${task.project_number}__${task.machine || ''}__${flowType}__${profile.id}`;
+        if (sentThisRun.has(dedupKey)) continue;
+
+        const flow    = FLOW_LABELS[flowType] || flowType;
+        const pStr    = task.machine ? `${task.project_number} ${task.machine}` : String(task.project_number);
+        const subject = `【申請催促】${pStr}　${flow}`;
+        const bodyDetail = flowType === 'shipping'
+          ? `${task.end_date} が予定出荷日ですが、申請がされていません。`
+          : `タスクの終了日（${task.end_date}）を過ぎていますが申請がされていません。`;
+        const text    =
+          `${profile.name} 様\n\n` +
+          `${pStr} の「${flow}」について、` +
+          `${bodyDetail}\n` +
+          `承認フロー管理システムにログインして申請をお願いします。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        // 担当者本人と重複しないようCCから除外
+        const ccEmails = ccProfiles
+          .filter(p => p.id !== profile.id)
+          .map(p => p.email);
+
+        try {
+          await sendEmail(profile.email, profile.name, subject, text, ccEmails);
+          sentThisRun.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`申請催促: ${count}件送信`);
+}
+
+// ペンディング項目の担当者名から通知先を解決（profiles優先、無ければnotification_recipients）
+async function resolveOwnerRecipients(ownerName) {
+  if (!ownerName) return [];
+  const profiles = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+  const withEmail = (profiles || []).filter(p => p.email);
+  if (withEmail.length > 0) return withEmail.map(p => ({ id: p.id, name: p.name, email: p.email }));
+
+  const recips = await supabaseFetch(
+    `notification_recipients?name=eq.${encodeURIComponent(ownerName)}&active=eq.true&select=name,email`
+  );
+  return (recips || []).filter(r => r.email).map(r => ({ id: null, name: r.name, email: r.email }));
+}
+
+// ===== ペンディング期日超過催促 =====
+async function runPendingItemReminders() {
+  console.log('\n--- ペンディング期日超過催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  const requests = await supabaseFetch(
+    `approval_requests?status=neq.rejected&select=id,project_number,machine_name,flow_type,sheet_data`
+  );
+
+  // 今日すでに送ったリマインダーのセット（申請ID + 宛先 + 項目内容）
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.pending_item_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id,recipient_email,detail`
+  );
+  const sentSet = new Set(
+    (sentToday || []).map(n => `${n.request_id}__${n.recipient_id || n.recipient_email}__${n.detail}`)
+  );
+
+  let count = 0;
+  for (const req of (requests || [])) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+
+    const items = req.sheet_data?.pending_items || [];
+    for (const item of items) {
+      if (item.completed) continue;
+      if (!item.due || item.due >= todayStr) continue; // 期日翌日から対象（当日はまだ超過していない）
+      if (!item.owner) continue;
+
+      const isQaFlow  = QA_MEETING_FLOWS.includes(req.flow_type);
+      const itemLabel = isQaFlow ? 'タスク' : 'ペンディング項目';
+      const label = item.content || item.machine || itemLabel;
+      const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
+      const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+      const subject = `【${itemLabel}期日超過】${pStr}　${label}`;
+
+      const recipients = await resolveOwnerRecipients(item.owner);
+      for (const recipient of recipients) {
+        const dedupKey = `${req.id}__${recipient.id || recipient.email}__${label}`;
+        if (sentSet.has(dedupKey)) continue;
+
+        const text =
+          `${recipient.name} 様\n\n` +
+          `${pStr}（${flow}）の${itemLabel}「${label}」の完了予定日（${item.due}）を過ぎていますが、` +
+          `まだ完了になっていません。\n` +
+          `承認フロー管理システムにログインし、対応後は「完了にする」を押してください。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        const ccEmails = PENDING_REMINDER_CC.filter(email => email !== recipient.email);
+
+        try {
+          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
+          await supabaseInsert('approval_notifications', {
+            request_id:         req.id,
+            recipient_id:       recipient.id || null,
+            recipient_email:    recipient.id ? null : recipient.email,
+            notification_type:  'pending_item_reminder',
+            detail:             label,
+            emailed_at:         new Date().toISOString(),
+          });
+          sentSet.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`ペンディング期日超過催促: ${count}件送信`);
+}
+
+// ===== 案内催促 =====
+async function runInvitationReminders() {
+  console.log('\n--- 案内催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+  const [y, m, d] = todayStr.split('-').map(Number);
+  const threeDaysLater = new Date(y, m - 1, d + 3).toLocaleDateString('en-CA');
+
+  // 申請済みの (工番__機械__フロー種別) セット（rejected以外）
+  const submitted = await supabaseFetch(
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=neq.rejected` +
+    `&select=project_number,machine_name,flow_type`
+  );
+  const submittedSet = new Set(
+    (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
+  );
+
+  // 品証・製管スタッフを取得
+  const qualityProfs = await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`);
+  const seikanProfs  = await supabaseFetch(
+    `profiles?department=eq.${encodeURIComponent('製管')}&role=eq.staff&select=id,name,email`
+  );
+  const seenIds = new Set();
+  const recipients = [...(qualityProfs || []), ...(seikanProfs || [])].filter(p => {
+    if (!p.id || seenIds.has(p.id)) return false;
+    seenIds.add(p.id);
+    return true;
+  });
+
+  // 簡易検査・外観検査：常に機械組立終了日の3日前を基準にする（試運転の有無は問わない）
+  const assemblyTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,end_date,is_completed`
+  );
+  const assemblyTargets = (assemblyTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '機械組立', refEndDate: t.end_date }));
+
+  // 出荷確認会議：試運転や外観検査の有無に頼らず、出荷確認会議タスク自身の開始日の3日前を基準にする
+  const shippingMeetingTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('出荷確認会議')}&start_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,start_date,is_completed`
+  );
+  const shippingMeetingTargets = (shippingMeetingTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '出荷確認会議', refEndDate: t.start_date }));
+
+  // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築
+  const hasInspectionTask = new Set();
+  const hasSimpleInspectionTask = new Set();
+  const hasShippingMeetingTask = new Set();
+  const [inspRows, siRows, smRows] = await Promise.all([
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('簡易検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷確認会議')}&select=project_number,machine`),
+  ]);
+  for (const r of (inspRows || [])) hasInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
+
+  // 案内催促の対象フロー定義
+  const inviteFlows = [
+    { flowType: 'simple_inspection', label: '簡易検査開催案内',   hasTask: (key) => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
+    { flowType: 'inspection',        label: '外観検査開催案内',   hasTask: (key) => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'shipping_meeting',  label: '出荷確認会議開催案内', hasTask: (key) => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
+  ];
+
+  const sentThisRun = new Set();
+  let count = 0;
+
+  for (const flow of inviteFlows) {
+    for (const target of flow.targets) {
+      if (completedProjectsSet.has(String(target.project_number).trim())) continue;
+      if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
+
+      const taskKey = `${target.project_number}__${target.machine}`;
+
+      // 対象フローのタスクが存在しない工番_機械はスキップ
+      if (!flow.hasTask(taskKey)) continue;
+
+      const submitKey = `${taskKey}__${flow.flowType}`;
+      if (submittedSet.has(submitKey)) continue;
+
+      const pStr   = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
+      const subject = `【案内催促】${pStr}　${flow.label}`;
+
+      for (const profile of recipients) {
+        if (!profile.email) continue;
+        const dedupKey = `${submitKey}__${profile.id}`;
+        if (sentThisRun.has(dedupKey)) continue;
+
+        const detailText = flow.flowType === 'shipping_meeting'
+          ? `出荷確認会議が ${target.refEndDate} に開催予定ですが、${flow.label}がされていません。`
+          : `${target.refTaskName}が ${target.refEndDate} に終了予定ですが、${flow.label}がされていません。`;
+        const text =
+          `${profile.name} 様\n\n` +
+          `${pStr} について、${detailText}\n` +
+          `承認フロー管理システムにログインして開催案内の送付をお願いします。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(profile.email, profile.name, subject, text);
+          sentThisRun.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`案内催促: ${count}件送信`);
+}
+
+// ===== 完了処理催促（簡易検査・外観検査・出荷確認会議） =====
+async function runQaFinalizeReminders() {
+  console.log('\n--- 完了処理催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  // 開催日の翌日以降になっても「完了にする」が押されていない開催案内
+  const requests = await supabaseFetch(
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=eq.submitted` +
+    `&inspection_date=lt.${todayStr}&select=id,project_number,machine_name,flow_type,inspection_date`
+  );
+
+  if (!requests || requests.length === 0) {
+    console.log('完了処理催促: 対象なし');
+    return;
+  }
+
+  // 今日すでに送ったリマインダーのセット
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.qa_finalize_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id`
+  );
+  const sentSet = new Set((sentToday || []).map(n => `${n.request_id}__${n.recipient_id}`));
+
+  // 品証（TO）・製管（CC）を取得
+  const qualityProfs = (await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`)) || [];
+  const seikanProfs  = (await supabaseFetch(`profiles?role=eq.production_control&select=email`)) || [];
+  const ccEmailsAll  = seikanProfs.map(p => p.email).filter(Boolean);
+
+  let count = 0;
+  for (const req of requests) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+
+    const flow = QA_MEETING_LABELS[req.flow_type] || req.flow_type;
+    const pStr = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+
+    for (const approver of qualityProfs) {
+      if (!approver.email) continue;
+      const key = `${req.id}__${approver.id}`;
+      if (sentSet.has(key)) continue;
+
+      const subject = `【完了処理催促】${pStr}　${flow}`;
+      const text =
+        `${approver.name} 様\n\n` +
+        `${pStr} の「${flow}」について、開催日（${req.inspection_date}）を過ぎていますが、` +
+        `まだ「完了にする」の処理がされていません。\n` +
+        `承認フロー管理システムにログインし、開催結果・タスクリストを確認のうえ完了処理をお願いします。\n\n` +
+        `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+      const ccEmails = ccEmailsAll.filter(e => e !== approver.email);
+
+      try {
+        await sendEmail(approver.email, approver.name, subject, text, ccEmails);
+        await supabaseInsert('approval_notifications', {
+          request_id:        req.id,
+          recipient_id:      approver.id,
+          notification_type: 'qa_finalize_reminder',
+          emailed_at:        new Date().toISOString(),
+        });
+        sentSet.add(key);
+        count++;
+      } catch (e) {
+        console.error(`✗ 送信エラー: ${approver.email}`, e.message);
+      }
+    }
+  }
+  console.log(`完了処理催促: ${count}件送信`);
+}
+
+async function main() {
+  requireEnv('SUPABASE_URL', SUPABASE_URL);
+  requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
+  requireEnv('GMAIL_USER', GMAIL_USER);
+  requireEnv('GMAIL_APP_PASSWORD', GMAIL_PASS);
+
+  console.log('====== リマインダー通知 ======');
+  console.log(`テストモード: ${TEST_MODE}`);
+  console.log(`実行日 (JST): ${tokyoDateStr()}`);
+
+  await loadCompletedProjects();
+  await runApprovalReminders();
+  await runSubmissionReminders();
+  await runInvitationReminders();
+  await runPendingItemReminders();
+  await runQaFinalizeReminders();
+
+  console.log('\n====== 完了 ======');
+}
+
+main().catch(e => {
+  console.error('致命的エラー:', e);
+  process.exit(1);
+});

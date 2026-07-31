@@ -537,15 +537,6 @@ async function loadProjects() {
         (completed || []).map(c => (c.project_number || '').toString().trim())
     );
 
-    // 梱包出荷の有無（未定/あり/なし）。工程表に実タスクが無い間の意思表示として保持する
-    const { data: packingStatuses } = await db
-        .from('packing_shipping_status')
-        .select('project_number, status');
-    packingStatusMap.clear();
-    (packingStatuses || []).forEach(p => {
-        packingStatusMap.set((p.project_number || '').toString().trim(), p.status);
-    });
-
     // sort_order付きでタスクを取得（工程表と同じ並び順にするため）
     const { data: tasks } = await db
         .from('tasks')
@@ -599,30 +590,6 @@ const testRunProjectNums       = new Set(); // 試運転タスクがある工番
 const shippingMeetingProjectNums = new Set(); // 出荷確認会議タスクがある工番
 const shippingProjectNums      = new Set(); // 工場出荷タスクがある工番
 const packingShippingProjectNums = new Set(); // 梱包出荷タスクがある工番
-const packingStatusMap = new Map(); // 工番 → 梱包出荷の有無('unknown'|'yes'|'no')。packing_shipping_status テーブルの内容
-
-// 梱包出荷の有無を3値で判定する。工程表に実タスクが存在する場合はそちらを優先し、
-// 無い場合のみ packing_shipping_status テーブルの意思表示（未定/なし）を見る
-function getPackingDisplayState(num, hasActualPackingTask) {
-    if (hasActualPackingTask) return 'yes';
-    return packingStatusMap.get(num) || 'unknown';
-}
-
-async function setPackingShippingStatus(projectNumber, status) {
-    try {
-        await db.from('packing_shipping_status').upsert({
-            project_number: projectNumber,
-            status,
-            updated_by:     currentUser.id,
-            updated_at:     new Date().toISOString()
-        }, { onConflict: 'project_number' });
-        packingStatusMap.set(projectNumber, status);
-        showToast('梱包出荷の有無を更新しました');
-    } catch (e) {
-        console.warn('梱包出荷有無の更新に失敗:', e);
-        showToast('更新に失敗しました', 'error');
-    }
-}
 
 async function onProjectChange() {
     const num    = currentProjectNum;
@@ -872,15 +839,11 @@ async function loadPendingSide() {
     });
 
     // フロー名は見出し側で表示済みのため、カード内では省略して申請タブのカードと行数を揃える
-    const PACKING_RELEVANT_FLOWS = ['shipping', 'simple_inspection', 'inspection', 'tentative_shipping'];
     const renderPendingCard = item => {
         const machineHtml = item.machineName ? '<span class="side-card-machine">' + esc(item.machineName) + '</span>' : '';
-        const packingWarningHtml = (PACKING_RELEVANT_FLOWS.includes(item.flowType)
-            && getPackingDisplayState(item.pNum, packingShippingProjectNums.has(item.pNum)) === 'unknown')
-            ? '<span class="prog-card-badge-warning" style="margin-left:6px;">⚠ 梱包未定</span>' : '';
         return `
         <div class="side-card is-pending-action" onclick="openDetailModal('${item.id}')">
-            <div class="side-card-title">${esc(item.pNum)}${machineHtml}${packingWarningHtml}</div>
+            <div class="side-card-title">${esc(item.pNum)}${machineHtml}</div>
             <div class="side-card-sub">${fmtDate(item.date)}</div>
             <div class="side-card-status">${item.statusText}</div>
         </div>`;
@@ -967,12 +930,9 @@ async function loadMineSide() {
             : `openDetailModal('${req.id}')`;
         const flowLabel = esc(isNotifFlow ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type) : (FLOW_LABELS[req.flow_type] || req.flow_type));
         const machineHtml = req.machine_name ? '<span class="mine-col-machine">' + esc(req.machine_name) + '</span>' : '';
-        const packingWarningHtml = (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type)
-            && getPackingDisplayState(pNum, packingShippingProjectNums.has(pNum)) === 'unknown')
-            ? '<span class="prog-card-badge-warning" style="margin-left:6px;">⚠ 梱包未定</span>' : '';
         return `
         <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
-            <div class="mine-col-num">${esc(pNum)}${machineHtml}${resubmitBadge}${packingWarningHtml}</div>
+            <div class="mine-col-num">${esc(pNum)}${machineHtml}${resubmitBadge}</div>
             <div class="mine-col-date">${fmtDate(req.created_at)}</div>
             <div class="mine-col-status">${statusText}</div>
         </div>`;
@@ -1267,8 +1227,6 @@ function renderProgressCards() {
     const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
-    // 梱包出荷の有無を設定できるのは営業・品証・製管のみ
-    const canSetPacking = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isQualityOrSeikan;
 
     // 出荷予定日表示: 工程表（工場出荷タスク終了日）をベースに、仮出荷予定日→確定出荷日の順で上書きする
     // 確定出荷日が入ったらラベルも「出荷予定日」→「確定出荷日」に切り替える
@@ -1427,9 +1385,7 @@ function renderProgressCards() {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
         const machines = Object.keys(projectData[num]).sort();
-        const hasActualPackingTask = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
-        const packingState = getPackingDisplayState(num, hasActualPackingTask);
-        const hasAnyPacking = packingState === 'yes';
+        const hasAnyPacking = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
 
         // 機械ごとに出荷日が異なる場合は右上にまとめず各機械行に個別表示し、揃っている場合は従来通り右上に1本表示する
         const machineShipDates = machines.map(m => Object.assign({ machine: m }, getEffectiveShippingDateForMachine(num, m)));
@@ -1453,9 +1409,6 @@ function renderProgressCards() {
             packingDateLabel = effectivePackingDate
                 ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : '';
-        } else if (packingState === 'unknown' && !is2000sSeries(num) && !isTInspectionSeries(num) && !is5or7Series(num)) {
-            // 承認フロー対象外の工番（2000番台・点検系・5/7番台）は梱包出荷の概念自体が無関係なため対象外にする
-            packingDateLabel = `<span class="prog-card-badge-warning">⚠ 梱包出荷：未定</span>`;
         }
 
         const machineRows = machines.map(machine => {
@@ -2575,7 +2528,6 @@ async function openDetailModal(requestId) {
     // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
     // あわせて工程表側のタスク日付を取得し、承認フロー側の日付とのズレを検知する
     let hasPackingShipping = false;
-    let packingState = 'unknown'; // 'yes'（実タスクあり）/ 'no'（なしと設定済み）/ 'unknown'（未定）
     const shippingDateMismatches = [];
     if (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type)) {
         const [{ data: factoryTasks }, { data: packingTasks }] = await Promise.all([
@@ -2585,7 +2537,6 @@ async function openDetailModal(requestId) {
             db.from('tasks').select('end_date').eq('project_number', pNum).eq('text', '梱包出荷').limit(1)
         ]);
         hasPackingShipping = !!(packingTasks && packingTasks.length > 0);
-        packingState = getPackingDisplayState(pNum, hasPackingShipping);
 
         const factoryTaskDate = factoryTasks?.[0]?.end_date || null;
         const packingTaskDate = packingTasks?.[0]?.end_date || null;
@@ -2597,9 +2548,6 @@ async function openDetailModal(requestId) {
         }
         if (approvalPackingDate && packingTaskDate && approvalPackingDate !== packingTaskDate) {
             shippingDateMismatches.push(`梱包出荷: 承認フロー ${fmtDate(approvalPackingDate)} / 工程表 ${fmtDate(packingTaskDate)}`);
-        }
-        if (packingState === 'yes' && !hasPackingShipping) {
-            shippingDateMismatches.push('梱包出荷が「あり」に設定されていますが、工程表に梱包出荷タスクが未登録です');
         }
     }
     currentDetailHasPackingShipping = hasPackingShipping;
@@ -2933,7 +2881,7 @@ async function openDetailModal(requestId) {
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
+        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
@@ -2942,7 +2890,7 @@ async function openDetailModal(requestId) {
         `;
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && !req.tentative_shipping_date && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildTentativeDateFooterInner(req, hasPackingShipping, packingState);
+        footer.innerHTML = buildTentativeDateFooterInner(req, hasPackingShipping);
     } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
         && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
         footer.innerHTML = `
@@ -2962,21 +2910,15 @@ async function openDetailModal(requestId) {
 
 // ===== 営業: 確定出荷日入力フッター =====
 // hasPackingShipping=true の場合、梱包出荷日（確定）の入力欄も並べて表示する
-// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
-function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
+function buildSalesDateFooterInner(req, hasPackingShipping) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
             <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
         </div>` : '';
-    const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
-        <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
-        </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
-            ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
                 <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
@@ -2989,21 +2931,15 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
 
 // ===== 営業: 仮出荷予定日入力フッター =====
 // hasPackingShipping=true の場合、梱包出荷日（仮）の入力欄も並べて表示する
-// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
-function buildTentativeDateFooterInner(req, hasPackingShipping, packingState) {
+function buildTentativeDateFooterInner(req, hasPackingShipping) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
             <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
         </div>` : '';
-    const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
-        <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
-        </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
-            ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
                 <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
