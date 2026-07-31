@@ -249,6 +249,13 @@
         }
         .side-panel-close-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
+        .side-panel-filter {
+            padding: 6px 14px;
+            background: #f4f6fb;
+            border-bottom: 1px solid #e8ecf4;
+            flex-shrink: 0;
+        }
+
         /* 上下半分 */
         .side-half {
             flex: 1;
