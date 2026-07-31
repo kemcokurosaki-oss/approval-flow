@@ -1523,7 +1523,7 @@ function renderProgressCards() {
 function renderShipAfterPendingList(wrap) {
     const { baseNums, projectData } = progressCachedData;
 
-    let nums = baseNums.slice();
+    let nums = baseNums.filter(num => is2000sSeries(num) === (progressTab === 'assembly_report'));
     if (progressFilterMine) {
         const myName = currentProfile?.name;
         if (myName) {
