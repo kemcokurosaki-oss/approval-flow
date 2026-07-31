@@ -2175,6 +2175,9 @@ async function submitRequest() {
         }
     }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (currentFlowType === 'shipping_prep') {
+        if (!confirm(`${machineNums.length}機械の出荷準備完了を申請します。\n承認は不要で、関係者に完了通知がすぐに送信されます。よろしいですか？`)) return;
+    }
 
     const note    = document.getElementById('submit_note').value.trim();
     const btn     = document.getElementById('submit_btn');
