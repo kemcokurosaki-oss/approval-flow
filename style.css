@@ -124,8 +124,46 @@
         .prefix-btn.active { background: #546e7a; border-left-color: #fff; color: #fff; }
         /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
         .prefix-btn[data-prefix=""] { font-size: 14px; }
-        /* 「組立・試運転 完了報告」タブでは工番種別パネルが不要なため非表示にする */
+        /* 「2000番 完了報告」タブでは工番種別パネルが不要なため非表示にする */
         .main-layout.assembly-report-mode .prefix-panel { display: none; }
+
+        /* ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） ===== */
+        .assembly-nav-panel {
+            display: none;
+            width: 170px;
+            background: #f4f6fb;
+            border-right: 2px solid #dce1ec;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .main-layout.assembly-report-mode .assembly-nav-panel { display: flex; }
+        .anav-project-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e3a5f;
+            border-bottom: 1px solid #e3e8f0;
+            background: #fff;
+        }
+        .anav-project-header:hover { background: #edf2fc; }
+        .anav-caret { font-size: 10px; color: #78909c; width: 10px; flex-shrink: 0; }
+        .anav-machines { display: none; flex-direction: column; background: #f4f6fb; }
+        .anav-machines.open { display: flex; }
+        .anav-machine {
+            padding: 7px 10px 7px 26px;
+            font-size: 12px;
+            color: #455a64;
+            cursor: pointer;
+            border-bottom: 1px solid #e8ecf3;
+        }
+        .anav-machine:hover { background: #e0eaf8; }
+        /* 2000番台は組立・試運転の2ステップしかないため、カード幅を縮めて余白を減らす */
+        .main-layout.assembly-report-mode .prog-card { width: min(340px, 100%); }
 
         /* 再申請バッジ */
         .resubmit-badge {
