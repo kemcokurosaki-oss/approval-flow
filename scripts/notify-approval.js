@@ -271,10 +271,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'pending_item_assigned':
       return {
         from,
-        subject: `【ペンディング項目】${pStr}`,
+        subject: `【${itemLabel}】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr}（${flow}）のペンディング項目の担当者に割り当てられました。` +
+          `${pStr}（${flow}）の${itemLabel}の担当者に割り当てられました。` +
           detailLine +
           `\n承認フロー管理システムで内容を確認し、完了したら「完了にする」を押してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
@@ -283,10 +283,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'pending_item_completed':
       return {
         from,
-        subject: `【ペンディング完了】${pStr}`,
+        subject: `【${itemLabel}完了】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr}（${flow}）のペンディング項目が完了になりました。` +
+          `${pStr}（${flow}）の${itemLabel}が完了になりました。` +
           detailLine +
           `\n承認フロー管理システムで内容をご確認ください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
@@ -295,10 +295,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'pending_item_uncompleted':
       return {
         from,
-        subject: `【ペンディング完了取消】${pStr}`,
+        subject: `【${itemLabel}完了取消】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr}（${flow}）のペンディング項目の完了が取り消されました。` +
+          `${pStr}（${flow}）の${itemLabel}の完了が取り消されました。` +
           detailLine +
           `\n承認フロー管理システムで内容をご確認ください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
