@@ -1147,8 +1147,7 @@ function toggleCompletedView(checked) {
 function setProgressTab(tab) {
     progressTab = tab;
     progressFilterPrefix = ''; // タブ切替時は工番種別フィルタをリセット
-    assemblyNavExpandedNums = new Set();
-    assemblyNavSelectedMachineKey = '';
+    assemblyNavActiveNum = '';
     document.querySelector('.main-layout')?.classList.toggle('assembly-report-mode', tab === 'assembly_report');
     _syncProgressControls();
     renderProgressCards();
