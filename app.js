@@ -1810,7 +1810,11 @@ function openSubmitModal(flowType = 'assembly') {
         if (btnSubmit)  btnSubmit.style.display  = 'none';
     } else {
         if (btnGoSheet) btnGoSheet.style.display = 'none';
-        if (btnSubmit)  { btnSubmit.style.display = ''; btnSubmit.disabled = false; }
+        if (btnSubmit)  {
+            btnSubmit.style.display = '';
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = flowType === 'shipping_prep' ? '完了申請する' : '申請する';
+        }
     }
 
     document.getElementById('submit_modal').classList.add('open');
