@@ -577,6 +577,35 @@
             font-size: 13px;
             white-space: nowrap;
         }
+        .prog-card-packing-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .prog-card-packing-popup {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            z-index: 50;
+            flex-direction: column;
+            background: #fff;
+            border: 1px solid #d0dae8;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            min-width: 90px;
+            overflow: hidden;
+        }
+        .prog-card-packing-popup.is-open { display: flex; }
+        .prog-card-packing-popup button {
+            border: none;
+            background: none;
+            padding: 7px 12px;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+        }
+        .prog-card-packing-popup button:hover { background: #f0f4fa; }
 
         .prog-machine-row-header {
             display: flex;
