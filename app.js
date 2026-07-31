@@ -1337,12 +1337,12 @@ function renderProgressCards() {
         nums = nums.filter(num => matchesPrefix(num, progressFilterPrefix));
     }
 
-    // 2000番完了報告タブ：左ナビは工事番号選択フィルタ適用前の一覧を常に反映する
+    // 2000番完了報告タブ：左ナビは工事番号の展開フィルタ適用前の一覧を常に反映する
     renderAssemblyNavPanel(nums, projectData);
 
-    // 左ナビで工事番号を選択している場合は、その工事番号のみに絞り込む
-    if (progressTab === 'assembly_report' && assemblyNavSelectedNum) {
-        nums = nums.filter(num => num === assemblyNavSelectedNum);
+    // 左ナビで工事番号を展開している場合は、その工事番号群だけに絞り込む（何も展開していなければ全件表示）
+    if (progressTab === 'assembly_report' && assemblyNavExpandedNums.size > 0) {
+        nums = nums.filter(num => assemblyNavExpandedNums.has(num));
     }
 
     if (nums.length === 0) {
