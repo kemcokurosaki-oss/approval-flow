@@ -1517,6 +1517,38 @@ function renderProgressCards() {
     }).join('');
 
     wrap.innerHTML = html;
+    renderAssemblyNavPanel(nums, projectData);
+}
+
+// ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
+function renderAssemblyNavPanel(nums, projectData) {
+    const panel = document.getElementById('assembly_nav_panel');
+    if (!panel) return;
+    if (progressTab !== 'assembly_report') { panel.innerHTML = ''; return; }
+
+    panel.innerHTML = nums.map(num => {
+        const machines = Object.keys(projectData[num]).sort();
+        const machineItems = machines.map(m =>
+            `<div class="anav-machine" onclick="jumpToAssemblyMachine('${esc(num)}', '${esc(m)}')">${esc(m)}</div>`
+        ).join('');
+        return `<div class="anav-project">
+            <div class="anav-project-header" onclick="toggleAssemblyNavProject(this)">
+                <span class="anav-caret">▶</span><span class="anav-num">${esc(num)}</span>
+            </div>
+            <div class="anav-machines">${machineItems}</div>
+        </div>`;
+    }).join('');
+}
+
+function toggleAssemblyNavProject(headerEl) {
+    const machinesEl = headerEl.nextElementSibling;
+    const isOpen = machinesEl.classList.toggle('open');
+    headerEl.querySelector('.anav-caret').textContent = isOpen ? '▼' : '▶';
+}
+
+function jumpToAssemblyMachine(num, machine) {
+    const row = document.querySelector(`.prog-machine-row[data-num="${CSS.escape(num)}"][data-machine="${CSS.escape(machine)}"]`);
+    row?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===== 出荷後対応ペンディング一覧（完了済み工番も含めて全工番を横断表示） =====
