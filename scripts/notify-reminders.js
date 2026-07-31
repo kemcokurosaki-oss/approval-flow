@@ -39,6 +39,8 @@ const QA_MEETING_LABELS = {
   inspection:        '外観検査',
   shipping_meeting:  '出荷確認会議',
 };
+// 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
+const QA_MEETING_FLOWS = Object.keys(QA_MEETING_LABELS);
 
 // ペンディング期日超過催促のCC固定宛先（品証・製管）
 const PENDING_REMINDER_CC = [
