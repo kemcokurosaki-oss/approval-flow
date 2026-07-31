@@ -601,10 +601,18 @@ const shippingProjectNums      = new Set(); // 工場出荷タスクがある工
 const packingShippingProjectNums = new Set(); // 梱包出荷タスクがある工番
 const packingStatusMap = new Map(); // 工番 → 梱包出荷の有無('unknown'|'yes'|'no')。packing_shipping_status テーブルの内容
 
+// 梱包出荷「未定」表示・あり／なし選択の対象となる工番かどうか（4000番台・4C番のみ）
+function isPackingRelevantProject(num) {
+    const n = parseInt(num, 10);
+    return (n >= 4000 && n <= 4999) || /^4C/i.test(num);
+}
+
 // 梱包出荷の有無を3値で判定する。工程表に実タスクが存在する場合はそちらを優先し、
-// 無い場合のみ packing_shipping_status テーブルの意思表示（未定/なし）を見る
+// 対象工番（4000番台・4C番）でのみ packing_shipping_status テーブルの意思表示（未定/なし）を見る。
+// 対象外の工番は梱包出荷の概念自体が無関係なため常に 'no' 扱いにする
 function getPackingDisplayState(num, hasActualPackingTask) {
     if (hasActualPackingTask) return 'yes';
+    if (!isPackingRelevantProject(num)) return 'no';
     return packingStatusMap.get(num) || 'unknown';
 }
 

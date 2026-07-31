@@ -25,9 +25,8 @@
 
 <!-- ===== Main App ===== -->
 <div id="app" style="display:none;">
-    <div class="header">
-        <!-- 開発用ロール切替バー（黒崎のみ表示） -->
-        <div class="dev-bar" id="dev_bar" style="display:none;">
+    <!-- 開発用ロール切替バー（黒崎のみ表示） -->
+    <div class="dev-bar" id="dev_bar" style="display:none;">
             🛠 デモ用ロール切替：
             <select id="dev_role_select" onchange="switchDevRole(this.value)">
                 <option value="">── 製管スタッフ（黒崎の実際の画面）──</option>
@@ -41,47 +40,10 @@
                 <option value="production_control">製管</option>
                 <option value="sales">営業担当者</option>
             </select>
-            <span id="dev_role_label" style="font-weight:bold;"></span>
-        </div>
-        <div class="header-row1">
-            <div class="app-bar-title header-home-link" onclick="closeSettingsModal()" title="案件ボードに戻る">
-                <span id="page_title">案件ボード</span>
-                <span id="page_subtitle"></span>
-            </div>
-            <div class="header-tools">
-                <div class="board-search">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.6" stroke="#9aa5b6" stroke-width="1.6"></circle><path d="m10.6 10.6 3 3" stroke="#9aa5b6" stroke-width="1.6" stroke-linecap="round"></path></svg>
-                    <input type="text" id="board_search" placeholder="工事番号・客先名で検索" oninput="applyBoardSearch()" autocomplete="off">
-                </div>
-                <div class="psort-group">
-                    <button id="psort_job"      class="psort-btn active" onclick="setProgressSort('job')">工事番号順</button>
-                    <button id="psort_shipping" class="psort-btn"        onclick="setProgressSort('shipping')">出荷日順</button>
-                </div>
-            </div>
-        </div>
-        <div class="header-row2">
-            <span class="pfilter-group-label">絞り込み</span>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
-                <span>自分の担当</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_completed" onchange="toggleCompletedView(this.checked)">
-                <span>完了済み</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_overdue" onchange="setProgressFilterOverdue(this.checked)">
-                <span>未申請・未承認</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_ship_after" onchange="setProgressFilterShipAfter(this.checked)">
-                <span>出荷後対応</span>
-            </label>
-        </div>
+        <span id="dev_role_label" style="font-weight:bold;"></span>
     </div>
 
-    <div class="main">
-        <div class="main-layout">
+    <div class="app-body">
             <nav class="app-rail">
                 <div class="rail-brand">
                     <div class="rail-brand-mark">
@@ -146,6 +108,47 @@
                     </div>
                 </div>
             </nav>
+        <div class="app-main">
+        <div class="header">
+        <div class="header-row1">
+            <div class="app-bar-title header-home-link" onclick="closeSettingsModal()" title="案件ボードに戻る">
+                <span id="page_title">案件ボード</span>
+                <span id="page_subtitle"></span>
+            </div>
+            <div class="header-tools">
+                <div class="board-search">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.6" stroke="#9aa5b6" stroke-width="1.6"></circle><path d="m10.6 10.6 3 3" stroke="#9aa5b6" stroke-width="1.6" stroke-linecap="round"></path></svg>
+                    <input type="text" id="board_search" placeholder="工事番号・客先名で検索" oninput="applyBoardSearch()" autocomplete="off">
+                </div>
+                <div class="psort-group">
+                    <button id="psort_job"      class="psort-btn active" onclick="setProgressSort('job')">工事番号順</button>
+                    <button id="psort_shipping" class="psort-btn"        onclick="setProgressSort('shipping')">出荷日順</button>
+                </div>
+            </div>
+        </div>
+        <div class="header-row2">
+            <span class="pfilter-group-label">絞り込み</span>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
+                <span>自分の担当</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_completed" onchange="toggleCompletedView(this.checked)">
+                <span>完了済み</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_overdue" onchange="setProgressFilterOverdue(this.checked)">
+                <span>未申請・未承認</span>
+            </label>
+            <label class="pfilter-label">
+                <input type="checkbox" id="pfilter_ship_after" onchange="setProgressFilterShipAfter(this.checked)">
+                <span>出荷後対応</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="main-layout">
             <!-- メイン：進捗一覧 -->
             <div class="main-content">
                 <div id="tab_content_progress"><div class="loading-indicator">読み込み中...</div></div>
@@ -194,6 +197,8 @@
             <div class="settings-page-body" id="settings_body">
                 <div class="loading-indicator">読み込み中...</div>
             </div>
+        </div>
+    </div>
         </div>
     </div>
 </div>
