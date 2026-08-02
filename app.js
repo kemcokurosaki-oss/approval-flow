@@ -3139,7 +3139,7 @@ function closeDetailModal() {
     ui.send('CLOSE');
 }
 
-// ===== 設定画面（製管2名のみ） =====
+// ===== 設定画面（製管3名のみ） =====
 let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
 
 // 設定画面のカテゴリ構成。項目を増やす時はここに追記するだけでよい
