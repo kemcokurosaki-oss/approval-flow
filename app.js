@@ -218,7 +218,7 @@ function canApplyFlow(flowType) {
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
 // 設定画面を開けるユーザー（製管2名）。開発用ロール切替バーの表示条件としても使う
-const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com'];
+const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com', 'm2-kusakabe@kusakabe.com'];
 
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
