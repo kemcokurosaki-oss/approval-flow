@@ -609,8 +609,9 @@ function isPackingRelevantProject(num) {
     return (n >= 4000 && n <= 4999) || /^4C/i.test(num);
 }
 
-// 梱包出荷の有無を3値で判定する。工程表に実タスクが存在する場合はそちらを優先し、
-// 対象工番（4000番台・4C番）でのみ packing_shipping_status テーブルの意思表示（未定/なし）を見る。
+// 梱包出荷の有無を3値で判定する。工程表に日付入りの実タスクが存在する場合はそちらを優先し
+// （開始日・終了日が空のプレースホルダータスクは「未定」のまま扱う）、
+// 対象工番（4000番台・4C番）でのみ packing_shipping_status テーブルの意思表示（未定/あり/なし）を見る。
 // 対象外の工番は梱包出荷の概念自体が無関係なため常に 'no' 扱いにする
 function getPackingDisplayState(num, hasActualPackingTask) {
     if (hasActualPackingTask) return 'yes';
