@@ -1509,6 +1509,13 @@ function renderProgressCards() {
             packingDateLabel = effectivePackingDate
                 ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : '';
+        } else if (packingState === 'unknown') {
+            // 梱包出荷「未定」表示・あり／なし選択は4000番台・4C番の工番のみが対象（getPackingDisplayState内で判定）
+            // 権限があるロールはバッジをクリックしてその場で「あり・なし」を選択できる。
+            // ポップアップは他のカード表示と重ならないよう、共有要素を position:fixed でバッジの真下に動的配置する（togglePackingPopup参照）
+            const badgeClass = canSetPacking ? 'prog-card-badge-warning is-clickable' : 'prog-card-badge-warning';
+            const badgeOnclick = canSetPacking ? ` onclick="event.stopPropagation(); togglePackingPopup(event, '${num}')"` : '';
+            packingDateLabel = `<span class="${badgeClass}"${badgeOnclick}>⚠ 梱包出荷：未定${canSetPacking ? ' ▾' : ''}</span>`;
         }
 
         const machineRows = machines.map(machine => {
