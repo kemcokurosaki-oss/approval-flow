@@ -1178,10 +1178,14 @@ async function loadProgress() {
 
     // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議/梱包出荷はproject全体に1つの場合がある
     const { data: projectFlowTasks } = await db.from('tasks')
-        .select('project_number, text, end_date, is_completed')
+        .select('project_number, text, start_date, end_date, is_completed')
         .in('text', ['簡易検査', '外観検査', '出荷確認会議', '梱包出荷']);
+    // 梱包出荷は有無未定の間、開始日・終了日が空のプレースホルダータスクとして工程表に常設されるため、
+    // 実際に日付が入って初めて「梱包出荷タスクあり」として扱う（他のフローは元々日付必須のため対象外）
     const projectFlowSet = new Set(
-        (projectFlowTasks || []).map(t => `${(t.project_number||'').toString().trim()}__${t.text}`)
+        (projectFlowTasks || [])
+            .filter(t => t.text !== '梱包出荷' || t.start_date)
+            .map(t => `${(t.project_number||'').toString().trim()}__${t.text}`)
     );
     const hasProjectFlow = (num, text) => projectFlowSet.has(`${num}__${text}`);
 
