@@ -679,14 +679,13 @@ document.addEventListener('click', () => {
 async function choosePackingStatus(num, status) {
     const el = document.getElementById('shared_packing_popup');
     if (el) el.classList.remove('is-open');
-    if (status === 'yes') {
-        // 「あり」は続けて日付入力（仮の日付でOK）を行い、保存確定時に状態＋工程表への反映を行う
-        // （日付未確定のまま「あり」だけ確定させると、工程表側が空日付のまま取り残されるため）
-        openPackingDateModal(num);
-        return;
-    }
     await setPackingShippingStatus(num, status);
-    await deleteEmptyPackingTasks(num);
+    if (status === 'no') {
+        // 「なし」確定時、工程表に残っている空日付のプレースホルダータスクは不要になるため削除する
+        await deleteEmptyPackingTasks(num);
+    }
+    // 「あり」の場合は工程表には触れない。右上表示が「梱包出荷日：未定」に変わり、
+    // 後で仮出荷日（packing_tentative_shipping_date等）が入力された時点で実際の日付表示に切り替わる
     renderProgressCards();
 }
 
@@ -702,48 +701,6 @@ async function deleteEmptyPackingTasks(projectNumber) {
             .is('end_date', null);
     } catch (e) {
         console.warn('梱包出荷タスクの削除に失敗:', e);
-    }
-}
-
-// ===== 梱包出荷「あり」選択時の日付入力モーダル =====
-let packingDateModalNum = null;
-
-function openPackingDateModal(num) {
-    packingDateModalNum = num;
-    document.getElementById('packing_date_modal_input').value = '';
-    const btn = document.getElementById('btn_save_packing_date');
-    btn.disabled = false; btn.textContent = '保存';
-    document.getElementById('packing_date_modal').classList.add('open');
-}
-
-function closePackingDateModal() {
-    document.getElementById('packing_date_modal').classList.remove('open');
-    packingDateModalNum = null;
-}
-
-async function savePackingDate() {
-    const num = packingDateModalNum;
-    if (!num) return;
-    const dateVal = document.getElementById('packing_date_modal_input').value;
-    if (!dateVal) { showToast('日付を入力してください', 'error'); return; }
-
-    const btn = document.getElementById('btn_save_packing_date');
-    btn.disabled = true; btn.textContent = '保存中...';
-
-    try {
-        await setPackingShippingStatus(num, 'yes');
-        // 工程表側の梱包出荷タスク（開始日・終了日が空のもの）に日付を反映する。
-        // 開始日・終了日は同じ日でよい（仮の日付として、後で正式な出荷日入力時に上書きされる）
-        await db.from('tasks')
-            .update({ start_date: dateVal, end_date: dateVal })
-            .eq('project_number', num)
-            .eq('text', '梱包出荷')
-            .is('start_date', null);
-        closePackingDateModal();
-        renderProgressCards();
-    } catch (e) {
-        showToast('保存に失敗しました: ' + e.message, 'error');
-        btn.disabled = false; btn.textContent = '保存';
     }
 }
 
