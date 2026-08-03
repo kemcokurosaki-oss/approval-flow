@@ -2648,9 +2648,11 @@ async function openDetailModal(requestId) {
             req.machine_name
                 ? db.from('tasks').select('end_date').eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '工場出荷').limit(1)
                 : Promise.resolve({ data: [] }),
-            db.from('tasks').select('end_date').eq('project_number', pNum).eq('text', '梱包出荷').limit(1)
+            db.from('tasks').select('start_date, end_date').eq('project_number', pNum).eq('text', '梱包出荷').limit(1)
         ]);
-        hasPackingShipping = !!(packingTasks && packingTasks.length > 0);
+        // 梱包出荷は有無未定の間、開始日・終了日が空のプレースホルダータスクとして工程表に常設されるため、
+        // 実際に日付が入って初めて「梱包出荷あり」として扱う
+        hasPackingShipping = !!(packingTasks && packingTasks.length > 0 && packingTasks[0].start_date);
         packingState = getPackingDisplayState(pNum, hasPackingShipping);
 
         const factoryTaskDate = factoryTasks?.[0]?.end_date || null;
