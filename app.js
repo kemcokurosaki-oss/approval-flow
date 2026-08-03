@@ -217,7 +217,7 @@ function canApplyFlow(flowType) {
 // 承認者ロール一覧
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
-// 設定画面を開けるユーザー（製管3名）。開発用ロール切替バーの表示条件としても使う
+// 設定画面を開けるユーザー（製管2名）。開発用ロール切替バーの表示条件としても使う
 const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com', 'm2-kusakabe@kusakabe.com'];
 
 function applyRoleLayout(role) {
@@ -496,12 +496,12 @@ async function bootApp(session) {
 
     currentProfile = profile;
     document.getElementById('login_overlay').classList.remove('visible');
-    document.getElementById('app').style.display = 'block';
+    document.getElementById('app').style.display = 'flex';
     document.getElementById('user_name_display').textContent =
         profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;
 
-    // 製管3名のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
+    // 製管2名のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
         document.getElementById('dev_bar').style.display = 'flex';
         document.getElementById('app').classList.add('has-dev-bar');
@@ -3139,7 +3139,7 @@ function closeDetailModal() {
     ui.send('CLOSE');
 }
 
-// ===== 設定画面（製管3名のみ） =====
+// ===== 設定画面（製管2名のみ） =====
 let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
 
 // 設定画面のカテゴリ構成。項目を増やす時はここに追記するだけでよい
