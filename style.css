@@ -1821,8 +1821,7 @@
         .prefix-panel::before,
         .assembly-nav-panel::before { content: '工番種別'; color: #5f759b; font-size: 10px; font-weight: 700; letter-spacing: .1em; padding: 6px 10px 8px; }
         .assembly-nav-panel::before { content: '工事番号'; }
-        .prefix-btn { border: none; border-bottom: none; border-radius: 8px; background: transparent; color: #a9bbd6; font-family: inherit; font-size: 12px; font-weight: 500; padding: 9px 10px; }
-        .prefix-btn[data-prefix=""] { font-size: 12px; }
+        .prefix-btn { border: none; border-bottom: none; border-radius: 8px; background: transparent; color: #a9bbd6; font-family: inherit; font-size: 13px; font-weight: 500; padding: 9px 10px; }
         .prefix-btn:hover { background: #1d3054; color: #fff; }
         .prefix-btn:active { transform: none; background: #1d3054; border-left-color: transparent; }
         .prefix-btn.active { background: #1d3054; color: #fff; font-weight: 700; border-left-color: transparent; }
