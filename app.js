@@ -572,7 +572,9 @@ async function loadProjects() {
         if (taskText === '試運転')     testRunProjectNums.add(num);
         if (taskText === '出荷確認会議') shippingMeetingProjectNums.add(num);
         if (taskText === '工場出荷')   shippingProjectNums.add(num);
-        if (taskText === '梱包出荷')   packingShippingProjectNums.add(num);
+        // 梱包出荷は有無未定の間、開始日・終了日が空のプレースホルダータスクとして工程表に常設されるため、
+        // 実際に日付が入って初めて「梱包出荷あり」として扱う
+        if (taskText === '梱包出荷' && t.start_date) packingShippingProjectNums.add(num);
         // 工場出荷タスクの end_date を出荷日として保存（複数機械がある場合は最も早い日付）
         if (taskText === '工場出荷' && t.end_date) {
             const existing = projectsMap[num].shipping_date;
