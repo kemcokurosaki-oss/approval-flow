@@ -1534,9 +1534,11 @@ function renderProgressCards() {
         let packingDateLabel = '';
         if (hasAnyPacking) {
             const { date: effectivePackingDate, isConfirmed: packingDateConfirmed } = getEffectivePackingShippingDate(num);
+            // 「あり」確定後、まだ仮出荷日等が未入力の間は日付欄に「未定」を表示する
+            // （工程表の梱包出荷タスクには触れず、承認フロー側の表示のみ切り替える）
             packingDateLabel = effectivePackingDate
                 ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
-                : '';
+                : `<span class="prog-card-date"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">未定</span></span>`;
         } else if (packingState === 'unknown') {
             // 梱包出荷「未定」表示・あり／なし選択は4000番台・4C番の工番のみが対象（getPackingDisplayState内で判定）
             // 権限があるロールはバッジをクリックしてその場で「あり・なし」を選択できる。
