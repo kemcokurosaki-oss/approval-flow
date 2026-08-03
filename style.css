@@ -131,8 +131,6 @@
         .prefix-btn:hover { background: #edf2fc; }
         .prefix-btn:active { transform: translateY(1px); background: #e0eaf8; border-left-color: #546e7a; }
         .prefix-btn.active { background: #546e7a; border-left-color: #fff; color: #fff; }
-        /* 日本語「全て」はNoto Sans JPのem-squareが大きいため一段小さくして視覚的に揃える */
-        .prefix-btn[data-prefix=""] { font-size: 14px; }
         /* 「2000番 完了報告」タブでは工番種別パネルが不要なため非表示にする */
         .main-layout.assembly-report-mode .prefix-panel { display: none; }
 
