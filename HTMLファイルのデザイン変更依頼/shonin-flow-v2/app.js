@@ -1323,6 +1323,8 @@ function renderProgressCards() {
     const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
+    // 梱包出荷の有無を設定できるのは営業・品証・製管のみ
+    const canSetPacking = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isQualityOrSeikan;
 
     // 出荷予定日表示: 工程表（工場出荷タスク終了日）をベースに、仮出荷予定日→確定出荷日の順で上書きする
     // 確定出荷日が入ったらラベルも「出荷予定日」→「確定出荷日」に切り替える
