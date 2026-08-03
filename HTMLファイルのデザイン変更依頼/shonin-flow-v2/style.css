@@ -566,6 +566,45 @@
             text-overflow: ellipsis;
         }
         .prog-card-date-value { font-size: 15px; flex-shrink: 0; }
+        .prog-card-badge-warning {
+            display: inline-block;
+            box-sizing: border-box;
+            color: #8a6100;
+            background: #fdf3d9;
+            border: 1px solid #f0d999;
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .prog-card-badge-warning.is-clickable { cursor: pointer; }
+        .prog-card-badge-warning.is-clickable:hover { background: #fbe8b8; }
+        /* 他のカード表示と重ならないよう、position:fixed でクリックされたバッジの真下に動的配置する（app.js側でtop/rightを設定） */
+        .prog-card-packing-popup {
+            display: none;
+            position: fixed;
+            z-index: 500;
+            flex-direction: column;
+            background: #fff;
+            border: 1px solid #d0dae8;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            min-width: 90px;
+            overflow: hidden;
+            font-family: inherit;
+        }
+        .prog-card-packing-popup.is-open { display: flex; }
+        .prog-card-packing-popup button {
+            border: none;
+            background: none;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+        }
+        .prog-card-packing-popup button:hover { background: #f0f4fa; }
 
         .prog-machine-row-header {
             display: flex;
