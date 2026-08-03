@@ -746,6 +746,26 @@
     </div>
 </div>
 
+<!-- ===== 梱包出荷「あり」選択時の日付入力モーダル ===== -->
+<div id="packing_date_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>梱包出荷日を入力</h2>
+            <button class="modal-close" onclick="closePackingDateModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>梱包出荷日（仮でOK） *</label>
+                <input type="date" id="packing_date_modal_input">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closePackingDateModal()">キャンセル</button>
+            <button class="btn btn-success"   id="btn_save_packing_date" onclick="savePackingDate()">保存</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== Detail Modal ===== -->
 <div id="detail_modal" class="modal-overlay">
     <div class="modal">
