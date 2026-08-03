@@ -1848,7 +1848,7 @@
         .prog-machine-row { margin-top: 14px; padding-top: 16px; border-top: 1px solid #f1f4f9; }
         .prog-machine-row:first-of-type { padding-top: 6px; }
         .prog-machine-label { font-size: 13px; font-weight: 700; color: #5b6b80; }
-        .flow-steps { overflow-x: auto; padding-bottom: 4px; }
+        .flow-steps { overflow-x: auto; padding-top: 8px; padding-bottom: 4px; }
         .flow-node { min-width: 88px; gap: 8px; }
         .flow-circle { width: 40px; height: 40px; font-size: 16px; font-weight: 700; border: 2px solid transparent; }
         .fc-done     { background: #2ba55d; border-color: #2ba55d; }
