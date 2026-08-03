@@ -3022,15 +3022,21 @@ async function openDetailModal(requestId) {
 
 // ===== 営業: 確定出荷日入力フッター =====
 // hasPackingShipping=true の場合、梱包出荷日（確定）の入力欄も並べて表示する
-function buildSalesDateFooterInner(req, hasPackingShipping) {
+// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
+function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
             <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
         </div>` : '';
+    const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
+        <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
+        </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
+            ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
                 <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
@@ -3043,15 +3049,21 @@ function buildSalesDateFooterInner(req, hasPackingShipping) {
 
 // ===== 営業: 仮出荷予定日入力フッター =====
 // hasPackingShipping=true の場合、梱包出荷日（仮）の入力欄も並べて表示する
-function buildTentativeDateFooterInner(req, hasPackingShipping) {
+// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
+function buildTentativeDateFooterInner(req, hasPackingShipping, packingState) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
             <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
         </div>` : '';
+    const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
+        <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
+            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
+        </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
+            ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
                 <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
