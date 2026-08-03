@@ -599,6 +599,86 @@ const testRunProjectNums       = new Set(); // 試運転タスクがある工番
 const shippingMeetingProjectNums = new Set(); // 出荷確認会議タスクがある工番
 const shippingProjectNums      = new Set(); // 工場出荷タスクがある工番
 const packingShippingProjectNums = new Set(); // 梱包出荷タスクがある工番
+const packingStatusMap = new Map(); // 工番 → 梱包出荷の有無('unknown'|'yes'|'no')。packing_shipping_status テーブルの内容
+
+// 梱包出荷「未定」表示・あり／なし選択の対象となる工番かどうか（4000番台・4C番のみ）
+function isPackingRelevantProject(num) {
+    const n = parseInt(num, 10);
+    return (n >= 4000 && n <= 4999) || /^4C/i.test(num);
+}
+
+// 梱包出荷の有無を3値で判定する。工程表に実タスクが存在する場合はそちらを優先し、
+// 対象工番（4000番台・4C番）でのみ packing_shipping_status テーブルの意思表示（未定/なし）を見る。
+// 対象外の工番は梱包出荷の概念自体が無関係なため常に 'no' 扱いにする
+function getPackingDisplayState(num, hasActualPackingTask) {
+    if (hasActualPackingTask) return 'yes';
+    if (!isPackingRelevantProject(num)) return 'no';
+    return packingStatusMap.get(num) || 'unknown';
+}
+
+async function setPackingShippingStatus(projectNumber, status) {
+    try {
+        await db.from('packing_shipping_status').upsert({
+            project_number: projectNumber,
+            status,
+            updated_by:     currentUser.id,
+            updated_at:     new Date().toISOString()
+        }, { onConflict: 'project_number' });
+        packingStatusMap.set(projectNumber, status);
+        showToast('梱包出荷の有無を更新しました');
+    } catch (e) {
+        console.warn('梱包出荷有無の更新に失敗:', e);
+        showToast('更新に失敗しました', 'error');
+    }
+}
+
+// 梱包出荷「あり・なし」選択ポップアップは、他のカード表示と重ならないよう
+// body直下に1つだけ共有要素を作り、クリックされたバッジの真下・右揃えに毎回位置を計算して表示する
+function ensurePackingPopupEl() {
+    let el = document.getElementById('shared_packing_popup');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'shared_packing_popup';
+    el.className = 'prog-card-packing-popup';
+    el.innerHTML = `
+        <button type="button" data-status="yes">あり</button>
+        <button type="button" data-status="no">なし</button>
+    `;
+    document.body.appendChild(el);
+    el.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', evt => {
+            evt.stopPropagation();
+            const num = el.dataset.num;
+            el.classList.remove('is-open');
+            if (num) choosePackingStatus(num, btn.dataset.status);
+        });
+    });
+    return el;
+}
+
+// 進捗カードの「梱包出荷：未定」バッジをクリックした時に、あり・なしを選ぶポップアップを開閉する
+function togglePackingPopup(evt, num) {
+    const el = ensurePackingPopupEl();
+    const wasOpenForSameCard = el.classList.contains('is-open') && el.dataset.num === num;
+    el.classList.remove('is-open');
+    if (wasOpenForSameCard) return;
+    const rect = evt.currentTarget.getBoundingClientRect();
+    el.style.top   = (rect.bottom + 4) + 'px';
+    el.style.right = (window.innerWidth - rect.right) + 'px';
+    el.dataset.num = num;
+    el.classList.add('is-open');
+}
+document.addEventListener('click', () => {
+    const el = document.getElementById('shared_packing_popup');
+    if (el) el.classList.remove('is-open');
+});
+
+async function choosePackingStatus(num, status) {
+    const el = document.getElementById('shared_packing_popup');
+    if (el) el.classList.remove('is-open');
+    await setPackingShippingStatus(num, status);
+    renderProgressCards();
+}
 
 async function onProjectChange() {
     const num    = currentProjectNum;
