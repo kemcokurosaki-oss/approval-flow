@@ -96,7 +96,8 @@
     .note.warn { background: #fdf1ed; border-left-color: #d9714a; color: #7a3a22; }
 
     /* ---------- スクリーンショット ---------- */
-    .shot {
+    /* ---------- 実画面モックアップ（アプリと同じCSS設計を再現した静止表示） ---------- */
+    .mockup {
         position: relative;
         max-width: 900px;
         margin: 18px 0 26px;
@@ -105,25 +106,116 @@
         overflow: hidden;
         box-shadow: 0 8px 24px rgba(20,36,63,.10);
         background: #fff;
+        font-size: 14px;
     }
-    .shot img { display: block; width: 100%; height: auto; }
-    .shot figcaption {
+    .mockup-caption {
         font-size: 12.5px;
         color: #6a7890;
         padding: 8px 14px;
         border-top: 1px solid #eef1f6;
         background: #f8fafc;
     }
-    .shot.broken { min-height: 200px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(45deg,#f3f5f9,#f3f5f9 10px,#eaeef4 10px,#eaeef4 20px); }
-    .shot.broken img { display: none; }
-    .shot.broken::before {
-        content: "画像未配置：guide_images/" attr(data-name) " を用意してください";
-        color: #8a94a6;
-        font-size: 13px;
-        text-align: center;
-        padding: 20px;
-    }
-    .shot.broken figcaption { display: none; }
+    .mockup-bg { background: #edf1f7; padding: 20px; }
+    .mockup-panel-wrap { background: #edf1f7; padding: 20px; display: flex; justify-content: center; }
+    .mockup-panel { background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(20,36,63,.14); width: 100%; max-width: 640px; overflow: hidden; }
+
+    /* 進捗カード（承認ステータス／2000番完了報告） */
+    .prog-card { background: #fff; border-radius: 14px; border: 1px solid #e5e9f1; box-shadow: 0 1px 2px rgba(20,36,63,.05), 0 6px 18px rgba(20,36,63,.04); padding: 15px 20px 18px; margin-bottom: 12px; }
+    .prog-card:last-child { margin-bottom: 0; }
+    .prog-card-header { margin-bottom: 2px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .prog-card-num { font-size: 20px; font-weight: 700; color: #16233a; letter-spacing: .01em; }
+    .prog-card-label { font-size: 14px; color: #7c8798; margin-left: 10px; }
+    .prog-card-dates { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .prog-card-date { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; min-width: 190px; border-radius: 9px; padding: 7px 12px; background: #f5f7fb; border: 1px solid #e3e8f0; color: #4a5768; white-space: nowrap; }
+    .prog-card-date-label { font-size: 12px; font-weight: 700; opacity: .78; }
+    .prog-card-date-value { font-size: 15px; font-weight: 700; }
+    .prog-machine-row { margin-top: 14px; padding-top: 16px; border-top: 1px solid #f1f4f9; }
+    .prog-machine-row:first-of-type { margin-top: 0; padding-top: 6px; border-top: none; }
+    .prog-machine-row-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 7px; flex-wrap: wrap; }
+    .prog-machine-label { font-size: 14px; font-weight: 700; color: #5b6b80; }
+
+    .flow-steps { display: flex; align-items: flex-start; width: 100%; overflow-x: auto; padding-top: 8px; padding-bottom: 4px; }
+    .flow-node { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 88px; }
+    .flow-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; border: 2px solid transparent; }
+    .fc-done   { background: #2ba55d; border-color: #2ba55d; color: #fff; }
+    .fc-active { background: #f0a020; border-color: #f0a020; color: #fff; box-shadow: 0 0 0 4px rgba(240,160,32,.18); }
+    .fc-draft  { background: #fff; color: #8593a8; border: 2px dashed #9fb0c6; font-size: 15px; }
+    .fc-empty  { background: #fff; color: #d5dce6; border: 2px solid #e0e6ef; }
+    .fc-play-icon { font-size: 16px; display: inline-block; transform: translate(1px, -1px); }
+    .flow-label { font-size: 14px; font-weight: 700; color: #3d4a5d; max-width: 88px; text-align: center; line-height: 1.3; }
+    .flow-date { font-size: 12px; color: #8a94a6; text-align: center; line-height: 1.2; white-space: nowrap; }
+    .flow-pending-badge, .flow-overdue-badge { font-size: 12px; border-radius: 20px; padding: 2px 9px; font-weight: bold; white-space: nowrap; }
+    .flow-pending-badge { background: #f6edfa; color: #8e44ad; }
+    .flow-overdue-badge { background: #fdecec; color: #c0392b; }
+    .flow-connector { flex: 1; height: 3px; border-radius: 2px; margin-top: 19px; min-width: 26px; }
+    .fc-line-done    { background: #bfe4cd; }
+    .fc-line-pending { background: #e6ebf3; }
+
+    /* マイページ（サイドパネル） */
+    .side-panel-header { height: 52px; padding: 0 16px; background: #16233a; display: flex; align-items: center; justify-content: space-between; }
+    .side-panel-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .side-panel-title svg, .side-half-icon svg { display: block; }
+    .side-panel-close-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(255,255,255,.14); color: #fff; font-size: 13px; }
+    .side-panel-filter { padding: 11px 14px; background: #fff; border-bottom: 1px solid #eef1f6; }
+    .mypage-filter-group { display: flex; align-items: center; gap: 6px; }
+    .mypage-filter-btn { padding: 5px 12px; border: 1px solid #e0e6ef; border-radius: 20px; background: #fff; color: #5b6b80; font-size: 13px; }
+    .mypage-filter-btn.active { background: #16233a; border-color: #16233a; color: #fff; font-weight: 700; }
+    .side-half { border-bottom: 1px solid #eef1f6; }
+    .side-half:last-child { border-bottom: none; }
+    .side-half-header { padding: 11px 16px; font-size: 14px; font-weight: bold; color: #fff; background: #16233a; display: flex; align-items: center; gap: 10px; }
+    .side-half-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: #8fb4e0; flex-shrink: 0; }
+    .side-half-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+    .side-half-desc { font-size: 12px; font-weight: 400; color: #8ea6c8; margin-right: auto; white-space: nowrap; }
+    .side-half-arrow { margin-left: auto; font-size: 15px; color: #8ea6c8; }
+    .side-half-header .badge { margin-left: 2px; }
+    .side-half-content-sections { display: flex; flex-direction: column; gap: 18px; padding: 14px 16px; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; background: #e5484d; color: #fff; border-radius: 10px; font-size: 11px; font-weight: bold; }
+
+    .mine-flow-section-title { display: flex; align-items: center; gap: 8px; padding: 7px 11px; margin: 0 0 10px; background: #eef2f8; border-left: 3px solid #2f6fb0; border-radius: 7px; }
+    .mine-flow-name { font-size: 13px; font-weight: 700; color: #16233a; }
+    .mine-flow-count { display: inline-flex; align-items: center; justify-content: center; min-width: 19px; height: 18px; padding: 0 6px; border-radius: 9px; background: #fff; color: #5b6b80; font-size: 11px; font-weight: 700; }
+    .mine-flow-section-arrow { margin-left: auto; font-size: 13px; color: #9aa5b6; }
+
+    .mine-kanban-row, .pending-flow-list { display: grid; grid-template-columns: 1fr 20px 1fr 20px 1fr 20px 1fr; column-gap: 6px; align-items: start; padding-left: 11px; }
+    .pending-flow-list { row-gap: 6px; }
+    .pending-flow-list .side-card { grid-column: 1; margin: 0; }
+    .kanban-col { background: #f6f8fb; border: 1px solid #eef1f6; border-radius: 10px; }
+    .kanban-col-header { padding: 9px 10px 6px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #7c8798; display: flex; align-items: center; justify-content: space-between; }
+    .kanban-col-body { padding: 7px; }
+    .kanban-col-empty { color: #b6c1d2; font-size: 12px; text-align: center; padding: 16px 4px; }
+    .kanban-arrow { align-self: start; text-align: center; font-size: 17px; font-weight: 700; color: #c3ccd9; padding-top: 10px; }
+
+    .side-card { background: #fff; border-radius: 9px; padding: 9px 11px; margin-bottom: 6px; border: 1px solid #e0e4ec; box-shadow: 0 1px 2px rgba(20,36,63,.04); }
+    .side-card.is-draft          { border-left: 3px solid #98a3b4; }
+    .side-card.is-waiting        { border-left: 3px solid #f0a020; background: #fffdf8; }
+    .side-card.is-pending-action { border-left: 3px solid #e5484d; background: #fffafa; }
+    .side-card.is-pending-action .side-card-title { color: #c0392b; }
+    .mine-col-num, .side-card-title { font-size: 15px; font-weight: 700; color: #16233a; }
+    .mine-col-date, .side-card-sub { font-size: 13px; color: #6b7789; margin-top: 3px; }
+    .mine-col-status, .side-card-status { font-size: 13px; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+    .si-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; font-weight: bold; flex-shrink: 0; color: #fff; }
+    .si-orange { background: #f0a020; }
+    .si-gray   { background: #98a3b4; }
+    .si-green  { background: #2ba55d; }
+    .si-red    { background: #e5484d; }
+
+    /* 左サイドメニュー（レール） */
+    .mockup-rail { width: 216px; background: #14243f; padding: 16px 10px 14px; }
+    .rail-brand { display: flex; align-items: center; gap: 10px; padding: 0 6px 16px; }
+    .rail-brand-mark2 { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #4f9ddb, #2f6fb0); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rail-brand-text2 { display: flex; flex-direction: column; line-height: 1.2; }
+    .rail-brand-name2 { color: #fff; font-size: 13px; font-weight: 700; }
+    .rail-brand-sub2  { color: #7d93b8; font-size: 11px; letter-spacing: .06em; }
+    .rail-label2 { padding: 10px 10px 6px; color: #5f759b; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+    .ptab-btn2, .side-tab-row2 { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 8px; background: transparent; color: #a9bbd6; font-size: 14px; font-weight: 500; text-align: left; }
+    .ptab-btn2.active { color: #fff; background: linear-gradient(135deg, #4f9ddb, #3d7dbd); box-shadow: 0 2px 6px rgba(61,125,189,.35); }
+    .side-tab-row2 .badge { margin-left: auto; }
+    .rail-icon2 { display: inline-flex; align-items: center; justify-content: center; width: 16px; flex-shrink: 0; }
+    .prefix-btn2 { display: block; width: 100%; padding: 9px 10px; border: none; border-radius: 8px; background: transparent; color: #a9bbd6; font-size: 14px; font-weight: 500; text-align: left; }
+    .prefix-btn2.active { background: #1d3054; color: #fff; font-weight: 700; }
+    .rail-user-btn2 { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: transparent; color: #e8eef8; font-size: 13px; }
+    .rail-avatar2 { width: 28px; height: 28px; border-radius: 50%; background: #2f6fb0; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rail-user-name2 { flex: 1; text-align: left; font-weight: 700; }
 
     /* ---------- フローの図 ---------- */
     .flowline { display: flex; align-items: center; flex-wrap: wrap; gap: 0; max-width: 900px; margin: 20px 0 8px; }
@@ -262,7 +354,7 @@
             <div class="section-eyebrow">Chapter 3</div>
             <h2>画面の基本構成</h2>
             <p>ログイン後、画面左側に常に表示されるメニューから各機能に移動します。</p>
-            <figure class="shot broken" data-name="05_sidebar_menu.png">
+            <figure class="shot" data-name="05_sidebar_menu.png">
                 <img src="guide_images/05_sidebar_menu.png" alt="左サイドメニュー" onerror="this.parentElement.classList.add('broken')">
                 <figcaption>左サイドメニュー：承認ステータス／2000番 完了報告／マイページ／使い方ガイド、下部に工番種別の絞り込みが並ぶ</figcaption>
             </figure>
@@ -279,7 +371,7 @@
             <div class="section-eyebrow">Chapter 4</div>
             <h2>承認ステータス画面の見方</h2>
             <p>工事番号ごとに1枚のカードで表示され、カード内にその工事の承認フローが工程順に並びます。</p>
-            <figure class="shot broken" data-name="01_status_list.png">
+            <figure class="shot" data-name="01_status_list.png">
                 <img src="guide_images/01_status_list.png" alt="承認ステータス画面の一覧表示" onerror="this.parentElement.classList.add('broken')">
                 <figcaption>承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる</figcaption>
             </figure>
@@ -306,11 +398,11 @@
             <div class="section-eyebrow">Chapter 5</div>
             <h2>マイページ</h2>
             <p>「マイページ」では、自分が出した<b>申請</b>の状況と、自分が対応すべき<b>承認</b>案件をまとめて確認できます。左メニューの「マイページ」に赤い数字バッジが付いている場合、対応待ちの承認があることを示しています。</p>
-            <figure class="shot broken" data-name="02_mypage_mini.png">
+            <figure class="shot" data-name="02_mypage_mini.png">
                 <img src="guide_images/02_mypage_mini.png" alt="マイページの簡易表示" onerror="this.parentElement.classList.add('broken')">
                 <figcaption>マイページ（簡易表示）：申請が「入力中 → 承認待ち → ペンディング → 承認済み」の順に進む</figcaption>
             </figure>
-            <figure class="shot broken" data-name="03_mypage_full.png">
+            <figure class="shot" data-name="03_mypage_full.png">
                 <img src="guide_images/03_mypage_full.png" alt="マイページの詳細表示（申請・承認セクション）" onerror="this.parentElement.classList.add('broken')">
                 <figcaption>マイページ（詳細表示）：上段が「申請」、下段が「承認」。承認セクションの赤いバッジ<span class="badge-num">1</span>は対応待ちの件数</figcaption>
             </figure>
@@ -329,7 +421,7 @@
             <div class="section-eyebrow">Chapter 6</div>
             <h2>2000番 完了報告</h2>
             <p>2000番台の工事番号は、組立・試運転のみが承認フローの対象です。この専用画面では、1つの工事番号の中にある複数の機械（FL・FS・LE・PC など）ごとの進捗を並べて確認できます。</p>
-            <figure class="shot broken" data-name="04_2000_report.png">
+            <figure class="shot" data-name="04_2000_report.png">
                 <img src="guide_images/04_2000_report.png" alt="2000番完了報告画面" onerror="this.parentElement.classList.add('broken')">
                 <figcaption>2000番 完了報告画面：機械ごとに組立・試運転の進捗と出荷予定日を表示。未申請の機械には警告が表示される</figcaption>
             </figure>
