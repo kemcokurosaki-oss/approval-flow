@@ -1135,28 +1135,6 @@
         .settings-note     { font-size: 13px; color: #999; margin-bottom: 10px; }
         .settings-check-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 15px; }
         .settings-check-row input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
-        .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 6px 0; font-size: 15px; }
-        .settings-toggle-label { min-width: 150px; text-align: left; color: #999; transition: color 0.2s ease; }
-        .settings-toggle-row:has(.settings-toggle-switch input:checked) .settings-toggle-label { color: #1e3a5f; }
-        .settings-toggle-switch { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; cursor: pointer; }
-        .settings-toggle-switch input {
-            position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; z-index: 2; width: 100%; height: 100%;
-        }
-        .settings-toggle-switch input:focus-visible + .settings-toggle-ui {
-            outline: 2px solid #1976d2; outline-offset: 2px; border-radius: 12px;
-        }
-        .settings-toggle-ui { pointer-events: none; display: block; }
-        .settings-toggle-track {
-            display: block; width: 38px; height: 22px; border-radius: 11px; background: #bdbdbd; position: relative; transition: background 0.2s ease;
-        }
-        .settings-toggle-thumb {
-            position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28); transition: transform 0.2s ease;
-        }
-        .settings-toggle-switch input:checked + .settings-toggle-ui .settings-toggle-track { background: #1976d2; }
-        .settings-toggle-switch input:checked + .settings-toggle-ui .settings-toggle-thumb { transform: translateX(16px); }
-        .settings-toggle-grid-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); justify-content: center; gap: 10px 24px; }
-        .settings-toggle-grid-cols .settings-flow-group { margin-bottom: 0; }
         .settings-flow-group { border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; background: #fafafa; }
         .settings-flow-title { font-weight: bold; font-size: 14px; color: #1e3a5f; margin-bottom: 4px; text-align: left; }
         .settings-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
