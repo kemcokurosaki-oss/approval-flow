@@ -334,8 +334,6 @@ async function loadFlowSettings() {
 async function logSettingsChange(category, summary) {
     await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
 }
-    return !flowOverrides.has(`${projectNum}${FLOW_OVERRIDE_SEP}${machine}${FLOW_OVERRIDE_SEP}${flowType}`);
-}
 
 // フロー種別ごとの固定宛先（個人のprofile ID・notification_recipients ID）
 function getFixedRecipientPlan(flowType) {
