@@ -1613,15 +1613,13 @@ function renderProgressCards() {
                     }
                 }
 
-                // 未申請・未承認バッジ（フィルタと連動）。OFF中はスキップ表示のみで、未申請扱いのバッジは出さない
+                // 未申請・未承認バッジ（フィルタと連動）
                 let overdueBadge = '';
-                if (!f.skipped) {
-                    const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
-                    const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
-                    if (isMainOverdueFlow || isInviteOverdueFlow) {
-                        const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
-                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
-                    }
+                const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
+                const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
+                if (isMainOverdueFlow || isInviteOverdueFlow) {
+                    const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
+                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
                 }
 
                 const connector = i < applicable.length - 1
