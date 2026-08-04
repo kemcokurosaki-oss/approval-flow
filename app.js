@@ -297,9 +297,7 @@ async function switchDevRole(value) {
 // 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
-// ===== 設定画面（flow_settings / flow_overrides） =====
-// ON/OFF設定の対象フロー種別（工程の先頭の組立・末尾の出荷確定も含め、全フロー種別が対象）
-const TOGGLABLE_FLOWS = ['assembly', 'test_run', 'simple_inspection', 'inspection', 'shipping_meeting', 'shipping_prep', 'shipping'];
+// ===== 設定画面（flow_settings） =====
 // フロー種別ごとに設定画面で個人単位に選べる固定宛先の候補グループ（担当者ベースの動的な宛先は対象外）
 const FIXED_RECIPIENT_GROUPS = {
     assembly:          [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
@@ -325,29 +323,15 @@ const FIXED_RECIPIENT_GROUPS = {
                          { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
 };
 let flowSettings   = { fixedRecipients: {} };
-let flowOverrides  = new Set(); // 工事番号・機械ごとにOFFにされたフロー（"projectmachineflow_type"）
-const FLOW_OVERRIDE_SEP = '';
-
 async function loadFlowSettings() {
-    const [{ data: settingsRows }, { data: overrideRows }] = await Promise.all([
-        db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients'),
-        db.from('flow_overrides').select('project_number, machine, flow_type')
-    ]);
+    const { data: settingsRows } = await db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients');
     const rows = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
-    flowSettings  = { fixedRecipients: rows.flow_fixed_recipients || {} };
-    flowOverrides = new Set((overrideRows || []).map(r => `${r.project_number}${FLOW_OVERRIDE_SEP}${r.machine}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
+    flowSettings = { fixedRecipients: rows.flow_fixed_recipients || {} };
 }
 
 // 設定変更を履歴テーブルに記録する（保存系の関数から呼び出す）
 async function logSettingsChange(category, summary) {
     await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
-}
-
-// 全フロー種別（組立・出荷確定含む）を工事番号・機械単位でOFFにできる。
-// exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
-function isFlowEnabledFor(flowType, projectNum, machine) {
-    if (!TOGGLABLE_FLOWS.includes(flowType)) return true;
-    return !flowOverrides.has(`${projectNum}${FLOW_OVERRIDE_SEP}${machine}${FLOW_OVERRIDE_SEP}${flowType}`);
 }
 
 // フロー種別ごとの固定宛先（個人のprofile ID・notification_recipients ID）
