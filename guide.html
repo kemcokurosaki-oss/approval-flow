@@ -247,6 +247,16 @@
     table.spec th, table.spec td { border: 1px solid #dde3ee; padding: 8px 12px; text-align: left; vertical-align: top; }
     table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
 
+    /* ---------- イラストと説明文の左右比較レイアウト ---------- */
+    .compare { display: flex; align-items: flex-start; gap: 24px; max-width: 1200px; margin: 18px 0 26px; flex-wrap: wrap; }
+    .compare-visual { flex: 0 1 auto; }
+    .compare-visual .mockup { margin: 0; }
+    .compare-notes { flex: 1 1 260px; min-width: 240px; }
+    .compare-notes .callout-list { margin: 0; }
+    @media (max-width: 860px) {
+        .compare { flex-direction: column; }
+    }
+
     /* ---------- イラスト番号バッジ／対応する説明リスト ---------- */
     .callout, .callout-light {
         display: inline-flex; align-items: center; justify-content: center;
