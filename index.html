@@ -354,7 +354,7 @@
                     ペンディング項目リスト（任意）
                     <button type="button" class="btn btn-sm btn-secondary" onclick="addPendingItem()">＋ 追加</button>
                 </div>
-                <div id="pending_items_container"><div style="color:#999;font-size:13px;padding:6px 0;">ペンディング項目はありません</div></div>
+                <div id="pending_items_container"><div style="color:#999;font-size:14px;padding:6px 0;">ペンディング項目はありません</div></div>
             </div>
         </div>
         <div class="modal-footer">
@@ -402,7 +402,7 @@
             <div class="form-group">
                 <label>開始時刻</label>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <select id="inspection_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="inspection_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="08">08時</option>
                         <option value="09">09時</option>
@@ -414,7 +414,7 @@
                         <option value="15">15時</option>
                         <option value="16">16時</option>
                     </select>
-                    <select id="inspection_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="inspection_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="00">00分</option>
                         <option value="15">15分</option>
@@ -426,7 +426,7 @@
             <div class="form-group">
                 <label>場所</label>
                 <div id="inspection_location_input" class="location-checkbox-area"></div>
-                <small style="color:#888; font-size:11px;">複数選択可</small>
+                <small style="color:#888; font-size:12px;">複数選択可</small>
             </div>
             <hr class="section-divider">
             <div class="form-group">
@@ -441,8 +441,8 @@
                 <hr class="section-divider">
                 <div class="section-title">宛先を追加（任意）</div>
                 <div style="display:flex; gap:6px; margin-bottom:6px;">
-                    <input type="text" id="inspection_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
-                    <input type="text" id="inspection_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="inspection_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <input type="text" id="inspection_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
                     <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('inspection')">追加</button>
                 </div>
                 <div id="inspection_extra_list"></div>
@@ -496,7 +496,7 @@
             <div class="form-group">
                 <label>開始時刻</label>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <select id="si_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="si_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="08">08時</option>
                         <option value="09">09時</option>
@@ -508,7 +508,7 @@
                         <option value="15">15時</option>
                         <option value="16">16時</option>
                     </select>
-                    <select id="si_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="si_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="00">00分</option>
                         <option value="15">15分</option>
@@ -520,7 +520,7 @@
             <div class="form-group">
                 <label>場所</label>
                 <div id="si_location_input" class="location-checkbox-area"></div>
-                <small style="color:#888; font-size:11px;">複数選択可</small>
+                <small style="color:#888; font-size:12px;">複数選択可</small>
             </div>
             <hr class="section-divider">
             <div class="form-group">
@@ -535,8 +535,8 @@
                 <hr class="section-divider">
                 <div class="section-title">宛先を追加（任意）</div>
                 <div style="display:flex; gap:6px; margin-bottom:6px;">
-                    <input type="text" id="si_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
-                    <input type="text" id="si_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="si_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <input type="text" id="si_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
                     <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('si')">追加</button>
                 </div>
                 <div id="si_extra_list"></div>
@@ -590,7 +590,7 @@
             <div class="form-group">
                 <label>開始時刻</label>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <select id="sm_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="sm_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="08">08時</option>
                         <option value="09">09時</option>
@@ -602,7 +602,7 @@
                         <option value="15">15時</option>
                         <option value="16">16時</option>
                     </select>
-                    <select id="sm_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="sm_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="00">00分</option>
                         <option value="15">15分</option>
@@ -613,7 +613,7 @@
             </div>
             <div class="form-group">
                 <label>場所（会議室）</label>
-                <select id="sm_location_input" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px; width:100%;">
+                <select id="sm_location_input" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px; width:100%;">
                     <option value="">選択してください</option>
                     <option value="第1会議室">第1会議室</option>
                     <option value="第2会議室">第2会議室</option>
@@ -635,8 +635,8 @@
                 <hr class="section-divider">
                 <div class="section-title">宛先を追加（任意）</div>
                 <div style="display:flex; gap:6px; margin-bottom:6px;">
-                    <input type="text" id="sm_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
-                    <input type="text" id="sm_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <input type="text" id="sm_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <input type="text" id="sm_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
                     <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('sm')">追加</button>
                 </div>
                 <div id="sm_extra_list"></div>
@@ -685,10 +685,10 @@
                 <label>申請・承認状況</label>
                 <div id="shipping_flow_list" class="flow-info-box"></div>
             </div>
-            <div id="shipping_missing_warning" style="display:none;color:#c0392b;font-size:12px;padding:6px 0;"></div>
+            <div id="shipping_missing_warning" style="display:none;color:#c0392b;font-size:13px;padding:6px 0;"></div>
             <hr class="section-divider">
             <div class="form-group">
-                <div style="font-size:12px; color:#888; padding:6px 0;">確定出荷日は営業担当者が入力後、内容を確認して本申請します。</div>
+                <div style="font-size:13px; color:#888; padding:6px 0;">確定出荷日は営業担当者が入力後、内容を確認して本申請します。</div>
             </div>
             <div class="form-group">
                 <label>特記事項（任意）</label>
@@ -717,7 +717,7 @@
             <div class="form-group">
                 <label>開始時刻</label>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <select id="reschedule_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="reschedule_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="08">08時</option>
                         <option value="09">09時</option>
@@ -729,7 +729,7 @@
                         <option value="15">15時</option>
                         <option value="16">16時</option>
                     </select>
-                    <select id="reschedule_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <select id="reschedule_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
                         <option value="00">00分</option>
                         <option value="15">15分</option>
