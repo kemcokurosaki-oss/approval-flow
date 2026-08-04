@@ -297,9 +297,7 @@ async function switchDevRole(value) {
 // 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
-// ===== 設定画面（flow_settings / flow_overrides） =====
-// ON/OFF設定の対象フロー種別（工程の先頭の組立・末尾の出荷確定も含め、全フロー種別が対象）
-const TOGGLABLE_FLOWS = ['assembly', 'test_run', 'simple_inspection', 'inspection', 'shipping_meeting', 'shipping_prep', 'shipping'];
+// ===== 設定画面（flow_settings） =====
 // フロー種別ごとに設定画面で個人単位に選べる固定宛先の候補グループ（担当者ベースの動的な宛先は対象外）
 const FIXED_RECIPIENT_GROUPS = {
     assembly:          [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
