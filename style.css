@@ -2005,6 +2005,7 @@
         .app-rail .side-tab-row .badge { margin-left: auto; }
         .rail-group-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid #223a60; }
         .rail-settings { width: 100%; }
+        .app-rail a.side-tab-row { text-decoration: none; }
 
         /* ----- サイドパネル（マイページ／設定）----- */
         .side-panel-header, .settings-page-header {
