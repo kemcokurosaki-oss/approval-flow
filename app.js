@@ -320,31 +320,18 @@ const FIXED_RECIPIENT_GROUPS = {
     shipping:          [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
-                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
-};
 let flowSettings   = { fixedRecipients: {} };
-let flowOverrides  = new Set(); // 工事番号・機械ごとにOFFにされたフロー（"projectmachineflow_type"）
-const FLOW_OVERRIDE_SEP = '';
 
 async function loadFlowSettings() {
-    const [{ data: settingsRows }, { data: overrideRows }] = await Promise.all([
-        db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients'),
-        db.from('flow_overrides').select('project_number, machine, flow_type')
-    ]);
+    const { data: settingsRows } = await db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients');
     const rows = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
-    flowSettings  = { fixedRecipients: rows.flow_fixed_recipients || {} };
-    flowOverrides = new Set((overrideRows || []).map(r => `${r.project_number}${FLOW_OVERRIDE_SEP}${r.machine}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
+    flowSettings = { fixedRecipients: rows.flow_fixed_recipients || {} };
 }
 
 // 設定変更を履歴テーブルに記録する（保存系の関数から呼び出す）
 async function logSettingsChange(category, summary) {
     await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
 }
-
-// 全フロー種別（組立・出荷確定含む）を工事番号・機械単位でOFFにできる。
-// exceptionテーブルに行がある＝OFF、無ければON（デフォルト有効）
-function isFlowEnabledFor(flowType, projectNum, machine) {
-    if (!TOGGLABLE_FLOWS.includes(flowType)) return true;
     return !flowOverrides.has(`${projectNum}${FLOW_OVERRIDE_SEP}${machine}${FLOW_OVERRIDE_SEP}${flowType}`);
 }
 
@@ -970,7 +957,8 @@ async function loadPendingSide() {
         return `
         <div class="mine-flow-section">
             <div class="mine-flow-section-title" onclick="toggleMineFlowSection(this)">
-                <span>【${esc(label)}】</span>
+                <span class="mine-flow-name">${esc(label)}</span>
+                <span class="mine-flow-count">${items.length}</span>
                 <span class="mine-flow-section-arrow">▾</span>
             </div>
             <div class="pending-flow-list">${items.map(renderPendingCard).join('')}</div>
@@ -1144,10 +1132,12 @@ async function loadMineSide() {
         const row = columns.map(([label, items, isPendingGroup]) => renderColumn(label, items, isPendingGroup)).join(arrow);
         // 対象案件が1件もないフローは最初から折りたたんでおく（見出しクリックで開閉可能）
         const isEmpty = columns.every(([, items]) => items.length === 0);
+        const flowCount = columns.reduce((n, [, items]) => n + items.length, 0);
         return `
         <div class="mine-flow-section${isEmpty ? ' collapsed' : ''}">
             <div class="mine-flow-section-title" onclick="toggleMineFlowSection(this)">
-                <span>【${esc(FLOW_LABELS[flowType] || flowType)}】</span>
+                <span class="mine-flow-name">${esc(FLOW_LABELS[flowType] || flowType)}</span>
+                <span class="mine-flow-count">${flowCount}</span>
                 <span class="mine-flow-section-arrow">▾</span>
             </div>
             <div class="mine-kanban-row">${row}</div>

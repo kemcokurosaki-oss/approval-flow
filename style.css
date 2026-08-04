@@ -2195,3 +2195,51 @@
             top: 50%;
             transform: translate(-50%, -50%);
         }
+
+
+        /* =========================================================
+           v2-h: マイページの階層ヘッダー整理
+           第2階層（申請／承認）＝紺の帯、第3階層（フロー名）＝淡いチップ、
+           第4階層（カンバン列見出し）＝グレーの小見出し、で強さの差を付ける
+           ========================================================= */
+
+        .side-half-header {
+            background: #16233a;
+            color: #fff;
+            border-bottom: none;
+            padding: 11px 16px;
+            gap: 10px;
+        }
+        .side-panel.has-both .side-half-header { box-shadow: none; }
+        .side-panel.has-both .side-half-header:hover { background: #1d3054; }
+        .side-panel.has-both .side-half-header:active { background: #1d3054; transform: none; }
+        .side-half-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: #8fb4e0; flex-shrink: 0; }
+        .side-half-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+        .side-half-desc { font-size: 12px; font-weight: 400; color: #8ea6c8; margin-right: auto; white-space: nowrap; }
+        .side-half-header .badge { background: #e5484d; color: #fff; }
+        .side-half-arrow { margin-left: 0; font-size: 15px; color: #8ea6c8; }
+
+        /* 第3階層：フロー名 */
+        .mine-flow-section-title {
+            gap: 8px;
+            justify-content: flex-start;
+            padding: 7px 11px;
+            margin: 0 0 10px;
+            background: #eef2f8;
+            border-left: 3px solid #2f6fb0;
+            border-bottom: none;
+            border-radius: 7px;
+        }
+        .mine-flow-name { font-size: 13px; font-weight: 700; color: #16233a; }
+        .mine-flow-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 19px; height: 18px; padding: 0 6px;
+            border-radius: 9px; background: #fff; color: #5b6b80;
+            font-size: 11px; font-weight: 700;
+        }
+        .mine-flow-section-arrow { margin-left: auto; font-size: 13px; }
+
+        /* 第3階層の配下はチップに合わせて字下げする */
+        .mine-kanban-row, .pending-flow-list { padding-left: 11px; }
+        .pending-flow-list .side-card { margin: 0; }
+        .side-half-content-sections { gap: 18px; }

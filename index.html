@@ -6,7 +6,7 @@
     <title>承認フロー</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='80' text-anchor='middle'>📊</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 
@@ -174,7 +174,9 @@
             </div>
             <div id="side_half_mine" class="side-half">
                 <div class="side-half-header" onclick="toggleSideHalf('mine')">
-                    申請
+                    <span class="side-half-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2.5h5l3 3v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9 2.5v3.2h3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg></span>
+                    <span class="side-half-title">申請</span>
+                    <span class="side-half-desc">自分が出した申請</span>
                     <span class="side-half-arrow">▾</span>
                 </div>
                 <div class="side-half-content side-half-content-sections" id="side_content_mine">
@@ -183,7 +185,9 @@
             </div>
             <div id="side_half_pending" class="side-half">
                 <div class="side-half-header" onclick="toggleSideHalf('pending')">
-                    承認
+                    <span class="side-half-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8.5 6 12l7.5-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+                    <span class="side-half-title">承認</span>
+                    <span class="side-half-desc">自分の対応待ち</span>
                     <span id="side_pending_count" class="badge" style="display:none;"></span>
                     <span class="side-half-arrow">▾</span>
                 </div>
