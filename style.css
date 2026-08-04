@@ -1043,6 +1043,15 @@
         }
         #login_dialog h2 { font-size: 18px; margin-bottom: 6px; text-align: center; color: #1e3a5f; }
         #login_dialog p { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 20px; }
+        .login-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
+        .login-brand-mark {
+            width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+            background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-brand-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        .login-brand-name { font-size: 17px; font-weight: 700; color: #16233a; }
+        .login-brand-sub  { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #7d93b8; }
         #login_dialog input {
             width: 100%;
             padding: 9px 12px;
