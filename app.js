@@ -744,7 +744,7 @@ function _renderPrepBlockerWarning(blockers) {
     ).join('、');
     const listEl = document.getElementById('flow_detect_list');
     if (listEl) {
-        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:13px; margin-top:8px;">⚠ 前フローが未完了のため申請できません: ${msg}</div>`;
+        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:14px; margin-top:8px;">⚠ 前フローが未完了のため申請できません: ${msg}</div>`;
     }
 }
 
@@ -755,7 +755,7 @@ async function onMachineChange() {
 
     if (machines.length === 0) {
         document.getElementById('flow_detect_list').innerHTML =
-            '<div style="color:#bbb; font-size:12px; padding:8px 0;">機械を選択してください</div>';
+            '<div style="color:#bbb; font-size:13px; padding:8px 0;">機械を選択してください</div>';
         flowEl.style.display = 'block';
         return;
     }
@@ -1761,7 +1761,7 @@ function renderShipAfterPendingList(wrap) {
             return `
             <div class="pending-detail-row">
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}${pendingDueSoon(r.item.due) ? ' <span style="font-size:11px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : ''}</div>
+                    <div class="pending-detail-text">${r.machine ? `<span class="pending-detail-machine">${esc(r.machine)}</span> ` : ''}[${esc(flowLabel)}] ${esc(r.item.content || r.item.machine || '—')}${pendingDueSoon(r.item.due) ? ' <span style="font-size:12px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : ''}</div>
                     ${r.item.owner ? `<div class="pending-detail-owner">担当: ${esc(r.item.owner)}</div>` : ''}
                     ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
                 </div>
@@ -2250,10 +2250,10 @@ function renderPendingItems() {
     const c = document.getElementById('pending_items_container');
     if (!c) return;
     if (pendingItems.length === 0) {
-        c.innerHTML = '<div style="color:#999;font-size:12px;padding:4px 0;">ペンディング項目はありません</div>';
+        c.innerHTML = '<div style="color:#999;font-size:13px;padding:4px 0;">ペンディング項目はありません</div>';
         return;
     }
-    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
+    const lbl = `<span style="display:block;font-size:11px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
     c.innerHTML = pendingItems.map((item, i) => `
         <div class="pending-row">
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -2267,17 +2267,17 @@ function renderPendingItems() {
                        oninput="pendingItems[${i}].content=this.value">
             </div>
             <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
+                <span style="display:block;font-size:11px;line-height:1.4;color:#999;">担当者（任意）</span>
                 <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
                        oninput="pendingItems[${i}].owner=this.value">
             </div>
             <div style="display:flex;flex-direction:column;width:135px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>
+                <span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>
                 <input type="date" class="pending-due" value="${esc(item.due)}"
                        onchange="pendingItems[${i}].due=this.value">
             </div>
             <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
-                <span style="font-size:10px;color:#999;">出荷後対応</span>
+                <span style="font-size:11px;color:#999;">出荷後対応</span>
                 <input type="checkbox" ${item.ship_after ? 'checked' : ''}
                        onchange="pendingItems[${i}].ship_after=this.checked">
             </label>
@@ -2452,7 +2452,7 @@ function buildPendingSectionInner(req, isMyRequest) {
         .map((item, idx) => ({ item, idx }))
         .filter(({ item }) => (item.content || item.machine));
     if (!items.length) return '';
-    const editLbl = `<span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>`;
+    const editLbl = `<span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>`;
     return `
         <hr class="section-divider">
         <div class="section-title">${isQaFlow ? 'タスクリスト' : 'ペンディング項目'}</div>
@@ -2468,17 +2468,17 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div class="pending-detail-content qa-pending-row" style="display:flex;flex-direction:column;gap:8px;">
                     <div style="display:flex;gap:6px;">
                         <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">場所</span>
                             <input type="text" id="qa_edit_location_${idx}" class="pending-content" placeholder="場所" value="${esc(item.location || '')}">
                         </div>
                         <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">担当者</span>
                             <input type="text" id="qa_edit_owner_${idx}" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}">
                         </div>
                     </div>
                     <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
                         <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">内容</span>
                             <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
                         </div>
                         <div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -2486,19 +2486,19 @@ function buildPendingSectionInner(req, isMyRequest) {
                             <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
                         </div>
                         <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">出荷後対応</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">出荷後対応</span>
                             <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''} style="margin-top:2px;">
                         </label>
                     </div>
                     <div style="display:flex;flex-direction:column;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真</span>
+                        <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真</span>
                         ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
                         <div class="photo-dropzone">
                             <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}" style="display:none;">
                             <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
                         </div>
                         ${item.photo_path ? `
-                        <label style="font-size:12px;color:#999;display:flex;align-items:center;gap:2px;">
+                        <label style="font-size:13px;color:#999;display:flex;align-items:center;gap:2px;">
                             <input type="checkbox" id="qa_edit_photo_remove_${idx}"> 写真を削除
                         </label>` : ''}
                     </div>
@@ -2516,7 +2516,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                     ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">`
                     : `<div class="pending-detail-photo-placeholder"></div>`}
                 <div class="pending-detail-content">
-                    <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}${item.completed ? ' <span style="font-size:11px;color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:1px 6px;">完了</span>' : (pendingDueSoon(item.due) ? ' <span style="font-size:11px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : '')}${item.ship_after ? ' <span class="badge-ship-after" style="font-size:11px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
+                    <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}${item.completed ? ' <span style="font-size:12px;color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:1px 6px;">完了</span>' : (pendingDueSoon(item.due) ? ' <span style="font-size:12px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : '')}${item.ship_after ? ' <span class="badge-ship-after" style="font-size:12px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
                     ${item.location ? `<div class="pending-detail-owner">場所: ${esc(item.location)}</div>` : ''}
                     ${item.owner ? `<div class="pending-detail-owner">担当: ${esc(item.owner)}</div>` : ''}
                     ${item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
@@ -2557,7 +2557,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
 
     let body;
     if (!meetingPassed) {
-        body = '<div style="color:#888; font-size:14px; padding:4px 0;">開催日以降にタスク確認・完了操作ができます。</div>';
+        body = '<div style="color:#888; font-size:15px; padding:4px 0;">開催日以降にタスク確認・完了操作ができます。</div>';
     } else {
         const pendingHtml = buildPendingSectionInner(req, isMyRequest);
         const hasSendableItems = (req.sheet_data?.pending_items || []).some(it => it.content);
@@ -2572,30 +2572,30 @@ function buildQaResultSectionInner(req, isMyRequest) {
                 <div class="pending-row qa-pending-row" style="flex-direction:column;align-items:stretch;gap:8px;">
                     <div style="display:flex;gap:6px;">
                         <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">場所（任意）</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">場所（任意）</span>
                             <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
                         </div>
                         <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">担当者（任意）</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">担当者（任意）</span>
                             <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
                         </div>
                     </div>
                     <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
                         <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">内容</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">内容</span>
                             <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
                         </div>
                         <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">完了予定日</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">完了予定日</span>
                             <input type="date" id="qa_pending_due" class="pending-due">
                         </div>
                         <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
-                            <span style="display:block;font-size:13px;line-height:1.4;color:#999;">出荷後対応</span>
+                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">出荷後対応</span>
                             <input type="checkbox" id="qa_pending_ship_after" style="margin-top:2px;">
                         </label>
                     </div>
                     <div style="display:flex;flex-direction:column;">
-                        <span style="display:block;font-size:13px;line-height:1.4;color:#999;">写真（任意）</span>
+                        <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真（任意）</span>
                         <div class="photo-dropzone">
                             <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="display:none;">
                             <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
@@ -2609,7 +2609,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
         ` : '';
         body = (pendingHtml || addFormHtml)
             ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}${sendCardBtnHtml}`
-            : `<div style="color:#888; font-size:14px; padding:4px 0;">タスクなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
+            : `<div style="color:#888; font-size:15px; padding:4px 0;">タスクなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
     // 開催案内が過ぎておりペンディング項目がある場合は、buildPendingSectionInner側の区切り線が使われるため、ここでは重ねて出さない
@@ -2947,23 +2947,23 @@ async function openDetailModal(requestId) {
     document.getElementById('detail_body').innerHTML = `
         <div style="display:grid; grid-template-columns:max-content 1fr; column-gap:10px; align-items:baseline;">
             <div style="font-size:18px;font-weight:bold;color:#1e3a5f;white-space:nowrap;">${headerLine1Left}</div>
-            <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(pInfo.customer_name || '')}</div>
-            ${pInfo.project_details ? `<div></div><div style="font-size:14px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+            <div style="font-size:19px;font-weight:bold;color:#1e3a5f;">${esc(pInfo.customer_name || '')}</div>
+            ${pInfo.project_details ? `<div></div><div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         </div>
 
         <div style="margin:10px 0 8px;">
             <span class="status-badge ${cls}">${slbl}</span>
             ${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}
         </div>
-        ${eventInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${eventInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
-        ${shippingInfoParts.length ? `<div style="font-size:14px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
-        ${req.note ? `<div style="font-size:14px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
+        ${eventInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${eventInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
+        ${shippingInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
+        ${req.note ? `<div style="font-size:15px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
         ${shippingDateMismatches.length ? `
-        <div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:14px;color:#a33a2c;margin-top:8px;">
+        <div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:15px;color:#a33a2c;margin-top:8px;">
             <div style="white-space:nowrap;overflow-x:auto;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。</div>
             ${changeDateBannerButtonHtml ? `<div style="margin-top:8px;">${changeDateBannerButtonHtml}</div>` : ''}
         </div>` : ''}
-        ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:14px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
+        ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:15px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
         <hr class="section-divider">
         <div class="section-title">申請・承認状況</div>
@@ -2971,12 +2971,12 @@ async function openDetailModal(requestId) {
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
-            <div style="font-size:14px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
-            <div style="font-size:15px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
-                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
-                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
-                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
-                <div><span style="color:#888; font-size:13px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
+            <div style="font-size:15px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
+            <div style="font-size:16px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
+                <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
+                <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
+                <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
+                <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
             </div>
         </div>` : ''}
         ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
@@ -2994,7 +2994,7 @@ async function openDetailModal(requestId) {
             const linkLabel = canEdit ? `${btnLabel}を修正する →` : `${btnLabel}を確認する →`;
             return `<hr class="section-divider">
         <div class="section-title">${sectionTitle}</div>
-        <button class="btn btn-secondary" style="font-size:14px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
+        <button class="btn btn-secondary" style="font-size:15px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
@@ -3003,7 +3003,7 @@ async function openDetailModal(requestId) {
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div class="section-title">出荷確認書</div>
-        <button class="btn btn-secondary" style="font-size:14px; padding:7px 18px; margin-top:2px;" onclick="window.open('shipping_sheet.html?view=1&id=${req.id}', '_blank')">出荷確認書を確認する →</button>` : ''}
+        <button class="btn btn-secondary" style="font-size:15px; padding:7px 18px; margin-top:2px;" onclick="window.open('shipping_sheet.html?view=1&id=${req.id}', '_blank')">出荷確認書を確認する →</button>` : ''}
         ${myStep ? `
         <hr class="section-divider">
         <div class="form-group">
@@ -3060,20 +3060,20 @@ async function openDetailModal(requestId) {
 function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
-            <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
+            <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
         <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
+            <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
         </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
-                <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
+                <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -3087,20 +3087,20 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
 function buildTentativeDateFooterInner(req, hasPackingShipping, packingState) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
-            <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
+            <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
         <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:13px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
+            <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
         </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
-                <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
+                <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -3122,15 +3122,15 @@ function showChangeTentativeDateFooter(requestId) {
 function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を変更してください</span>
-            <input type="date" id="packing_sales_date_input" value="${req.packing_confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を変更してください</span>
+            <input type="date" id="packing_sales_date_input" value="${req.packing_confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を変更してください</span>
-                <input type="date" id="sales_date_input" value="${req.confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を変更してください</span>
+                <input type="date" id="sales_date_input" value="${req.confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -3142,15 +3142,15 @@ function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
 function buildChangeTentativeDateFooterInner(req, hasPackingShipping) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を変更してください</span>
-            <input type="date" id="packing_tentative_date_input" value="${req.packing_tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+            <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を変更してください</span>
+            <input type="date" id="packing_tentative_date_input" value="${req.packing_tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を変更してください</span>
-                <input type="date" id="tentative_date_input" value="${req.tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:14px;margin-top:4px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を変更してください</span>
+                <input type="date" id="tentative_date_input" value="${req.tentative_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -3424,7 +3424,7 @@ function renderSettingsToggleGrid() {
     if (!gridEl) return;
     if (settingsToggleMachines.length === 0) {
         gridEl.className = '';
-        gridEl.innerHTML = '<div style="color:#aaa;font-size:12px;">機械が見つかりません</div>';
+        gridEl.innerHTML = '<div style="color:#aaa;font-size:13px;">機械が見つかりません</div>';
         return;
     }
     gridEl.className = 'settings-toggle-grid-cols';
@@ -3432,7 +3432,7 @@ function renderSettingsToggleGrid() {
     gridEl.innerHTML = settingsToggleMachines.map(machine => {
         const applicableFlows = TOGGLABLE_FLOWS.filter(ft => settingsToggleApplicable[machine]?.has(ft));
         const rows = applicableFlows.length === 0
-            ? '<div style="color:#aaa;font-size:12px;">対象フローがありません（工程表にタスクがありません）</div>'
+            ? '<div style="color:#aaa;font-size:13px;">対象フローがありません（工程表にタスクがありません）</div>'
             : applicableFlows.map(ft => {
                 const pendingForMachine = settingsTogglePending[machine] || {};
                 const enabled = pendingForMachine.hasOwnProperty(ft)
@@ -3550,7 +3550,7 @@ async function showRecipientsDetailScreen(flowType) {
                     <label class="settings-check-row">
                         <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}>
                         <span>${esc(c.name || '—')}</span>
-                        <span style="color:#999; font-size:12px;">${esc(c.email || '')}</span>
+                        <span style="color:#999; font-size:13px;">${esc(c.email || '')}</span>
                     </label>
                 `).join('') : (g.kind === 'department'
                     ? '<div class="settings-note">該当者がいません。<button class="btn btn-xs btn-outline" onclick="showRecipientMasterScreen()">「宛先候補の管理」で追加する →</button></div>'
@@ -3609,7 +3609,7 @@ async function showRecipientMasterScreen() {
         const itemsHtml = items.map(r => `
             <div class="settings-check-row" style="justify-content:space-between;">
                 <span>${esc(r.name)}${r.active ? '' : ' <span style="color:#e74c3c;">（無効）</span>'}
-                    <span style="color:#999; font-size:12px;">${esc(r.email)}・${esc(r.role)}</span></span>
+                    <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(r.role)}</span></span>
                 <button class="btn btn-xs btn-outline" onclick="editRecipientMaster('${r.id}')">編集</button>
             </div>
         `).join('');
@@ -3728,8 +3728,8 @@ async function showAuditLogScreen() {
         const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         return `
             <div class="settings-check-row" style="align-items:flex-start;">
-                <span style="min-width:120px; color:#999; font-size:12px;">${esc(dateStr)}</span>
-                <span style="min-width:90px; font-size:12px;">${esc(r.changed_by)}</span>
+                <span style="min-width:120px; color:#999; font-size:13px;">${esc(dateStr)}</span>
+                <span style="min-width:90px; font-size:13px;">${esc(r.changed_by)}</span>
                 <span class="recipient-tag" style="margin-right:6px;">${esc(CATEGORY_LABELS[r.category] || r.category)}</span>
                 <span>${esc(r.summary)}</span>
             </div>`;
@@ -4535,7 +4535,7 @@ async function _loadMachineCheckboxes(projectNum, listId, onChangeFn) {
     const machines = [...new Set((data || []).map(t => t.machine).filter(Boolean))].sort();
     const list = document.getElementById(listId);
     if (machines.length === 0) {
-        list.innerHTML = '<div style="color:#aaa;font-size:12px;">機械が見つかりません</div>';
+        list.innerHTML = '<div style="color:#aaa;font-size:13px;">機械が見つかりません</div>';
         return;
     }
     list.innerHTML = machines.map(m => `
@@ -4855,7 +4855,7 @@ function renderRecipientsList(prefix, recipients) {
             <span class="recipient-tag">${esc(r.department || '')}</span>
         </div>`).join('');
 
-    listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:12px;padding:8px;">宛先なし</div>';
+    listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
 }
 
 function addExtraRecipient(prefix) {
@@ -4879,8 +4879,8 @@ function renderExtraList(prefix) {
     const el = document.getElementById(`${prefix}_extra_list`);
     el.innerHTML = extraRecipients[prefix].map((r, i) => `
         <div class="extra-recipient-item">
-            <span style="font-weight:bold;min-width:80px;font-size:12px;">${esc(r.name)}</span>
-            <span style="color:#888;flex:1;font-size:12px;">${esc(r.email)}</span>
+            <span style="font-weight:bold;min-width:80px;font-size:13px;">${esc(r.name)}</span>
+            <span style="color:#888;flex:1;font-size:13px;">${esc(r.email)}</span>
             <button onclick="removeExtraRecipient('${prefix}', ${i})">×</button>
         </div>`).join('');
 }
@@ -5296,7 +5296,7 @@ async function onShippingMachineChange() {
     document.getElementById('shipping_approver_list').innerHTML = [
         ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner]
     ].map(([role, name]) =>
-        `<div class="flow-info-item"><span style="width:32px;font-size:11px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
+        `<div class="flow-info-item"><span style="width:32px;font-size:12px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
     ).join('');
     document.getElementById('shipping_approver_box').style.display = 'block';
 
