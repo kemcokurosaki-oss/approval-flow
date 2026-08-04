@@ -2055,13 +2055,11 @@
         .side-card-customer { font-size: 13px; color: #9aa5b6; }
 
         /* 設定画面 */
-        .settings-menu-card, .settings-menu-group, .settings-flow-group, .settings-project-tree { border-radius: 10px; border-color: #e5e9f1; }
-        .settings-menu-card:hover, .settings-menu-item:hover, .settings-project-item:hover { background: #f6f8fb; border-color: #cdd8e8; }
-        .settings-menu-group-header, .settings-project-category-header { background: #f6f8fb; color: #16233a; }
-        .settings-menu-group-header:hover, .settings-project-category-header:hover { background: #eef2f8; }
+        .settings-menu-card, .settings-menu-group, .settings-flow-group { border-radius: 10px; border-color: #e5e9f1; }
+        .settings-menu-card:hover, .settings-menu-item:hover { background: #f6f8fb; border-color: #cdd8e8; }
+        .settings-menu-group-header { background: #f6f8fb; color: #16233a; }
+        .settings-menu-group-header:hover { background: #eef2f8; }
         .settings-menu-title, .settings-menu-item-title, .settings-flow-title { color: #16233a; }
-        .settings-toggle-switch input:checked + .settings-toggle-ui .settings-toggle-track { background: #2f6fb0; }
-        .settings-toggle-row:has(.settings-toggle-switch input:checked) .settings-toggle-label { color: #16233a; }
         .settings-sticky-header { box-shadow: 0 1px 4px rgba(20,36,63,.08); }
 
 
