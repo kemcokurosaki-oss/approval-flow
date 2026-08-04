@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>承認フローアプリ 使い方ガイド</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f9ddb'/><stop offset='1' stop-color='%232f6fb0'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M6 25V16M13 25V9M20 25V18M26 25V12' stroke='white' stroke-width='3.4' stroke-linecap='round'/></svg>">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+        font-family: "メイリオ", Meiryo, sans-serif;
+        background: #edf1f7;
+        color: #263142;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+    a { color: #2f6fb0; }
+
+    /* ---------- レイアウト ---------- */
+    .layout { display: flex; min-height: 100vh; }
+    .toc {
+        width: 240px;
+        flex-shrink: 0;
+        background: #14243f;
+        color: #cdd8ea;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 20px 0 90px;
+    }
+    .toc-brand { display: flex; align-items: center; gap: 10px; padding: 0 18px 20px; }
+    .toc-brand-mark {
+        width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .toc-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .toc-brand-name { color: #fff; font-size: 13px; font-weight: 700; }
+    .toc-brand-sub  { color: #7d93b8; font-size: 10.5px; letter-spacing: .06em; }
+    .toc-label { padding: 14px 18px 6px; color: #5f759b; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+    .toc a {
+        display: block;
+        padding: 8px 18px;
+        color: #a9bbd6;
+        text-decoration: none;
+        font-size: 13.5px;
+        border-left: 3px solid transparent;
+        transition: background .12s, color .12s;
+    }
+    .toc a:hover { background: #1d3054; color: #fff; }
+    .toc a.active { background: #1d3054; color: #fff; border-left-color: #4f9ddb; font-weight: 700; }
+
+    .main { flex: 1; min-width: 0; }
+    section {
+        padding: 70px 64px;
+        border-bottom: 1px solid #dde3ee;
+        scroll-margin-top: 20px;
+    }
+    section.cover {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: linear-gradient(135deg, #14243f 0%, #1e3a5f 55%, #2f6fb0 100%);
+        color: #fff;
+        border-bottom: none;
+    }
+    .cover-mark {
+        width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0; margin-bottom: 26px;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .cover h1 { font-size: 34px; font-weight: 800; letter-spacing: .02em; margin-bottom: 14px; }
+    .cover p.lead { font-size: 16px; color: #cfe0f5; max-width: 640px; }
+    .cover .meta { margin-top: 46px; font-size: 13px; color: #9db4d6; }
+
+    .section-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .12em; color: #2f6fb0; text-transform: uppercase; }
+    h2 { font-size: 25px; font-weight: 800; color: #14243f; margin: 8px 0 22px; }
+    h3 { font-size: 17px; font-weight: 700; color: #1e3a5f; margin: 26px 0 10px; }
+    p { margin: 0 0 12px; max-width: 780px; }
+    ul, ol { margin: 0 0 16px; padding-left: 22px; max-width: 780px; }
+    li { margin-bottom: 6px; }
+    .note {
+        max-width: 780px;
+        background: #eef4fb;
+        border-left: 4px solid #4f9ddb;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13.5px;
+        color: #29435f;
+        margin: 14px 0 20px;
+    }
+    .note.warn { background: #fdf1ed; border-left-color: #d9714a; color: #7a3a22; }
+
+    /* ---------- スクリーンショット ---------- */
+    .shot {
+        position: relative;
+        max-width: 900px;
+        margin: 18px 0 26px;
+        border: 1px solid #d7dee9;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(20,36,63,.10);
+        background: #fff;
+    }
+    .shot img { display: block; width: 100%; height: auto; }
+    .shot figcaption {
+        font-size: 12.5px;
+        color: #6a7890;
+        padding: 8px 14px;
+        border-top: 1px solid #eef1f6;
+        background: #f8fafc;
+    }
+    .shot.broken { min-height: 200px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(45deg,#f3f5f9,#f3f5f9 10px,#eaeef4 10px,#eaeef4 20px); }
+    .shot.broken img { display: none; }
+    .shot.broken::before {
+        content: "画像未配置：guide_images/" attr(data-name) " を用意してください";
+        color: #8a94a6;
+        font-size: 13px;
+        text-align: center;
+        padding: 20px;
+    }
+    .shot.broken figcaption { display: none; }
+
+    /* ---------- フローの図 ---------- */
+    .flowline { display: flex; align-items: center; flex-wrap: wrap; gap: 0; max-width: 900px; margin: 20px 0 8px; }
+    .flow-step { display: flex; flex-direction: column; align-items: center; width: 108px; }
+    .flow-dot {
+        width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 16px; font-weight: 700; color: #fff;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        box-shadow: 0 3px 10px rgba(47,111,176,.35);
+        flex-shrink: 0;
+    }
+    .flow-step span.label { margin-top: 8px; font-size: 12.5px; font-weight: 700; color: #1e3a5f; text-align: center; }
+    .flow-step span.sub { font-size: 11px; color: #8a94a6; text-align: center; }
+    .flow-arrow { flex: 1; min-width: 20px; height: 2px; background: #b9c6da; margin: 0 -2px 22px; position: relative; }
+    .flow-arrow::after { content: '▸'; position: absolute; right: -6px; top: -9px; color: #b9c6da; font-size: 14px; }
+
+    /* ---------- 状態アイコン説明 ---------- */
+    .legend { display: flex; flex-wrap: wrap; gap: 18px; max-width: 900px; margin: 10px 0 22px; }
+    .legend-item { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e9f1; border-radius: 9px; padding: 10px 14px; flex: 1 1 260px; }
+    .legend-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; font-weight: 700; }
+    .legend-icon.todo { border: 2.5px dashed #c7cfdc; color: #c7cfdc; }
+    .legend-icon.doing { background: #f0973b; color: #fff; }
+    .legend-icon.done { background: #2e9e5b; color: #fff; }
+    .legend-icon.warn { background: #fdecec; color: #d9483c; }
+    .legend-text b { display: block; font-size: 13.5px; color: #1e3a5f; }
+    .legend-text span { font-size: 12px; color: #7c8698; }
+
+    table.spec { border-collapse: collapse; max-width: 900px; margin: 10px 0 24px; font-size: 13.5px; }
+    table.spec th, table.spec td { border: 1px solid #dde3ee; padding: 8px 12px; text-align: left; vertical-align: top; }
+    table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
+
+    .badge-num { display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #d9483c; color: #fff; font-size: 11px; font-weight: 700; align-items: center; justify-content: center; }
+
+    /* ---------- ページ送りボタン ---------- */
+    .pagerbar {
+        position: fixed;
+        right: 26px;
+        bottom: 24px;
+        display: flex;
+        gap: 8px;
+        z-index: 50;
+    }
+    .pagerbar button {
+        width: 42px; height: 42px; border-radius: 50%; border: none;
+        background: #14243f; color: #fff; font-size: 16px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(20,36,63,.3);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pagerbar button:hover { background: #2f6fb0; }
+
+    @media print {
+        .toc, .pagerbar { display: none; }
+        .main { width: 100%; }
+        section { break-inside: avoid; padding: 24px 6px; border-bottom: 1px solid #ccc; }
+        section.cover { min-height: auto; color: #14243f; background: none; }
+        .cover-mark { background: #2f6fb0 !important; -webkit-print-color-adjust: exact; }
+    }
+</style>
+</head>
+<body>
+
+<div class="layout">
+    <nav class="toc" id="toc">
+        <div class="toc-brand">
+            <div class="toc-brand-mark"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div class="toc-brand-text"><span class="toc-brand-name">KUSAKABE</span><span class="toc-brand-sub">APPROVAL FLOW GUIDE</span></div>
+        </div>
+        <div class="toc-label">目次</div>
+        <a href="#cover">表紙</a>
+        <a href="#s1">1. このアプリについて</a>
+        <a href="#s2">2. 承認フローの全体像</a>
+        <a href="#s3">3. 画面の基本構成</a>
+        <a href="#s4">4. 承認ステータス画面</a>
+        <a href="#s5">5. マイページ</a>
+        <a href="#s6">6. 2000番 完了報告</a>
+        <a href="#s7">7. 申請〜承認の操作手順</a>
+        <a href="#s8">8. 自動メール通知</a>
+        <a href="#s9">9. 困ったときは</a>
+    </nav>
+
+    <main class="main">
+
+        <section class="cover" id="cover">
+            <div class="cover-mark"><svg width="30" height="30" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <h1>承認フローアプリ<br>使い方ガイド</h1>
+            <p class="lead">組立完了・試運転完了・検査開催案内・出荷確定などの申請／承認を、紙や口頭ではなくこのアプリ上で一元管理するための説明資料です。説明会での投影用に作成していますが、アプリ内の「使い方ガイド」ボタンからいつでも同じ内容を見返せます。</p>
+            <div class="meta">KUSAKABE APPROVAL FLOW ／ 製造管理課</div>
+        </section>
+
+        <section id="s1">
+            <div class="section-eyebrow">Chapter 1</div>
+            <h2>このアプリについて</h2>
+            <p>これまで組立完了・試運転完了・検査開催案内・出荷確定などの申請や承認は、紙の帳票や口頭・メールでのやり取りで行われてきました。承認フローアプリは、これらの申請〜承認の状況を1つの画面で見える化し、誰が・何を・いつまでに対応すべきかを明確にするためのツールです。</p>
+            <h3>このアプリでできること</h3>
+            <ul>
+                <li>工事番号ごとの承認フローの進捗状況を一覧で確認できる</li>
+                <li>組立完了・試運転完了などの申請をアプリ上から提出できる</li>
+                <li>承認者はアプリ上でボタン一つで承認できる</li>
+                <li>自分が出した申請／自分が承認すべき案件を「マイページ」でまとめて確認できる</li>
+                <li>申請忘れ・承認忘れがある場合は自動でメール通知が届く</li>
+            </ul>
+            <div class="note">対象となる工事番号は 3000番／4000番／3C番／4C番／D番 です。2000番台（組立・試運転）は専用の「2000番 完了報告」画面で扱います。</div>
+        </section>
+
+        <section id="s2">
+            <div class="section-eyebrow">Chapter 2</div>
+            <h2>承認フローの全体像</h2>
+            <p>1つの工事番号は、機械ごとに以下のような工程を順番に進んでいきます。工程の数や順序は機械の内容によって異なり、試運転や出荷確認会議が不要な案件では省略されることもあります。</p>
+            <div class="flowline">
+                <div class="flow-step"><div class="flow-dot">1</div><span class="label">組立</span><span class="sub">完了申請・承認</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">2</div><span class="label">外観検査</span><span class="sub">開催案内</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">3</div><span class="label">試運転</span><span class="sub">完了申請・承認</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">4</div><span class="label">出荷会議</span><span class="sub">開催案内</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">5</div><span class="label">出荷準備</span><span class="sub">完了申請</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">6</div><span class="label">出荷</span><span class="sub">出荷確定申請</span></div>
+            </div>
+            <h3>申請と承認の役割分担</h3>
+            <table class="spec">
+                <tr><th>工程</th><th>申請・案内送付</th><th>承認</th></tr>
+                <tr><td>組立完了</td><td>組立担当者</td><td>組立課長 → 品証 → 製管</td></tr>
+                <tr><td>外観検査・簡易検査</td><td>組立担当者（開催案内送信）</td><td>承認なし（品証が開催後にペンディングを確認）</td></tr>
+                <tr><td>試運転完了</td><td>操業（試運転）担当者</td><td>操業課長 → 品証 → 製管 → 組立部長（常務）</td></tr>
+                <tr><td>出荷確認会議</td><td>営業／製管（開催案内送信）</td><td>承認なし（品証が開催後にペンディングを確認）</td></tr>
+                <tr><td>出荷準備完了</td><td>組立担当者</td><td>承認なし（品証へ即時通知）</td></tr>
+                <tr><td>出荷確定</td><td>営業担当者</td><td>組立部長（常務） → 製管 → 品証</td></tr>
+            </table>
+            <div class="note">「承認なし」の工程は、開催案内を送った後に品証がペンディング項目（残作業）を確認し、完了させることで次の工程に進みます。</div>
+        </section>
+
+        <section id="s3">
+            <div class="section-eyebrow">Chapter 3</div>
+            <h2>画面の基本構成</h2>
+            <p>ログイン後、画面左側に常に表示されるメニューから各機能に移動します。</p>
+            <table class="spec">
+                <tr><th>承認ステータス</th><td>全工事番号の承認フロー進捗を一覧表示するメイン画面</td></tr>
+                <tr><th>2000番 完了報告</th><td>2000番台（組立・試運転のみ対象）専用の進捗一覧画面</td></tr>
+                <tr><th>マイページ</th><td>自分が出した申請の状況、自分が承認すべき案件をまとめて確認</td></tr>
+                <tr><th>使い方ガイド</th><td>この資料をいつでも開けるリンク</td></tr>
+            </table>
+            <div class="note">画面上部に表示される「デモ用ロール切替」バーは、動作確認のための開発用機能で、一部の担当者にのみ表示されます。通常の利用では表示されません。</div>
+        </section>
+
+        <section id="s4">
+            <div class="section-eyebrow">Chapter 4</div>
+            <h2>承認ステータス画面の見方</h2>
+            <p>工事番号ごとに1枚のカードで表示され、カード内にその工事の承認フローが工程順に並びます。</p>
+            <figure class="shot broken" data-name="01_status_list.png">
+                <img src="guide_images/01_status_list.png" alt="承認ステータス画面の一覧表示" onerror="this.parentElement.classList.add('broken')">
+                <figcaption>承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる</figcaption>
+            </figure>
+            <h3>工程アイコンの意味</h3>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-icon todo">○</div><div class="legend-text"><b>未着手</b><span>まだこの工程に到達していない</span></div></div>
+                <div class="legend-item"><div class="legend-icon doing">▶</div><div class="legend-text"><b>対応中</b><span>申請中・承認待ち・開催予定など、誰かの対応待ち</span></div></div>
+                <div class="legend-item"><div class="legend-icon done">✓</div><div class="legend-text"><b>完了</b><span>その工程が完了した（完了日を表示）</span></div></div>
+                <div class="legend-item"><div class="legend-icon warn">⚠</div><div class="legend-text"><b>未申請・未承認</b><span>期日を過ぎても対応がない状態（催促の対象）</span></div></div>
+            </div>
+            <p>各工程の下には申請日・開催日・完了日や、ペンディング（残作業）の件数バッジが表示されます。</p>
+            <h3>絞り込み・検索・並び替え</h3>
+            <ul>
+                <li><b>自分の担当</b>：自分が対応すべき工事番号だけに絞り込む</li>
+                <li><b>完了済み</b>：全工程が完了した工事番号を表示する</li>
+                <li><b>未申請・未承認</b>：期日を過ぎて止まっている案件だけを表示する（品証・製管向け）</li>
+                <li><b>出荷後対応</b>：出荷後に残っている未完了のペンディング項目を横断表示する</li>
+                <li>右上の検索欄で工事番号・客先名から絞り込み、「工事番号順」「出荷日順」で並び替えが可能</li>
+                <li>左メニューの「工番種別」（3000番／4000番／3C番／4C番／D番）でも絞り込める</li>
+            </ul>
+        </section>
+
+        <section id="s5">
+            <div class="section-eyebrow">Chapter 5</div>
+            <h2>マイページ</h2>
+            <p>「マイページ」では、自分が出した<b>申請</b>の状況と、自分が対応すべき<b>承認</b>案件をまとめて確認できます。左メニューの「マイページ」に赤い数字バッジが付いている場合、対応待ちの承認があることを示しています。</p>
+            <figure class="shot broken" data-name="02_mypage_mini.png">
+                <img src="guide_images/02_mypage_mini.png" alt="マイページの簡易表示" onerror="this.parentElement.classList.add('broken')">
+                <figcaption>マイページ（簡易表示）：申請が「入力中 → 承認待ち → ペンディング → 承認済み」の順に進む</figcaption>
+            </figure>
+            <figure class="shot broken" data-name="03_mypage_full.png">
+                <img src="guide_images/03_mypage_full.png" alt="マイページの詳細表示（申請・承認セクション）" onerror="this.parentElement.classList.add('broken')">
+                <figcaption>マイページ（詳細表示）：上段が「申請」、下段が「承認」。承認セクションの赤いバッジ<span class="badge-num">1</span>は対応待ちの件数</figcaption>
+            </figure>
+            <h3>申請セクション（自分が出した申請）</h3>
+            <ul>
+                <li><b>入力中</b>：自主点検シートなどを入力している途中で、まだ申請していない状態</li>
+                <li><b>承認待ち</b>：申請済みで、承認者の対応待ちの状態</li>
+                <li><b>ペンディング</b>：承認は済んだが残作業（ペンディング項目）が残っている状態</li>
+                <li><b>承認済み</b>：すべて完了した状態</li>
+            </ul>
+            <h3>承認セクション（自分が対応すべき案件）</h3>
+            <p>組立課長・操業課長・品証・製管などの承認権限を持つ人にのみ表示されます。「要承認」と表示されているカードをクリックすると、詳細を確認してその場で承認できます。</p>
+        </section>
+
+        <section id="s6">
+            <div class="section-eyebrow">Chapter 6</div>
+            <h2>2000番 完了報告</h2>
+            <p>2000番台の工事番号は、組立・試運転のみが承認フローの対象です。この専用画面では、1つの工事番号の中にある複数の機械（FL・FS・LE・PC など）ごとの進捗を並べて確認できます。</p>
+            <figure class="shot broken" data-name="04_2000_report.png">
+                <img src="guide_images/04_2000_report.png" alt="2000番完了報告画面" onerror="this.parentElement.classList.add('broken')">
+                <figcaption>2000番 完了報告画面：機械ごとに組立・試運転の進捗と出荷予定日を表示。未申請の機械には警告が表示される</figcaption>
+            </figure>
+            <div class="note">通常の「承認ステータス」画面には2000番台は表示されません。2000番台の案件はこの画面から確認・申請してください。</div>
+        </section>
+
+        <section id="s7">
+            <div class="section-eyebrow">Chapter 7</div>
+            <h2>申請〜承認の操作手順</h2>
+            <p>ここでは組立完了申請を例に、基本的な操作の流れを説明します（実際の操作は説明会内でアプリを動かしながらご案内します）。</p>
+            <ol>
+                <li>「承認ステータス」または「2000番 完了報告」画面で、対象の工事番号・機械の申請ボタンを押す</li>
+                <li>機械組立完了自主点検シートの各項目を「○／×／―」でチェックし、必要に応じて備考・写真を入力する</li>
+                <li>入力完了後、「入力完了・申請へ進む」を押すと基本情報の入力画面に戻る（この時点では「入力中」のまま保存されるので、途中で閉じても再開できる）</li>
+                <li>承認者（組立課長／組立部長）を選択し、コメントを入力して「申請する」を押す</li>
+                <li>申請後は承認者にメールで通知が届き、承認者はマイページの「承認」からその場で承認できる</li>
+                <li>承認が完了すると次の工程（外観検査など）に進み、承認ステータス画面の表示も自動的に更新される</li>
+            </ol>
+            <div class="note">検査・会議系（簡易検査・外観検査・出荷確認会議）は承認そのものは不要で、「開催案内を送信」→ 開催後に品証がペンディングを確認して「完了にする」という流れになります。</div>
+        </section>
+
+        <section id="s8">
+            <div class="section-eyebrow">Chapter 8</div>
+            <h2>自動メール通知（催促）</h2>
+            <p>対応漏れを防ぐため、以下のようなケースでは毎日自動でメール通知（催促）が届きます。</p>
+            <table class="spec">
+                <tr><th>承認催促</th><td>申請から24時間以上経っても承認されていない場合、承認者へ</td></tr>
+                <tr><th>申請催促</th><td>工程表の予定終了日を過ぎても申請がない場合、担当者へ</td></tr>
+                <tr><th>案内催促</th><td>検査・会議の開催案内が未送付の場合、品証・製管へ</td></tr>
+                <tr><th>ペンディング期日超過催促</th><td>ペンディング項目の完了予定日を過ぎても未完了の場合、担当者へ（完了にするまで毎日）</td></tr>
+                <tr><th>完了処理催促</th><td>検査・会議の開催日を過ぎても「完了にする」が押されていない場合、品証へ（完了にするまで毎日）</td></tr>
+            </table>
+            <div class="note">通知はすべて自動送信です。心当たりのある通知が届いたら、放置せずアプリ上で該当の申請・承認・完了処理を行ってください。</div>
+        </section>
+
+        <section id="s9">
+            <div class="section-eyebrow">Chapter 9</div>
+            <h2>困ったときは</h2>
+            <ul>
+                <li>操作方法が分からない場合は、この資料をアプリ内の「使い方ガイド」からいつでも見返せます</li>
+                <li>アプリの不具合・表示がおかしい場合や、承認者・担当者の変更が必要な場合は製造管理課までご連絡ください</li>
+                <li>設定（承認者の割り当てなど）は製造管理課の担当者のみが行います</li>
+            </ul>
+        </section>
+
+    </main>
+</div>
+
+<div class="pagerbar">
+    <button id="btn_prev" title="前のセクション（↑ / PageUp）">▲</button>
+    <button id="btn_next" title="次のセクション（↓ / PageDown / Space）">▼</button>
+</div>
+
+<script>
+    var sectionEls = Array.prototype.slice.call(document.querySelectorAll('main.main > section'));
+    var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+
+    function currentIndex() {
+        var mid = window.scrollY + window.innerHeight / 3;
+        var idx = 0;
+        sectionEls.forEach(function (sec, i) {
+            if (sec.offsetTop <= mid) idx = i;
+        });
+        return idx;
+    }
+    function goTo(idx) {
+        idx = Math.max(0, Math.min(sectionEls.length - 1, idx));
+        sectionEls[idx].scrollIntoView({ behavior: 'smooth' });
+    }
+    document.getElementById('btn_prev').addEventListener('click', function () { goTo(currentIndex() - 1); });
+    document.getElementById('btn_next').addEventListener('click', function () { goTo(currentIndex() + 1); });
+    window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(currentIndex() + 1); }
+        if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(currentIndex() - 1); }
+    });
+
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
+            if (!link) return;
+            if (entry.isIntersecting) {
+                tocLinks.forEach(function (l) { l.classList.remove('active'); });
+                link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sectionEls.forEach(function (sec) { io.observe(sec); });
+</script>
+</body>
+</html>
