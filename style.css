@@ -2150,7 +2150,7 @@
             display: flex; align-items: center; justify-content: center;
         }
         .rail-user-name { flex: 1; text-align: left; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rail-user .header-user-caret { color: #7d93b8; font-size: 14px; }
+        .rail-user .header-user-caret { color: #7d93b8; font-size: 20px; }
         .rail-user .user-menu-dropdown { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 200px; }
 
 
