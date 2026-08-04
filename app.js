@@ -1551,19 +1551,13 @@ function renderProgressCards() {
                 if (f.type === 'shipping_meeting')  return hasProjectFlow(num, '出荷確認会議') || hasTask(num, machine, '出荷確認会議') || !!mData.flows['shipping_meeting'];
                 if (f.type === 'shipping_prep')     return hasTask(num, machine, '出荷準備')   || !!mData.flows['shipping_prep'];
                 return false;
-            }).map(f => ({
-                // 設定（工事番号・機械単位）でOFFにされたフローは、完全に消すのではなく「スキップ」として残す
-                // （既存の申請済みデータがあれば、OFFでも通常表示のまま継続する）
-                ...f, skipped: !isFlowEnabledFor(f.type, num, machine) && !mData.flows[f.type]
-            }));
+            });
 
             const nodes = applicable.map((f, i) => {
                 const req = mData.flows[f.type];
                 let fcClass, icon, clickAttr = '', clickable = '';
 
-                if (f.skipped) {
-                    fcClass = 'fc-skipped'; icon = '－';
-                } else if (!req) {
+                if (!req) {
                     fcClass = 'fc-empty'; icon = '○';
                 } else if (req.status === 'approved') {
                     fcClass = 'fc-done'; icon = '✓';
@@ -1577,9 +1571,7 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if (f.skipped) {
-                    // OFF中は申請・詳細表示ともにクリック不可
-                } else if (!req && canApply && !progressFilterCompleted) {
+                if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
@@ -1595,9 +1587,7 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (f.skipped) {
-                    flowDateStr = 'スキップ';
-                } else if (req && req.status !== 'draft') {
+                if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
@@ -1622,21 +1612,19 @@ function renderProgressCards() {
                     }
                 }
 
-                // 未申請・未承認バッジ（フィルタと連動）。OFF中はスキップ表示のみで、未申請扱いのバッジは出さない
+                // 未申請・未承認バッジ（フィルタと連動）
                 let overdueBadge = '';
-                if (!f.skipped) {
-                    const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
-                    const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
-                    if (isMainOverdueFlow || isInviteOverdueFlow) {
-                        const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
-                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
-                    }
+                const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
+                const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
+                if (isMainOverdueFlow || isInviteOverdueFlow) {
+                    const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
+                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
                 }
 
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
-                return `<div class="flow-node${clickable}${f.skipped ? ' flow-node-skipped' : ''}" ${clickAttr}
+                return `<div class="flow-node${clickable}" ${clickAttr}
                     data-flow-type="${f.type}"
                     data-num="${esc(num)}"
                     data-machine="${esc(machine)}">
