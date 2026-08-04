@@ -320,6 +320,8 @@ const FIXED_RECIPIENT_GROUPS = {
     shipping:          [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
+                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
+};
 let flowSettings   = { fixedRecipients: {} };
 
 async function loadFlowSettings() {
