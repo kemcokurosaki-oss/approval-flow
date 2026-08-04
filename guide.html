@@ -391,10 +391,47 @@
             <div class="section-eyebrow">Chapter 4</div>
             <h2>承認ステータス画面の見方</h2>
             <p>工事番号ごとに1枚のカードで表示され、カード内にその工事の承認フローが工程順に並びます。</p>
-            <figure class="shot" data-name="01_status_list.png">
-                <img src="guide_images/01_status_list.png" alt="承認ステータス画面の一覧表示" onerror="this.parentElement.classList.add('broken')">
-                <figcaption>承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる</figcaption>
-            </figure>
+            <div class="mockup">
+                <div class="mockup-bg">
+                    <div class="prog-card">
+                        <div class="prog-card-header">
+                            <div class="prog-card-header-left"><span class="prog-card-num">3181</span><span class="prog-card-label">新家工業株式会社　関西工場　PSM-6ミーリング切断機減速機更新工事</span></div>
+                            <div class="prog-card-dates"><div class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/8/28</span></div></div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-active"><span class="fc-play-icon">▶</span></div><div class="flow-label">組立</div><div class="flow-date">申請 7/30</div><div class="flow-pending-badge">1件</div><div class="flow-overdue-badge">⚠ 未承認</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-active"><span class="fc-play-icon">▶</span></div><div class="flow-label">外観検査</div><div class="flow-date">開催 7/27</div><div class="flow-pending-badge">2件</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="prog-card">
+                        <div class="prog-card-header">
+                            <div class="prog-card-header-left"><span class="prog-card-num">3196</span><span class="prog-card-label">丸一鋼管株式会社　名古屋工場　3号ラインRGリフター追加工事</span></div>
+                            <div class="prog-card-dates"><div class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/10/9</span></div></div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">組立</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">外観検査</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷会議</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-done">✓</div><div class="flow-label">出荷準備</div><div class="flow-date">完了 7/31</div></div>
+                                <div class="flow-connector fc-line-done"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-caption">承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる（実際の画面と同じ表示を再現）</div>
+            </div>
             <h3>工程アイコンの意味</h3>
             <div class="legend">
                 <div class="legend-item"><div class="legend-icon todo">○</div><div class="legend-text"><b>未着手</b><span>まだこの工程に到達していない</span></div></div>
