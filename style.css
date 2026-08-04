@@ -2060,7 +2060,8 @@
             border-bottom: 1px solid #e3e8f0;
             padding: 0 16px;
         }
-        .side-panel-title { font-size: 14px; font-weight: 700; color: #16233a; }
+        .side-panel-title { font-size: 14px; font-weight: 700; color: #16233a; display: flex; align-items: center; gap: 8px; }
+        .side-panel-title-icon { color: #16233a; }
         .side-panel-close-btn {
             width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
             border-radius: 8px; background: #f1f4f9; color: #6b7789; font-size: 14px; padding: 0;
