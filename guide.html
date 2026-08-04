@@ -544,10 +544,40 @@
             <div class="section-eyebrow">Chapter 6</div>
             <h2>2000番 完了報告</h2>
             <p>2000番台の工事番号は、組立・試運転のみが承認フローの対象です。この専用画面では、1つの工事番号の中にある複数の機械（FL・FS・LE・PC など）ごとの進捗を並べて確認できます。</p>
-            <figure class="shot" data-name="04_2000_report.png">
-                <img src="guide_images/04_2000_report.png" alt="2000番完了報告画面" onerror="this.parentElement.classList.add('broken')">
-                <figcaption>2000番 完了報告画面：機械ごとに組立・試運転の進捗と出荷予定日を表示。未申請の機械には警告が表示される</figcaption>
-            </figure>
+            <div class="mockup">
+                <div class="mockup-bg">
+                    <div class="prog-card">
+                        <div class="prog-card-header">
+                            <div class="prog-card-header-left"><span class="prog-card-num">2810</span><span class="prog-card-label">三五　高張力ドアビーム対応造管ライン</span></div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="prog-machine-row-header"><span class="prog-machine-label">【FL】</span><span class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/10/16</span></span></div>
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-draft">✏</div><div class="flow-label">組立</div><div class="flow-date">入力中</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div><div class="flow-overdue-badge">⚠ 未申請</div></div>
+                            </div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="prog-machine-row-header"><span class="prog-machine-label">【FS】</span><span class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/10/2</span></span></div>
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-draft">✏</div><div class="flow-label">組立</div><div class="flow-date">入力中</div><div class="flow-overdue-badge">⚠ 未申請</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
+                            </div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="prog-machine-row-header"><span class="prog-machine-label">【LE】</span><span class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/10/2</span></span></div>
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">組立</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-caption">2000番 完了報告画面：機械ごとに組立・試運転の進捗と出荷予定日を表示。未申請の機械には警告が表示される</div>
+            </div>
             <div class="note">通常の「承認ステータス」画面には2000番台は表示されません。2000番台の案件はこの画面から確認・申請してください。</div>
         </section>
 
