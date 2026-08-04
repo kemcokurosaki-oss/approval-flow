@@ -665,9 +665,6 @@
         .fc-play-icon { font-size: 16px; display: inline-block; transform: translate(1px, -1px); }
         .fc-x-icon   { font-size: 25px; font-weight: bold; display: inline-block; transform: translateY(-2px); }
         .fc-empty    { background: #e0e0e0; color: #aaa; }
-        .fc-skipped  { background: #f5f5f5; color: #ccc; border: 2px dashed #ddd !important; }
-        .flow-node-skipped .flow-label,
-        .flow-node-skipped .flow-date { color: #bbb; }
         .flow-label {
             font-size: 17px;
             color: #666;
