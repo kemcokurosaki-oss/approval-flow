@@ -1588,9 +1588,7 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (f.skipped) {
-                    flowDateStr = 'スキップ';
-                } else if (req && req.status !== 'draft') {
+                if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
