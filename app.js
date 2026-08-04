@@ -3150,7 +3150,7 @@ function closeDetailModal() {
 }
 
 // ===== 設定画面（製管2名のみ） =====
-let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
+let settingsView            = 'menu'; // 'menu' | 'recipients_list' | 'recipients_detail' | ...
 
 // 設定画面のカテゴリ構成。項目を増やす時はここに追記するだけでよい
 const SETTINGS_CATEGORIES = [
