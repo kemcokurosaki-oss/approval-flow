@@ -1552,19 +1552,13 @@ function renderProgressCards() {
                 if (f.type === 'shipping_meeting')  return hasProjectFlow(num, '出荷確認会議') || hasTask(num, machine, '出荷確認会議') || !!mData.flows['shipping_meeting'];
                 if (f.type === 'shipping_prep')     return hasTask(num, machine, '出荷準備')   || !!mData.flows['shipping_prep'];
                 return false;
-            }).map(f => ({
-                // 設定（工事番号・機械単位）でOFFにされたフローは、完全に消すのではなく「スキップ」として残す
-                // （既存の申請済みデータがあれば、OFFでも通常表示のまま継続する）
-                ...f, skipped: !isFlowEnabledFor(f.type, num, machine) && !mData.flows[f.type]
-            }));
+            });
 
             const nodes = applicable.map((f, i) => {
                 const req = mData.flows[f.type];
                 let fcClass, icon, clickAttr = '', clickable = '';
 
-                if (f.skipped) {
-                    fcClass = 'fc-skipped'; icon = '－';
-                } else if (!req) {
+                if (!req) {
                     fcClass = 'fc-empty'; icon = '○';
                 } else if (req.status === 'approved') {
                     fcClass = 'fc-done'; icon = '✓';
