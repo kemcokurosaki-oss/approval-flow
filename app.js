@@ -1572,9 +1572,7 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if (f.skipped) {
-                    // OFF中は申請・詳細表示ともにクリック不可
-                } else if (!req && canApply && !progressFilterCompleted) {
+                if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
