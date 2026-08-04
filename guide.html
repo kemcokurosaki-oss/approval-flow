@@ -247,6 +247,29 @@
     table.spec th, table.spec td { border: 1px solid #dde3ee; padding: 8px 12px; text-align: left; vertical-align: top; }
     table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
 
+    /* ---------- イラスト番号バッジ／対応する説明リスト ---------- */
+    .callout, .callout-light {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 19px; height: 19px; border-radius: 50%;
+        font-size: 11px; font-weight: 800; flex-shrink: 0;
+        margin-left: 6px; vertical-align: 2px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .callout       { background: #e5644a; color: #fff; }
+    .callout-light { background: #fff; color: #c0392b; }
+    .callout-list {
+        list-style: none;
+        max-width: 780px;
+        margin: 14px 0 26px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+    .callout-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
+    .callout-list li .callout, .callout-list li .callout-light { margin-left: 0; margin-top: 1px; background: #e5644a; color: #fff; }
+    .callout-list li b { color: #16233a; }
+
 
     /* ---------- ページ送りボタン ---------- */
     .pagerbar {
