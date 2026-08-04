@@ -3168,31 +3168,6 @@ const SETTINGS_CATEGORIES = [
         ]
     }
 ];
-let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
-let settingsToggleMachines  = [];     // フローON/OFF画面で表示中の機械一覧
-let settingsToggleApplicable = {};    // 機械ごとに、ステップ表示に出てくる（＝トグルを表示すべき）フロー種別 { machine: Set(flow_type) }
-let settingsTogglePending   = {};     // 未保存の変更差分 { machine: { flow_type: boolean(有効か) } }
-
-// フロー種別 → 対応するタスク名（TASK_TEXT_TO_FLOWの逆引き＋組立・出荷確定を追加）
-const FLOW_TYPE_TO_TASK_TEXT = {
-    ...Object.fromEntries(Object.entries(TASK_TEXT_TO_FLOW).map(([text, ft]) => [ft, text])),
-    assembly: '機械組立', shipping: '工場出荷'
-};
-
-// このフローを機械の設定画面に「トグルとして表示すべきか」を、ステップ表示（applicable判定）と同じ条件で判定する。
-// 工程表にタスクが無いフローはONにしても意味が無い（ステップに出てこない）ため、そもそもトグル自体を出さない。
-// ただし過去に申請済みのフローは、タスクが後から消えていても継続表示する。
-function isFlowApplicableForToggle(num, machine, ft, machineTaskSet, projectFlowSet, existingFlowSet) {
-    if (is2000sSeries(num) && ft !== 'test_run' && ft !== 'assembly') return false; // 2000番台は組立・試運転以外の中間フロー対象外
-    // 組立・出荷確定はステップ表示でalwaysShow扱い（工程表のタスク有無を問わず常に表示）のため、トグルも常に表示する
-    if (ft === 'assembly' || ft === 'shipping') return true;
-    if (existingFlowSet.has(`${machine}${FLOW_OVERRIDE_SEP}${ft}`)) return true; // 申請済みなら継続表示
-    const taskText = FLOW_TYPE_TO_TASK_TEXT[ft];
-    const hasMachineTask = machineTaskSet.has(`${machine}${FLOW_OVERRIDE_SEP}${taskText}`);
-    if (ft === 'test_run' || ft === 'shipping_prep') return hasMachineTask; // 機械単位のタスクのみ
-    return projectFlowSet.has(taskText) || hasMachineTask; // 工番単位のタスクでも可
-}
-
 function toggleUserMenu() {
     document.getElementById('user_menu_btn').classList.toggle('open');
     document.getElementById('user_menu_dropdown').classList.toggle('open');
@@ -4315,15 +4290,13 @@ async function _getMiddleFlowChain(projectNum, machine) {
         if (text === '試運転' && r.machine !== machine) continue;
         if (best[flow] === undefined || r.sort_order < best[flow]) best[flow] = r.sort_order;
     }
-    // 設定（工事番号・機械単位）でOFFにされたフローは、出荷準備等の前提チェックの対象から除外する
-    return Object.keys(best).filter(ft => isFlowEnabledFor(ft, projectNum, machine)).sort((a, b) => best[a] - best[b]);
+    return Object.keys(best).sort((a, b) => best[a] - best[b]);
 }
 
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
-// 設定（工事番号・機械単位）でOFFにされたフローは組立・出荷確定も含めて除外する
 async function _getMachineFlowChain(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
-    return ['assembly', ...middle, 'shipping'].filter(ft => isFlowEnabledFor(ft, projectNum, machine));
+    return ['assembly', ...middle, 'shipping'];
 }
 
 // 複数機械選択時: 各機械のフロー構成を、工程順を保ったまま合成する
