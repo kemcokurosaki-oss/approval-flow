@@ -3149,16 +3149,10 @@ function closeDetailModal() {
 }
 
 // ===== 設定画面（製管2名のみ） =====
-let settingsView            = 'menu'; // 'menu' | 'flow_toggle' | 'recipients_list' | 'recipients_detail' | ...
+let settingsView            = 'menu'; // 'menu' | 'recipients_list' | 'recipients_detail' | ...
 
 // 設定画面のカテゴリ構成。項目を増やす時はここに追記するだけでよい
 const SETTINGS_CATEGORIES = [
-    {
-        icon: '🔀', label: 'フロー設定',
-        items: [
-            { label: 'フローのON/OFF', desc: '工事番号・機械ごとに、不要なフローを飛ばす', fn: 'showFlowToggleScreen' }
-        ]
-    },
     {
         icon: '📧', label: '通知・宛先設定',
         items: [
@@ -3173,31 +3167,6 @@ const SETTINGS_CATEGORIES = [
         ]
     }
 ];
-let settingsToggleProject   = '';     // フローON/OFF画面で選択中の工事番号
-let settingsToggleMachines  = [];     // フローON/OFF画面で表示中の機械一覧
-let settingsToggleApplicable = {};    // 機械ごとに、ステップ表示に出てくる（＝トグルを表示すべき）フロー種別 { machine: Set(flow_type) }
-let settingsTogglePending   = {};     // 未保存の変更差分 { machine: { flow_type: boolean(有効か) } }
-
-// フロー種別 → 対応するタスク名（TASK_TEXT_TO_FLOWの逆引き＋組立・出荷確定を追加）
-const FLOW_TYPE_TO_TASK_TEXT = {
-    ...Object.fromEntries(Object.entries(TASK_TEXT_TO_FLOW).map(([text, ft]) => [ft, text])),
-    assembly: '機械組立', shipping: '工場出荷'
-};
-
-// このフローを機械の設定画面に「トグルとして表示すべきか」を、ステップ表示（applicable判定）と同じ条件で判定する。
-// 工程表にタスクが無いフローはONにしても意味が無い（ステップに出てこない）ため、そもそもトグル自体を出さない。
-// ただし過去に申請済みのフローは、タスクが後から消えていても継続表示する。
-function isFlowApplicableForToggle(num, machine, ft, machineTaskSet, projectFlowSet, existingFlowSet) {
-    if (is2000sSeries(num) && ft !== 'test_run' && ft !== 'assembly') return false; // 2000番台は組立・試運転以外の中間フロー対象外
-    // 組立・出荷確定はステップ表示でalwaysShow扱い（工程表のタスク有無を問わず常に表示）のため、トグルも常に表示する
-    if (ft === 'assembly' || ft === 'shipping') return true;
-    if (existingFlowSet.has(`${machine}${FLOW_OVERRIDE_SEP}${ft}`)) return true; // 申請済みなら継続表示
-    const taskText = FLOW_TYPE_TO_TASK_TEXT[ft];
-    const hasMachineTask = machineTaskSet.has(`${machine}${FLOW_OVERRIDE_SEP}${taskText}`);
-    if (ft === 'test_run' || ft === 'shipping_prep') return hasMachineTask; // 機械単位のタスクのみ
-    return projectFlowSet.has(taskText) || hasMachineTask; // 工番単位のタスクでも可
-}
-
 function toggleUserMenu() {
     document.getElementById('user_menu_btn').classList.toggle('open');
     document.getElementById('user_menu_dropdown').classList.toggle('open');
@@ -3249,240 +3218,6 @@ function showSettingsMenu() {
             `).join('')}
         </div>
     `;
-}
-
-// ----- フローのON/OFF（工事番号・機械ごと） -----
-// フローのON/OFF画面で使う工番区分（進捗一覧のprefix-panelと同じ区分・同じmatchesPrefix()を使う）
-const SETTINGS_PROJECT_CATEGORIES = [
-    { key: '2000', label: '2000番' }, { key: '3', label: '3000番' }, { key: '4', label: '4000番' },
-    { key: '3C',   label: '3C番' },   { key: '4C', label: '4C番' },   { key: 'D', label: 'D番' }
-];
-
-// メインの進捗一覧（loadProgress()のbaseNums）と同じ条件で対象工番を絞り込む：
-// 機械組立・試運転タスクが実在する工番のみを対象にし、2000番台・D番はさらにタスクの有無で絞る
-async function buildSettingsProjectCategories() {
-    const { data: taskRows } = await db.from('tasks')
-        .select('project_number, machine, text')
-        .in('text', ['機械組立', '試運転'])
-        .not('machine', 'is', null);
-    const taskTextsByProject = {}; // num -> Set(text)（機械単位までは問わず、工番に存在するかだけ見る）
-    (taskRows || []).forEach(t => {
-        const num = (t.project_number || '').toString().trim();
-        if (!num || !t.machine) return; // 号機（machine）が未入力のタスクは対象外（メインの進捗一覧と同条件）
-        if (!taskTextsByProject[num]) taskTextsByProject[num] = new Set();
-        taskTextsByProject[num].add(t.text);
-    });
-
-    const nums = Object.keys(projectsMap)
-        .filter(num => !completedProjectNums.has(num)) // 完了済み工番は対象外
-        .filter(num => !isTInspectionSeries(num) && !is5or7Series(num)) // 承認フロー対象外の工番は除外
-        .filter(num => {
-            const texts = taskTextsByProject[num];
-            if (!texts) return false; // 機械組立・試運転タスクが無い工番は対象外
-            if (is2000sSeries(num)) return texts.has('機械組立') || texts.has('試運転');
-            if (isDSeries(num))     return texts.has('機械組立');
-            return true;
-        })
-        .sort();
-    const buckets = SETTINGS_PROJECT_CATEGORIES.map(c => ({ ...c, nums: [] }));
-    const others = [];
-    nums.forEach(num => {
-        const b = buckets.find(b => matchesPrefix(num, b.key));
-        (b ? b.nums : others).push(num);
-    });
-    if (others.length > 0) buckets.push({ key: '__other__', label: 'その他', nums: others });
-    return buckets.filter(b => b.nums.length > 0);
-}
-
-async function showFlowToggleScreen() {
-    settingsView          = 'flow_toggle';
-    settingsToggleProject = '';
-    settingsToggleMachines = [];
-    settingsTogglePending = {};
-    const body = document.getElementById('settings_body');
-    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
-
-    const categories = await buildSettingsProjectCategories();
-    const categoriesHtml = categories.map(cat => `
-        <div class="settings-project-category">
-            <button class="settings-project-category-header" onclick="this.parentElement.classList.toggle('open')">
-                <span class="settings-project-category-arrow">▶</span>
-                <span>${esc(cat.label)}</span>
-                <span class="settings-project-category-count">${cat.nums.length}件</span>
-            </button>
-            <div class="settings-project-category-body">
-                ${cat.nums.map(num => {
-                    const p = projectsMap[num] || {};
-                    const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-                    return `<div class="settings-project-item" onclick="selectSettingsProject('${esc(num)}')">
-                        <span class="settings-project-item-num">${esc(num)}</span>
-                        <span class="settings-project-item-label">${esc(label)}</span>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>
-    `).join('');
-    body.innerHTML = `
-        <div class="settings-sticky-header">
-            <button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button>
-        </div>
-        <div class="section-title" style="margin-top:10px;">フローのON/OFF（工事番号・機械ごと）</div>
-        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。</div>
-        <div class="form-group">
-            <label>工事番号を選択</label>
-            <div class="settings-project-tree">${categoriesHtml}</div>
-        </div>
-    `;
-}
-
-// 工事番号を選択した時点で、工事番号選択ツリーから機械ごとのフローON/OFF切り替え画面へ丸ごと切り替える
-// （選択後もツリーを表示したままにすると、どの工事番号を操作中か分かりにくいため）
-async function selectSettingsProject(num) {
-    settingsView          = 'flow_toggle_detail';
-    settingsToggleProject = num;
-    settingsToggleMachines = [];
-    settingsToggleApplicable = {};
-    settingsTogglePending = {};
-
-    const p     = projectsMap[num] || {};
-    const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
-    const body  = document.getElementById('settings_body');
-    body.innerHTML = `
-        <div class="settings-sticky-header">
-            <button class="btn btn-sm btn-secondary" onclick="showFlowToggleScreen()">← 戻る</button>
-            <div class="settings-sticky-project-label">📌 ${esc(num)}　${esc(label)}</div>
-        </div>
-        <div class="settings-note">OFFにすると、その機械のそのフローだけ新規申請・開催案内の作成ができなくなります（進行中の案件はそのまま継続できます）。工程表にタスクが無いフローは、そもそも表示されません。</div>
-        <div id="settings_toggle_grid" class="loading-indicator">読み込み中...</div>
-        <div style="margin-top:10px;">
-            <button class="btn btn-primary" onclick="confirmFlowToggles()">確定</button>
-        </div>
-    `;
-    showLoading('読み込み中...');
-    try {
-        // メインの進捗一覧（ステップ表示）のapplicable判定と同じ材料を、この工番だけに絞って取得する
-        const [{ data: machineTaskRows }, { data: projectFlowRows }, { data: existingReqs }] = await Promise.all([
-            db.from('tasks').select('machine, text').eq('project_number', num)
-                .in('text', ['機械組立', '試運転', '外観検査', '出荷確認会議', '出荷準備'])
-                .not('machine', 'is', null),
-            db.from('tasks').select('text').eq('project_number', num)
-                .in('text', ['簡易検査', '外観検査', '出荷確認会議']),
-            db.from('approval_requests').select('machine_name, flow_type').eq('project_number', num)
-        ]);
-
-        settingsToggleMachines = [...new Set((machineTaskRows || [])
-            .filter(t => t.text === '機械組立' && t.machine)
-            .map(t => t.machine))].sort();
-
-        const machineTaskSet = new Set((machineTaskRows || [])
-            .filter(t => t.machine)
-            .map(t => `${t.machine}${FLOW_OVERRIDE_SEP}${t.text}`));
-        const projectFlowSet = new Set((projectFlowRows || []).map(t => t.text));
-        const existingFlowSet = new Set((existingReqs || [])
-            .filter(r => r.machine_name)
-            .map(r => `${r.machine_name}${FLOW_OVERRIDE_SEP}${r.flow_type}`));
-
-        settingsToggleApplicable = {};
-        settingsToggleMachines.forEach(machine => {
-            settingsToggleApplicable[machine] = new Set(
-                TOGGLABLE_FLOWS.filter(ft => isFlowApplicableForToggle(num, machine, ft, machineTaskSet, projectFlowSet, existingFlowSet))
-            );
-        });
-    } finally {
-        hideLoading();
-    }
-    renderSettingsToggleGrid();
-}
-
-function renderSettingsToggleGrid() {
-    const gridEl = document.getElementById('settings_toggle_grid');
-    if (!gridEl) return;
-    if (settingsToggleMachines.length === 0) {
-        gridEl.className = '';
-        gridEl.innerHTML = '<div style="color:#aaa;font-size:13px;">機械が見つかりません</div>';
-        return;
-    }
-    gridEl.className = 'settings-toggle-grid-cols';
-
-    gridEl.innerHTML = settingsToggleMachines.map(machine => {
-        const applicableFlows = TOGGLABLE_FLOWS.filter(ft => settingsToggleApplicable[machine]?.has(ft));
-        const rows = applicableFlows.length === 0
-            ? '<div style="color:#aaa;font-size:13px;">対象フローがありません（工程表にタスクがありません）</div>'
-            : applicableFlows.map(ft => {
-                const pendingForMachine = settingsTogglePending[machine] || {};
-                const enabled = pendingForMachine.hasOwnProperty(ft)
-                    ? pendingForMachine[ft]
-                    : isFlowEnabledFor(ft, settingsToggleProject, machine);
-                return `
-                    <label class="settings-toggle-row">
-                        <span class="settings-toggle-label">${esc(FLOW_LABELS[ft] || ft)}</span>
-                        <span class="settings-toggle-switch">
-                            <input type="checkbox" data-settings-machine="${esc(machine)}" data-settings-flow="${ft}"
-                                   ${enabled ? 'checked' : ''} onchange="onSettingsToggleChange(this)">
-                            <span class="settings-toggle-ui">
-                                <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
-                            </span>
-                        </span>
-                    </label>`;
-            }).join('');
-        return `
-            <div class="settings-flow-group">
-                <div class="settings-flow-title">${esc(machine)}</div>
-                ${rows}
-            </div>`;
-    }).join('');
-}
-
-function onSettingsToggleChange(cb) {
-    const machine  = cb.dataset.settingsMachine;
-    const flowType = cb.dataset.settingsFlow;
-    if (!settingsTogglePending[machine]) settingsTogglePending[machine] = {};
-    settingsTogglePending[machine][flowType] = cb.checked;
-}
-
-async function confirmFlowToggles() {
-    const changes = [];
-    for (const machine of Object.keys(settingsTogglePending)) {
-        for (const flowType of Object.keys(settingsTogglePending[machine])) {
-            changes.push({ machine, flowType, enabled: settingsTogglePending[machine][flowType] });
-        }
-    }
-    if (changes.length === 0) { showToast('変更がありません', 'error'); return; }
-
-    showLoading('保存中...');
-    try {
-        const toDelete = [];
-        const toUpsert = [];
-        for (const c of changes) {
-            if (c.enabled) {
-                toDelete.push(c); // ON=デフォルトに戻す → 例外行を削除
-            } else {
-                toUpsert.push({
-                    project_number: settingsToggleProject, machine: c.machine, flow_type: c.flowType,
-                    updated_by: currentUser.email, updated_at: new Date().toISOString()
-                });
-            }
-        }
-        for (const d of toDelete) {
-            await db.from('flow_overrides').delete()
-                .eq('project_number', settingsToggleProject).eq('machine', d.machine).eq('flow_type', d.flowType);
-        }
-        if (toUpsert.length > 0) {
-            await db.from('flow_overrides').upsert(toUpsert, { onConflict: 'project_number,machine,flow_type' });
-        }
-        const changeDescs = changes.map(c => `${c.machine}:${FLOW_LABELS[c.flowType] || c.flowType}を${c.enabled ? 'ON' : 'OFF'}`);
-        await logSettingsChange('flow_toggle', `${settingsToggleProject} — ${changeDescs.join('、')}`);
-
-        await loadFlowSettings();
-        settingsTogglePending = {};
-        renderSettingsToggleGrid();
-        await refreshAll();
-        showToast('設定を保存しました。', 'success');
-    } catch (e) {
-        showToast('保存に失敗しました: ' + e.message, 'error');
-    } finally {
-        hideLoading();
-    }
 }
 
 // ----- 固定宛先の設定（個人単位） -----
@@ -4554,15 +4289,13 @@ async function _getMiddleFlowChain(projectNum, machine) {
         if (text === '試運転' && r.machine !== machine) continue;
         if (best[flow] === undefined || r.sort_order < best[flow]) best[flow] = r.sort_order;
     }
-    // 設定（工事番号・機械単位）でOFFにされたフローは、出荷準備等の前提チェックの対象から除外する
-    return Object.keys(best).filter(ft => isFlowEnabledFor(ft, projectNum, machine)).sort((a, b) => best[a] - best[b]);
+    return Object.keys(best).sort((a, b) => best[a] - best[b]);
 }
 
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
-// 設定（工事番号・機械単位）でOFFにされたフローは組立・出荷確定も含めて除外する
 async function _getMachineFlowChain(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
-    return ['assembly', ...middle, 'shipping'].filter(ft => isFlowEnabledFor(ft, projectNum, machine));
+    return ['assembly', ...middle, 'shipping'];
 }
 
 // 複数機械選択時: 各機械のフロー構成を、工程順を保ったまま合成する
