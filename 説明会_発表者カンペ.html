@@ -12,21 +12,16 @@
         background: #edf1f7;
         color: #263142;
         font-size: 15px;
-        line-height: 1.75;
+        line-height: 1.8;
     }
     .page {
-        max-width: 900px;
+        max-width: 880px;
         margin: 0 auto;
         padding: 40px 48px 80px;
     }
 
     /* ---------- 印刷ボタン（画面のみ） ---------- */
-    .print-bar {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        z-index: 50;
-    }
+    .print-bar { position: fixed; top: 16px; right: 16px; z-index: 50; }
     .print-bar button {
         display: flex; align-items: center; gap: 8px;
         padding: 10px 18px;
@@ -43,31 +38,29 @@
         background: linear-gradient(135deg, #14243f 0%, #1e3a5f 55%, #2f6fb0 100%);
         color: #fff;
         border-radius: 14px;
-        padding: 40px 44px;
+        padding: 36px 44px;
         margin-bottom: 28px;
     }
     .cover-mark {
-        width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; margin-bottom: 18px;
+        width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; margin-bottom: 16px;
         background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
         display: flex; align-items: center; justify-content: center;
         box-shadow: 0 8px 22px rgba(0,0,0,.25);
     }
-    .cover h1 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
-    .cover p { color: #cfe0f5; font-size: 14px; max-width: 640px; }
-    .cover p + p { margin-top: 6px; }
+    .cover h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cover p { color: #cfe0f5; font-size: 13.5px; max-width: 640px; }
+    .cover p + p { margin-top: 5px; }
 
-    /* ---------- 共通導入 ---------- */
-    .intro-card {
+    /* ---------- 共通導入・締め ---------- */
+    .intro-card, .closing-card {
         background: #fff;
         border: 1px solid #e5e9f1;
         border-radius: 12px;
-        padding: 20px 26px;
-        margin-bottom: 30px;
+        padding: 22px 28px;
+        margin-bottom: 26px;
         box-shadow: 0 1px 2px rgba(20,36,63,.05), 0 6px 18px rgba(20,36,63,.04);
     }
-    .intro-card h2 { font-size: 15px; color: #16233a; margin-bottom: 10px; }
-    .intro-card ul { padding-left: 20px; font-size: 14px; }
-    .intro-card li { margin-bottom: 5px; }
+    .intro-card h2, .closing-card h2 { font-size: 13px; font-weight: 800; letter-spacing: .06em; color: #2f6fb0; text-transform: uppercase; margin-bottom: 10px; }
 
     /* ---------- 部署セクション ---------- */
     .dept {
@@ -78,54 +71,62 @@
         margin-bottom: 26px;
         box-shadow: 0 1px 2px rgba(20,36,63,.05), 0 6px 18px rgba(20,36,63,.04);
     }
-    .dept-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #eef2f8; padding-bottom: 14px; margin-bottom: 16px; }
+    .dept-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
     .dept-header h2 { font-size: 21px; font-weight: 800; color: #14243f; }
     .dept-time { font-size: 13px; font-weight: 700; color: #fff; background: #2f6fb0; border-radius: 20px; padding: 5px 14px; white-space: nowrap; }
+    .dept-ref { font-size: 12.5px; color: #9aa5b6; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid #eef2f8; }
+    .dept-ref b { color: #6b7789; }
 
-    .opener {
-        background: #eef4fb;
-        border-left: 4px solid #4f9ddb;
-        border-radius: 6px;
-        padding: 12px 16px;
-        font-size: 14.5px;
-        color: #29435f;
-        margin-bottom: 18px;
+    /* ---------- 話す言葉（スクリプト） ---------- */
+    .script p {
+        margin-bottom: 14px;
+        font-size: 15.5px;
+        color: #263142;
+        padding-left: 14px;
+        border-left: 3px solid #e5e9f1;
     }
-    .opener b { color: #16233a; }
+    .script p.lead {
+        border-left-color: #4f9ddb;
+        background: #eef4fb;
+        padding: 10px 14px;
+        border-radius: 0 6px 6px 0;
+        font-weight: 700;
+        color: #16233a;
+    }
+    .script b { color: #16233a; }
 
+    /* 画面操作の指示（話す言葉ではない部分） */
+    .cue {
+        display: block;
+        background: #fff7e8;
+        border: 1px dashed #e8b96a;
+        color: #8a6100;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 6px;
+        padding: 7px 12px;
+        margin: 4px 0 14px;
+    }
+
+    /* Q&A */
     h3.block-title {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 800;
         color: #fff;
         background: #16233a;
         display: inline-block;
         padding: 4px 12px;
         border-radius: 6px;
-        margin: 18px 0 10px;
+        margin: 20px 0 12px;
     }
-    h3.block-title.light { background: #7c8798; }
     h3.block-title.qa { background: #c0392b; }
+    .qa-item { background: #fdf1ed; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+    .qa-item .q { font-weight: 800; color: #7a3a22; font-size: 14.5px; margin-bottom: 4px; }
+    .qa-item .a { font-size: 14.5px; color: #5c4033; }
+    .qa-item .a::before { content: "→ "; font-weight: 800; }
 
-    .dept ul { padding-left: 22px; }
-    .dept li { margin-bottom: 8px; font-size: 14.5px; }
-    .dept li.sub { list-style: circle; font-size: 13.5px; color: #4a5768; margin-left: 6px; }
-    .dept ol { padding-left: 22px; }
-    .dept ol li { margin-bottom: 6px; font-size: 14.5px; }
-    .dept b { color: #16233a; }
-    .chtag { display: inline-block; background: #eef2f8; color: #2f6fb0; font-weight: 800; font-size: 12px; border-radius: 5px; padding: 1px 7px; margin-right: 4px; }
-
-    .qa-list { list-style: none; padding-left: 0; }
-    .qa-list li { background: #fdf1ed; border-radius: 8px; padding: 9px 14px; margin-bottom: 8px; font-size: 14px; color: #7a3a22; }
-
-    .closing {
-        background: #14243f;
-        color: #fff;
-        border-radius: 12px;
-        padding: 20px 26px;
-        font-size: 14.5px;
-        line-height: 1.8;
-    }
-    .closing b { color: #9fd3ff; }
+    .closing-card p { font-size: 14.5px; color: #263142; margin-bottom: 8px; }
+    .closing-card b { color: #16233a; }
 
     @media print {
         body { background: #fff; }
@@ -134,9 +135,9 @@
         .cover { background: #14243f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .cover-mark { background: #2f6fb0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .dept { break-inside: avoid; page-break-after: always; box-shadow: none; border: 1px solid #ccc; }
-        .intro-card { break-inside: avoid; }
-        .closing { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        h3.block-title, h3.block-title.light, h3.block-title.qa { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .intro-card, .closing-card { break-inside: avoid; }
+        .cue { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        h3.block-title, h3.block-title.qa { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 </style>
 </head>
@@ -147,138 +148,111 @@
 <div class="page">
 
     <div class="cover">
-        <div class="cover-mark"><svg width="24" height="24" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="cover-mark"><svg width="22" height="22" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
         <h1>承認フローアプリ説明会　発表者カンペ</h1>
-        <p>資料は共通で <b>guide.html</b>（使い方ガイド）を投影しながら進める前提。章番号（Chapter 1〜9）は guide.html の目次と対応。</p>
-        <p>部署ごとに「重点的に話す章」「軽く流す章」「補足で口頭説明する内容」「想定される質問」を分けている。</p>
+        <p>そのまま読み上げられる「話す言葉」の台本です。黄色い枠は画面操作の指示、それ以外は実際に話す内容です。</p>
+        <p>資料は共通で guide.html（使い方ガイド）を投影しながら進める前提。文中の Ch1〜9 は guide.html の章番号に対応。</p>
     </div>
 
     <div class="intro-card">
-        <h2>全部署共通：冒頭で話すこと（5分）</h2>
-        <ul>
-            <li>このアプリは、今まで紙・口頭・メールでやっていた組立完了／試運転完了／検査開催案内／出荷確定の申請・承認を、1つの画面で一元管理するためのもの（<span class="chtag">Ch1</span>）</li>
-            <li>目的は「対応漏れをなくす」「誰が・何を・いつまでにやるべきかを見える化する」こと</li>
-            <li>今日は実際に画面を操作しながら説明する。資料はこの後もアプリ内の「使い方ガイド」からいつでも見返せる</li>
-            <li>左メニューの構成をひと通り紹介（<span class="chtag">Ch3</span>）：承認ステータス／2000番完了報告／マイページ／使い方ガイド</li>
-            <li>設定画面には触れない（製管3名のみのため）</li>
-        </ul>
+        <h2>全部署共通：冒頭トーク（約5分）</h2>
+        <div class="script">
+            <p class="lead">皆さん、こんにちは。本日はお集まりいただきありがとうございます。今日は、来月から運用を始める「承認フローアプリ」について説明させていただきます。</p>
+            <p>これまで組立完了の報告や、外観検査・出荷確認会議の案内、出荷確定の手続きなどは、紙の帳票や口頭、メールでやり取りしてきました。これからはこのアプリ1つで、誰が・何を・いつまでに対応すべきかが、画面を見るだけで分かるようになります。目的は、対応漏れをなくすことと、進捗を全員で見える化することです。</p>
+            <p>今日はこの資料を画面に映しながら、実際にアプリも操作してご説明します。全部を今日覚えていただく必要はありません。この資料は、説明会が終わったあとも、アプリの左メニューにある「使い方ガイド」からいつでも同じものを見返せます。</p>
+            <div class="cue">👉 画面操作：ログイン後のトップ画面を開く</div>
+            <p>まず画面の構成です。左側のメニューに「承認ステータス」「2000番完了報告」「マイページ」「使い方ガイド」の4つが並んでいます。設定という項目もありますが、これは製管の3名しか使わないので、今日は説明を省きます。</p>
+        </div>
     </div>
 
     <!-- ===== 1. 組立 ===== -->
     <div class="dept">
         <div class="dept-header"><h2>1. 組立（組立担当者・組立課長・組立部長）向け</h2><span class="dept-time">想定 25〜30分</span></div>
-        <div class="opener">冒頭の一言：「組立の完了報告と、外観検査・出荷準備のところで皆さんに操作していただくことになります」</div>
-
-        <h3 class="block-title">重点的に話す章</h3>
-        <ul>
-            <li><span class="chtag">Ch2</span><b>承認フローの全体像</b>：組立→外観検査→（試運転）→出荷準備→出荷 の流れの中で、自分たちがどこを担当するかを明確に。組立完了の承認は「組立課長 → 品証 → 製管」の順であること、外観検査は承認不要（開催案内のみ）であることを強調</li>
-            <li><span class="chtag">Ch4</span><b>承認ステータス画面</b>：自分が担当する工事番号をどう絞り込むか（「自分の担当」フィルタ）を実演</li>
-            <li><span class="chtag">Ch6</span><b>2000番完了報告</b>：組立担当者は2000番台（造管ラインなど）も扱うので、この専用画面の存在を必ず案内。通常の承認ステータス画面には出てこない点を強調</li>
-            <li><span class="chtag">Ch7</span><b>申請〜承認の操作手順</b>：ここが一番重要。実際に自主点検シートの入力〜申請までをアプリで実演する
-                <ul>
-                    <li class="sub">自主点検シートは「入力中」のまま一時保存できる＝閉じても消えない、という点を必ず伝える（不安に思われやすい）</li>
-                    <li class="sub">承認者は組立課長・部長のどちらでもよく、先に承認された方が優先されるだけで両方の承認は不要</li>
-                    <li class="sub">出荷準備完了の申請は承認不要で、申請した瞬間に品証へ通知が飛ぶ（＝提出ミスに注意）</li>
-                </ul>
-            </li>
-        </ul>
-
-        <h3 class="block-title light">軽く流してよい章</h3>
-        <ul>
-            <li><span class="chtag">Ch5</span>マイページ：申請・承認の基本操作だけ触れれば十分</li>
-            <li><span class="chtag">Ch8</span>通知：「申請催促」（期日を過ぎても申請がないと自分に届く）と「承認催促」（課長・部長に届く）だけ触れれば十分。品証向けの通知（案内催促・完了処理催促）は他部署の話として簡単に流す</li>
-        </ul>
-
+        <div class="dept-ref">参照章：<b>Ch2・Ch4・Ch6・Ch7</b> を重点的に、Ch5・Ch8 は簡潔に</div>
+        <div class="script">
+            <p class="lead">続けて、組立の皆さんに関わる部分を説明します。</p>
+            <p>まず全体の流れです。1つの工事番号は、機械ごとに「組立 → 外観検査 →（試運転）→ 出荷準備 → 出荷」という順番で進んでいきます。皆さんが主に関わるのは、組立の完了報告と、外観検査、出荷準備のところです。</p>
+            <p>組立が終わったら、まず組立担当者の方が自主点検シートを入力して申請します。それを組立課長、または部長が承認します。ここがポイントですが、課長と部長はどちらが承認してもよく、先に承認した方が優先されます。両方の承認は必要ありません。課長・部長の承認のあとは、品証、そして製管が順番に確認して、それで完了になります。</p>
+            <p>外観検査は少し流れが違います。承認というステップはなく、開催案内を送るだけで進みます。開催したあとは品証が内容を確認して完了にしますので、皆さんは案内を送るところまでで大丈夫です。</p>
+            <div class="cue">👉 画面操作：承認ステータス画面を開く</div>
+            <p>この画面では、工事番号ごとにカードが並んでいて、組立・外観検査…という工程が横に並んでいます。丸のアイコンはまだ着手していない工程、オレンジの▶マークは誰かが対応待ちの工程、緑のチェックは完了した工程です。赤い警告マークが出ていたら、期日を過ぎても申請や承認がされていないということなので、見つけたら早めに対応してください。</p>
+            <p>自分が担当している工事番号だけを見たいときは、上にある「絞り込み」の「自分の担当」にチェックを入れてください。</p>
+            <div class="cue">👉 画面操作：「自分の担当」にチェックを入れて見せる → 続けて左メニューの「2000番完了報告」を開く</div>
+            <p>もう一つ大事な画面です。2000番台の工事番号は、こちらの専用画面を使います。承認ステータス画面には出てきませんので、必ずこちらを確認してください。1つの工事番号の中に複数の機械がある場合、機械ごとに組立・試運転の進捗が並んで表示されます。</p>
+            <p class="lead">それでは実際に、組立完了の申請をやってみます。</p>
+            <div class="cue">👉 画面操作：対象の工事番号の「組立」のアイコンをクリック</div>
+            <p>まず機械を選びます。複数の機械がある場合はチェックボックスで選んでください。次に進むと「機械組立完了自主点検シート」が開きます。ボルトのIマークが付いているか、油やグリスを塗布しているか……といった項目に、○・×・―（対象外）で答えていきます。</p>
+            <p>ここで一番お伝えしたいポイントです。この自主点検シートは、途中で「一時保存して閉じる」を押しても、入力した内容は消えません。マイページを見ると「入力中」として残っていますので、続きから再開できます。急いで一気に全部入力する必要はありませんので、安心してください。</p>
+            <p>入力が終わったら「入力完了・申請へ進む」を押して、承認者を選びます。組立課長・組立部長のどちらでも構いません。コメントがあれば入力して、「申請する」を押せば申請完了です。</p>
+            <p>申請すると、選んだ承認者にメールで通知が届きます。承認者はマイページの「承認」から、その場で承認できます。承認されると、次は品証・製管の確認に進み、画面の表示も自動で切り替わります。</p>
+            <p>もう一つ注意点です。出荷準備完了の申請は承認が不要です。申請した瞬間に品証へ通知が飛んで完了扱いになりますので、内容をよく確認してから申請してください。</p>
+            <p>マイページと通知については、簡単に触れておきます。マイページでは、自分が出した申請の状況と、自分が承認すべき案件がまとめて見られます。また、申請すべき期日を過ぎても申請がないと、皆さんに「申請催促」のメールが届きます。申請してから24時間たっても承認されていないと、課長・部長に「承認催促」が届きます。品証向けの通知は他にもありますが、それは品証の説明会で詳しくお伝えします。</p>
+        </div>
         <h3 class="block-title qa">想定される質問</h3>
-        <ul class="qa-list">
-            <li>Q. 自主点検シートを間違えて送信したら？　→ 却下されれば再申請できる、承認済みの内容は品証・製管が確認</li>
-            <li>Q. 課長が長期不在の場合は？　→ 部長を承認者に選べる</li>
-        </ul>
+        <div class="qa-item"><div class="q">Q. 自主点検シートを間違えて送信してしまったら、どうすればいいですか？</div><div class="a">大丈夫です。却下されれば再申請できますし、承認済みの内容も品証・製管が確認しますので、そこで気づいてもらえます。</div></div>
+        <div class="qa-item"><div class="q">Q. 課長が長期不在のときはどうすればいいですか？</div><div class="a">部長を承認者として選べますので、そちらにお願いしてください。</div></div>
     </div>
 
     <!-- ===== 2. 操業 ===== -->
     <div class="dept">
         <div class="dept-header"><h2>2. 操業（試運転担当者・操業課長・操業部長）向け</h2><span class="dept-time">想定 20〜25分</span></div>
-        <div class="opener">冒頭の一言：「試運転完了の申請と、外観検査・出荷確認会議のところに関わります」<br>※組立と合同開催の場合はCh1・Ch3・Ch8など共通部分を省略し15分程度に短縮可</div>
-
-        <h3 class="block-title">重点的に話す章</h3>
-        <ul>
-            <li><span class="chtag">Ch2</span><b>承認フローの全体像</b>：試運転完了の承認フローは組立より1段階多く「操業課長 → 品証 → 製管 → 組立部長（常務）」まで進む点を必ず強調（組立と比較して聞かれやすい）</li>
-            <li><span class="chtag">Ch4</span><span class="chtag">Ch6</span>組立と同様、2000番台は「2000番完了報告」画面を使う（試運転列がある）</li>
-            <li><span class="chtag">Ch7</span>操作手順は組立完了とほぼ同じ流れ（自主点検シート→申請→承認）なので、「組立の説明と同じ流れです」で構わないが、承認ステップが1つ多いことだけは再度触れる</li>
-        </ul>
-
-        <h3 class="block-title light">軽く流してよい章</h3>
-        <ul>
-            <li><span class="chtag">Ch5</span><span class="chtag">Ch8</span>組立向けと同様に簡潔に</li>
-        </ul>
-
+        <div class="dept-ref">参照章：<b>Ch2・Ch7</b>を重点的に、Ch4・Ch6・Ch5・Ch8は組立と同様の説明で可／組立と合同開催の場合は冒頭トークを省略しここから開始（15分程度に短縮可）</div>
+        <div class="script">
+            <p class="lead">続いて、操業の皆さんに関わる部分です。皆さんが主に関わるのは、試運転完了の報告と、外観検査・出荷確認会議のところです。</p>
+            <p>試運転が終わったら、操業担当者の方が自主点検シートを入力して申請します。組立と同じように、操業課長・部長のどちらが承認してもよく、先に承認した方が優先されます。ここで組立と違うポイントがあります。試運転の承認は、課長・部長の承認のあとに品証、製管、そして組立部長――つまり常務まで確認が進みます。組立より1段階多いので、ここは必ず覚えておいてください。</p>
+            <div class="cue">👉 画面操作：承認ステータス画面、続いて2000番完了報告画面を開く</div>
+            <p>画面の見方や、2000番台を扱う場合の「2000番完了報告」画面は、組立と全く同じです。試運転の列がある、という違いだけです。</p>
+            <p>申請の操作手順も、組立完了とほとんど同じです。自主点検シートを入力して、一時保存もでき、承認者を選んで申請する、という流れです。「組立の説明と同じ流れです」とお伝えして大丈夫ですが、承認ステップが1つ多いことだけは、もう一度繰り返しておきます。</p>
+            <p>マイページと通知についても、組立と同じ内容なので、簡単に触れる程度で構いません。</p>
+        </div>
         <h3 class="block-title qa">想定される質問</h3>
-        <ul class="qa-list">
-            <li>Q. なぜ試運転だけ常務の承認まで必要なのか？　→ 出荷前の最終確認として組立部長（常務）が試運転結果を確認する運用のため</li>
-        </ul>
+        <div class="qa-item"><div class="q">Q. なぜ試運転だけ常務の承認まで必要なんですか？</div><div class="a">出荷前の最終確認として、組立部長――つまり常務が試運転の結果を確認する、という運用になっているためです。</div></div>
     </div>
 
     <!-- ===== 3. 品証 ===== -->
     <div class="dept">
         <div class="dept-header"><h2>3. 品証（品質保証課）向け</h2><span class="dept-time">想定 35〜40分（最も丁寧に）</span></div>
-        <div class="opener">冒頭の一言：「品証はほぼ全てのフローの承認・確認に関わるので、今日は一番細かく説明します」</div>
-
-        <h3 class="block-title">重点的に話す章</h3>
-        <ul>
-            <li><span class="chtag">Ch2</span><b>役割分担の表</b>：品証が関わるフローが圧倒的に多いことを表を見ながら確認（組立・試運転の承認、外観検査・簡易検査・出荷確認会議の完了確認、出荷準備完了の受け手、出荷確定の承認）</li>
-            <li><span class="chtag">Ch4</span><b>絞り込み</b>：「未申請・未承認」フィルタは品証・製管しか使えない特別なフィルタであることを強調し、実際に使ってみせる。対応が止まっている案件を横断的に見つけるための機能</li>
-            <li><span class="chtag">Ch5</span><b>マイページ</b>：承認セクションに複数フローの案件が並ぶので、フローごとのチップ（組立完了申請、試運転完了申請…）で整理されている点を実演</li>
-            <li><span class="chtag">Ch7補足（口頭のみ）</span>guide.htmlのCh7は組立完了申請を例にしているが、品証は「開催案内後のペンディング確認→完了にする」操作が中心になるので、これは資料に載っていない実演で必ず見せる
-                <ul>
-                    <li class="sub">簡易検査・外観検査・出荷確認会議は承認ボタンがなく、「開催案内を送る→開催後にペンディング（タスク）を確認→完了にする」という流れであることを繰り返し説明</li>
-                    <li class="sub">出荷準備完了は品証への通知のみで、品証側での操作は不要（見るだけ）</li>
-                </ul>
-            </li>
-            <li><span class="chtag">Ch8</span><b>通知</b>：品証が受け取る通知が最も多いことを一覧で確認。特に「案内催促」「完了処理催促」は品証しか受け取らない通知であることを強調</li>
-        </ul>
-
+        <div class="dept-ref">参照章：<b>Ch2・Ch4・Ch5・Ch8</b>すべて重点。Ch7は資料に載っていない品証独自の操作を口頭で補足</div>
+        <div class="script">
+            <p class="lead">続いて品証の皆さんへの説明です。品証は、ほぼすべてのフローの承認・確認に関わりますので、今日は少し丁寧にお話しします。</p>
+            <div class="cue">👉 画面操作：guide.html Ch2の役割分担の表を見せる</div>
+            <p>まず、品証が関わるフローを一覧で確認しましょう。組立完了と試運転完了の承認、外観検査・簡易検査・出荷確認会議の完了確認、出荷準備完了の受け手、そして出荷確定の承認――このように、ほとんどのフローに品証が関わります。</p>
+            <div class="cue">👉 画面操作：承認ステータス画面で「未申請・未承認」フィルタにチェックを入れる</div>
+            <p>ここで、品証・製管だけが使える特別な絞り込みを紹介します。上の「未申請・未承認」にチェックを入れると、期日を過ぎても申請や承認が止まっている案件だけが表示されます。対応が止まっている案件を横断的に見つけるための機能なので、ぜひ日常的に使ってください。</p>
+            <div class="cue">👉 画面操作：マイページの「承認」セクションを開く</div>
+            <p>マイページの承認セクションには、複数のフローの案件がまとめて並びます。「組立完了申請」「試運転完了申請」というように、フローごとにチップで整理されていますので、見たいフローのところだけ確認することもできます。</p>
+            <p class="lead">ここからは、資料には載っていない部分ですが、品証の皆さんにとって一番大事な操作です。</p>
+            <p>簡易検査・外観検査・出荷確認会議には、承認というボタンがありません。開催案内を送ったあと、開催した内容を品証が確認して、残っている作業――ペンディング、資料上は「タスク」とも呼びます――がなければ「完了にする」を押していただく、という流れになります。</p>
+            <div class="cue">👉 画面操作：開催結果・ペンディング確認の画面を実際に開いて操作を見せる</div>
+            <p>実際にこの画面を見てみましょう。このように、ペンディング項目が残っていれば、それを解消してから「完了にする」を押してください。</p>
+            <p>もう一つ、出荷準備完了については、品証の皆さんは操作の必要はありません。組立担当者が申請すると、その瞬間に品証へ通知が届くだけですので、内容を確認していただくだけで大丈夫です。</p>
+            <p>最後に通知についてです。品証は、他のどの部署よりも多くの通知を受け取ります。特に「案内催促」――検査や会議の開催案内が送られていないときの催促と、「完了処理催促」――開催日を過ぎても完了にするが押されていないときの催促は、品証にしか届かない通知ですので、届いたら早めに対応をお願いします。</p>
+        </div>
         <h3 class="block-title qa">想定される質問</h3>
-        <ul class="qa-list">
-            <li>Q. 承認待ちが溜まったらどう探せばいい？　→ マイページの「承認」セクション、または承認ステータス画面の「未申請・未承認」フィルタ</li>
-            <li>Q. 「完了にする」を押し忘れたらどうなる？　→ 開催日翌日から毎日リマインダーが届く（Ch8）</li>
-        </ul>
+        <div class="qa-item"><div class="q">Q. 承認待ちが溜まってきたら、どうやって探せばいいですか？</div><div class="a">マイページの「承認」セクションを見ていただくか、承認ステータス画面の「未申請・未承認」フィルタを使ってください。</div></div>
+        <div class="qa-item"><div class="q">Q. 完了にするを押し忘れたら、どうなりますか？</div><div class="a">開催日の翌日から、毎日リマインダーのメールが届きます。完了にするまで届き続けますので、対応すれば止まります。</div></div>
     </div>
 
     <!-- ===== 4. 営業 ===== -->
     <div class="dept">
         <div class="dept-header"><h2>4. 営業担当者向け</h2><span class="dept-time">想定 15〜20分</span></div>
-        <div class="opener">冒頭の一言：「営業は出荷日まわりの入力だけお願いすることになります」</div>
-
-        <h3 class="block-title">重点的に話す章</h3>
-        <ul>
-            <li><span class="chtag">Ch2</span><b>役割分担の表</b>：営業が関わるのは「出荷確認会議の開催案内」と「出荷確定申請」の2箇所だけであることを最初に伝えて安心してもらう</li>
-            <li><span class="chtag">Ch7補足（口頭のみ・資料には未記載）</span>guide.htmlのCh7は組立完了申請の例なので、営業向けには別途下記を口頭で説明する
-                <ol>
-                    <li>簡易検査・外観検査が完了すると「仮出荷予定日の入力依頼」通知が届く（<span class="chtag">Ch8</span>）</li>
-                    <li>アプリにログインして仮出荷予定日を入力すると、品証・製管に通知が届き、確定作業が進む</li>
-                    <li>出荷確定のタイミングで品証・製管が出荷確定申請を起票すると「確定出荷日入力依頼」が届く</li>
-                    <li>確定出荷日を入力すると常務の承認を経て出荷確定となる</li>
-                </ol>
-            </li>
-            <li><span class="chtag">Ch8</span><b>通知</b>：営業が受け取るのは「仮出荷予定日入力依頼」「確定出荷日入力依頼」の2種類だけであることを整理して伝える</li>
-        </ul>
-
-        <h3 class="block-title light">軽く流してよい章</h3>
-        <ul>
-            <li><span class="chtag">Ch4</span><span class="chtag">Ch5</span><span class="chtag">Ch6</span>組立・試運転特有の画面なので簡単に紹介する程度でよい</li>
-        </ul>
-
+        <div class="dept-ref">参照章：<b>Ch2・Ch8</b>を重点に。Ch7は資料に載っていない営業独自の操作を口頭で補足。Ch4・Ch5・Ch6は簡単な紹介のみで可</div>
+        <div class="script">
+            <p class="lead">最後に営業担当者の皆さんへの説明です。営業の皆さんに関わるのは、出荷確認会議の開催案内と、出荷確定申請の2箇所だけですので、そこまで難しく考えなくて大丈夫です。</p>
+            <p>ここからは資料には載っていない流れですが、口頭でご説明します。</p>
+            <p>まず、簡易検査・外観検査が完了すると、皆さんに「仮出荷予定日の入力依頼」というメールが届きます。アプリにログインして仮出荷予定日を入力していただくと、品証・製管に通知が届き、確定に向けた作業が進みます。</p>
+            <p>そのあと、出荷確定のタイミングになると、品証・製管が出荷確定申請を起票します。すると皆さんに「確定出荷日入力依頼」が届きますので、確定出荷日を入力してください。入力すると常務の承認を経て、出荷確定となります。</p>
+            <p>通知として営業の皆さんに届くのは、この「仮出荷予定日入力依頼」と「確定出荷日入力依頼」の2種類だけです。それ以外の通知は届きませんので、覚えることはそれほど多くありません。</p>
+            <p>なお、承認ステータス画面や2000番完了報告、マイページの画面は組立・試運転の担当者向けの内容が中心になりますので、今日は簡単な紹介にとどめます。</p>
+        </div>
         <h3 class="block-title qa">想定される質問</h3>
-        <ul class="qa-list">
-            <li>Q. 出荷日が変わったら？　→ 入力し直せば関係者に再度通知が届く</li>
-            <li>Q. 承認は必要か？　→ 出荷確認会議は承認不要、出荷確定は常務の承認が必要</li>
-        </ul>
+        <div class="qa-item"><div class="q">Q. 出荷日が変わったら、どうすればいいですか？</div><div class="a">入力し直していただければ、関係者に再度通知が届きます。</div></div>
+        <div class="qa-item"><div class="q">Q. 承認は必要ですか？</div><div class="a">出荷確認会議は承認不要です。出荷確定は、常務の承認が必要になります。</div></div>
     </div>
 
-    <div class="closing">
-        <b>共通：締めの一言</b><br>
-        「今日操作した内容や画面の見方は、アプリ内の『使い方ガイド』からいつでもこの資料で見返せます。分からないことがあれば製造管理課まで」（Ch9）
+    <div class="closing-card">
+        <h2>共通：締めのトーク</h2>
+        <p><b>「今日お話しした内容は、アプリの左メニューにある『使い方ガイド』からいつでも見返せます。分からないことがあれば、製造管理課までご連絡ください。本日はありがとうございました。」</b></p>
     </div>
 
 </div>
