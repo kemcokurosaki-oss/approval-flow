@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>承認フローアプリ説明会 発表者カンペ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f9ddb'/><stop offset='1' stop-color='%232f6fb0'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M6 25V16M13 25V9M20 25V18M26 25V12' stroke='white' stroke-width='3.4' stroke-linecap='round'/></svg>">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: "メイリオ", Meiryo, sans-serif;
+        background: #edf1f7;
+        color: #263142;
+        font-size: 15px;
+        line-height: 1.75;
+    }
+    .page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 48px 80px;
+    }
+
+    /* ---------- 印刷ボタン（画面のみ） ---------- */
+    .print-bar {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 50;
+    }
+    .print-bar button {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 18px;
+        border: none; border-radius: 24px;
+        background: #14243f; color: #fff;
+        font-family: inherit; font-size: 14px; font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(20,36,63,.3);
+    }
+    .print-bar button:hover { background: #2f6fb0; }
+
+    /* ---------- 表紙 ---------- */
+    .cover {
+        background: linear-gradient(135deg, #14243f 0%, #1e3a5f 55%, #2f6fb0 100%);
+        color: #fff;
+        border-radius: 14px;
+        padding: 40px 44px;
+        margin-bottom: 28px;
+    }
+    .cover-mark {
+        width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; margin-bottom: 18px;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 8px 22px rgba(0,0,0,.25);
+    }
+    .cover h1 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+    .cover p { color: #cfe0f5; font-size: 14px; max-width: 640px; }
+    .cover p + p { margin-top: 6px; }
+
+    /* ---------- 共通導入 ---------- */
+    .intro-card {
+        background: #fff;
+        border: 1px solid #e5e9f1;
+        border-radius: 12px;
+        padding: 20px 26px;
+        margin-bottom: 30px;
+        box-shadow: 0 1px 2px rgba(20,36,63,.05), 0 6px 18px rgba(20,36,63,.04);
+    }
+    .intro-card h2 { font-size: 15px; color: #16233a; margin-bottom: 10px; }
+    .intro-card ul { padding-left: 20px; font-size: 14px; }
+    .intro-card li { margin-bottom: 5px; }
+
+    /* ---------- 部署セクション ---------- */
+    .dept {
+        background: #fff;
+        border: 1px solid #e5e9f1;
+        border-radius: 14px;
+        padding: 28px 32px 32px;
+        margin-bottom: 26px;
+        box-shadow: 0 1px 2px rgba(20,36,63,.05), 0 6px 18px rgba(20,36,63,.04);
+    }
+    .dept-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #eef2f8; padding-bottom: 14px; margin-bottom: 16px; }
+    .dept-header h2 { font-size: 21px; font-weight: 800; color: #14243f; }
+    .dept-time { font-size: 13px; font-weight: 700; color: #fff; background: #2f6fb0; border-radius: 20px; padding: 5px 14px; white-space: nowrap; }
+
+    .opener {
+        background: #eef4fb;
+        border-left: 4px solid #4f9ddb;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-size: 14.5px;
+        color: #29435f;
+        margin-bottom: 18px;
+    }
+    .opener b { color: #16233a; }
+
+    h3.block-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #fff;
+        background: #16233a;
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 6px;
+        margin: 18px 0 10px;
+    }
+    h3.block-title.light { background: #7c8798; }
+    h3.block-title.qa { background: #c0392b; }
+
+    .dept ul { padding-left: 22px; }
+    .dept li { margin-bottom: 8px; font-size: 14.5px; }
+    .dept li.sub { list-style: circle; font-size: 13.5px; color: #4a5768; margin-left: 6px; }
+    .dept ol { padding-left: 22px; }
+    .dept ol li { margin-bottom: 6px; font-size: 14.5px; }
+    .dept b { color: #16233a; }
+    .chtag { display: inline-block; background: #eef2f8; color: #2f6fb0; font-weight: 800; font-size: 12px; border-radius: 5px; padding: 1px 7px; margin-right: 4px; }
+
+    .qa-list { list-style: none; padding-left: 0; }
+    .qa-list li { background: #fdf1ed; border-radius: 8px; padding: 9px 14px; margin-bottom: 8px; font-size: 14px; color: #7a3a22; }
+
+    .closing {
+        background: #14243f;
+        color: #fff;
+        border-radius: 12px;
+        padding: 20px 26px;
+        font-size: 14.5px;
+        line-height: 1.8;
+    }
+    .closing b { color: #9fd3ff; }
+
+    @media print {
+        body { background: #fff; }
+        .print-bar { display: none; }
+        .page { max-width: none; padding: 0; }
+        .cover { background: #14243f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .cover-mark { background: #2f6fb0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .dept { break-inside: avoid; page-break-after: always; box-shadow: none; border: 1px solid #ccc; }
+        .intro-card { break-inside: avoid; }
+        .closing { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        h3.block-title, h3.block-title.light, h3.block-title.qa { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+</head>
+<body>
+
+<div class="print-bar"><button onclick="window.print()">🖨 印刷する</button></div>
+
+<div class="page">
+
+    <div class="cover">
+        <div class="cover-mark"><svg width="24" height="24" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h1>承認フローアプリ説明会　発表者カンペ</h1>
+        <p>資料は共通で <b>guide.html</b>（使い方ガイド）を投影しながら進める前提。章番号（Chapter 1〜9）は guide.html の目次と対応。</p>
+        <p>部署ごとに「重点的に話す章」「軽く流す章」「補足で口頭説明する内容」「想定される質問」を分けている。</p>
+    </div>
+
+    <div class="intro-card">
+        <h2>全部署共通：冒頭で話すこと（5分）</h2>
+        <ul>
+            <li>このアプリは、今まで紙・口頭・メールでやっていた組立完了／試運転完了／検査開催案内／出荷確定の申請・承認を、1つの画面で一元管理するためのもの（<span class="chtag">Ch1</span>）</li>
+            <li>目的は「対応漏れをなくす」「誰が・何を・いつまでにやるべきかを見える化する」こと</li>
+            <li>今日は実際に画面を操作しながら説明する。資料はこの後もアプリ内の「使い方ガイド」からいつでも見返せる</li>
+            <li>左メニューの構成をひと通り紹介（<span class="chtag">Ch3</span>）：承認ステータス／2000番完了報告／マイページ／使い方ガイド</li>
+            <li>設定画面には触れない（製管3名のみのため）</li>
+        </ul>
+    </div>
+
+    <!-- ===== 1. 組立 ===== -->
+    <div class="dept">
+        <div class="dept-header"><h2>1. 組立（組立担当者・組立課長・組立部長）向け</h2><span class="dept-time">想定 25〜30分</span></div>
+        <div class="opener">冒頭の一言：「組立の完了報告と、外観検査・出荷準備のところで皆さんに操作していただくことになります」</div>
+
+        <h3 class="block-title">重点的に話す章</h3>
+        <ul>
+            <li><span class="chtag">Ch2</span><b>承認フローの全体像</b>：組立→外観検査→（試運転）→出荷準備→出荷 の流れの中で、自分たちがどこを担当するかを明確に。組立完了の承認は「組立課長 → 品証 → 製管」の順であること、外観検査は承認不要（開催案内のみ）であることを強調</li>
+            <li><span class="chtag">Ch4</span><b>承認ステータス画面</b>：自分が担当する工事番号をどう絞り込むか（「自分の担当」フィルタ）を実演</li>
+            <li><span class="chtag">Ch6</span><b>2000番完了報告</b>：組立担当者は2000番台（造管ラインなど）も扱うので、この専用画面の存在を必ず案内。通常の承認ステータス画面には出てこない点を強調</li>
+            <li><span class="chtag">Ch7</span><b>申請〜承認の操作手順</b>：ここが一番重要。実際に自主点検シートの入力〜申請までをアプリで実演する
+                <ul>
+                    <li class="sub">自主点検シートは「入力中」のまま一時保存できる＝閉じても消えない、という点を必ず伝える（不安に思われやすい）</li>
+                    <li class="sub">承認者は組立課長・部長のどちらでもよく、先に承認された方が優先されるだけで両方の承認は不要</li>
+                    <li class="sub">出荷準備完了の申請は承認不要で、申請した瞬間に品証へ通知が飛ぶ（＝提出ミスに注意）</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3 class="block-title light">軽く流してよい章</h3>
+        <ul>
+            <li><span class="chtag">Ch5</span>マイページ：申請・承認の基本操作だけ触れれば十分</li>
+            <li><span class="chtag">Ch8</span>通知：「申請催促」（期日を過ぎても申請がないと自分に届く）と「承認催促」（課長・部長に届く）だけ触れれば十分。品証向けの通知（案内催促・完了処理催促）は他部署の話として簡単に流す</li>
+        </ul>
+
+        <h3 class="block-title qa">想定される質問</h3>
+        <ul class="qa-list">
+            <li>Q. 自主点検シートを間違えて送信したら？　→ 却下されれば再申請できる、承認済みの内容は品証・製管が確認</li>
+            <li>Q. 課長が長期不在の場合は？　→ 部長を承認者に選べる</li>
+        </ul>
+    </div>
+
+    <!-- ===== 2. 操業 ===== -->
+    <div class="dept">
+        <div class="dept-header"><h2>2. 操業（試運転担当者・操業課長・操業部長）向け</h2><span class="dept-time">想定 20〜25分</span></div>
+        <div class="opener">冒頭の一言：「試運転完了の申請と、外観検査・出荷確認会議のところに関わります」<br>※組立と合同開催の場合はCh1・Ch3・Ch8など共通部分を省略し15分程度に短縮可</div>
+
+        <h3 class="block-title">重点的に話す章</h3>
+        <ul>
+            <li><span class="chtag">Ch2</span><b>承認フローの全体像</b>：試運転完了の承認フローは組立より1段階多く「操業課長 → 品証 → 製管 → 組立部長（常務）」まで進む点を必ず強調（組立と比較して聞かれやすい）</li>
+            <li><span class="chtag">Ch4</span><span class="chtag">Ch6</span>組立と同様、2000番台は「2000番完了報告」画面を使う（試運転列がある）</li>
+            <li><span class="chtag">Ch7</span>操作手順は組立完了とほぼ同じ流れ（自主点検シート→申請→承認）なので、「組立の説明と同じ流れです」で構わないが、承認ステップが1つ多いことだけは再度触れる</li>
+        </ul>
+
+        <h3 class="block-title light">軽く流してよい章</h3>
+        <ul>
+            <li><span class="chtag">Ch5</span><span class="chtag">Ch8</span>組立向けと同様に簡潔に</li>
+        </ul>
+
+        <h3 class="block-title qa">想定される質問</h3>
+        <ul class="qa-list">
+            <li>Q. なぜ試運転だけ常務の承認まで必要なのか？　→ 出荷前の最終確認として組立部長（常務）が試運転結果を確認する運用のため</li>
+        </ul>
+    </div>
+
+    <!-- ===== 3. 品証 ===== -->
+    <div class="dept">
+        <div class="dept-header"><h2>3. 品証（品質保証課）向け</h2><span class="dept-time">想定 35〜40分（最も丁寧に）</span></div>
+        <div class="opener">冒頭の一言：「品証はほぼ全てのフローの承認・確認に関わるので、今日は一番細かく説明します」</div>
+
+        <h3 class="block-title">重点的に話す章</h3>
+        <ul>
+            <li><span class="chtag">Ch2</span><b>役割分担の表</b>：品証が関わるフローが圧倒的に多いことを表を見ながら確認（組立・試運転の承認、外観検査・簡易検査・出荷確認会議の完了確認、出荷準備完了の受け手、出荷確定の承認）</li>
+            <li><span class="chtag">Ch4</span><b>絞り込み</b>：「未申請・未承認」フィルタは品証・製管しか使えない特別なフィルタであることを強調し、実際に使ってみせる。対応が止まっている案件を横断的に見つけるための機能</li>
+            <li><span class="chtag">Ch5</span><b>マイページ</b>：承認セクションに複数フローの案件が並ぶので、フローごとのチップ（組立完了申請、試運転完了申請…）で整理されている点を実演</li>
+            <li><span class="chtag">Ch7補足（口頭のみ）</span>guide.htmlのCh7は組立完了申請を例にしているが、品証は「開催案内後のペンディング確認→完了にする」操作が中心になるので、これは資料に載っていない実演で必ず見せる
+                <ul>
+                    <li class="sub">簡易検査・外観検査・出荷確認会議は承認ボタンがなく、「開催案内を送る→開催後にペンディング（タスク）を確認→完了にする」という流れであることを繰り返し説明</li>
+                    <li class="sub">出荷準備完了は品証への通知のみで、品証側での操作は不要（見るだけ）</li>
+                </ul>
+            </li>
+            <li><span class="chtag">Ch8</span><b>通知</b>：品証が受け取る通知が最も多いことを一覧で確認。特に「案内催促」「完了処理催促」は品証しか受け取らない通知であることを強調</li>
+        </ul>
+
+        <h3 class="block-title qa">想定される質問</h3>
+        <ul class="qa-list">
+            <li>Q. 承認待ちが溜まったらどう探せばいい？　→ マイページの「承認」セクション、または承認ステータス画面の「未申請・未承認」フィルタ</li>
+            <li>Q. 「完了にする」を押し忘れたらどうなる？　→ 開催日翌日から毎日リマインダーが届く（Ch8）</li>
+        </ul>
+    </div>
+
+    <!-- ===== 4. 営業 ===== -->
+    <div class="dept">
+        <div class="dept-header"><h2>4. 営業担当者向け</h2><span class="dept-time">想定 15〜20分</span></div>
+        <div class="opener">冒頭の一言：「営業は出荷日まわりの入力だけお願いすることになります」</div>
+
+        <h3 class="block-title">重点的に話す章</h3>
+        <ul>
+            <li><span class="chtag">Ch2</span><b>役割分担の表</b>：営業が関わるのは「出荷確認会議の開催案内」と「出荷確定申請」の2箇所だけであることを最初に伝えて安心してもらう</li>
+            <li><span class="chtag">Ch7補足（口頭のみ・資料には未記載）</span>guide.htmlのCh7は組立完了申請の例なので、営業向けには別途下記を口頭で説明する
+                <ol>
+                    <li>簡易検査・外観検査が完了すると「仮出荷予定日の入力依頼」通知が届く（<span class="chtag">Ch8</span>）</li>
+                    <li>アプリにログインして仮出荷予定日を入力すると、品証・製管に通知が届き、確定作業が進む</li>
+                    <li>出荷確定のタイミングで品証・製管が出荷確定申請を起票すると「確定出荷日入力依頼」が届く</li>
+                    <li>確定出荷日を入力すると常務の承認を経て出荷確定となる</li>
+                </ol>
+            </li>
+            <li><span class="chtag">Ch8</span><b>通知</b>：営業が受け取るのは「仮出荷予定日入力依頼」「確定出荷日入力依頼」の2種類だけであることを整理して伝える</li>
+        </ul>
+
+        <h3 class="block-title light">軽く流してよい章</h3>
+        <ul>
+            <li><span class="chtag">Ch4</span><span class="chtag">Ch5</span><span class="chtag">Ch6</span>組立・試運転特有の画面なので簡単に紹介する程度でよい</li>
+        </ul>
+
+        <h3 class="block-title qa">想定される質問</h3>
+        <ul class="qa-list">
+            <li>Q. 出荷日が変わったら？　→ 入力し直せば関係者に再度通知が届く</li>
+            <li>Q. 承認は必要か？　→ 出荷確認会議は承認不要、出荷確定は常務の承認が必要</li>
+        </ul>
+    </div>
+
+    <div class="closing">
+        <b>共通：締めの一言</b><br>
+        「今日操作した内容や画面の見方は、アプリ内の『使い方ガイド』からいつでもこの資料で見返せます。分からないことがあれば製造管理課まで」（Ch9）
+    </div>
+
+</div>
+</body>
+</html>
