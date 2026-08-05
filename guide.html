@@ -698,7 +698,26 @@
         <section id="s8">
             <div class="section-eyebrow">Chapter 8</div>
             <h2>自動メール通知</h2>
-            <p>アプリからのメール通知は大きく2種類あります。①誰かが申請・承認・案内送信などの操作をするたびに送られる「<b>承認フロー通知</b>」と、②対応漏れを防ぐために毎日自動でチェックされる「<b>リマインダー通知</b>」です。</p>
+            <p>アプリからのメール通知は大きく2種類あります。①誰かが申請・承認・案内送信などの操作をするたびに送られる「<b>承認フロー通知</b>」と、②対応漏れを防ぐために毎日自動でチェックされる「<b>リマインダー通知</b>」です。どちらも件名・本文の形はほぼ共通で、以下は代表例として「承認依頼」メールです。</p>
+            <div class="mockup" style="max-width:640px;">
+                <div class="mail-meta">
+                    <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【承認依頼】3181 MC　組立完了申請</span></div>
+                    <div class="mail-row"><span class="mail-label">差出人</span><span>工事工程 通知 &lt;notify@kusakabe.com&gt;</span></div>
+                    <div class="mail-row"><span class="mail-label">宛先</span><span>山田 課長 様</span></div>
+                </div>
+                <div class="mail-body">山田 課長 様
+
+3181 MC の「組立完了申請」について承認依頼が届いています。
+承認フロー管理システムにログインして承認をお願いします。
+
+※組立課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。
+
+▼ 承認フローを開く
+<span class="mail-link">https://kemcokurosaki-oss.github.io/approval-flow/</span>
+
+※このメールは自動送信です。</div>
+                <div class="mockup-caption">通知メールの例（承認依頼）。件名でどの工事番号・どのフローの通知かが分かり、本文のリンクからアプリにそのままログインできる</div>
+            </div>
 
             <h3>① 承認フロー通知（操作のたびに送信・最大15分以内）</h3>
             <p>誰かがアプリ上で操作すると、その内容に応じて関係者へ自動でメールが送られます。</p>
