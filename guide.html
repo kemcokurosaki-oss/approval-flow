@@ -238,7 +238,11 @@
     .flow-step span.label { margin-top: 8px; font-size: 12.5px; font-weight: 700; color: #1e3a5f; text-align: center; }
     .flow-step span.sub { font-size: 11px; color: #8a94a6; text-align: center; }
     .flow-arrow { flex: 1; min-width: 12px; height: 2px; background: #b9c6da; margin: 19px -22px 0; position: relative; }
-    .flow-arrow::after { content: '▸'; position: absolute; right: -6px; top: -6px; color: #b9c6da; font-size: 14px; }
+    .flow-arrow::after {
+        content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
+        width: 0; height: 0; border-style: solid; border-width: 4px 0 4px 6px;
+        border-color: transparent transparent transparent #b9c6da;
+    }
 
     /* ---------- 工程別 詳細フロー（申請〜承認〜通知） ---------- */
     .step-card { border: 1px solid #e5e9f1; border-radius: 12px; padding: 22px 26px 20px; margin: 14px 0 26px; background: #fff; box-shadow: 0 1px 2px rgba(20,36,63,.04); max-width: 900px; }
