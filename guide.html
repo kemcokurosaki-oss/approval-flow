@@ -406,17 +406,96 @@
         <section id="s3">
             <div class="section-eyebrow">Chapter 3</div>
             <h2>申請と承認の役割分担</h2>
-            <p>工程ごとに「誰が申請・案内送付するか」「誰が承認するか」に加えて、その操作に応じて自動で送られる通知メールもあわせて一覧にしています。表を上から見ていくと、申請〜承認〜通知までの一連の流れが分かります。</p>
-            <table class="spec">
-                <tr><th>工程</th><th>申請・案内送付</th><th>承認</th><th>通知（自動メール）</th></tr>
-                <tr><td>組立完了</td><td>組立担当者</td><td>組立課長・部長（どちらか一方が承認すれば完了）</td><td>申請時に承認者へ「承認依頼」／却下時に申請者へ「却下」／再申請時に承認者へ「再申請」／承認時に申請者へ「承認完了」（もう一方の承認者には「対応不要」）</td></tr>
-                <tr><td>外観検査・簡易検査</td><td>品証（不在時は製管）が開催案内を送信</td><td>承認なし（品証・製管が開催後にタスクを確認して完了にする）</td><td>送信時に送付先へ「開催案内」／変更・キャンセル時に「日程変更」「キャンセル」／タスク割り当て・完了時に担当者へ通知／完了時に営業担当者へ「仮出荷予定日 入力依頼」</td></tr>
-                <tr><td>試運転完了</td><td>操業（試運転）担当者</td><td>操業課長・部長（どちらか一方が承認すれば完了）</td><td>組立完了と同様（承認依頼／却下／再申請／承認完了）</td></tr>
-                <tr><td>出荷確認会議</td><td>品証（不在時は製管）が開催案内を送信</td><td>承認なし（品証・製管が開催後にタスクを確認して完了にする）</td><td>外観検査・簡易検査と同様（開催案内／日程変更／キャンセル／タスク関連）</td></tr>
-                <tr><td>出荷準備完了</td><td>組立担当者・営業担当者</td><td>承認なし（品証へ即時通知）</td><td>完了時に品証（製管をCC）へ「出荷準備完了」</td></tr>
-                <tr><td>出荷確定</td><td>品証・製管が起票 → 営業担当者が確定出荷日を入力 → 品証が内容確認のうえ本申請</td><td>組立部長（常務）</td><td>起票時に営業担当者へ「確定出荷日 入力依頼」／入力時に品証・製管へ「確定出荷日 入力済み」／本申請時に承認者へ「承認依頼」／承認時に申請者へ「承認完了」（確定出荷日つき）</td></tr>
-            </table>
-            <div class="note">簡易検査・外観検査・出荷確認会議は、開催案内を送った後に品証（または製管）が残作業を確認し、完了させることで次の工程に進みます。この3つのフローでは、残作業のことを「ペンディング」ではなく「タスク」と呼びます。組立完了・試運転完了は、課長・部長どちらか一方が承認すればそれで完了です（品証・製管の承認ステップはありません）。</div>
+            <p>Chapter 2のフロー図の番号順に、各工程で「誰が申請・案内送付するか」「誰が承認するか」、そしてその操作に応じて自動で送られる通知メールを、イラストで細かく見ていきます。</p>
+
+            <div class="step-card">
+                <h3>①組立完了</h3>
+                <p class="step-desc">組立担当者が完了を申請し、組立課長・部長のどちらか一方が承認すれば完了です（両方の承認は不要）。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">組立担当者</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">承認依頼</span><span class="sub">課長・部長へメール</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✅</div><span class="label">承認</span><span class="sub">どちらか一方</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">承認完了</span><span class="sub">申請者へメール</span></div>
+                </div>
+                <div class="note">却下された場合は申請者へ「却下」メールが届きます。内容を修正して再申請すると、承認者へ「再申請」メールが届きます。また、課長・部長のどちらか一方が先に承認した場合、もう一方には「対応不要」の案内が届きます。</div>
+            </div>
+
+            <div class="step-card">
+                <h3>②外観検査</h3>
+                <p class="step-desc">品証（不在時は製管）が開催案内を送信します。承認は不要で、開催後に品証・製管がタスクを確認して「完了にする」と次の工程に進みます。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">📨</div><span class="label">開催案内送信</span><span class="sub">品証・製管</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">開催案内</span><span class="sub">送付先へメール<br>（カレンダー添付）</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">🔍</div><span class="label">タスク確認・完了</span><span class="sub">品証・製管</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">入力依頼</span><span class="sub">営業へ「仮出荷予定日<br>入力依頼」メール</span></div>
+                </div>
+                <div class="note">3C番／4C番／D番では、この工程は「簡易検査」と呼ばれ、④出荷確認会議を含みます。開催日程を変更・キャンセルした場合も、それぞれ送付先へメールが届きます。</div>
+            </div>
+
+            <div class="step-card">
+                <h3>③試運転完了</h3>
+                <p class="step-desc">操業（試運転）担当者が完了を申請し、操業課長・部長のどちらか一方が承認すれば完了です（①組立完了と同じ流れです）。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">操業（試運転）担当者</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">承認依頼</span><span class="sub">課長・部長へメール</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✅</div><span class="label">承認</span><span class="sub">どちらか一方</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">承認完了</span><span class="sub">申請者へメール</span></div>
+                </div>
+                <div class="note">却下・再申請時の通知は①組立完了と同様です。</div>
+            </div>
+
+            <div class="step-card">
+                <h3>④出荷確認会議</h3>
+                <p class="step-desc">品証（不在時は製管）が開催案内を送信します。承認は不要で、開催後にタスクを確認して「完了にする」と次の工程に進みます（②外観検査と同じ流れです）。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">📨</div><span class="label">開催案内送信</span><span class="sub">品証・製管</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">開催案内</span><span class="sub">送付先へメール<br>（カレンダー添付）</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">🔍</div><span class="label">タスク確認・完了</span><span class="sub">品証・製管</span></div>
+                </div>
+                <div class="note">3C番／4C番／D番では独立した工程はなく、②簡易検査に含まれます。</div>
+            </div>
+
+            <div class="step-card">
+                <h3>⑤出荷準備完了</h3>
+                <p class="step-desc">組立担当者・営業担当者が完了を申請します。承認は不要で、申請すると即時に完了扱いとなります。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">組立担当者<br>・営業担当者</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">完了通知</span><span class="sub">品証へメール<br>（製管をCC）</span></div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3>⑥出荷確定</h3>
+                <p class="step-desc">品証・製管が起票し、営業担当者が確定出荷日を入力、品証が内容確認のうえ本申請、組立部長（常務）が承認します。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">📝</div><span class="label">起票</span><span class="sub">品証・製管</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">入力依頼</span><span class="sub">営業へ「確定出荷日<br>入力依頼」メール</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">🖊️</div><span class="label">入力</span><span class="sub">営業担当者</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">入力済み通知</span><span class="sub">品証・製管へメール</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📨</div><span class="label">本申請</span><span class="sub">品証</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✅</div><span class="label">承認</span><span class="sub">組立部長（常務）</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">承認完了</span><span class="sub">申請者へメール<br>（確定出荷日つき）</span></div>
+                </div>
+            </div>
+
             <div class="note warn">運用にあたっての注意事項：通知メールは操作から最大15分以内に自動送信されます。申請から24時間以上承認されない、開催案内が送られない、期日を過ぎても完了処理がされないなど対応が止まっている案件があると、翌日から毎日「リマインダー通知」（催促メール）が届き続けます（詳しくはChapter 9「自動メール通知」）。却下された申請は、内容を修正のうえ再申請してください。</div>
         </section>
 
