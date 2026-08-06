@@ -226,8 +226,8 @@
     .mail-link { color: #2f6fb0; text-decoration: underline; word-break: break-all; }
 
     /* ---------- フローの図 ---------- */
-    .flowline { display: flex; align-items: center; flex-wrap: wrap; gap: 0; max-width: 900px; margin: 20px 0 8px; }
-    .flow-step { display: flex; flex-direction: column; align-items: center; width: 108px; }
+    .flowline { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0; max-width: 900px; margin: 20px 0 8px; }
+    .flow-step { display: flex; flex-direction: column; align-items: center; width: 92px; position: relative; z-index: 1; }
     .flow-dot {
         width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-size: 16px; font-weight: 700; color: #fff;
@@ -237,8 +237,8 @@
     }
     .flow-step span.label { margin-top: 8px; font-size: 12.5px; font-weight: 700; color: #1e3a5f; text-align: center; }
     .flow-step span.sub { font-size: 11px; color: #8a94a6; text-align: center; }
-    .flow-arrow { flex: 1; min-width: 20px; height: 2px; background: #b9c6da; margin: 0 -2px 22px; position: relative; }
-    .flow-arrow::after { content: '▸'; position: absolute; right: -6px; top: -9px; color: #b9c6da; font-size: 14px; }
+    .flow-arrow { flex: 1; min-width: 12px; height: 2px; background: #b9c6da; margin: 19px -22px 0; position: relative; }
+    .flow-arrow::after { content: '▸'; position: absolute; right: -6px; top: -6px; color: #b9c6da; font-size: 14px; }
 
     /* ---------- 工程別 詳細フロー（申請〜承認〜通知） ---------- */
     .step-card { border: 1px solid #e5e9f1; border-radius: 12px; padding: 22px 26px 20px; margin: 14px 0 26px; background: #fff; box-shadow: 0 1px 2px rgba(20,36,63,.04); max-width: 900px; }
