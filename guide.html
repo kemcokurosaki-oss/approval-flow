@@ -240,6 +240,15 @@
     .flow-arrow { flex: 1; min-width: 20px; height: 2px; background: #b9c6da; margin: 0 -2px 22px; position: relative; }
     .flow-arrow::after { content: '▸'; position: absolute; right: -6px; top: -9px; color: #b9c6da; font-size: 14px; }
 
+    /* ---------- 工程別 詳細フロー（申請〜承認〜通知） ---------- */
+    .step-card { border: 1px solid #e5e9f1; border-radius: 12px; padding: 22px 26px 20px; margin: 14px 0 26px; background: #fff; box-shadow: 0 1px 2px rgba(20,36,63,.04); max-width: 900px; }
+    .step-card h3 { margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+    .step-card p.step-desc { margin: 0 0 16px; font-size: 13.5px; color: #4a5768; }
+    .step-card .flowline { margin: 6px 0 4px; }
+    .step-card .flow-step { width: auto; min-width: 96px; padding: 0 4px; }
+    .step-card .flow-dot { width: 36px; height: 36px; font-size: 15px; background: linear-gradient(135deg, #7ec1ea, #4f9ddb); box-shadow: 0 3px 8px rgba(79,157,219,.3); }
+    .step-card .flow-step span.sub { line-height: 1.4; }
+
     /* ---------- 状態アイコン説明 ---------- */
     .legend { display: flex; flex-wrap: wrap; gap: 18px; max-width: 900px; margin: 10px 0 22px; }
     .legend-item { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e9f1; border-radius: 9px; padding: 10px 14px; flex: 1 1 260px; }
