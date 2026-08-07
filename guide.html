@@ -583,22 +583,39 @@
                         </div>
                         <div class="prog-machine-row">
                             <div class="flow-steps">
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">組立</div></div>
-                                <div class="flow-connector fc-line-pending"></div>
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">外観検査</div></div>
+                                <div class="flow-node"><div class="flow-circle fc-done">✓</div><div class="flow-label">組立</div><div class="flow-date">完了 7/18</div></div>
+                                <div class="flow-connector fc-line-done"></div>
+                                <div class="flow-node"><div class="flow-circle fc-active"><span class="fc-play-icon">▶</span></div><div class="flow-label">外観検査</div><div class="flow-date">開催 7/25</div><div class="flow-pending-badge">2件</div></div>
                                 <div class="flow-connector fc-line-pending"></div>
                                 <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
                                 <div class="flow-connector fc-line-pending"></div>
                                 <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷確認会議</div></div>
                                 <div class="flow-connector fc-line-pending"></div>
-                                <div class="flow-node"><div class="flow-circle fc-done">✓</div><div class="flow-label">出荷準備</div><div class="flow-date">完了 7/31</div></div>
-                                <div class="flow-connector fc-line-done"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷準備</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="prog-card">
+                        <div class="prog-card-header">
+                            <div class="prog-card-header-left"><span class="prog-card-num">D215</span><span class="prog-card-label">山田製作所株式会社　滋賀工場　搬送ラインD型改造工事</span></div>
+                            <div class="prog-card-dates"><div class="prog-card-date"><span class="prog-card-date-label">出荷予定日</span><span class="prog-card-date-value">2026/9/15</span></div></div>
+                        </div>
+                        <div class="prog-machine-row">
+                            <div class="flow-steps">
+                                <div class="flow-node"><div class="flow-circle fc-rejected">✕</div><div class="flow-label">組立</div><div class="flow-date">却下 8/2</div><div class="flow-rejected-badge">✕ 却下・要再申請</div></div>
+                                <div class="flow-connector fc-line-rejected"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">簡易検査</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
+                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷準備</div></div>
+                                <div class="flow-connector fc-line-pending"></div>
                                 <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">出荷</div></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mockup-caption">承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる（実際の画面と同じ表示を再現）</div>
+                <div class="mockup-caption">承認ステータス画面：工事番号ごとにカード表示され、各工程の進捗状況が確認できる（実際の画面と同じ表示を再現）。3枚目のD215は3C番／4C番／D番の4工程フロー（簡易検査に②③④を集約）と、却下時の表示例</div>
             </div>
             </div>
             <div class="compare-notes">
