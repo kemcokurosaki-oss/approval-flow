@@ -455,6 +455,23 @@ async function doLogout() {
     location.reload();
 }
 
+function showLoginOverlay() {
+    document.getElementById('login_overlay').classList.add('visible');
+}
+function hideLoginOverlay() {
+    document.getElementById('login_overlay').classList.remove('visible');
+}
+
+// 未ログイン時の操作をブロックし、ログイン画面を促す（実際の可否はDB側RLSで担保。これはUXのための案内）
+function requireLogin() {
+    if (!currentUser?.id) {
+        showToast('この操作にはログインが必要です', 'error');
+        showLoginOverlay();
+        return true;
+    }
+    return false;
+}
+
 // ヘッダーの実際の高さ（dev_bar表示の有無やフォント環境で変わる）を測って、
 // マイページ・設定パネルの位置合わせに使う --header-height に反映する
 function updateHeaderHeightVar() {
