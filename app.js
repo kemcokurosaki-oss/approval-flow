@@ -529,6 +529,8 @@ async function bootApp(session) {
     document.getElementById('login_overlay').classList.remove('visible');
     document.getElementById('app').style.display = 'flex';
     document.getElementById('app').classList.remove('is-guest');
+    document.getElementById('user_menu_btn').style.display   = '';
+    document.getElementById('guest_login_btn').style.display = 'none';
     document.getElementById('user_name_display').textContent =
         profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;
