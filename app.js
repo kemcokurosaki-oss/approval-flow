@@ -5361,6 +5361,7 @@ async function confirmTentativeShippingDate(requestId) {
 // 営業・品証・製管: 確定出荷日を後から変更する。既に常務へ申請・承認済み（status: submitted/approved）の場合は
 // 承認ステップをリセットして常務の再承認を必須にする
 async function changeConfirmedShippingDate(requestId) {
+    if (requireLogin()) return;
     const dateVal        = document.getElementById('sales_date_input')?.value;
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
