@@ -1034,6 +1034,7 @@
         }
         #login_overlay.visible { display: flex; }
         #login_dialog {
+            position: relative;
             background: #fff;
             border-radius: 10px;
             padding: 32px 28px;
@@ -1041,6 +1042,19 @@
             border: 1px solid #ecedf0;
             box-shadow: 0 12px 40px rgba(0,0,0,0.14);
         }
+        .login-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            line-height: 1;
+            color: #aaa;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .login-close:hover { color: #333; }
         #login_dialog h2 { font-size: 18px; margin-bottom: 6px; text-align: center; color: #1e3a5f; }
         #login_dialog p { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 20px; }
         .login-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
