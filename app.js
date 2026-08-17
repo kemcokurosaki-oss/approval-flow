@@ -3851,6 +3851,7 @@ async function saveEditQaPendingItem(requestId, idx) {
 }
 
 async function deleteQaPendingItem(requestId, idx) {
+    if (requireLogin()) return;
     if (!confirm('このタスクを削除します。よろしいですか？')) return;
 
     showLoading('削除中...');
