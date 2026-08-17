@@ -709,6 +709,8 @@
 
         /* view-only: サイドタブのみ表示（申請ボタンなし） */
         .is-view-only #new_btn_area { display: none !important; }
+        /* 未ログイン（閲覧のみ）: 申請ボタンなし */
+        .is-guest #new_btn_area { display: none !important; }
 
         /* ===== Tabs ===== */
         .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 0; gap: 0; }
