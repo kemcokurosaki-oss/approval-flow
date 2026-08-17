@@ -203,6 +203,22 @@ let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal か
 function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
 function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
 
+// 部署 → その部署の上長ロール（課長・部長）一覧。品証・製管・設計は課長/部長ロールがprofilesに存在しないため対象外
+const DEPT_SUPERVISOR_ROLES = {
+    '組立': ['assembly_manager', 'assembly_director'],
+    '操業': ['operations_manager', 'operations_director']
+};
+
+// タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
+function isSupervisorOfOwner(ownerName) {
+    if (!ownerName) return false;
+    const ownerProfile = allProfiles.find(p => p.name === ownerName);
+    if (!ownerProfile) return false;
+    const supervisorRoles = DEPT_SUPERVISOR_ROLES[ownerProfile.department];
+    if (!supervisorRoles) return false;
+    return supervisorRoles.includes(getEffectiveRole());
+}
+
 function canApplyFlow(flowType) {
     const role  = getEffectiveRole();
     const dept  = getEffectiveDept();
