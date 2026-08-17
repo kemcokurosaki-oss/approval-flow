@@ -748,6 +748,7 @@ async function choosePackingStatus(num, status) {
 // 梱包出荷「なし」確定時、工程表に残っている開始日・終了日が空のプレースホルダータスクを自動削除する
 // （日付が入っている＝別途スケジュール済みの実タスクは誤って消さないよう対象外）
 async function deleteEmptyPackingTasks(projectNumber) {
+    if (requireLogin()) return;
     try {
         await db.from('tasks')
             .delete()
