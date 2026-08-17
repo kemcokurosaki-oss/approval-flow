@@ -572,6 +572,7 @@ async function bootGuest() {
     document.getElementById('app').classList.add('is-guest');
     document.getElementById('user_menu_btn').style.display   = 'none';
     document.getElementById('guest_login_btn').style.display = 'flex';
+    document.getElementById('rail_mypage').style.display      = 'none';
     document.getElementById('dev_bar').style.display          = 'none';
     document.getElementById('app').classList.remove('has-dev-bar');
     document.getElementById('nav_settings_item').style.display = 'none';
