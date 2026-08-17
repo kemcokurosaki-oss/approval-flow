@@ -4151,6 +4151,7 @@ async function syncShippingDateToTasks(req, { factoryDate, packingDate } = {}) {
 
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
+    if (requireLogin()) return;
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
 
     // assembly・test_run はいずれも並列承認（どちらかが承認した時点で即完了）
