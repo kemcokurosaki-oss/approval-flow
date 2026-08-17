@@ -3732,6 +3732,7 @@ async function _notifyPendingOwner(requestId, owner, isFixed = false, content = 
 }
 
 async function addQaPendingItem(requestId) {
+    if (requireLogin()) return;
     const contentEl    = document.getElementById('qa_pending_content');
     const locationEl   = document.getElementById('qa_pending_location');
     const ownerEl      = document.getElementById('qa_pending_owner');
