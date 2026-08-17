@@ -2453,6 +2453,7 @@ function buildPendingSectionInner(req, isMyRequest) {
         <div class="section-title">${isQaFlow ? 'タスクリスト' : 'ペンディング項目'}</div>
         ${items.map(({ item, idx }, pos) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
+            // QAフローのタスクリストはさらに、担当者の上長（組立課長/部長・操業課長/部長）も完了操作できる
             const itemCanComplete = isQaFlow
                 ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner) || isSupervisorOfOwner(item.owner)))
                 : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner));
