@@ -2353,6 +2353,7 @@ function collectSheetData() {
 }
 
 async function submitRequest() {
+    if (requireLogin()) return;
     const projectNum = currentProjectNum;
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)          { showToast('工事番号が設定されていません', 'error'); return; }
