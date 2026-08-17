@@ -3977,6 +3977,7 @@ function closeRescheduleModal() {
 }
 
 async function saveReschedule() {
+    if (requireLogin()) return;
     const requestId = rescheduleModalReqId;
     if (!requestId) return;
 
