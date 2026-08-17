@@ -5280,6 +5280,7 @@ async function confirmAndSubmitShipping(requestId) {
 // 営業: 仮出荷予定日を入力（品証・製管の確認待ちへ）
 // 営業: 仮出荷予定日を入力（簡易検査・外観検査の申請そのものに付随。品証・製管の確認待ちへ）
 async function submitTentativeShippingDate(requestId) {
+    if (requireLogin()) return;
     const dateVal        = document.getElementById('tentative_date_input')?.value;
     const packingInputEl = document.getElementById('packing_tentative_date_input');
     const packingDateVal = packingInputEl?.value || null;
