@@ -5417,6 +5417,7 @@ async function changeConfirmedShippingDate(requestId) {
 
 // 営業・品証・製管: 仮出荷予定日を後から変更する。既に品証・製管が確認済みの場合は確認済みフラグをリセットして再確認を必須にする
 async function changeTentativeShippingDate(requestId) {
+    if (requireLogin()) return;
     const dateVal        = document.getElementById('tentative_date_input')?.value;
     const packingInputEl = document.getElementById('packing_tentative_date_input');
     const packingDateVal = packingInputEl?.value || null;
