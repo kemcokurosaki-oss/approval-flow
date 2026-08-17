@@ -3356,6 +3356,7 @@ async function showRecipientsDetailScreen(flowType) {
 }
 
 async function saveRecipientDetail(flowType) {
+    if (requireLogin()) return;
     const checkedBoxes = [...document.querySelectorAll('#settings_body [data-recipient-kind]:checked')];
     const profileIds   = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'profile').map(cb => cb.dataset.recipientId);
     const recipientIds = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'recipient').map(cb => cb.dataset.recipientId);
