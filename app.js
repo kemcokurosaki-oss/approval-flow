@@ -213,15 +213,15 @@ const DEPT_SUPERVISOR_ROLES = {
 // タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
 function isSupervisorOfOwner(ownerName) {
     if (!ownerName) return false;
-    const ownerProfile = allProfiles.find(p => p.name === ownerName);
-    if (!ownerProfile) return false;
-    // 設計は課長/部長ロールがprofilesに無いため、membersテーブルの上長メールで判定する
-    if (ownerProfile.department === '設計') {
-        const memberRow = allMembers.find(m => m.name === ownerName);
-        if (!memberRow) return false;
+    // 設計担当者はprofiles未登録の場合があるため、membersテーブルを先に確認する
+    const memberRow = allMembers.find(m => m.name === ownerName);
+    if (memberRow) {
         const supervisorEmails = [memberRow.supervisor_email1, memberRow.supervisor_email_2].filter(Boolean);
         return supervisorEmails.includes(currentUser?.email);
     }
+    // 組立・操業はprofilesのロール（課長/部長）で判定する
+    const ownerProfile = allProfiles.find(p => p.name === ownerName);
+    if (!ownerProfile) return false;
     const supervisorRoles = DEPT_SUPERVISOR_ROLES[ownerProfile.department];
     if (!supervisorRoles) return false;
     return supervisorRoles.includes(getEffectiveRole());
