@@ -5751,10 +5751,9 @@ async function getProfileByRole(role) {
 // ===== Auth Listener =====
 db.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
-        document.getElementById('login_overlay').classList.add('visible');
-        document.getElementById('app').style.display = 'none';
         currentUser    = null;
         currentProfile = null;
+        bootGuest();
     }
 });
 
@@ -5762,16 +5761,17 @@ db.auth.onAuthStateChange((event, session) => {
 (async () => {
     const accessToken  = localStorage.getItem('ap_access_token');
     const refreshToken = localStorage.getItem('ap_refresh_token');
-    if (!accessToken) return; // 未ログイン → ログイン画面のまま
+    if (!accessToken) { await bootGuest(); return; } // 未ログイン → 閲覧のみで起動
 
     const { data, error } = await db.auth.setSession({
         access_token:  accessToken,
         refresh_token: refreshToken
     });
     if (error || !data.session) {
-        // トークン期限切れなど → ログイン画面へ
+        // トークン期限切れなど → 閲覧のみで起動
         localStorage.removeItem('ap_access_token');
         localStorage.removeItem('ap_refresh_token');
+        await bootGuest();
         return;
     }
     await bootApp(data.session);
