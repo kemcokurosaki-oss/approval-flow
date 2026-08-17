@@ -2134,6 +2134,7 @@ function _updateSheetSaveStatus(state) {
 }
 
 async function saveSheetNow() {
+    if (requireLogin()) return;
     if (!currentDraftId) return;
     try {
         const data = collectSheetData();
