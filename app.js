@@ -558,6 +558,30 @@ async function bootApp(session) {
     ui.send('READY');
 }
 
+// 未ログインでも閲覧だけはできるようにする起動パス（編集系はDB側RLSでブロックされる）
+async function bootGuest() {
+    currentUser    = { id: null, email: null };
+    currentProfile = { id: null, name: '閲覧のみ', role: '', department: '' };
+
+    hideLoginOverlay();
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').classList.add('is-guest');
+    document.getElementById('user_name_display').textContent = 'ログイン';
+    document.getElementById('user_menu_email').textContent   = '';
+    document.getElementById('dev_bar').style.display          = 'none';
+    document.getElementById('app').classList.remove('has-dev-bar');
+    document.getElementById('nav_settings_item').style.display = 'none';
+    updateHeaderHeightVar();
+
+    await loadFlowSettings();
+    await loadProjects();
+    await refreshAll();
+
+    applyRoleLayout('');
+
+    ui.send('READY');
+}
+
 // ===== Projects =====
 async function loadProjects() {
     // 完了済み工事番号を取得（進捗一覧には含めるが、通常表示では除外する）
