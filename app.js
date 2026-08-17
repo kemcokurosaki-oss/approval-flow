@@ -4857,6 +4857,7 @@ async function onInspectionMachineChange() {
 }
 
 async function submitInspection() {
+    if (requireLogin()) return;
     const num      = currentInspectionProjectNum;
     const machines = getSelectedMachines('inspection_machine_list');
     const dateVal  = document.getElementById('inspection_date_input').value;
