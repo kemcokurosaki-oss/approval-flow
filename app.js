@@ -3471,6 +3471,7 @@ function onRmDepartmentSelectChange() {
 }
 
 async function saveRecipientMaster(id) {
+    if (requireLogin()) return;
     const name  = document.getElementById('rm_name').value.trim();
     const email = document.getElementById('rm_email').value.trim();
     const deptSel = document.getElementById('rm_department_select').value;
