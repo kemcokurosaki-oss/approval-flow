@@ -162,6 +162,7 @@ const ui = {
 // ===== App State =====
 let currentUser    = null;
 let currentProfile = null;
+let allProfiles    = []; // ログイン時に取得した全profiles（id,name,email,role,department）。担当者の上長判定に使用
 let projectsMap    = {}; // project_number → { customer_name, project_details }
 let currentTab          = 'pending';
 let progressTab          = 'progress'; // 'progress'（進捗一覧） | 'assembly_report'（組立・試運転 完了報告＝2000番台）
