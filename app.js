@@ -463,6 +463,7 @@ async function bootApp(session) {
     const allRows = await resAll.json();
     console.log('全profiles:', JSON.stringify(allRows));
     console.log('ログイン中のUID:', currentUser.id);
+    allProfiles = Array.isArray(allRows) ? allRows : [];
 
     // UID一致で検索
     const profile = Array.isArray(allRows)
