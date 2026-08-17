@@ -1782,9 +1782,10 @@ function _canCompletePendingItem(req, item) {
         ? ['submitted', 'approved'].includes(req.status)
         : ['submitted', 'in_review', 'approved'].includes(req.status);
     if (!statusOk) return false;
-    const isOwner     = !!(item.owner && currentProfile?.name === item.owner);
-    const isMyRequest = req.requester_id === currentUser.id;
-    return isQualityOrSeikan || isOwner || (!isQaFlow && isMyRequest);
+    const isOwner      = !!(item.owner && currentProfile?.name === item.owner);
+    const isSupervisor = isQaFlow && isSupervisorOfOwner(item.owner);
+    const isMyRequest  = req.requester_id === currentUser.id;
+    return isQualityOrSeikan || isOwner || isSupervisor || (!isQaFlow && isMyRequest);
 }
 
 // ===== Tab Switch（廃止済み・後方互換用スタブ） =====
