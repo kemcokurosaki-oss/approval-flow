@@ -567,8 +567,8 @@ async function bootGuest() {
     hideLoginOverlay();
     document.getElementById('app').style.display = 'flex';
     document.getElementById('app').classList.add('is-guest');
-    document.getElementById('user_name_display').textContent = 'ログイン';
-    document.getElementById('user_menu_email').textContent   = '';
+    document.getElementById('user_menu_btn').style.display   = 'none';
+    document.getElementById('guest_login_btn').style.display = 'flex';
     document.getElementById('dev_bar').style.display          = 'none';
     document.getElementById('app').classList.remove('has-dev-bar');
     document.getElementById('nav_settings_item').style.display = 'none';
