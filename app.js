@@ -4970,6 +4970,7 @@ async function onSmMachineChange() {
 }
 
 async function submitShippingMeeting() {
+    if (requireLogin()) return;
     const num      = currentSmProjectNum;
     const machines = getSelectedMachines('sm_machine_list');
     const dateVal  = document.getElementById('sm_date_input').value;
