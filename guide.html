@@ -947,37 +947,44 @@
 <script>
     var sectionEls = Array.prototype.slice.call(document.querySelectorAll('main.main > section'));
     var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+    var currentIdx = 0;
 
-    function currentIndex() {
-        var mid = window.scrollY + window.innerHeight / 3;
-        var idx = 0;
-        sectionEls.forEach(function (sec, i) {
-            if (sec.offsetTop <= mid) idx = i;
-        });
-        return idx;
+    function indexFromHash() {
+        var hash = window.location.hash.replace('#', '');
+        var idx = -1;
+        sectionEls.forEach(function (sec, i) { if (sec.id === hash) idx = i; });
+        return idx >= 0 ? idx : 0;
     }
-    function goTo(idx) {
+
+    function showSection(idx, skipHash) {
         idx = Math.max(0, Math.min(sectionEls.length - 1, idx));
-        sectionEls[idx].scrollIntoView({ behavior: 'smooth' });
+        currentIdx = idx;
+        sectionEls.forEach(function (sec, i) {
+            sec.classList.toggle('is-active', i === idx);
+            if (i === idx) sec.scrollTop = 0;
+        });
+        tocLinks.forEach(function (l, i) { l.classList.toggle('active', i === idx); });
+        if (!skipHash) { history.replaceState(null, '', '#' + sectionEls[idx].id); }
     }
-    document.getElementById('btn_prev').addEventListener('click', function () { goTo(currentIndex() - 1); });
-    document.getElementById('btn_next').addEventListener('click', function () { goTo(currentIndex() + 1); });
-    window.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(currentIndex() + 1); }
-        if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(currentIndex() - 1); }
+
+    tocLinks.forEach(function (link, i) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            showSection(i);
+        });
     });
 
-    var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
-            if (!link) return;
-            if (entry.isIntersecting) {
-                tocLinks.forEach(function (l) { l.classList.remove('active'); });
-                link.classList.add('active');
-            }
-        });
-    }, { rootMargin: '-40% 0px -55% 0px' });
-    sectionEls.forEach(function (sec) { io.observe(sec); });
+    document.getElementById('btn_prev').addEventListener('click', function () { showSection(currentIdx - 1); });
+    document.getElementById('btn_next').addEventListener('click', function () { showSection(currentIdx + 1); });
+    window.addEventListener('keydown', function (e) {
+        var tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); showSection(currentIdx + 1); }
+        if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); showSection(currentIdx - 1); }
+    });
+    window.addEventListener('hashchange', function () { showSection(indexFromHash(), true); });
+
+    showSection(indexFromHash(), true);
 </script>
 </body>
 </html>
