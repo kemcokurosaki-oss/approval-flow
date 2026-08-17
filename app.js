@@ -203,7 +203,7 @@ let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal か
 function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
 function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
 
-// 部署 → その部署の上長ロール（課長・部長）一覧。品証・製管・設計は課長/部長ロールがprofilesに存在しないため対象外
+// 部署 → その部署の上長ロール（課長・部長）一覧。品証・製管は課長/部長ロールがprofilesに存在しないため対象外
 const DEPT_SUPERVISOR_ROLES = {
     '組立': ['assembly_manager', 'assembly_director'],
     '操業': ['operations_manager', 'operations_director']
@@ -214,6 +214,13 @@ function isSupervisorOfOwner(ownerName) {
     if (!ownerName) return false;
     const ownerProfile = allProfiles.find(p => p.name === ownerName);
     if (!ownerProfile) return false;
+    // 設計は課長/部長ロールがprofilesに無いため、membersテーブルの上長メールで判定する
+    if (ownerProfile.department === '設計') {
+        const memberRow = allMembers.find(m => m.name === ownerName);
+        if (!memberRow) return false;
+        const supervisorEmails = [memberRow.supervisor_email1, memberRow.supervisor_email_2].filter(Boolean);
+        return supervisorEmails.includes(currentUser?.email);
+    }
     const supervisorRoles = DEPT_SUPERVISOR_ROLES[ownerProfile.department];
     if (!supervisorRoles) return false;
     return supervisorRoles.includes(getEffectiveRole());
