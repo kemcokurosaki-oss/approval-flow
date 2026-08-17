@@ -3790,6 +3790,7 @@ function cancelEditQaPendingItem() {
 }
 
 async function saveEditQaPendingItem(requestId, idx) {
+    if (requireLogin()) return;
     const contentEl     = document.getElementById(`qa_edit_content_${idx}`);
     const locationEl    = document.getElementById(`qa_edit_location_${idx}`);
     const ownerEl       = document.getElementById(`qa_edit_owner_${idx}`);
