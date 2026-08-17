@@ -4745,6 +4745,7 @@ async function onSiMachineChange() {
 }
 
 async function submitSimpleInspection() {
+    if (requireLogin()) return;
     const num      = currentSiProjectNum;
     const machines = getSelectedMachines('si_machine_list');
     const dateVal  = document.getElementById('si_date_input').value;
