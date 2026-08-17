@@ -489,6 +489,10 @@ async function bootApp(session) {
     console.log('ログイン中のUID:', currentUser.id);
     allProfiles = Array.isArray(allRows) ? allRows : [];
 
+    // 設計担当者の上長メール判定用にmembersテーブルを取得
+    const { data: memberRows } = await db.from('members').select('name, email, supervisor_email1, supervisor_email_2');
+    allMembers = memberRows || [];
+
     // UID一致で検索
     const profile = Array.isArray(allRows)
         ? allRows.find(r => r.id === currentUser.id) || null
