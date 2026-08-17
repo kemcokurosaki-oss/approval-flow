@@ -5125,6 +5125,7 @@ async function onShippingMachineChange() {
 }
 
 async function submitShipping() {
+    if (requireLogin()) return;
     const num      = currentShippingProjectNum;
     const machines = getSelectedMachines('shipping_machine_list');
     const note     = document.getElementById('shipping_note_input').value.trim();
