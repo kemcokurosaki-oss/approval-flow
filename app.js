@@ -5194,6 +5194,7 @@ async function submitShipping() {
 
 // 営業: 確定出荷日を入力（品証の確認待ちへ）
 async function submitSalesShippingDate(requestId) {
+    if (requireLogin()) return;
     const dateVal        = document.getElementById('sales_date_input')?.value;
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
