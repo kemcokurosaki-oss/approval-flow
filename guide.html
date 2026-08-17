@@ -52,21 +52,21 @@
     .toc a:hover { background: #1d3054; color: #fff; }
     .toc a.active { background: #1d3054; color: #fff; border-left-color: #4f9ddb; font-weight: 700; }
 
-    .main { flex: 1; min-width: 0; }
+    .main { flex: 1; min-width: 0; height: 100vh; overflow: hidden; position: relative; }
     section {
+        display: none;
+        height: 100vh;
+        overflow-y: auto;
         padding: 70px 64px;
-        border-bottom: 1px solid #dde3ee;
-        scroll-margin-top: 20px;
     }
+    section.is-active { display: block; }
     section.cover {
-        min-height: 100vh;
-        display: flex;
         flex-direction: column;
         justify-content: center;
         background: linear-gradient(135deg, #14243f 0%, #1e3a5f 55%, #2f6fb0 100%);
         color: #fff;
-        border-bottom: none;
     }
+    section.cover.is-active { display: flex; }
     .cover-mark {
         width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0; margin-bottom: 26px;
         background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
