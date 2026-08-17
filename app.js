@@ -4246,6 +4246,7 @@ async function approveStep(requestId, stepId, stepOrder) {
 
 // ===== Reject =====
 async function rejectStep(requestId, stepId) {
+    if (requireLogin()) return;
     const comment = (document.getElementById('approval_comment')?.value || '').trim();
     if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
 
