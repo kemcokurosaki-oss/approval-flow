@@ -3338,9 +3338,15 @@ async function showRecipientsDetailScreen(flowType) {
         } else {
             // department種別: ログインアカウント(profiles)と非ログイン名簿(notification_recipients)の両方を候補にする
             const { data: profRows } = await db.from('profiles').select('id, name, email').eq('department', g.department);
-            const { data: recRows }  = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
+            let extraProfRows = [];
+            if (g.extraProfileEmails && g.extraProfileEmails.length > 0) {
+                const { data } = await db.from('profiles').select('id, name, email').in('email', g.extraProfileEmails);
+                extraProfRows = (data || []).filter(e => !(profRows || []).some(p => p.id === e.id));
+            }
+            const { data: recRows } = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
             candidates = [
                 ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
+                ...extraProfRows.map(p =>       ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
                 ...(recRows  || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }))
             ];
         }
