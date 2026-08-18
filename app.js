@@ -401,6 +401,8 @@ const ROLE_LABELS = {
     assembly_director:   '組立部長',
     operations_manager:  '操業課長',
     operations_director: '操業部長',
+    design_manager:      '設計課長',
+    design_director:     '設計部長',
     quality:             '品質保証課',
     production_control:  '製管',
     staff:               '担当者',
