@@ -5555,8 +5555,8 @@ async function recordFlowNotifications(requestId, flowType) {
             }
         }
         if (!resolved) {
-            await addE({ department: '設計', role: 'manager' });
-            await addE({ department: '設計', role: 'director' });
+            await addP({ department: '設計', role: 'design_manager' });
+            await addP({ department: '設計', role: 'design_director' });
         }
     };
 
