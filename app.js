@@ -3702,7 +3702,7 @@ async function showAuditLogScreen() {
     const rows = data || [];
     const CATEGORY_LABELS = {
         flow_toggle: 'フローON/OFF', fixed_recipients: '固定宛先',
-        recipient_master: '宛先候補', room_email: '会議室'
+        recipient_master: '宛先候補', roster_edit: '名簿編集', room_email: '会議室'
     };
     const rowsHtml = rows.length ? rows.map(r => {
         const d = new Date(r.changed_at);
