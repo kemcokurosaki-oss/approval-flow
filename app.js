@@ -348,11 +348,14 @@ const FIXED_RECIPIENT_GROUPS = {
                          // 山下は profiles 上の部署が「組立」のため、物流課グループには個人指定で追加する
                          { key: 'logistics',          label: '物流課', kind: 'department', department: '物流', extraProfileEmails: ['y-yamashita@kusakabe.com'] }]
 };
-let flowSettings   = { fixedRecipients: {} };
+let flowSettings   = { fixedRecipients: {}, dynamicRecipients: {} };
 async function loadFlowSettings() {
-    const { data: settingsRows } = await db.from('flow_settings').select('key, value').eq('key', 'flow_fixed_recipients');
+    const { data: settingsRows } = await db.from('flow_settings').select('key, value').in('key', ['flow_fixed_recipients', 'flow_dynamic_recipients']);
     const rows = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
-    flowSettings = { fixedRecipients: rows.flow_fixed_recipients || {} };
+    flowSettings = {
+        fixedRecipients:   rows.flow_fixed_recipients   || {},
+        dynamicRecipients: rows.flow_dynamic_recipients || {}
+    };
 }
 
 // 設定変更を履歴テーブルに記録する（保存系の関数から呼び出す）
@@ -364,6 +367,31 @@ async function logSettingsChange(category, summary) {
 function getFixedRecipientPlan(flowType) {
     const plan = flowSettings.fixedRecipients[flowType] || {};
     return { profileIds: plan.profileIds || [], recipientIds: plan.recipientIds || [] };
+}
+
+// フロー種別ごとに、工番の担当者から自動で宛先に加わるグループ（部署単位でON/OFF可能）
+const DYNAMIC_RECIPIENT_GROUPS = {
+    assembly:          ['kumitate', 'shiunten', 'sales', 'sekkei'],
+    test_run:          ['kumitate', 'shiunten', 'sales', 'sekkei'],
+    shipping_meeting:  ['kumitate', 'shiunten', 'sales', 'sekkei'],
+    simple_inspection: ['kumitate', 'sales', 'sekkei'],
+    inspection:        ['kumitate', 'shiunten', 'sales', 'sekkei'],
+    shipping:          ['kumitate', 'shiunten', 'sales', 'sekkei']
+    // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ）
+};
+const DYNAMIC_GROUP_LABELS = {
+    kumitate: '組立担当者（組立課長を含む）',
+    shiunten: '操業担当者（操業課長・部長を含む）',
+    sales:    '営業担当者',
+    sekkei:   '設計担当者（上長への通知を含む）'
+};
+// フロー種別ごとの動的宛先ON/OFF設定（未設定のグループはON扱い＝従来通りの動作）
+function getDynamicRecipientPlan(flowType) {
+    const saved  = flowSettings.dynamicRecipients[flowType] || {};
+    const groups = DYNAMIC_RECIPIENT_GROUPS[flowType] || [];
+    const result = {};
+    groups.forEach(g => { result[g] = saved[g] !== false; });
+    return result;
 }
 
 const FLOW_LABELS = {
