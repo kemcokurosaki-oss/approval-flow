@@ -3335,8 +3335,13 @@ async function showRecipientsDetailScreen(flowType) {
             const { data } = await db.from('profiles').select('id, name, email').eq('role', g.role);
             candidates = (data || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile', checked: plan.profileIds.includes(p.id) }));
         } else {
-            const { data } = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
-            candidates = (data || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }));
+            // department種別: ログインアカウント(profiles)と非ログイン名簿(notification_recipients)の両方を候補にする
+            const { data: profRows } = await db.from('profiles').select('id, name, email').eq('department', g.department);
+            const { data: recRows }  = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
+            candidates = [
+                ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
+                ...(recRows  || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }))
+            ];
         }
         groupsHtml.push(`
             <div class="settings-flow-group">
