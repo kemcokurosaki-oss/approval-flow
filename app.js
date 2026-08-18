@@ -3654,6 +3654,7 @@ async function editRosterMember(key) {
                 <span>有効</span>
             </label>
             <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
+            <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteNonLoginRosterMember('${id}')">削除する</button>
         `;
     }
 }
