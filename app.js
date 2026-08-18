@@ -410,6 +410,41 @@ const ROLE_LABELS = {
     logistics:           '物流'
 };
 
+// ===== 名簿管理（部署ごとの名簿・profiles ⇄ notification_recipients の役職語彙統一） =====
+// 部署 + tier(課長/部長) → profiles.role の具体値。品証・製管・営業・技戦・物流は課長/部長を区別しないため未定義（常にstaff固定）
+const DEPT_TIER_TO_PROFILE_ROLE = {
+    '組立': { manager: 'assembly_manager',   director: 'assembly_director' },
+    '操業': { manager: 'operations_manager', director: 'operations_director' },
+    '設計': { manager: 'design_manager',     director: 'design_director' }
+};
+// profiles.role → tier（一覧表示・承認者バッジ突合用の逆引き）
+const PROFILE_ROLE_TO_TIER = {
+    staff: 'staff',
+    assembly_manager: 'manager', assembly_director: 'director',
+    operations_manager: 'manager', operations_director: 'director',
+    design_manager: 'manager', design_director: 'director',
+    quality: 'staff', production_control: 'staff'
+};
+const TIER_LABELS = { staff: '部員', manager: '課長', director: '部長' };
+// approval_steps.approver_role として実際に使われる値 → 対応する申請フロー種別（名簿の承認者バッジ表示用）
+const APPROVER_ROLE_FLOWS = {
+    assembly_manager:    ['assembly'],
+    assembly_director:   ['assembly'],
+    operations_manager:  ['test_run'],
+    operations_director: ['test_run']
+};
+// 名簿一覧の部署表示順（未知の部署は末尾に五十音順で追加）
+const DEPARTMENT_ORDER = ['組立', '操業', '設計', '営業', '技戦', '物流', '品証', '製管'];
+function sortDepartments(depts) {
+    return [...depts].sort((a, b) => {
+        const ia = DEPARTMENT_ORDER.indexOf(a), ib = DEPARTMENT_ORDER.indexOf(b);
+        if (ia === -1 && ib === -1) return a.localeCompare(b, 'ja');
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+    });
+}
+
 const STATUS_LABELS = {
     draft:      '入力中',
     submitted:  '課長承認待ち',
