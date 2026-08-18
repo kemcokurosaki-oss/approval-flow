@@ -4844,7 +4844,12 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
                 resolved = true;
                 const { data: supRecips } = await db.from('notification_recipients')
                     .select('name, email, department, role').in('email', supEmails).eq('active', true);
-                const supMap = Object.fromEntries((supRecips || []).map(r => [r.email, r]));
+                const { data: supProfiles } = await db.from('profiles')
+                    .select('name, email, department, role').in('email', supEmails);
+                const supMap = Object.fromEntries([
+                    ...(supRecips   || []).map(r => [r.email, r]),
+                    ...(supProfiles || []).map(p => [p.email, p])
+                ]);
                 for (const email of supEmails) {
                     if (!extEmails.has(email)) {
                         extEmails.add(email);
