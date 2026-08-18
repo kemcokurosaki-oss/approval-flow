@@ -3436,26 +3436,88 @@ async function saveRecipientDetail(flowType) {
     }
 }
 
-// ----- 宛先候補の管理（notification_recipients） -----
-async function showRecipientMasterScreen() {
+// ----- 部署ごとの名簿管理（profiles + notification_recipients 統合表示） -----
+function roleToTier(role) { return PROFILE_ROLE_TO_TIER[role] || 'staff'; }
+
+// profilesとnotification_recipientsをメールアドレス一致で1人にマージする
+function mergeRosterRows(profileRows, recipientRows) {
+    const byEmail = new Map();
+    (profileRows || []).forEach(p => {
+        byEmail.set(String(p.email).toLowerCase(), {
+            profileId: p.id, recipientId: null, source: 'profile',
+            name: p.name, email: p.email, department: p.department,
+            tier: roleToTier(p.role), profileRole: p.role, active: true
+        });
+    });
+    (recipientRows || []).forEach(r => {
+        const key = String(r.email).toLowerCase();
+        const existing = byEmail.get(key);
+        if (existing) {
+            existing.recipientId = r.id;
+            existing.source = 'both';
+        } else {
+            byEmail.set(key, {
+                profileId: null, recipientId: r.id, source: 'recipient',
+                name: r.name, email: r.email, department: r.department,
+                tier: r.role, profileRole: null, active: r.active
+            });
+        }
+    });
+    return [...byEmail.values()];
+}
+
+// 名簿行が承認者になっているフローのバッジ文言を返す
+function getApproverBadges(row) {
+    if (!row.profileRole) return [];
+    return (APPROVER_ROLE_FLOWS[row.profileRole] || []).map(ft => `承認者: ${FLOW_LABELS[ft] || ft}`);
+}
+
+// 名簿行がフローの固定宛先候補・選択中であるかのバッジ文言を返す
+function getFixedRecipientBadges(row) {
+    const badges = [];
+    for (const [flowType, groups] of Object.entries(FIXED_RECIPIENT_GROUPS)) {
+        for (const g of groups) {
+            const isCandidate = g.kind === 'role'
+                ? row.profileRole === g.role
+                : (row.department === g.department || (g.extraProfileEmails && row.profileId && g.extraProfileEmails.includes(row.email)));
+            if (!isCandidate) continue;
+            const plan = getFixedRecipientPlan(flowType);
+            const selected = (row.profileId && plan.profileIds.includes(row.profileId))
+                           || (row.recipientId && plan.recipientIds.includes(row.recipientId));
+            badges.push(`固定宛先: ${FLOW_LABELS[flowType] || flowType}${selected ? '' : '（未選択）'}`);
+        }
+    }
+    return badges;
+}
+
+async function showRosterScreen() {
     settingsView = 'recipient_master';
     const body = document.getElementById('settings_body');
     body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
 
-    const { data } = await db.from('notification_recipients')
-        .select('id, name, email, department, role, active').order('department').order('name');
-    const rows = data || [];
-    const departments = [...new Set(rows.map(r => r.department))].sort();
+    const [{ data: profRows }, { data: recRows }] = await Promise.all([
+        db.from('profiles').select('id, name, email, department, role'),
+        db.from('notification_recipients').select('id, name, email, department, role, active')
+    ]);
+    const rows = mergeRosterRows(profRows, recRows);
+    const departments = sortDepartments([...new Set(rows.map(r => r.department))]);
 
     const groupsHtml = departments.map(dept => {
-        const items = rows.filter(r => r.department === dept);
-        const itemsHtml = items.map(r => `
-            <div class="settings-check-row" style="justify-content:space-between;">
-                <span>${esc(r.name)}${r.active ? '' : ' <span style="color:#e74c3c;">（無効）</span>'}
-                    <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(r.role)}</span></span>
-                <button class="btn btn-xs btn-outline" onclick="editRecipientMaster('${r.id}')">編集</button>
-            </div>
-        `).join('');
+        const items = rows.filter(r => r.department === dept).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
+        const itemsHtml = items.map(r => {
+            const badges = [...getApproverBadges(r), ...getFixedRecipientBadges(r)];
+            const badgesHtml = badges.map(b => `<span class="recipient-tag" style="margin-right:4px;">${esc(b)}</span>`).join('');
+            const key = r.profileId ? `profile:${r.profileId}` : `recipient:${r.recipientId}`;
+            const loginNote = (r.source === 'profile' || r.source === 'both') ? '・ログイン可' : '';
+            return `
+                <div class="settings-check-row" style="justify-content:space-between; flex-wrap:wrap;">
+                    <span>${esc(r.name)}${r.active === false ? ' <span style="color:#e74c3c;">（無効）</span>' : ''}
+                        <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(TIER_LABELS[r.tier] || r.tier)}${loginNote}</span>
+                        ${badgesHtml}</span>
+                    <button class="btn btn-xs btn-outline" onclick="editRosterMember('${key}')">編集</button>
+                </div>
+            `;
+        }).join('');
         return `
             <div class="settings-flow-group">
                 <div class="settings-flow-title">${esc(dept)}</div>
@@ -3465,57 +3527,70 @@ async function showRecipientMasterScreen() {
 
     body.innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
-        <div class="section-title" style="margin-top:10px;">宛先候補の管理</div>
-        <div class="settings-note">開催案内・完了通知の宛先候補となる担当者を管理します。削除はできません（不要になった場合は編集画面で「無効」にしてください）。</div>
-        <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="editRecipientMaster(null)">＋ 新規追加</button>
+        <div class="section-title" style="margin-top:10px;">部署ごとの名簿管理</div>
+        <div class="settings-note">ログインアカウントの有無に関わらず、部署単位で全担当者を管理します。ログイン可能な担当者の役職を変更すると、承認フローの判定にもそのまま反映されます。</div>
+        <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="addRosterMember()">＋ 非ログイン担当者を追加</button>
         ${groupsHtml}
     `;
 }
 
-async function editRecipientMaster(id) {
+async function editRosterMember(key) {
+    const [kind, id] = key.split(':');
     const body = document.getElementById('settings_body');
-    let record = { name: '', email: '', department: '', role: 'staff', active: true };
-    if (id) {
-        const { data } = await db.from('notification_recipients')
-            .select('id, name, email, department, role, active').eq('id', id).single();
-        if (data) record = data;
-    }
-    const { data: deptRows } = await db.from('notification_recipients').select('department');
-    const departments = [...new Set((deptRows || []).map(r => r.department))].sort();
-    const isKnownDept = departments.includes(record.department);
 
-    body.innerHTML = `
-        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRecipientMasterScreen()">← 戻る</button></div>
-        <div class="section-title" style="margin-top:10px;">${id ? '担当者を編集' : '担当者を追加'}</div>
-        <div class="form-group">
-            <label>名前</label>
-            <input type="text" id="rm_name" value="${esc(record.name)}">
-        </div>
-        <div class="form-group">
-            <label>メールアドレス</label>
-            <input type="text" id="rm_email" value="${esc(record.email)}">
-        </div>
-        <div class="form-group">
-            <label>部署</label>
-            <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
-                ${departments.map(d => `<option value="${esc(d)}" ${d === record.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}
-                <option value="__other__" ${isKnownDept ? '' : 'selected'}>その他（自由入力）</option>
-            </select>
-            <input type="text" id="rm_department_other" placeholder="部署名を入力" value="${isKnownDept ? '' : esc(record.department)}"
-                   style="margin-top:6px; ${isKnownDept ? 'display:none;' : ''}">
-        </div>
-        <div class="form-group">
-            <label>役割</label>
-            <select id="rm_role">
-                ${['staff', 'manager', 'director'].map(r => `<option value="${r}" ${r === record.role ? 'selected' : ''}>${r}</option>`).join('')}
-            </select>
-        </div>
-        <label class="settings-check-row">
-            <input type="checkbox" id="rm_active" ${record.active ? 'checked' : ''}>
-            <span>有効</span>
-        </label>
-        <button class="btn btn-primary" onclick="saveRecipientMaster(${id ? `'${id}'` : 'null'})">保存する</button>
-    `;
+    if (kind === 'profile') {
+        const { data: record } = await db.from('profiles').select('id, name, email, department, role').eq('id', id).single();
+        if (!record) { showToast('データが見つかりません', 'error'); return; }
+        const tierOptions = DEPT_TIER_TO_PROFILE_ROLE[record.department] ? ['staff', 'manager', 'director'] : ['staff'];
+        const currentTier = roleToTier(record.role);
+        body.innerHTML = `
+            <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
+            <div class="section-title" style="margin-top:10px;">担当者を編集</div>
+            <div class="settings-note">ログインアカウントを持つ担当者です。部署の変更はここでは行えません。</div>
+            <div class="form-group"><label>名前</label><input type="text" id="rm_name" value="${esc(record.name)}"></div>
+            <div class="form-group"><label>メールアドレス</label><input type="text" value="${esc(record.email)}" disabled></div>
+            <div class="form-group"><label>部署</label><input type="text" value="${esc(record.department)}" disabled></div>
+            <div class="form-group">
+                <label>役職</label>
+                <select id="rm_tier" ${tierOptions.length === 1 ? 'disabled' : ''}>
+                    ${tierOptions.map(t => `<option value="${t}" ${t === currentTier ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
+        `;
+    } else {
+        const { data: record } = await db.from('notification_recipients').select('id, name, email, department, role, active').eq('id', id).single();
+        if (!record) { showToast('データが見つかりません', 'error'); return; }
+        const { data: deptRows } = await db.from('notification_recipients').select('department');
+        const departments = sortDepartments([...new Set((deptRows || []).map(r => r.department))]);
+        const isKnownDept = departments.includes(record.department);
+        body.innerHTML = `
+            <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
+            <div class="section-title" style="margin-top:10px;">担当者を編集</div>
+            <div class="form-group"><label>名前</label><input type="text" id="rm_name" value="${esc(record.name)}"></div>
+            <div class="form-group"><label>メールアドレス</label><input type="text" id="rm_email" value="${esc(record.email)}"></div>
+            <div class="form-group">
+                <label>部署</label>
+                <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
+                    ${departments.map(d => `<option value="${esc(d)}" ${d === record.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}
+                    <option value="__other__" ${isKnownDept ? '' : 'selected'}>その他（自由入力）</option>
+                </select>
+                <input type="text" id="rm_department_other" placeholder="部署名を入力" value="${isKnownDept ? '' : esc(record.department)}"
+                       style="margin-top:6px; ${isKnownDept ? 'display:none;' : ''}">
+            </div>
+            <div class="form-group">
+                <label>役職</label>
+                <select id="rm_tier">
+                    ${['staff', 'manager', 'director'].map(t => `<option value="${t}" ${t === record.role ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
+                </select>
+            </div>
+            <label class="settings-check-row">
+                <input type="checkbox" id="rm_active" ${record.active ? 'checked' : ''}>
+                <span>有効</span>
+            </label>
+            <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
+        `;
+    }
 }
 
 function onRmDepartmentSelectChange() {
@@ -3523,30 +3598,92 @@ function onRmDepartmentSelectChange() {
     document.getElementById('rm_department_other').style.display = sel.value === '__other__' ? '' : 'none';
 }
 
-async function saveRecipientMaster(id) {
+async function saveRosterMember(key) {
+    if (requireLogin()) return;
+    const [kind, id] = key.split(':');
+    const name = document.getElementById('rm_name').value.trim();
+    if (!name) { showToast('名前は必須です', 'error'); return; }
+
+    showLoading('保存中...');
+    try {
+        if (kind === 'profile') {
+            const { data: current } = await db.from('profiles').select('department').eq('id', id).single();
+            const tier = document.getElementById('rm_tier').value;
+            const roleMap = DEPT_TIER_TO_PROFILE_ROLE[current.department];
+            const role = (roleMap && roleMap[tier]) ? roleMap[tier] : 'staff';
+            const { error } = await db.from('profiles').update({ name, role }).eq('id', id);
+            if (error) throw error;
+            await logSettingsChange('roster_edit', `${current.department}の${name}を「${TIER_LABELS[tier]}」に変更`);
+        } else {
+            const email = document.getElementById('rm_email').value.trim();
+            const deptSel = document.getElementById('rm_department_select').value;
+            const department = deptSel === '__other__' ? document.getElementById('rm_department_other').value.trim() : deptSel;
+            const role = document.getElementById('rm_tier').value;
+            const active = document.getElementById('rm_active').checked;
+            if (!email || !department) { showToast('メールアドレス・部署は必須です', 'error'); return; }
+            const { error } = await db.from('notification_recipients').update({ name, email, department, role, active }).eq('id', id);
+            if (error) throw error;
+            await logSettingsChange('roster_edit', `${department}の${name}を編集`);
+        }
+        showToast('保存しました。', 'success');
+        showRosterScreen();
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function addRosterMember() {
+    const body = document.getElementById('settings_body');
+    const { data: deptRows } = await db.from('notification_recipients').select('department');
+    const departments = sortDepartments([...new Set((deptRows || []).map(r => r.department))]);
+    body.innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">非ログイン担当者を追加</div>
+        <div class="settings-note">ここで追加した担当者はログインできません。ログインが必要な場合は別途アカウント発行が必要です。</div>
+        <div class="form-group"><label>名前</label><input type="text" id="rm_name" value=""></div>
+        <div class="form-group"><label>メールアドレス</label><input type="text" id="rm_email" value=""></div>
+        <div class="form-group">
+            <label>部署</label>
+            <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
+                ${departments.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}
+                <option value="__other__" selected>その他（自由入力）</option>
+            </select>
+            <input type="text" id="rm_department_other" placeholder="部署名を入力" style="margin-top:6px;">
+        </div>
+        <div class="form-group">
+            <label>役職</label>
+            <select id="rm_tier">
+                ${['staff', 'manager', 'director'].map(t => `<option value="${t}">${TIER_LABELS[t]}</option>`).join('')}
+            </select>
+        </div>
+        <label class="settings-check-row">
+            <input type="checkbox" id="rm_active" checked>
+            <span>有効</span>
+        </label>
+        <button class="btn btn-primary" onclick="saveNewRosterMember()">保存する</button>
+    `;
+}
+
+async function saveNewRosterMember() {
     if (requireLogin()) return;
     const name  = document.getElementById('rm_name').value.trim();
     const email = document.getElementById('rm_email').value.trim();
     const deptSel = document.getElementById('rm_department_select').value;
     const department = deptSel === '__other__' ? document.getElementById('rm_department_other').value.trim() : deptSel;
-    const role   = document.getElementById('rm_role').value;
+    const role   = document.getElementById('rm_tier').value;
     const active = document.getElementById('rm_active').checked;
 
     if (!name || !email || !department) { showToast('名前・メールアドレス・部署は必須です', 'error'); return; }
 
     showLoading('保存中...');
     try {
-        if (id) {
-            const { error } = await db.from('notification_recipients').update({ name, email, department, role, active }).eq('id', id);
-            if (error) throw error;
-            await logSettingsChange('recipient_master', `${department}の${name}を編集`);
-        } else {
-            const { error } = await db.from('notification_recipients').insert({ name, email, department, role, active });
-            if (error) throw error;
-            await logSettingsChange('recipient_master', `${department}に${name}を追加`);
-        }
+        const { error } = await db.from('notification_recipients').insert({ name, email, department, role, active });
+        if (error) throw error;
+        await logSettingsChange('roster_edit', `${department}に${name}を追加`);
         showToast('保存しました。', 'success');
-        showRecipientMasterScreen();
+        showRosterScreen();
     } catch (e) {
         showToast('保存に失敗しました: ' + e.message, 'error');
     } finally {
