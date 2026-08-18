@@ -3428,10 +3428,26 @@ async function showRecipientsDetailScreen(flowType) {
             </div>`);
     }
 
+    // 工番担当者から自動で宛先に加わるグループのON/OFFトグル
+    const dynGroups = DYNAMIC_RECIPIENT_GROUPS[flowType] || [];
+    const dynPlan   = getDynamicRecipientPlan(flowType);
+    const dynHtml = dynGroups.length ? `
+        <div class="settings-flow-group">
+            <div class="settings-flow-title">工番担当者の自動通知</div>
+            <div class="settings-note">この工番に登録されている担当者を、部署単位で通知に含めるかどうかを切り替えます。</div>
+            ${dynGroups.map(g => `
+                <label class="settings-check-row">
+                    <input type="checkbox" data-dynamic-group="${g}" ${dynPlan[g] ? 'checked' : ''}>
+                    <span>${esc(DYNAMIC_GROUP_LABELS[g] || g)}</span>
+                </label>
+            `).join('')}
+        </div>` : '';
+
     body.innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRecipientsListScreen()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">${esc(FLOW_LABELS[flowType] || flowType)}の固定宛先</div>
         ${groupsHtml.join('')}
+        ${dynHtml}
         <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
     `;
 }
@@ -3443,6 +3459,13 @@ async function saveRecipientDetail(flowType) {
     const recipientIds = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'recipient').map(cb => cb.dataset.recipientId);
     const names = checkedBoxes.map(cb => cb.closest('label')?.querySelector('span')?.textContent || '').filter(Boolean);
 
+    const dynGroups = DYNAMIC_RECIPIENT_GROUPS[flowType] || [];
+    const dynValue = {};
+    dynGroups.forEach(g => {
+        const cb = document.querySelector(`#settings_body [data-dynamic-group="${g}"]`);
+        dynValue[g] = cb ? cb.checked : true;
+    });
+
     showLoading('保存中...');
     try {
         const { data } = await db.from('flow_settings').select('value').eq('key', 'flow_fixed_recipients').single();
@@ -3452,9 +3475,19 @@ async function saveRecipientDetail(flowType) {
             .update({ value, updated_at: new Date().toISOString(), updated_by: currentUser.email })
             .eq('key', 'flow_fixed_recipients');
         if (error) throw error;
-
         flowSettings.fixedRecipients = value;
-        await logSettingsChange('fixed_recipients', `${FLOW_LABELS[flowType] || flowType}の固定宛先を「${names.join('、') || 'なし'}」に変更`);
+
+        if (dynGroups.length > 0) {
+            const { data: dynData } = await db.from('flow_settings').select('value').eq('key', 'flow_dynamic_recipients').maybeSingle();
+            const dynAll = dynData?.value || {};
+            dynAll[flowType] = dynValue;
+            const { error: dynError } = await db.from('flow_settings')
+                .upsert({ key: 'flow_dynamic_recipients', value: dynAll, updated_at: new Date().toISOString(), updated_by: currentUser.email }, { onConflict: 'key' });
+            if (dynError) throw dynError;
+            flowSettings.dynamicRecipients = dynAll;
+        }
+
+        await logSettingsChange('fixed_recipients', `${FLOW_LABELS[flowType] || flowType}の固定宛先・自動通知設定を変更（固定宛先: ${names.join('、') || 'なし'}）`);
         showToast('固定宛先を保存しました。', 'success');
         showRecipientsListScreen();
     } catch (e) {
