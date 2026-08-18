@@ -5775,113 +5775,139 @@ async function recordFlowNotifications(requestId, flowType) {
     let notifType = 'completed';
 
     switch (flowType) {
-        case 'assembly':
+        case 'assembly': {
+            const dyn = getDynamicRecipientPlan('assembly');
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
-            // 工番担当者（profiles）: 組立（複数人対応）
-            for (const o of kumitateOwners) await addPbyName(o);
-            // 試運転タスクがある場合のみ試運転担当者も追加
-            for (const o of shiuntenOwners) await addPbyName(o);
-            if (shiuntenOwners.length > 0) {
+            // 工番担当者（profiles）: 組立（複数人対応、ON/OFF切替可）
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
+            // 試運転タスクがある場合のみ試運転担当者も追加（ON/OFF切替可）
+            if (dyn.shiunten) {
+                for (const o of shiuntenOwners) await addPbyName(o);
+                if (shiuntenOwners.length > 0) {
+                    await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                    await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+                }
+            }
+            // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
+            if (dyn.sales) await addEbyName(salesOwner);
+            if (dyn.sekkei) {
+                for (const o of sekkeiOwners) await addEbyName(o);
+                // 設計管理職: 担当者の上長を members テーブルから取得
+                await addSekkeiSupervisors();
+            }
+            break;
+        }
+
+        case 'test_run': {
+            const dyn = getDynamicRecipientPlan('test_run');
+            // 固定宛先（設定画面で個人単位に選択）
+            await addFixedRecipients();
+            if (dyn.kumitate && kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            if (dyn.shiunten && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
             }
-            // 工番担当者（外部）: 営業・設計staff
-            await addEbyName(salesOwner);
-            for (const o of sekkeiOwners) await addEbyName(o);
-            // 設計管理職: 担当者の上長を members テーブルから取得
-            await addSekkeiSupervisors();
-            break;
-
-        case 'test_run':
-            // 固定宛先（設定画面で個人単位に選択）
-            await addFixedRecipients();
-            if (kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
-            if (shiuntenOwners.length > 0) {
-                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
-                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
+            // 工番担当者（profiles）: 組立・操業（複数人対応、ON/OFF切替可）
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
+            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);
+            // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
+            if (dyn.sales) await addEbyName(salesOwner);
+            if (dyn.sekkei) {
+                for (const o of sekkeiOwners) await addEbyName(o);
+                // 設計管理職: 担当者の上長を members テーブルから取得
+                await addSekkeiSupervisors();
             }
-            // 工番担当者（profiles）: 組立・操業（複数人対応）
-            for (const o of kumitateOwners) await addPbyName(o);
-            for (const o of shiuntenOwners) await addPbyName(o);
-            // 工番担当者（外部）: 営業・設計staff
-            await addEbyName(salesOwner);
-            for (const o of sekkeiOwners) await addEbyName(o);
-            // 設計管理職: 担当者の上長を members テーブルから取得
-            await addSekkeiSupervisors();
             break;
+        }
 
-        case 'shipping_meeting':
+        case 'shipping_meeting': {
+            const dyn = getDynamicRecipientPlan('shipping_meeting');
             notifType = 'shipping_meeting_invite';
-            await addFixedRecipients();                             // 設定画面で個人単位に選択
-            for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
-            await addEbyName(salesOwner);                           // 営業担当者
-            for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
-            await addSekkeiSupervisors();                           // 設計課長・部長
-            if (kumitateOwners.length > 0) {
+            await addFixedRecipients();                                         // 設定画面で個人単位に選択
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
+            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sekkei) {
+                for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
+                await addSekkeiSupervisors();                           // 設計課長・部長
+            }
+            if (dyn.kumitate && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
-            if (shiuntenOwners.length > 0) {
+            if (dyn.shiunten && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
             break;
+        }
 
-        case 'simple_inspection':
+        case 'simple_inspection': {
+            const dyn = getDynamicRecipientPlan('simple_inspection');
             notifType = 'simple_inspection_invite';
-            await addFixedRecipients();                             // 設定画面で個人単位に選択
-            for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            await addEbyName(salesOwner);                           // 営業担当者
-            for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
-            await addSekkeiSupervisors();                           // 設計課長・部長
-            if (kumitateOwners.length > 0) {
+            await addFixedRecipients();                                         // 設定画面で個人単位に選択
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sekkei) {
+                for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
+                await addSekkeiSupervisors();                           // 設計課長・部長
+            }
+            if (dyn.kumitate && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
             break;
+        }
 
-        case 'inspection':
+        case 'inspection': {
+            const dyn = getDynamicRecipientPlan('inspection');
             notifType = 'inspection_invite';
-            await addFixedRecipients();                             // 設定画面で個人単位に選択
-            for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
-            await addEbyName(salesOwner);                           // 営業担当者
-            for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
-            await addSekkeiSupervisors();                           // 設計課長・部長
-            if (kumitateOwners.length > 0) {
+            await addFixedRecipients();                                         // 設定画面で個人単位に選択
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
+            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sekkei) {
+                for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
+                await addSekkeiSupervisors();                           // 設計課長・部長
+            }
+            if (dyn.kumitate && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
-            if (shiuntenOwners.length > 0) {
+            if (dyn.shiunten && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
             break;
+        }
 
         case 'shipping_prep':
-            // 固定宛先（設定画面で個人単位に選択、製管へはメール送信時にCCで届く）
+            // 固定宛先（設定画面で個人単位に選択、製管へはメール送信時にCCで届く）。工番担当者の自動通知は対象外
             await addFixedRecipients();
             break;
 
-        case 'shipping':
+        case 'shipping': {
+            const dyn = getDynamicRecipientPlan('shipping');
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
-            // 設計管理職: 担当者の上長を members テーブルから取得
-            await addSekkeiSupervisors();
+            if (dyn.sekkei) {
+                // 設計管理職: 担当者の上長を members テーブルから取得
+                await addSekkeiSupervisors();
+            }
             // 機械組立タスクがある場合: 組立課長
-            if (kumitateOwners.length > 0) {
+            if (dyn.kumitate && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });
             }
             // 試運転タスクがある場合: 操業課長・部長
-            if (shiuntenOwners.length > 0) {
+            if (dyn.shiunten && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });
                 await addP({ role: 'operations_director' });
             }
             // 工番担当者
-            for (const o of sekkeiOwners)   await addEbyName(o);  // 設計担当者（notification_recipients）
-            for (const o of kumitateOwners) await addPbyName(o);  // 組立担当者（profiles）
-            for (const o of shiuntenOwners) await addPbyName(o);  // 操業担当者（profiles）
-            await addEbyName(salesOwner);                          // 営業担当者（notification_recipients）
+            if (dyn.sekkei)   for (const o of sekkeiOwners)   await addEbyName(o);  // 設計担当者（notification_recipients）
+            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);  // 組立担当者（profiles）
+            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);  // 操業担当者（profiles）
+            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者（notification_recipients）
             break;
+        }
     }
 
     const inserts = [
