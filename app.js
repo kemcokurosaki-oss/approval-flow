@@ -4806,6 +4806,11 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
             if (key && !extEmails.has(key)) { extEmails.add(key); extList.push(r); }
         });
     };
+    // 工番担当者名から profiles・notification_recipients の両方を検索する（設計・営業は一部だけログイン移行済みのため両対応が必要）
+    const addOwnerByName = async (name) => {
+        await addPbyName(name);
+        await addEbyName(name);
+    };
     // 設定画面で個人単位に選ばれた固定宛先を追加（プレビューのため申請者=現在ログイン中のユーザーとして除外する）
     const addFixedRecipientsPreview = async () => {
         const plan = getFixedRecipientPlan(flowType);
