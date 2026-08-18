@@ -3755,6 +3755,70 @@ async function saveNewRosterMember() {
     }
 }
 
+// ----- ログイン可能な担当者を追加（Supabase Authアカウント発行＋profiles登録をEdge Function経由で行う） -----
+async function addLoginRosterMember() {
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">ログイン可能な担当者を追加</div>
+        <div class="settings-note">この操作でログインアカウントが作成されます。初回ログイン用のパスワード発行は、別途Supabase管理画面から行ってください。</div>
+        <div class="form-group"><label>名前</label><input type="text" id="lrm_name" value=""></div>
+        <div class="form-group"><label>メールアドレス</label><input type="text" id="lrm_email" value=""></div>
+        <div class="form-group">
+            <label>部署</label>
+            <select id="lrm_department_select" onchange="onLrmDepartmentChange()">
+                ${DEPARTMENT_ORDER.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>役職</label>
+            <select id="lrm_tier">
+                ${['staff', 'manager', 'director'].map(t => `<option value="${t}">${TIER_LABELS[t]}</option>`).join('')}
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="saveNewLoginRosterMember()">アカウントを作成する</button>
+    `;
+    onLrmDepartmentChange();
+}
+
+// 部署が組立/操業/設計以外なら役職を「部員」固定にする（DEPT_TIER_TO_PROFILE_ROLEに定義が無い部署は課長/部長の概念が無いため）
+function onLrmDepartmentChange() {
+    const dept = document.getElementById('lrm_department_select').value;
+    const tierSelect = document.getElementById('lrm_tier');
+    const hasTiers = !!DEPT_TIER_TO_PROFILE_ROLE[dept];
+    tierSelect.disabled = !hasTiers;
+    if (!hasTiers) tierSelect.value = 'staff';
+}
+
+async function saveNewLoginRosterMember() {
+    if (requireLogin()) return;
+    const name  = document.getElementById('lrm_name').value.trim();
+    const email = document.getElementById('lrm_email').value.trim();
+    const department = document.getElementById('lrm_department_select').value;
+    const tier  = document.getElementById('lrm_tier').value;
+
+    if (!name || !email || !department) { showToast('名前・メールアドレス・部署は必須です', 'error'); return; }
+
+    showLoading('アカウントを作成中...');
+    try {
+        const { data, error } = await db.functions.invoke('create-employee', {
+            body: { email, name, department, tier }
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        await logSettingsChange('roster_edit', `${department}に${name}のログインアカウントを追加`);
+        showToast(data?.alreadyHadAuthAccount
+            ? '既存のログインアカウントに紐付けて名簿登録しました。'
+            : '新規アカウントを作成し名簿登録しました。', 'success');
+        showRosterScreen();
+    } catch (e) {
+        showToast('作成に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ----- 変更履歴 -----
 async function showAuditLogScreen() {
     settingsView = 'audit_log';
