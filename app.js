@@ -3590,7 +3590,10 @@ async function showRosterScreen() {
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">部署ごとの名簿管理</div>
         <div class="settings-note">ログインアカウントの有無に関わらず、部署単位で全担当者を管理します。ログイン可能な担当者の役職を変更すると、承認フローの判定にもそのまま反映されます。</div>
-        <button class="btn btn-primary btn-sm" style="margin-bottom:10px;" onclick="addRosterMember()">＋ 非ログイン担当者を追加</button>
+        <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="addRosterMember()">＋ 非ログイン担当者を追加</button>
+            <button class="btn btn-secondary btn-sm" onclick="addLoginRosterMember()">＋ ログイン可能な担当者を追加</button>
+        </div>
         ${groupsHtml}
     `;
 }
