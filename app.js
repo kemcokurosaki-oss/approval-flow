@@ -4859,7 +4859,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     await addFixedRecipientsPreview();
     if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
     if (dyn.shiunten) for (const o of shiuntenOwnersFallback) await addPbyName(o);
-    if (dyn.sales)    await addEbyName(salesOwner);
+    if (dyn.sales)    await addOwnerByName(salesOwner);
     if (dyn.sekkei) {
         for (const o of sekkeiOwnersFallback) await addEbyName(o);
         // 設計管理職: 担当者の上長を members テーブルから取得
@@ -5833,7 +5833,7 @@ async function recordFlowNotifications(requestId, flowType) {
                 }
             }
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
-            if (dyn.sales) await addEbyName(salesOwner);
+            if (dyn.sales) await addOwnerByName(salesOwner);
             if (dyn.sekkei) {
                 for (const o of sekkeiOwners) await addEbyName(o);
                 // 設計管理職: 担当者の上長を members テーブルから取得
@@ -5855,7 +5855,7 @@ async function recordFlowNotifications(requestId, flowType) {
             if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
             if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
-            if (dyn.sales) await addEbyName(salesOwner);
+            if (dyn.sales) await addOwnerByName(salesOwner);
             if (dyn.sekkei) {
                 for (const o of sekkeiOwners) await addEbyName(o);
                 // 設計管理職: 担当者の上長を members テーブルから取得
@@ -5870,7 +5870,7 @@ async function recordFlowNotifications(requestId, flowType) {
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
             if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
-            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
             if (dyn.sekkei) {
                 for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
                 await addSekkeiSupervisors();                           // 設計課長・部長
@@ -5890,7 +5890,7 @@ async function recordFlowNotifications(requestId, flowType) {
             notifType = 'simple_inspection_invite';
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
             if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
             if (dyn.sekkei) {
                 for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
                 await addSekkeiSupervisors();                           // 設計課長・部長
@@ -5907,7 +5907,7 @@ async function recordFlowNotifications(requestId, flowType) {
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
             if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
-            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者
+            if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
             if (dyn.sekkei) {
                 for (const o of sekkeiOwners) await addEbyName(o);     // 設計担当者
                 await addSekkeiSupervisors();                           // 設計課長・部長
@@ -5948,7 +5948,7 @@ async function recordFlowNotifications(requestId, flowType) {
             if (dyn.sekkei)   for (const o of sekkeiOwners)   await addEbyName(o);  // 設計担当者（notification_recipients）
             if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);  // 組立担当者（profiles）
             if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);  // 操業担当者（profiles）
-            if (dyn.sales)    await addEbyName(salesOwner);                          // 営業担当者（notification_recipients）
+            if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者（notification_recipients）
             break;
         }
     }
