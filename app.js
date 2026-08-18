@@ -3607,7 +3607,6 @@ async function editRosterMember(key) {
         if (!record) { showToast('データが見つかりません', 'error'); return; }
         const tierOptions = DEPT_TIER_TO_PROFILE_ROLE[record.department] ? ['staff', 'manager', 'director'] : ['staff'];
         const currentTier = roleToTier(record.role);
-        const approverBadges = getApproverBadges({ profileRole: record.role });
         body.innerHTML = `
             <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
             <div class="section-title" style="margin-top:10px;">担当者を編集</div>
@@ -3622,7 +3621,7 @@ async function editRosterMember(key) {
                 </select>
             </div>
             <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
-            <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteLoginRosterMember('${id}', '${esc(record.name)}', ${JSON.stringify(approverBadges)})">退職処理（アカウント削除）</button>
+            <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteLoginRosterMember('${id}')">退職処理（アカウント削除）</button>
         `;
     } else {
         const { data: record } = await db.from('notification_recipients').select('id, name, email, department, role, active').eq('id', id).single();
