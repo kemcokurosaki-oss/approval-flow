@@ -136,6 +136,13 @@ function mkStamp(dept, name, pending = false) {
 }
 
 async function init() {
+    // ログインセッションを復元（別タブとして開かれるため、RLSで書き込みが通るように明示的にセットする）
+    const accessToken  = localStorage.getItem('ap_access_token');
+    const refreshToken = localStorage.getItem('ap_refresh_token');
+    if (accessToken && refreshToken) {
+        await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    }
+
     const id = new URLSearchParams(location.search).get('id');
     if (!id) { setErr('IDが指定されていません'); return; }
 
