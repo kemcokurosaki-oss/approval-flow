@@ -1,0 +1,18 @@
+name: アカウント作成（一時使用）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-accounts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: アカウント作成
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: node scripts/create-accounts.js
