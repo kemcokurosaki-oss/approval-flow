@@ -516,6 +516,16 @@ async function main() {
     (allRecipients || []).forEach(r => {
       if (r.email && emailSet.has(r.email)) recipientEmailNameMap[r.email] = r.name;
     });
+    // notification_recipients で見つからない場合は profiles 側も検索する
+    // （設計部門など、ログインアカウント移行済みの人の上長通知は recipient_email 形式で profiles 側の人へ届くため）
+    const stillUnresolved = recipientEmails.filter(e => !recipientEmailNameMap[e]);
+    if (stillUnresolved.length > 0) {
+      const emailListParam = stillUnresolved.map(e => `"${e}"`).join(',');
+      const profileRows = await supabaseFetch(`profiles?email=in.(${emailListParam})&select=name,email`);
+      (profileRows || []).forEach(p => {
+        if (p.email) recipientEmailNameMap[p.email] = p.name;
+      });
+    }
   }
 
   // shipping完了通知用: 承認した常務の名前を取得
