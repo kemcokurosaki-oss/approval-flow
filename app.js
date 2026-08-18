@@ -3277,8 +3277,8 @@ const SETTINGS_CATEGORIES = [
     {
         icon: '📧', label: '通知・宛先設定',
         items: [
-            { label: '宛先候補の管理', desc: '技戦・物流・設計などの担当者「名簿」を管理する（追加・編集・無効化）', fn: 'showRecipientMasterScreen' },
-            { label: '固定宛先の設定', desc: '名簿の中から、フローごとに実際に使う人を選ぶ', fn: 'showRecipientsListScreen' }
+            { label: '部署ごとの名簿管理', desc: 'ログインアカウントの有無に関わらず、部署単位で担当者を一覧管理する（追加・編集・役職変更）', fn: 'showRosterScreen' },
+            { label: '通知の宛先設定', desc: '名簿の中から、フローごとに実際に通知する人・部署を選ぶ', fn: 'showRecipientsListScreen' }
         ]
     },
     {
