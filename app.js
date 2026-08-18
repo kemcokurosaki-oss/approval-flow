@@ -3821,6 +3821,53 @@ async function saveNewLoginRosterMember() {
     }
 }
 
+// 退職処理: ログインアカウントを持つ担当者を、Authアカウントごと完全に削除する
+async function deleteLoginRosterMember(profileId) {
+    const { data: record } = await db.from('profiles').select('name, role, department').eq('id', profileId).single();
+    if (!record) { showToast('データが見つかりません', 'error'); return; }
+
+    const approverBadges = getApproverBadges({ profileRole: record.role });
+    const warning = approverBadges.length > 0
+        ? `\n\n⚠ この人は「${approverBadges.join('、')}」の承認者です。削除すると、他に同じ役職の人がいない場合、承認フローが止まります。`
+        : '';
+    if (!confirm(`${record.department}の${record.name}さんを削除します。ログインアカウントごと完全に削除され、元に戻せません。${warning}\n\nよろしいですか？`)) return;
+
+    showLoading('削除中...');
+    try {
+        const { data, error } = await db.functions.invoke('delete-employee', { body: { profileId } });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        await logSettingsChange('roster_edit', `${record.department}の${record.name}を退職処理（アカウント削除）`);
+        showToast('削除しました。', 'success');
+        showRosterScreen();
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 非ログイン名簿(notification_recipients)からの削除
+async function deleteNonLoginRosterMember(recipientId) {
+    const { data: record } = await db.from('notification_recipients').select('name, department').eq('id', recipientId).single();
+    if (!record) { showToast('データが見つかりません', 'error'); return; }
+    if (!confirm(`${record.department}の${record.name}さんを名簿から削除します。よろしいですか？`)) return;
+
+    showLoading('削除中...');
+    try {
+        const { error } = await db.from('notification_recipients').delete().eq('id', recipientId);
+        if (error) throw error;
+        await logSettingsChange('roster_edit', `${record.department}の${record.name}を名簿から削除`);
+        showToast('削除しました。', 'success');
+        showRosterScreen();
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ----- 変更履歴 -----
 async function showAuditLogScreen() {
     settingsView = 'audit_log';
