@@ -3376,26 +3376,38 @@ function showSettingsMenu() {
 // ----- 固定宛先の設定（個人単位） -----
 function showRecipientsListScreen() {
     settingsView = 'recipients_list';
-    const cards = Object.keys(FIXED_RECIPIENT_GROUPS).map(ft => {
+    const rows = Object.keys(FIXED_RECIPIENT_GROUPS).map(ft => {
         const plan = getFixedRecipientPlan(ft);
         const fixedCount = plan.profileIds.length + plan.recipientIds.length;
         const dynGroups  = DYNAMIC_RECIPIENT_GROUPS[ft] || [];
         const dynPlan    = getDynamicRecipientPlan(ft);
         const dynOffCount = dynGroups.filter(g => !dynPlan[g]).length;
-        const dynSummary = dynGroups.length === 0 ? ''
-            : (dynOffCount === 0 ? '・自動通知は全てON' : `・自動通知${dynOffCount}件OFF`);
+        const dynHtml = dynGroups.length === 0
+            ? '<span class="recip-dyn-none">対象外</span>'
+            : (dynOffCount === 0
+                ? '<span class="recip-dyn-on">全てON</span>'
+                : `<span class="recip-dyn-off">${dynOffCount}件OFF</span>`);
         return `
-        <button class="settings-menu-card" onclick="showRecipientsDetailScreen('${ft}')">
-            <div class="settings-menu-title">${esc(FLOW_LABELS[ft] || ft)}</div>
-            <div class="settings-menu-item-desc">固定宛先${fixedCount}名${dynSummary}</div>
-        </button>
-    `;
+        <button class="recip-row" onclick="showRecipientsDetailScreen('${ft}')">
+            <span class="recip-flow-name">${esc(FLOW_LABELS[ft] || ft)}</span>
+            <span class="recip-fixed-count">${fixedCount}名</span>
+            <span>${dynHtml}</span>
+            <span class="recip-chevron">›</span>
+        </button>`;
     }).join('');
+
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">通知の宛先設定</div>
-        <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます。工番の担当者（組立・操業・営業・設計）は別途自動で追加されますが、担当者本人・その上長を分けてON/OFFも切り替えられます。</div>
-        <div class="settings-menu">${cards}</div>
+        <div class="recip-list">
+            <div class="recip-head">
+                <div>フロー</div>
+                <div>固定宛先</div>
+                <div>工番担当者の自動通知</div>
+                <div></div>
+            </div>
+            ${rows}
+        </div>
     `;
 }
 
@@ -3407,6 +3419,8 @@ async function showRecipientsDetailScreen(flowType) {
     const groups = FIXED_RECIPIENT_GROUPS[flowType] || [];
     const plan   = getFixedRecipientPlan(flowType);
     const groupsHtml = [];
+    let selectedTotal = 0;
+
     for (const g of groups) {
         let candidates;
         if (g.kind === 'role') {
@@ -3414,26 +3428,43 @@ async function showRecipientsDetailScreen(flowType) {
             candidates = (data || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile', checked: plan.profileIds.includes(p.id) }));
         } else {
             // department種別: ログインアカウント(profiles、本来の部署 or 兼任部署が一致)と非ログイン名簿(notification_recipients)の両方を候補にする
-            const { data: profRows } = await db.from('profiles').select('id, name, email')
+            const { data: profRows } = await db.from('profiles').select('id, name, email, department, extra_departments')
                 .or(`department.eq.${g.department},extra_departments.cs.{${g.department}}`);
             const { data: recRows } = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
             candidates = [
-                ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
+                ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile', checked: plan.profileIds.includes(p.id),
+                                                concurrent: p.department !== g.department })),
                 ...(recRows  || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }))
             ];
         }
+
+        const checkedCount = candidates.filter(c => c.checked).length;
+        selectedTotal += checkedCount;
+
+        const rowsHtml = candidates.length ? candidates.map(c => `
+            <label class="recip-person-row">
+                <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}
+                       onchange="updateRecipientSelectedCount()">
+                <span class="recip-person-name" title="${esc(c.name || '')}">${esc(c.name || '—')}</span>
+                <span class="recip-person-email" title="${esc(c.email || '')}">${esc(c.email || '')}</span>
+                ${c.concurrent ? '<span class="recip-note" title="兼務">兼務</span>' : '<span></span>'}
+            </label>
+        `).join('') : `
+            <div class="recip-empty">
+                <span>該当者がいません。</span>
+                ${g.kind === 'department'
+                    ? '<button class="btn-xs" onclick="showRosterScreen()">「部署ごとの名簿管理」で追加する →</button>'
+                    : '<span>この項目は担当ロールを持つログインユーザーが対象です。</span>'}
+            </div>`;
+
         groupsHtml.push(`
-            <div class="settings-flow-group">
-                <div class="settings-flow-title">${esc(g.label)}</div>
-                ${candidates.length ? candidates.map(c => `
-                    <label class="settings-check-row">
-                        <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}>
-                        <span>${esc(c.name || '—')}</span>
-                        <span style="color:#999; font-size:13px;">${esc(c.email || '')}</span>
-                    </label>
-                `).join('') : (g.kind === 'department'
-                    ? '<div class="settings-note">該当者がいません。<button class="btn btn-xs btn-outline" onclick="showRosterScreen()">「部署ごとの名簿管理」で追加する →</button></div>'
-                    : '<div class="settings-note">該当者がいません（この項目は担当ロールを持つ社内ログインユーザーが対象です）</div>')}
+            <div class="recip-group">
+                <div class="recip-group-header">
+                    <span class="recip-group-title">${esc(g.label)}</span>
+                    <span class="recip-group-kind">${g.kind === 'role' ? '役職から選択' : '部署から選択'}</span>
+                    <span class="recip-group-count">${checkedCount} / ${candidates.length}</span>
+                </div>
+                ${rowsHtml}
             </div>`);
     }
 
@@ -3441,13 +3472,17 @@ async function showRecipientsDetailScreen(flowType) {
     const dynGroups = DYNAMIC_RECIPIENT_GROUPS[flowType] || [];
     const dynPlan   = getDynamicRecipientPlan(flowType);
     const dynHtml = dynGroups.length ? `
-        <div class="settings-flow-group">
-            <div class="settings-flow-title">工番担当者の自動通知</div>
-            <div class="settings-note">この工番に登録されている担当者本人・その上長を、それぞれ通知に含めるかどうかを切り替えます。</div>
+        <div class="recip-group">
+            <div class="recip-group-header">
+                <span class="recip-group-title">工番担当者の自動通知</span>
+                <span class="recip-group-kind">部署単位でON / OFF</span>
+            </div>
             ${dynGroups.map(g => `
-                <label class="settings-check-row">
-                    <input type="checkbox" data-dynamic-group="${g}" ${dynPlan[g] ? 'checked' : ''}>
-                    <span>${esc(DYNAMIC_GROUP_LABELS[g] || g)}</span>
+                <label class="recip-dyn-row">
+                    <input type="checkbox" data-dynamic-group="${g}" ${dynPlan[g] ? 'checked' : ''}
+                           onchange="this.closest('label').querySelector('.recip-badge-on, .recip-badge-off').outerHTML = this.checked ? '<span class=\\'recip-badge-on\\'>ON</span>' : '<span class=\\'recip-badge-off\\'>OFF</span>'">
+                    <span class="recip-dyn-label">${esc(DYNAMIC_GROUP_LABELS[g] || g)}</span>
+                    ${dynPlan[g] ? '<span class="recip-badge-on">ON</span>' : '<span class="recip-badge-off">OFF</span>'}
                 </label>
             `).join('')}
         </div>` : '';
@@ -3457,8 +3492,18 @@ async function showRecipientsDetailScreen(flowType) {
         <div class="section-title" style="margin-top:10px;">${esc(FLOW_LABELS[flowType] || flowType)}の固定宛先</div>
         ${groupsHtml.join('')}
         ${dynHtml}
-        <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
+        <div class="recip-footer">
+            <span class="recip-footer-count">固定宛先 選択中 <strong id="recip_selected_count">${selectedTotal}名</strong></span>
+            <button class="btn btn-primary" onclick="saveRecipientDetail('${flowType}')">保存する</button>
+        </div>
     `;
+}
+
+// 保存バーの選択人数を更新する
+function updateRecipientSelectedCount() {
+    const el = document.getElementById('recip_selected_count');
+    if (!el) return;
+    el.textContent = document.querySelectorAll('#settings_body [data-recipient-kind]:checked').length + '名';
 }
 
 async function saveRecipientDetail(flowType) {
