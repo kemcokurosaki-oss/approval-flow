@@ -611,6 +611,8 @@ async function bootApp(session) {
         document.getElementById('dev_bar').style.display = 'flex';
         document.getElementById('app').classList.add('has-dev-bar');
         document.getElementById('nav_settings_item').style.display = '';
+        // 運用ガイドの「設定画面」の章は管理者のみ閲覧可能にする
+        document.getElementById('rail_guide').href = 'guide.html?admin=1';
     }
     updateHeaderHeightVar();
 
