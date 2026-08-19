@@ -3502,7 +3502,8 @@ function mergeRosterRows(profileRows, recipientRows) {
         byEmail.set(String(p.email).toLowerCase(), {
             profileId: p.id, recipientId: null, source: 'profile',
             name: p.name, email: p.email, department: p.department,
-            tier: roleToTier(p.role), profileRole: p.role, active: true
+            tier: roleToTier(p.role), profileRole: p.role, active: true,
+            extraDepartments: p.extra_departments || []
         });
     });
     (recipientRows || []).forEach(r => {
