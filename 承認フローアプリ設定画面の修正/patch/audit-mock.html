@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>変更履歴 — 修正後デザイン（静的モック）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* --- モック表示用（アプリには不要） --- */
+  body { margin:0; padding:40px; background:#e7ebf2; font-family:'Noto Sans JP','メイリオ',Meiryo,sans-serif; color:#20293a; }
+  .mock-panel { width:740px; background:#fff; border:1px solid #e3e8f0; border-radius:14px; box-shadow:0 12px 40px rgba(20,36,63,.14); overflow:hidden; }
+  .mock-panel-header { height:52px; padding:0 16px; border-bottom:1px solid #e3e8f0; display:flex; align-items:center; justify-content:space-between; }
+  .mock-panel-title { font-size:14px; font-weight:700; color:#16233a; }
+  .mock-close { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; border-radius:8px; background:#f1f4f9; color:#6b7789; font-size:15px; cursor:pointer; }
+  .settings-page-body { padding:18px; max-height:560px; overflow-y:auto; }
+  .settings-sticky-header { position:sticky; top:-18px; z-index:6; margin:-18px -18px 10px; padding:10px 18px; background:#fff; box-shadow:0 1px 4px rgba(20,36,63,.08); }
+  .section-title { font-size:15px; font-weight:700; color:#8a94a6; margin-bottom:12px; }
+  .btn { padding:7px 16px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:700; font-family:inherit; }
+  .btn-sm { padding:4px 10px; font-size:13px; }
+  .btn-secondary { background:#eef1f6; color:#5b6b80; }
+
+  /* ==========================================================
+     ここから下が style.css に追記する内容
+     （patch/style-append-audit.css と同一）
+     ========================================================== */
+  .audit-filter { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 12px; margin-bottom:12px; border:1px solid #e5e9f1; border-radius:10px; background:#fbfcfe; }
+  .audit-filter-label { font-size:11px; font-weight:700; color:#9aa5b6; letter-spacing:.04em; }
+  .audit-filter select, .audit-filter input[type="date"] { height:30px; padding:0 8px; border:1px solid #e0e6ef; border-radius:8px; background:#fff; color:#3d4a5d; font-size:13px; font-family:inherit; }
+  .audit-filter-sep { font-size:13px; color:#9aa5b6; }
+  .audit-filter-clear { margin-left:auto; padding:5px 12px; font-size:12px; font-weight:700; border:1px solid #e0e6ef; border-radius:7px; background:#fff; color:#5b6b80; font-family:inherit; cursor:pointer; }
+  .audit-filter-clear:hover { background:#f6f8fb; color:#16233a; }
+
+  .audit-list { border:1px solid #e5e9f1; border-radius:10px; overflow:hidden; }
+  .audit-head, .audit-row { display:grid; grid-template-columns:52px 96px 92px minmax(0,1fr); column-gap:10px; }
+  .audit-head { align-items:center; padding:8px 14px; background:#fbfcfe; border-bottom:1px solid #eef1f6; font-size:12px; font-weight:700; color:#9aa5b6; letter-spacing:.04em; }
+  .audit-day-header { display:flex; align-items:center; gap:8px; padding:7px 14px; background:#f6f8fb; border-top:1px solid #eef1f6; border-bottom:1px solid #eef1f6; }
+  .audit-list .audit-day-header:first-of-type { border-top:none; }
+  .audit-day-date { font-size:13px; font-weight:700; color:#16233a; }
+  .audit-day-count { display:inline-flex; align-items:center; justify-content:center; min-width:19px; height:18px; padding:0 6px; border-radius:9px; background:#fff; border:1px solid #e0e6ef; color:#5b6b80; font-size:11px; font-weight:700; }
+  .audit-row { align-items:start; padding:9px 14px; border-bottom:1px solid #f4f6fa; }
+  .audit-row:last-child { border-bottom:none; }
+  .audit-time { font-size:13px; color:#5b6b80; font-variant-numeric:tabular-nums; line-height:20px; }
+  .audit-user { font-size:13px; color:#16233a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:20px; }
+  .audit-cat-cell { line-height:20px; }
+  .audit-summary { font-size:13px; color:#3d4a5d; line-height:1.6; text-wrap:pretty; }
+
+  .audit-cat { display:inline-flex; align-items:center; min-height:20px; padding:1px 8px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; background:#f1f4f9; color:#5b6b80; }
+  .audit-cat.cat-roster_edit { background:#eef2f8; color:#2f6fb0; }
+  .audit-cat.cat-fixed_recipients { background:#f6edfa; color:#8e44ad; }
+  .audit-cat.cat-flow_toggle { background:#e8f6ee; color:#166534; }
+  .audit-cat.cat-recipient_master { background:#fdf6e3; color:#8a6d00; }
+  .audit-cat.cat-room_email { background:#f1f4f9; color:#5b6b80; }
+
+  .audit-empty { padding:14px; font-size:13px; color:#8a94a6; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="mock-panel">
+  <div class="mock-panel-header"><span class="mock-panel-title">⚙ 設定</span><button class="mock-close">✕</button></div>
+  <div class="settings-page-body">
+    <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary">← 戻る</button></div>
+    <div class="section-title">変更履歴 <span style="font-size:12px; font-weight:400; color:#9aa5b6;">最新100件</span></div>
+
+    <div class="audit-filter">
+      <span class="audit-filter-label">絞り込み</span>
+      <select>
+        <option>項目：すべて</option>
+        <option>名簿編集</option>
+        <option>通知の宛先</option>
+      </select>
+      <input type="date">
+      <span class="audit-filter-sep">〜</span>
+      <input type="date">
+      <button class="audit-filter-clear">条件をクリア</button>
+    </div>
+
+    <div class="audit-list">
+      <div class="audit-head">
+        <div>時刻</div><div>変更者</div><div>項目</div><div>内容</div>
+      </div>
+
+      <div class="audit-day-header">
+        <span class="audit-day-date">2026/8/19（水）</span>
+        <span class="audit-day-count">3</span>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">14:32</div>
+        <div class="audit-user" title="m2-kusakabe@kusakabe.com">常務</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-fixed_recipients">通知の宛先</span></div>
+        <div class="audit-summary">出荷確定申請の固定宛先・自動通知設定を変更（固定宛先: 常務、田中、渡辺、山下、廣田）</div>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">11:05</div>
+        <div class="audit-user" title="h-yonezawa@kusakabe.com">米澤</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-roster_edit">名簿編集</span></div>
+        <div class="audit-summary">組立の米澤を「課長」に変更</div>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">09:48</div>
+        <div class="audit-user" title="h-yonezawa@kusakabe.com">米澤</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-roster_edit">名簿編集</span></div>
+        <div class="audit-summary">物流に佐藤のログインアカウントを追加</div>
+      </div>
+
+      <div class="audit-day-header">
+        <span class="audit-day-date">2026/8/18（火）</span>
+        <span class="audit-day-count">3</span>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">17:20</div>
+        <div class="audit-user" title="m2-kusakabe@kusakabe.com">常務</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-flow_toggle">フローON/OFF</span></div>
+        <div class="audit-summary">出荷準備完了申請を有効化</div>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">16:02</div>
+        <div class="audit-user" title="q-kusakabe@kusakabe.com">品証</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-room_email">会議室</span></div>
+        <div class="audit-summary">出荷確認会議の会議室アドレスを変更</div>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">10:11</div>
+        <div class="audit-user" title="h-yonezawa@kusakabe.com">米澤</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-roster_edit">名簿編集</span></div>
+        <div class="audit-summary">技戦の小林を名簿から削除</div>
+      </div>
+
+      <div class="audit-day-header">
+        <span class="audit-day-date">2026/8/15（土）</span>
+        <span class="audit-day-count">1</span>
+      </div>
+      <div class="audit-row">
+        <div class="audit-time">13:44</div>
+        <div class="audit-user" title="m2-kusakabe@kusakabe.com">常務</div>
+        <div class="audit-cat-cell"><span class="audit-cat cat-recipient_master">宛先候補</span></div>
+        <div class="audit-summary">簡易検査開催案内の自動通知（設計担当者）をOFF</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
