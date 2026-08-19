@@ -3372,11 +3372,21 @@ function showSettingsMenu() {
 // ----- 固定宛先の設定（個人単位） -----
 function showRecipientsListScreen() {
     settingsView = 'recipients_list';
-    const cards = Object.keys(FIXED_RECIPIENT_GROUPS).map(ft => `
+    const cards = Object.keys(FIXED_RECIPIENT_GROUPS).map(ft => {
+        const plan = getFixedRecipientPlan(ft);
+        const fixedCount = plan.profileIds.length + plan.recipientIds.length;
+        const dynGroups  = DYNAMIC_RECIPIENT_GROUPS[ft] || [];
+        const dynPlan    = getDynamicRecipientPlan(ft);
+        const dynOffCount = dynGroups.filter(g => !dynPlan[g]).length;
+        const dynSummary = dynGroups.length === 0 ? ''
+            : (dynOffCount === 0 ? '・自動通知は全てON' : `・自動通知${dynOffCount}件OFF`);
+        return `
         <button class="settings-menu-card" onclick="showRecipientsDetailScreen('${ft}')">
             <div class="settings-menu-title">${esc(FLOW_LABELS[ft] || ft)}</div>
+            <div class="settings-menu-item-desc">固定宛先${fixedCount}名${dynSummary}</div>
         </button>
-    `).join('');
+    `;
+    }).join('');
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">通知の宛先設定</div>
