@@ -3894,18 +3894,63 @@ async function deleteNonLoginRosterMember(recipientId) {
 }
 
 // ----- 変更履歴 -----
+const AUDIT_CATEGORY_LABELS = {
+    flow_toggle: 'フローON/OFF', fixed_recipients: '通知の宛先',
+    recipient_master: '宛先候補', roster_edit: '名簿編集', room_email: '会議室'
+};
+let auditLogFilter = { category: '', dateFrom: '', dateTo: '' };
+
 async function showAuditLogScreen() {
     settingsView = 'audit_log';
+    auditLogFilter = { category: '', dateFrom: '', dateTo: '' };
     const body = document.getElementById('settings_body');
-    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+    body.innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
+        <div class="settings-flow-group" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="form-group" style="margin:0;">
+                <label>項目</label>
+                <select id="audit_filter_category" onchange="applyAuditLogFilter()">
+                    <option value="">すべて</option>
+                    <option value="roster_edit">名簿編集</option>
+                    <option value="fixed_recipients">通知の宛先</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>開始日</label>
+                <input type="date" id="audit_filter_from" onchange="applyAuditLogFilter()">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>終了日</label>
+                <input type="date" id="audit_filter_to" onchange="applyAuditLogFilter()">
+            </div>
+        </div>
+        <div id="audit_log_rows"><div class="loading-indicator">読み込み中...</div></div>
+    `;
+    await renderAuditLogRows();
+}
 
-    const { data } = await db.from('settings_audit_log')
-        .select('changed_at, changed_by, category, summary').order('changed_at', { ascending: false }).limit(100);
+async function applyAuditLogFilter() {
+    auditLogFilter.category = document.getElementById('audit_filter_category').value;
+    auditLogFilter.dateFrom = document.getElementById('audit_filter_from').value;
+    auditLogFilter.dateTo   = document.getElementById('audit_filter_to').value;
+    await renderAuditLogRows();
+}
+
+async function renderAuditLogRows() {
+    const rowsEl = document.getElementById('audit_log_rows');
+    rowsEl.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    let query = db.from('settings_audit_log')
+        .select('changed_at, changed_by, category, summary')
+        .order('changed_at', { ascending: false })
+        .limit(100);
+    if (auditLogFilter.category) query = query.eq('category', auditLogFilter.category);
+    if (auditLogFilter.dateFrom) query = query.gte('changed_at', `${auditLogFilter.dateFrom}T00:00:00`);
+    if (auditLogFilter.dateTo)   query = query.lte('changed_at', `${auditLogFilter.dateTo}T23:59:59`);
+
+    const { data } = await query;
     const rows = data || [];
-    const CATEGORY_LABELS = {
-        flow_toggle: 'フローON/OFF', fixed_recipients: '固定宛先',
-        recipient_master: '宛先候補', roster_edit: '名簿編集', room_email: '会議室'
-    };
     const rowsHtml = rows.length ? rows.map(r => {
         const d = new Date(r.changed_at);
         const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -3913,16 +3958,12 @@ async function showAuditLogScreen() {
             <div class="settings-check-row" style="align-items:flex-start;">
                 <span style="min-width:120px; color:#999; font-size:13px;">${esc(dateStr)}</span>
                 <span style="min-width:90px; font-size:13px;">${esc(r.changed_by)}</span>
-                <span class="recipient-tag" style="margin-right:6px;">${esc(CATEGORY_LABELS[r.category] || r.category)}</span>
+                <span class="recipient-tag" style="margin-right:6px;">${esc(AUDIT_CATEGORY_LABELS[r.category] || r.category)}</span>
                 <span>${esc(r.summary)}</span>
             </div>`;
-    }).join('') : '<div class="settings-note">まだ変更履歴がありません</div>';
+    }).join('') : '<div class="settings-note">該当する変更履歴がありません</div>';
 
-    body.innerHTML = `
-        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
-        <div class="section-title" style="margin-top:10px;">変更履歴（最新100件）</div>
-        ${rowsHtml}
-    `;
+    rowsEl.innerHTML = rowsHtml;
 }
 
 async function completePendingItem(requestId, idx, opts = {}) {
