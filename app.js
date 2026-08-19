@@ -3946,8 +3946,9 @@ async function renderAuditLogRows() {
         .order('changed_at', { ascending: false })
         .limit(100);
     if (auditLogFilter.category) query = query.eq('category', auditLogFilter.category);
-    if (auditLogFilter.dateFrom) query = query.gte('changed_at', `${auditLogFilter.dateFrom}T00:00:00`);
-    if (auditLogFilter.dateTo)   query = query.lte('changed_at', `${auditLogFilter.dateTo}T23:59:59`);
+    // 入力欄は日本時間(JST)の日付として扱い、DB保存のUTC時刻と比較できるよう変換する
+    if (auditLogFilter.dateFrom) query = query.gte('changed_at', new Date(`${auditLogFilter.dateFrom}T00:00:00+09:00`).toISOString());
+    if (auditLogFilter.dateTo)   query = query.lte('changed_at', new Date(`${auditLogFilter.dateTo}T23:59:59+09:00`).toISOString());
 
     const { data } = await query;
     const rows = data || [];
