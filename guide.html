@@ -1026,7 +1026,9 @@
 
             <h3>②通知の宛先設定</h3>
             <p>フロー（組立完了・外観検査・出荷確認会議など）ごとに、名簿の中から実際にメール通知する人・部署を選びます。一覧からフローを選ぶと詳細画面が開きます。</p>
-            <div class="mockup" style="max-width:640px;">
+            <div class="compare">
+            <div class="compare-visual">
+            <div class="mockup" style="max-width:560px;">
                 <div class="cfg-recip-row cfg-recip-head"><div>フロー<span class="callout">1</span></div><div>固定宛先<span class="callout">2</span></div><div>工番担当者の自動通知<span class="callout">3</span></div><div></div></div>
                 <div class="cfg-recip-row"><div>組立完了申請</div><div>3名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›<span class="callout">4</span></div></div>
                 <div class="cfg-recip-row"><div>試運転完了申請</div><div>4名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›</div></div>
@@ -1034,13 +1036,19 @@
                 <div class="cfg-recip-row"><div>出荷確定申請</div><div>7名</div><div><span class="cfg-dyn-off">3件OFF</span></div><div class="cfg-chevron">›</div></div>
                 <div class="mockup-caption">通知の宛先設定（一覧）：フローごとの固定宛先の人数と、工番担当者の自動通知のON/OFF状況が並ぶ</div>
             </div>
+            </div>
+            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>フロー名（組立完了申請・出荷確定申請など）</span></li>
                 <li><span class="callout">2</span><span>固定宛先に選ばれている人数</span></li>
                 <li><span class="callout">3</span><span>工番担当者の自動通知：<b>全てON／〇件OFF／対象外</b>（そもそも自動通知の対象がないフロー）</span></li>
                 <li><span class="callout">4</span><span>行をクリックすると詳細画面へ</span></li>
             </ol>
-            <div class="mockup" style="max-width:640px;">
+            </div>
+            </div>
+            <div class="compare">
+            <div class="compare-visual">
+            <div class="mockup" style="max-width:560px;">
                 <div class="cfg-group-header">品証 役職から選択<span class="cfg-group-count">1/1</span></div>
                 <div class="cfg-check-row"><input type="checkbox" checked disabled><span class="cfg-name">田中</span><span class="cfg-mail">t-tanaka@kusakabe.com</span></div>
                 <div class="cfg-group-header">製管 役職から選択<span class="cfg-group-count">2/2</span><span class="callout">1</span></div>
@@ -1052,11 +1060,15 @@
                 <div class="cfg-recip-row" style="grid-template-columns:1fr auto;"><div>固定宛先 選択中 <b>3名</b></div><div><span class="cfg-btn cfg-btn-blue">保存する</span><span class="callout">3</span></div></div>
                 <div class="mockup-caption">通知の宛先設定（詳細・組立完了申請の例）：役職・部署ごとのグループからチェックで固定宛先を選ぶ</div>
             </div>
+            </div>
+            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>役職（品証・製管など）または部署ごとのグループから、通知したい人にチェックを入れる</span></li>
                 <li><span class="callout">2</span><span>固定宛先とは別に、その工番の担当者へ自動で通知するかをグループ単位でON/OFF</span></li>
                 <li><span class="callout">3</span><span>「保存する」を押すまで反映されない。固定宛先を0件で保存しようとすると確認ダイアログが出る</span></li>
             </ol>
+            </div>
+            </div>
             <div class="note">誰にも通知が届かなくなる変更（固定宛先0件など）は特に慎重に。保存前に選択人数を必ず確認してください。</div>
 
             <h3>③変更履歴</h3>
