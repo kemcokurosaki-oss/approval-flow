@@ -345,8 +345,8 @@ const FIXED_RECIPIENT_GROUPS = {
     shipping:          [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
-                         // 山下は profiles 上の部署が「組立」のため、物流課グループには個人指定で追加する
-                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流', extraProfileEmails: ['y-yamashita@kusakabe.com'] }]
+                         // 物流課: 本来の部署が物流の人に加え、profiles.extra_departments に'物流'を持つ兼任者も対象（山下など）
+                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
 };
 let flowSettings   = { fixedRecipients: {}, dynamicRecipients: {} };
 async function loadFlowSettings() {
