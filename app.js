@@ -6060,22 +6060,18 @@ async function recordFlowNotifications(requestId, flowType) {
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
             // 工番担当者（profiles）: 組立（複数人対応、ON/OFF切替可）
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
-            // 試運転タスクがある場合のみ試運転担当者も追加（ON/OFF切替可）
-            if (dyn.shiunten) {
-                for (const o of shiuntenOwners) await addPbyName(o);
-                if (shiuntenOwners.length > 0) {
-                    await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
-                    await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
-                }
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);
+            // 試運転タスクがある場合のみ試運転担当者も追加（本人・上長を別々にON/OFF切替可）
+            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);
+            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
+                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
+                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
             }
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
             if (dyn.sales) await addOwnerByName(salesOwner);
-            if (dyn.sekkei) {
-                for (const o of sekkeiOwners) await addOwnerByName(o);
-                // 設計管理職: 担当者の上長を members テーブルから取得
-                await addSekkeiSupervisors();
-            }
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);
+            // 設計管理職: 担当者の上長を members テーブルから取得（本人・上長を別々にON/OFF切替可）
+            if (dyn.sekkei_manager) await addSekkeiSupervisors();
             break;
         }
 
@@ -6083,21 +6079,19 @@ async function recordFlowNotifications(requestId, flowType) {
             const dyn = getDynamicRecipientPlan('test_run');
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
-            if (dyn.kumitate && kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
-            if (dyn.shiunten && shiuntenOwners.length > 0) {
+            if (dyn.kumitate_manager && kumitateOwners.length > 0) await addP({ role: 'assembly_manager' });   // 組立課長（機械組立あり）
+            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
             }
-            // 工番担当者（profiles）: 組立・操業（複数人対応、ON/OFF切替可）
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
-            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);
+            // 工番担当者（profiles）: 組立・操業（複数人対応、本人・上長を別々にON/OFF切替可）
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);
+            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
             if (dyn.sales) await addOwnerByName(salesOwner);
-            if (dyn.sekkei) {
-                for (const o of sekkeiOwners) await addOwnerByName(o);
-                // 設計管理職: 担当者の上長を members テーブルから取得
-                await addSekkeiSupervisors();
-            }
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);
+            // 設計管理職: 担当者の上長を members テーブルから取得
+            if (dyn.sekkei_manager) await addSekkeiSupervisors();
             break;
         }
 
@@ -6105,17 +6099,15 @@ async function recordFlowNotifications(requestId, flowType) {
             const dyn = getDynamicRecipientPlan('shipping_meeting');
             notifType = 'shipping_meeting_invite';
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
-            if (dyn.sekkei) {
-                for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
-                await addSekkeiSupervisors();                           // 設計課長・部長
-            }
-            if (dyn.kumitate && kumitateOwners.length > 0) {
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
+            if (dyn.sekkei_manager) await addSekkeiSupervisors();                           // 設計課長・部長
+            if (dyn.kumitate_manager && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
-            if (dyn.shiunten && shiuntenOwners.length > 0) {
+            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
@@ -6126,13 +6118,11 @@ async function recordFlowNotifications(requestId, flowType) {
             const dyn = getDynamicRecipientPlan('simple_inspection');
             notifType = 'simple_inspection_invite';
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
-            if (dyn.sekkei) {
-                for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
-                await addSekkeiSupervisors();                           // 設計課長・部長
-            }
-            if (dyn.kumitate && kumitateOwners.length > 0) {
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
+            if (dyn.sekkei_manager) await addSekkeiSupervisors();                           // 設計課長・部長
+            if (dyn.kumitate_manager && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
             break;
@@ -6142,17 +6132,15 @@ async function recordFlowNotifications(requestId, flowType) {
             const dyn = getDynamicRecipientPlan('inspection');
             notifType = 'inspection_invite';
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
-            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
+            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
             if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
-            if (dyn.sekkei) {
-                for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
-                await addSekkeiSupervisors();                           // 設計課長・部長
-            }
-            if (dyn.kumitate && kumitateOwners.length > 0) {
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);     // 設計担当者
+            if (dyn.sekkei_manager) await addSekkeiSupervisors();                           // 設計課長・部長
+            if (dyn.kumitate_manager && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
-            if (dyn.shiunten && shiuntenOwners.length > 0) {
+            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
@@ -6168,23 +6156,23 @@ async function recordFlowNotifications(requestId, flowType) {
             const dyn = getDynamicRecipientPlan('shipping');
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
-            if (dyn.sekkei) {
-                // 設計管理職: 担当者の上長を members テーブルから取得
+            // 設計管理職: 担当者の上長を members テーブルから取得
+            if (dyn.sekkei_manager) {
                 await addSekkeiSupervisors();
             }
             // 機械組立タスクがある場合: 組立課長
-            if (dyn.kumitate && kumitateOwners.length > 0) {
+            if (dyn.kumitate_manager && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });
             }
             // 試運転タスクがある場合: 操業課長・部長
-            if (dyn.shiunten && shiuntenOwners.length > 0) {
+            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
                 await addP({ role: 'operations_manager' });
                 await addP({ role: 'operations_director' });
             }
             // 工番担当者
-            if (dyn.sekkei)   for (const o of sekkeiOwners)   await addOwnerByName(o);  // 設計担当者（notification_recipients）
-            if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);  // 組立担当者（profiles）
-            if (dyn.shiunten) for (const o of shiuntenOwners) await addPbyName(o);  // 操業担当者（profiles）
+            if (dyn.sekkei_owner)   for (const o of sekkeiOwners)   await addOwnerByName(o);  // 設計担当者（notification_recipients）
+            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);  // 組立担当者（profiles）
+            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);  // 操業担当者（profiles）
             if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者（notification_recipients）
             break;
         }
