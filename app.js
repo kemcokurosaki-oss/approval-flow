@@ -3443,7 +3443,7 @@ async function showRecipientsDetailScreen(flowType) {
     const dynHtml = dynGroups.length ? `
         <div class="settings-flow-group">
             <div class="settings-flow-title">工番担当者の自動通知</div>
-            <div class="settings-note">この工番に登録されている担当者を、部署単位で通知に含めるかどうかを切り替えます。</div>
+            <div class="settings-note">この工番に登録されている担当者本人・その上長を、それぞれ通知に含めるかどうかを切り替えます。</div>
             ${dynGroups.map(g => `
                 <label class="settings-check-row">
                     <input type="checkbox" data-dynamic-group="${g}" ${dynPlan[g] ? 'checked' : ''}>
