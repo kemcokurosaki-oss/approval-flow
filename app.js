@@ -3779,30 +3779,61 @@ async function editRosterMember(key) {
         const isKnownDept = departments.includes(record.department);
         body.innerHTML = `
             <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
-            <div class="section-title" style="margin-top:10px;">担当者を編集</div>
-            <div class="form-group"><label>名前</label><input type="text" id="rm_name" value="${esc(record.name)}"></div>
-            <div class="form-group"><label>メールアドレス</label><input type="text" id="rm_email" value="${esc(record.email)}"></div>
-            <div class="form-group">
-                <label>部署</label>
-                <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
-                    ${departments.map(d => `<option value="${esc(d)}" ${d === record.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}
-                    <option value="__other__" ${isKnownDept ? '' : 'selected'}>その他（自由入力）</option>
-                </select>
-                <input type="text" id="rm_department_other" placeholder="部署名を入力" value="${isKnownDept ? '' : esc(record.department)}"
-                       style="margin-top:6px; ${isKnownDept ? 'display:none;' : ''}">
+            <div class="rm-title-row">
+                <span class="rm-title">担当者を編集</span>
+                <span class="rm-badge-nologin">通知のみ（ログイン不可）</span>
             </div>
-            <div class="form-group">
-                <label>役職</label>
-                <select id="rm_tier">
-                    ${['staff', 'manager', 'director'].map(t => `<option value="${t}" ${t === record.role ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
-                </select>
+
+            <div class="rm-card">
+                <div class="rm-card-header">基本情報</div>
+                <div class="rm-card-body">
+                    <div class="rm-field">
+                        <label for="rm_name">名前</label>
+                        <input type="text" id="rm_name" value="${esc(record.name)}">
+                    </div>
+                    <div class="rm-field">
+                        <label for="rm_email">メールアドレス</label>
+                        <input type="text" id="rm_email" value="${esc(record.email)}">
+                    </div>
+                    <div class="rm-field is-top">
+                        <label for="rm_department_select">部署</label>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <select id="rm_department_select" onchange="onRmDepartmentSelectChange()">
+                                ${departments.map(d => `<option value="${esc(d)}" ${d === record.department ? 'selected' : ''}>${esc(d)}</option>`).join('')}
+                                <option value="__other__" ${isKnownDept ? '' : 'selected'}>その他（自由入力）</option>
+                            </select>
+                            <input type="text" id="rm_department_other" placeholder="部署名を入力"
+                                   value="${isKnownDept ? '' : esc(record.department)}" ${isKnownDept ? 'style="display:none;"' : ''}>
+                        </div>
+                    </div>
+                    <div class="rm-field">
+                        <label for="rm_tier">役職</label>
+                        <select id="rm_tier">
+                            ${['staff', 'manager', 'director'].map(t => `<option value="${t}" ${t === record.role ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="rm-field">
+                        <span class="rm-label">状態</span>
+                        <label class="rm-check">
+                            <input type="checkbox" id="rm_active" ${record.active ? 'checked' : ''}>
+                            <span>有効（通知の宛先候補に表示する）</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <label class="settings-check-row">
-                <input type="checkbox" id="rm_active" ${record.active ? 'checked' : ''}>
-                <span>有効</span>
-            </label>
-            <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
-            <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteNonLoginRosterMember('${id}')">削除する</button>
+
+            <div class="rm-danger">
+                <div class="rm-danger-header">削除</div>
+                <div class="rm-danger-body">
+                    <span class="rm-danger-note">名簿から削除します。一時的に通知を止めるだけなら「有効」のチェックを外してください。</span>
+                    <button class="rm-danger-btn" onclick="deleteNonLoginRosterMember('${id}')">削除する</button>
+                </div>
+            </div>
+
+            <div class="rm-footer">
+                <button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">キャンセル</button>
+                <button class="btn btn-primary rm-footer-save" onclick="saveRosterMember('${key}')">保存する</button>
+            </div>
         `;
     }
 }
