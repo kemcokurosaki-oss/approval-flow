@@ -372,12 +372,12 @@ function getFixedRecipientPlan(flowType) {
 // フロー種別ごとに、工番の担当者から自動で宛先に加わるグループ（担当者本人／上長を分けてON/OFF可能）
 // assemblyのkumitateは組立担当者自身が申請するフローのため上長（組立課長）は含まない
 const DYNAMIC_RECIPIENT_GROUPS = {
-    assembly:          ['kumitate_owner', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
-    test_run:          ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
-    shipping_meeting:  ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
-    simple_inspection: ['kumitate_owner', 'kumitate_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
-    inspection:        ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
-    shipping:          ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager']
+    assembly:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager'],
+    test_run:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
+    shipping_meeting:  ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
+    simple_inspection: ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager'],
+    inspection:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
+    shipping:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager']
     // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ）
 };
 const DYNAMIC_GROUP_LABELS = {
