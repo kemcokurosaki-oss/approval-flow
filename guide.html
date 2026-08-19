@@ -949,6 +949,12 @@
 </div>
 
 <script>
+    // 「設定画面」の章は管理者向けURL（?admin=1）でアプリから開いた場合のみ表示する。
+    // 通常ユーザーには目次・本文ともに存在しないのと同じ状態になる。
+    if (new URLSearchParams(window.location.search).get('admin') !== '1') {
+        document.querySelectorAll('.admin-only').forEach(function (el) { el.remove(); });
+    }
+
     var sectionEls = Array.prototype.slice.call(document.querySelectorAll('main.main > section'));
     var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
     var currentIdx = 0;
