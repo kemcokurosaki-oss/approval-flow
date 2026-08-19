@@ -3553,28 +3553,33 @@ async function showRosterScreen() {
     body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
 
     const [{ data: profRows }, { data: recRows }] = await Promise.all([
-        db.from('profiles').select('id, name, email, department, role'),
+        db.from('profiles').select('id, name, email, department, role, extra_departments'),
         db.from('notification_recipients').select('id, name, email, department, role, active')
     ]);
     const rows = mergeRosterRows(profRows, recRows);
-    const departments = sortDepartments([...new Set(rows.map(r => r.department))]);
+    const departments = sortDepartments([...new Set(rows.flatMap(r => [r.department, ...(r.extraDepartments || [])]))]);
+
+    const renderRow = (r, isConcurrent) => {
+        const badges = [...getApproverBadges(r), ...getFixedRecipientBadges(r)];
+        const badgesHtml = badges.map(b => `<span class="recipient-tag" style="margin-right:4px;">${esc(b)}</span>`).join('');
+        const key = r.profileId ? `profile:${r.profileId}` : `recipient:${r.recipientId}`;
+        const loginNote = (r.source === 'profile' || r.source === 'both') ? '・ログイン可' : '';
+        const concurrentNote = isConcurrent ? ' <span style="color:#8a6d00;">（兼務）</span>' : '';
+        return `
+            <div class="settings-check-row" style="justify-content:space-between; flex-wrap:wrap;">
+                <span>${esc(r.name)}${concurrentNote}${r.active === false ? ' <span style="color:#e74c3c;">（無効）</span>' : ''}
+                    <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(TIER_LABELS[r.tier] || r.tier)}${loginNote}</span>
+                    ${badgesHtml}</span>
+                <button class="btn btn-xs btn-outline" onclick="editRosterMember('${key}')">編集</button>
+            </div>
+        `;
+    };
 
     const groupsHtml = departments.map(dept => {
-        const items = rows.filter(r => r.department === dept).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
-        const itemsHtml = items.map(r => {
-            const badges = [...getApproverBadges(r), ...getFixedRecipientBadges(r)];
-            const badgesHtml = badges.map(b => `<span class="recipient-tag" style="margin-right:4px;">${esc(b)}</span>`).join('');
-            const key = r.profileId ? `profile:${r.profileId}` : `recipient:${r.recipientId}`;
-            const loginNote = (r.source === 'profile' || r.source === 'both') ? '・ログイン可' : '';
-            return `
-                <div class="settings-check-row" style="justify-content:space-between; flex-wrap:wrap;">
-                    <span>${esc(r.name)}${r.active === false ? ' <span style="color:#e74c3c;">（無効）</span>' : ''}
-                        <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(TIER_LABELS[r.tier] || r.tier)}${loginNote}</span>
-                        ${badgesHtml}</span>
-                    <button class="btn btn-xs btn-outline" onclick="editRosterMember('${key}')">編集</button>
-                </div>
-            `;
-        }).join('');
+        const mainItems       = rows.filter(r => r.department === dept);
+        const concurrentItems = rows.filter(r => r.department !== dept && (r.extraDepartments || []).includes(dept));
+        const items = [...mainItems, ...concurrentItems].sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
+        const itemsHtml = items.map(r => renderRow(r, r.department !== dept)).join('');
         return `
             <div class="settings-flow-group">
                 <div class="settings-flow-title">${esc(dept)}</div>
