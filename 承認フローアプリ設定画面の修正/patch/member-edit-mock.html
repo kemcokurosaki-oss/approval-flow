@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>担当者の編集 — 修正後デザイン（静的モック）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* --- モック表示用（アプリには不要） --- */
+  body { margin:0; padding:40px; background:#e7ebf2; font-family:'Noto Sans JP','メイリオ',Meiryo,sans-serif; color:#20293a; display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap; }
+  .mock-col { display:flex; flex-direction:column; gap:10px; }
+  .mock-caption { font-size:14px; font-weight:700; color:#16233a; }
+  .mock-panel { width:740px; background:#fff; border:1px solid #e3e8f0; border-radius:14px; box-shadow:0 12px 40px rgba(20,36,63,.14); overflow:hidden; }
+  .mock-panel-header { height:52px; padding:0 16px; border-bottom:1px solid #e3e8f0; display:flex; align-items:center; justify-content:space-between; }
+  .mock-panel-title { font-size:14px; font-weight:700; color:#16233a; }
+  .mock-close { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; border-radius:8px; background:#f1f4f9; color:#6b7789; font-size:15px; cursor:pointer; }
+  .settings-page-body { padding:18px; max-height:640px; overflow-y:auto; }
+  .settings-sticky-header { position:sticky; top:-18px; z-index:6; margin:-18px -18px 10px; padding:10px 18px; background:#fff; box-shadow:0 1px 4px rgba(20,36,63,.08); }
+  .btn { padding:7px 16px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:700; font-family:inherit; }
+  .btn-sm { padding:4px 10px; font-size:13px; }
+  .btn-primary { background:#2f6fb0; color:#fff; }
+  .btn-primary:hover { background:#255d97; }
+  .btn-secondary { background:#eef1f6; color:#5b6b80; }
+  .btn-secondary:hover { background:#e2e8f1; color:#16233a; }
+
+  /* ==========================================================
+     ここから下が style.css に追記する内容
+     （patch/style-append-member-edit.css と同一）
+     ========================================================== */
+  .rm-card { border:1px solid #e5e9f1; border-radius:10px; overflow:hidden; margin-bottom:12px; }
+  .rm-card-header { display:flex; align-items:center; gap:8px; padding:9px 14px; background:#f6f8fb; border-bottom:1px solid #eef1f6; font-size:13px; font-weight:700; color:#16233a; }
+  .rm-card-header .rm-card-note { font-size:11px; font-weight:400; color:#9aa5b6; }
+  .rm-card-body { padding:14px; display:flex; flex-direction:column; gap:12px; }
+
+  .rm-title-row { display:flex; align-items:center; gap:8px; margin:0 0 14px; }
+  .rm-title { font-size:15px; font-weight:700; color:#16233a; }
+  .rm-badge-login, .rm-badge-nologin { display:inline-flex; align-items:center; min-height:20px; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+  .rm-badge-login { background:#eef2f8; color:#2f6fb0; }
+  .rm-badge-nologin { background:#f6f8fb; border:1px solid #e5e9f1; color:#7c8798; }
+
+  .rm-field { display:grid; grid-template-columns:96px minmax(0,1fr); column-gap:12px; align-items:center; }
+  .rm-field.is-top { align-items:start; }
+  .rm-field > label, .rm-field > .rm-label { font-size:13px; color:#5b6b80; }
+  .rm-field.is-top > label { line-height:34px; }
+  .rm-field input[type="text"], .rm-field select { height:34px; padding:0 10px; border:1px solid #e0e6ef; border-radius:9px; background:#fff; color:#16233a; font-size:14px; font-family:inherit; box-sizing:border-box; width:100%; }
+  .rm-field input[type="text"]:focus, .rm-field select:focus { border-color:#2f6fb0; box-shadow:0 0 0 3px rgba(47,111,176,.12); outline:none; }
+
+  .rm-readonly { display:flex; align-items:center; gap:8px; min-height:34px; padding:0 10px; background:#f6f8fb; border:1px solid #eef1f6; border-radius:9px; font-size:14px; color:#5b6b80; }
+  .rm-readonly-note { margin-left:auto; font-size:11px; color:#9aa5b6; }
+
+  .rm-check { display:flex; align-items:center; gap:8px; min-height:34px; cursor:pointer; }
+  .rm-check input[type="checkbox"] { width:16px; height:16px; margin:0; accent-color:#2f6fb0; cursor:pointer; }
+  .rm-check span { font-size:14px; color:#3d4a5d; }
+
+  .rm-dept-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:12px 14px; }
+  .rm-dept-chip { display:flex; align-items:center; gap:7px; padding:7px 10px; border:1px solid #e0e6ef; border-radius:8px; background:#fff; font-size:13px; color:#3d4a5d; cursor:pointer; }
+  .rm-dept-chip:hover { border-color:#cdd8e8; background:#f9fbfe; }
+  .rm-dept-chip input[type="checkbox"] { width:15px; height:15px; margin:0; accent-color:#2f6fb0; cursor:pointer; }
+  .rm-dept-chip:has(input:checked) { border-color:#2f6fb0; background:#f2f7fd; color:#16233a; font-weight:700; }
+
+  .rm-danger { border:1px solid #f3d9d9; border-radius:10px; overflow:hidden; }
+  .rm-danger-header { padding:9px 14px; background:#fdf5f5; border-bottom:1px solid #f7e3e3; font-size:13px; font-weight:700; color:#c0392b; }
+  .rm-danger-body { padding:12px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .rm-danger-note { font-size:12px; color:#8a94a6; line-height:1.6; max-width:460px; }
+  .rm-danger-btn { margin-left:auto; padding:6px 14px; font-size:13px; font-weight:700; border:1px solid #e5484d; border-radius:8px; background:#fff; color:#e5484d; font-family:inherit; cursor:pointer; }
+  .rm-danger-btn:hover { background:#fdecec; }
+
+  .rm-footer { position:sticky; bottom:-18px; z-index:5; display:flex; align-items:center; gap:12px; margin:12px -18px -18px; padding:12px 18px; background:#fff; border-top:1px solid #eef1f6; box-shadow:0 -1px 4px rgba(20,36,63,.06); }
+  .rm-footer .rm-footer-save { margin-left:auto; }
+</style>
+</head>
+<body>
+
+<!-- ============ ログイン可能な担当者 ============ -->
+<div class="mock-col">
+  <div class="mock-caption">担当者を編集（ログイン可能）</div>
+  <div class="mock-panel">
+    <div class="mock-panel-header"><span class="mock-panel-title">⚙ 設定</span><button class="mock-close">✕</button></div>
+    <div class="settings-page-body">
+      <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary">← 戻る</button></div>
+      <div class="rm-title-row">
+        <span class="rm-title">担当者を編集</span>
+        <span class="rm-badge-login">ログインアカウントあり</span>
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-header">基本情報</div>
+        <div class="rm-card-body">
+          <div class="rm-field">
+            <label for="rm_name">名前</label>
+            <input type="text" id="rm_name" value="常務">
+          </div>
+          <div class="rm-field">
+            <span class="rm-label">メールアドレス</span>
+            <span class="rm-readonly">m2-kusakabe@kusakabe.com<span class="rm-readonly-note">変更不可</span></span>
+          </div>
+          <div class="rm-field">
+            <span class="rm-label">部署</span>
+            <span class="rm-readonly">組立<span class="rm-readonly-note">変更不可</span></span>
+          </div>
+          <div class="rm-field">
+            <label for="rm_tier">役職</label>
+            <select id="rm_tier">
+              <option>部員</option>
+              <option>課長</option>
+              <option selected>部長</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-header">
+          兼任部署
+          <span class="rm-card-note">通知の宛先候補にのみ影響（承認権限は変わりません）</span>
+        </div>
+        <div class="rm-dept-grid">
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>操業</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>設計</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>営業</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>技戦</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept" checked><span>物流</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>品証</span></label>
+          <label class="rm-dept-chip"><input type="checkbox" class="rm_extra_dept"><span>製管</span></label>
+        </div>
+      </div>
+
+      <div class="rm-danger">
+        <div class="rm-danger-header">退職・アカウント削除</div>
+        <div class="rm-danger-body">
+          <span class="rm-danger-note">ログインアカウントを削除します。過去の申請・承認の記録は残ります。</span>
+          <button class="rm-danger-btn">退職処理（アカウント削除）</button>
+        </div>
+      </div>
+
+      <div class="rm-footer">
+        <button class="btn btn-sm btn-secondary">キャンセル</button>
+        <button class="btn btn-primary rm-footer-save">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 非ログイン担当者 ============ -->
+<div class="mock-col">
+  <div class="mock-caption">担当者を編集（非ログイン）</div>
+  <div class="mock-panel">
+    <div class="mock-panel-header"><span class="mock-panel-title">⚙ 設定</span><button class="mock-close">✕</button></div>
+    <div class="settings-page-body">
+      <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary">← 戻る</button></div>
+      <div class="rm-title-row">
+        <span class="rm-title">担当者を編集</span>
+        <span class="rm-badge-nologin">通知のみ（ログイン不可）</span>
+      </div>
+
+      <div class="rm-card">
+        <div class="rm-card-header">基本情報</div>
+        <div class="rm-card-body">
+          <div class="rm-field">
+            <label for="rm_name2">名前</label>
+            <input type="text" id="rm_name2" value="田中">
+          </div>
+          <div class="rm-field">
+            <label for="rm_email">メールアドレス</label>
+            <input type="text" id="rm_email" value="tanaka@kusakabe.com">
+          </div>
+          <div class="rm-field is-top">
+            <label for="rm_department_select">部署</label>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <select id="rm_department_select">
+                <option selected>製管</option>
+                <option>組立</option>
+                <option>その他（自由入力）</option>
+              </select>
+              <input type="text" id="rm_department_other" placeholder="部署名を入力" style="display:none;">
+            </div>
+          </div>
+          <div class="rm-field">
+            <label for="rm_tier2">役職</label>
+            <select id="rm_tier2">
+              <option selected>部員</option>
+              <option>課長</option>
+              <option>部長</option>
+            </select>
+          </div>
+          <div class="rm-field">
+            <span class="rm-label">状態</span>
+            <label class="rm-check">
+              <input type="checkbox" id="rm_active" checked>
+              <span>有効（通知の宛先候補に表示する）</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="rm-danger">
+        <div class="rm-danger-header">削除</div>
+        <div class="rm-danger-body">
+          <span class="rm-danger-note">名簿から削除します。一時的に通知を止めるだけなら「有効」のチェックを外してください。</span>
+          <button class="rm-danger-btn">削除する</button>
+        </div>
+      </div>
+
+      <div class="rm-footer">
+        <button class="btn btn-sm btn-secondary">キャンセル</button>
+        <button class="btn btn-primary rm-footer-save">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

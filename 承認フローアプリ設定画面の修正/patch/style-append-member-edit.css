@@ -1,0 +1,84 @@
+/* =========================================================
+   担当者の編集／追加フォーム（style.css の末尾に追記）
+   ========================================================= */
+
+/* カード */
+.rm-card { border: 1px solid #e5e9f1; border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.rm-card-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 14px; background: #f6f8fb; border-bottom: 1px solid #eef1f6;
+    font-size: 13px; font-weight: 700; color: #16233a;
+}
+.rm-card-header .rm-card-note { font-size: 11px; font-weight: 400; color: #9aa5b6; }
+.rm-card-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* 見出しの状態バッジ */
+.rm-title-row { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
+.rm-title { font-size: 15px; font-weight: 700; color: #16233a; }
+.rm-badge-login, .rm-badge-nologin {
+    display: inline-flex; align-items: center; min-height: 20px; padding: 1px 8px;
+    border-radius: 10px; font-size: 11px; font-weight: 700;
+}
+.rm-badge-login   { background: #eef2f8; color: #2f6fb0; }
+.rm-badge-nologin { background: #f6f8fb; border: 1px solid #e5e9f1; color: #7c8798; }
+
+/* ラベル＋入力の2カラム行 */
+.rm-field { display: grid; grid-template-columns: 96px minmax(0, 1fr); column-gap: 12px; align-items: center; }
+.rm-field.is-top { align-items: start; }
+.rm-field > label, .rm-field > .rm-label { font-size: 13px; color: #5b6b80; }
+.rm-field.is-top > label { line-height: 34px; }
+.rm-field input[type="text"],
+.rm-field select {
+    height: 34px; padding: 0 10px; border: 1px solid #e0e6ef; border-radius: 9px;
+    background: #fff; color: #16233a; font-size: 14px; font-family: inherit;
+    box-sizing: border-box; width: 100%;
+}
+.rm-field input[type="text"]:focus,
+.rm-field select:focus { border-color: #2f6fb0; box-shadow: 0 0 0 3px rgba(47,111,176,.12); outline: none; }
+
+/* 変更できない項目（disabled input の代わりに読み取り専用の行で見せる） */
+.rm-readonly {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 34px; padding: 0 10px;
+    background: #f6f8fb; border: 1px solid #eef1f6; border-radius: 9px;
+    font-size: 14px; color: #5b6b80;
+}
+.rm-readonly-note { margin-left: auto; font-size: 11px; color: #9aa5b6; }
+
+/* チェックボックス行（有効フラグなど） */
+.rm-check { display: flex; align-items: center; gap: 8px; min-height: 34px; cursor: pointer; }
+.rm-check input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: #2f6fb0; cursor: pointer; }
+.rm-check span { font-size: 14px; color: #3d4a5d; }
+
+/* 兼任部署（チップ状のチェック） */
+.rm-dept-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 12px 14px; }
+.rm-dept-chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 10px; border: 1px solid #e0e6ef; border-radius: 8px; background: #fff;
+    font-size: 13px; color: #3d4a5d; cursor: pointer;
+}
+.rm-dept-chip:hover { border-color: #cdd8e8; background: #f9fbfe; }
+.rm-dept-chip input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: #2f6fb0; cursor: pointer; }
+.rm-dept-chip:has(input:checked) { border-color: #2f6fb0; background: #f2f7fd; color: #16233a; font-weight: 700; }
+
+/* 危険な操作 */
+.rm-danger { border: 1px solid #f3d9d9; border-radius: 10px; overflow: hidden; }
+.rm-danger-header { padding: 9px 14px; background: #fdf5f5; border-bottom: 1px solid #f7e3e3; font-size: 13px; font-weight: 700; color: #c0392b; }
+.rm-danger-body { padding: 12px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rm-danger-note { font-size: 12px; color: #8a94a6; line-height: 1.6; max-width: 460px; }
+.rm-danger-btn {
+    margin-left: auto; padding: 6px 14px; font-size: 13px; font-weight: 700;
+    border: 1px solid #e5484d; border-radius: 8px; background: #fff; color: #e5484d;
+    font-family: inherit; cursor: pointer;
+}
+.rm-danger-btn:hover { background: #fdecec; }
+
+/* 保存バー（本文の一番下に固定） */
+.rm-footer {
+    position: sticky; bottom: -18px; z-index: 5;
+    display: flex; align-items: center; gap: 12px;
+    margin: 12px -18px -18px; padding: 12px 18px;
+    background: #fff; border-top: 1px solid #eef1f6;
+    box-shadow: 0 -1px 4px rgba(20,36,63,.06);
+}
+.rm-footer .rm-footer-save { margin-left: auto; }

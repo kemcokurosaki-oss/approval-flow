@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>部署ごとの名簿管理 — 修正後デザイン（静的モック）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* --- ページ（モック表示用。アプリには不要） --- */
+  body { margin:0; padding:40px; background:#e7ebf2; font-family:'Noto Sans JP','メイリオ',Meiryo,sans-serif; color:#20293a; }
+  .mock-panel { width:740px; background:#fff; border:1px solid #e3e8f0; border-radius:14px; box-shadow:0 12px 40px rgba(20,36,63,.14); overflow:hidden; }
+  .mock-panel-header { height:52px; padding:0 16px; border-bottom:1px solid #e3e8f0; display:flex; align-items:center; justify-content:space-between; }
+  .mock-panel-title { font-size:14px; font-weight:700; color:#16233a; }
+  .mock-close { width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:none; border-radius:8px; background:#f1f4f9; color:#6b7789; font-size:15px; cursor:pointer; }
+  .mock-body { padding:18px; }
+  .settings-sticky-header { margin:-18px -18px 10px; padding:10px 18px; background:#fff; box-shadow:0 1px 4px rgba(20,36,63,.08); }
+  .section-title { font-size:15px; font-weight:700; color:#8a94a6; margin-bottom:8px; }
+  .btn { padding:7px 16px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:700; font-family:inherit; }
+  .btn-sm { padding:4px 10px; font-size:13px; }
+  .btn-primary { background:#2f6fb0; color:#fff; }
+  .btn-secondary { background:#eef1f6; color:#5b6b80; }
+  .btn-xs { padding:4px 10px; font-size:13px; font-weight:700; border-radius:7px; border:1px solid #e0e6ef; background:#f6f8fb; color:#5b6b80; cursor:pointer; font-family:inherit; }
+  .settings-flow-group { border:1px solid #e5e9f1; border-radius:10px; margin-bottom:10px; background:#fafafa; }
+  .settings-flow-title { font-weight:700; font-size:14px; color:#16233a; }
+
+  /* ==========================================================
+     ここから下が style.css に追記する内容（patch/style-append.css と同一）
+     ========================================================== */
+  .settings-flow-group.roster-group { padding:0; background:#fff; overflow:hidden; }
+  .roster-group-header { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#f6f8fb; border-bottom:1px solid #eef1f6; }
+  .roster-group-header .settings-flow-title { margin:0; }
+  .roster-group-count { display:inline-flex; align-items:center; justify-content:center; min-width:19px; height:18px; padding:0 6px; border-radius:9px; background:#fff; border:1px solid #e0e6ef; color:#5b6b80; font-size:11px; font-weight:700; }
+
+  .roster-head, .roster-row { display:grid; grid-template-columns:78px 178px 48px 52px minmax(160px,1fr) 52px; column-gap:8px; }
+  .roster-head { align-items:center; padding:7px 14px; background:#fbfcfe; border-bottom:1px solid #eef1f6; font-size:12px; font-weight:700; color:#9aa5b6; letter-spacing:.04em; }
+  .roster-row { align-items:start; padding:9px 14px; border-bottom:1px solid #f4f6fa; }
+  .roster-row:last-child { border-bottom:none; }
+
+  .roster-ellip { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .roster-name  { font-size:14px; font-weight:700; color:#16233a; line-height:22px; }
+  .roster-email { font-size:13px; color:#7c8798; line-height:22px; }
+  .roster-tier  { font-size:13px; color:#5b6b80; line-height:22px; }
+  .roster-login { line-height:22px; }
+  .roster-login-yes, .roster-login-no { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:10px; font-size:12px; font-weight:700; }
+  .roster-login-yes { background:#eef2f8; color:#5b6b80; }
+  .roster-login-no  { background:#f6f8fb; border:1px solid #eef1f6; color:#b6c1d2; }
+
+  .roster-mark { font-size:10px; font-weight:700; padding:0 4px; border-radius:4px; margin-left:4px; }
+  .roster-mark-concurrent { background:#fdf6e3; color:#8a6d00; }
+  .roster-mark-inactive   { background:#fdecec; color:#c0392b; }
+
+  .roster-badges { display:flex; flex-direction:column; gap:4px; min-width:0; padding-top:1px; }
+  .roster-badge-line { display:grid; grid-template-columns:34px minmax(0,1fr); column-gap:6px; align-items:start; }
+  .roster-badge-label { font-size:11px; font-weight:700; line-height:22px; }
+  .roster-badge-label-approver { color:#2f6fb0; }
+  .roster-badge-label-fixed    { color:#9aa5b6; }
+  .roster-chips { display:flex; gap:4px; flex-wrap:wrap; min-width:0; }
+  .roster-chip-approver, .roster-chip-fixed { display:inline-flex; align-items:center; box-sizing:border-box; min-height:22px; padding:1px 8px; border-radius:6px; font-size:12px; line-height:1.6; white-space:nowrap; flex-shrink:0; }
+  .roster-chip-approver { background:#2f6fb0; color:#fff; font-weight:700; }
+  .roster-chip-fixed    { background:#f6f8fb; border:1px solid #e5e9f1; color:#5b6b80; }
+  .roster-chip-fixed.is-unselected { border-style:dashed; color:#9aa5b6; }
+  .roster-none { font-size:13px; color:#c3ccd9; line-height:22px; }
+
+  .btn.btn-roster-add-login { background:#2ba55d; color:#fff; }
+  .btn.btn-roster-add-login:hover:not(:disabled) { background:#219a52; }
+</style>
+</head>
+<body>
+
+<div class="mock-panel">
+  <div class="mock-panel-header">
+    <span class="mock-panel-title">⚙ 設定</span>
+    <button class="mock-close">✕</button>
+  </div>
+  <div class="mock-body">
+    <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary">← 戻る</button></div>
+    <div class="section-title">部署ごとの名簿管理</div>
+
+    <div style="display:flex; gap:8px; margin:10px 0 16px; flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm">＋ 非ログイン担当者を追加</button>
+      <button class="btn btn-sm btn-roster-add-login">＋ ログイン可能な担当者を追加</button>
+    </div>
+
+    <div class="settings-flow-group roster-group">
+      <div class="roster-group-header">
+        <span class="settings-flow-title">組立</span>
+        <span class="roster-group-count">11</span>
+      </div>
+      <div class="roster-head">
+        <div>名前</div><div>メールアドレス</div><div>役職</div><div>ログイン</div><div>承認者・固定宛先</div><div></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">センティル</div>
+        <div class="roster-email roster-ellip">senthilkumar@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">宮本</div>
+        <div class="roster-email roster-ellip">m-miyamoto@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">桂</div>
+        <div class="roster-email roster-ellip">n-katsura@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">古賀</div>
+        <div class="roster-email roster-ellip">y-koga@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">香西</div>
+        <div class="roster-email roster-ellip">m-kousai@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">山下</div>
+        <div class="roster-email roster-ellip">y-yamashita@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges">
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-fixed">宛先</span>
+            <span class="roster-chips"><span class="roster-chip-fixed">出荷確定申請</span></span>
+          </div>
+        </div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">常務</div>
+        <div class="roster-email roster-ellip">m2-kusakabe@kusakabe.com</div>
+        <div class="roster-tier">部長</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges">
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-approver">承認</span>
+            <span class="roster-chips"><span class="roster-chip-approver">組立完了申請</span></span>
+          </div>
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-fixed">宛先</span>
+            <span class="roster-chips">
+              <span class="roster-chip-fixed">試運転完了申請</span>
+              <span class="roster-chip-fixed">出荷確認会議開催案内</span>
+              <span class="roster-chip-fixed">簡易検査開催案内</span>
+              <span class="roster-chip-fixed">外観検査開催案内</span>
+              <span class="roster-chip-fixed">出荷確定申請</span>
+            </span>
+          </div>
+        </div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">早川</div>
+        <div class="roster-email roster-ellip">t-hayakawa@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">長谷川</div>
+        <div class="roster-email roster-ellip">r-hasegawa@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">米澤</div>
+        <div class="roster-email roster-ellip">h-yonezawa@kusakabe.com</div>
+        <div class="roster-tier">課長</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges">
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-approver">承認</span>
+            <span class="roster-chips"><span class="roster-chip-approver">組立完了申請</span></span>
+          </div>
+        </div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">廣田</div>
+        <div class="roster-email roster-ellip">h-hirota@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+    </div>
+
+    <div class="settings-flow-group roster-group">
+      <div class="roster-group-header">
+        <span class="settings-flow-title">検査（状態バリエーションの例）</span>
+        <span class="roster-group-count">3</span>
+      </div>
+      <div class="roster-head">
+        <div>名前</div><div>メールアドレス</div><div>役職</div><div>ログイン</div><div>承認者・固定宛先</div><div></div>
+      </div>
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">佐々木<span class="roster-mark roster-mark-concurrent" title="兼務">兼</span></div>
+        <div class="roster-email roster-ellip">sasaki@kusakabe.com</div>
+        <div class="roster-tier">課長</div>
+        <div class="roster-login"><span class="roster-login-yes">可</span></div>
+        <div class="roster-badges">
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-fixed">宛先</span>
+            <span class="roster-chips">
+              <span class="roster-chip-fixed">簡易検査開催案内</span>
+              <span class="roster-chip-fixed is-unselected" title="固定宛先の候補（未選択）">外観検査開催案内</span>
+            </span>
+          </div>
+        </div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">田中</div>
+        <div class="roster-email roster-ellip">tanaka@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-no">—</span></div>
+        <div class="roster-badges">
+          <div class="roster-badge-line">
+            <span class="roster-badge-label roster-badge-label-fixed">宛先</span>
+            <span class="roster-chips"><span class="roster-chip-fixed">出荷確定申請</span></span>
+          </div>
+        </div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+      <div class="roster-row">
+        <div class="roster-name roster-ellip">渡辺<span class="roster-mark roster-mark-inactive" title="無効">無</span></div>
+        <div class="roster-email roster-ellip">watanabe@kusakabe.com</div>
+        <div class="roster-tier">部員</div>
+        <div class="roster-login"><span class="roster-login-no">—</span></div>
+        <div class="roster-badges"><span class="roster-none">—</span></div>
+        <div><button class="btn-xs">編集</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
