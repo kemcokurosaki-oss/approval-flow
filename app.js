@@ -3516,7 +3516,7 @@ function mergeRosterRows(profileRows, recipientRows) {
             byEmail.set(key, {
                 profileId: null, recipientId: r.id, source: 'recipient',
                 name: r.name, email: r.email, department: r.department,
-                tier: r.role, profileRole: null, active: r.active
+                tier: r.role, profileRole: null, active: r.active, extraDepartments: []
             });
         }
     });
