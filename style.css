@@ -2378,3 +2378,71 @@
 .recip-footer-count { font-size: 13px; color: #5b6b80; }
 .recip-footer-count strong { color: #16233a; font-size: 14px; }
 .recip-footer .btn { margin-left: auto; }
+
+/* =========================================================
+   変更履歴（style.css の末尾に追記）
+   ========================================================= */
+
+/* 絞り込みバー */
+.audit-filter {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 12px; margin-bottom: 12px;
+    border: 1px solid #e5e9f1; border-radius: 10px; background: #fbfcfe;
+}
+.audit-filter-label { font-size: 11px; font-weight: 700; color: #9aa5b6; letter-spacing: .04em; }
+.audit-filter select,
+.audit-filter input[type="date"] {
+    height: 30px; padding: 0 8px; border: 1px solid #e0e6ef; border-radius: 8px;
+    background: #fff; color: #3d4a5d; font-size: 13px; font-family: inherit;
+}
+.audit-filter-sep { font-size: 13px; color: #9aa5b6; }
+.audit-filter-clear {
+    margin-left: auto; padding: 5px 12px; font-size: 12px; font-weight: 700;
+    border: 1px solid #e0e6ef; border-radius: 7px; background: #fff; color: #5b6b80;
+    font-family: inherit; cursor: pointer;
+}
+.audit-filter-clear:hover { background: #f6f8fb; color: #16233a; }
+
+/* 一覧 */
+.audit-list { border: 1px solid #e5e9f1; border-radius: 10px; overflow: hidden; }
+.audit-head, .audit-row {
+    display: grid; grid-template-columns: 52px 96px 92px minmax(0, 1fr);
+    column-gap: 10px;
+}
+.audit-head {
+    align-items: center; padding: 8px 14px;
+    background: #fbfcfe; border-bottom: 1px solid #eef1f6;
+    font-size: 12px; font-weight: 700; color: #9aa5b6; letter-spacing: .04em;
+}
+.audit-day-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px; background: #f6f8fb;
+    border-top: 1px solid #eef1f6; border-bottom: 1px solid #eef1f6;
+}
+.audit-list .audit-day-header:first-of-type { border-top: none; }
+.audit-day-date { font-size: 13px; font-weight: 700; color: #16233a; }
+.audit-day-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 19px; height: 18px; padding: 0 6px; border-radius: 9px;
+    background: #fff; border: 1px solid #e0e6ef; color: #5b6b80; font-size: 11px; font-weight: 700;
+}
+.audit-row { align-items: start; padding: 9px 14px; border-bottom: 1px solid #f4f6fa; }
+.audit-row:last-child { border-bottom: none; }
+.audit-time { font-size: 13px; color: #5b6b80; font-variant-numeric: tabular-nums; line-height: 20px; }
+.audit-user { font-size: 13px; color: #16233a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 20px; }
+.audit-cat-cell { line-height: 20px; }
+.audit-summary { font-size: 13px; color: #3d4a5d; line-height: 1.6; text-wrap: pretty; }
+
+/* 項目バッジ（カテゴリ別） */
+.audit-cat {
+    display: inline-flex; align-items: center; min-height: 20px; padding: 1px 8px;
+    border-radius: 6px; font-size: 11px; font-weight: 700; white-space: nowrap;
+    background: #f1f4f9; color: #5b6b80;
+}
+.audit-cat.cat-roster_edit      { background: #eef2f8; color: #2f6fb0; }
+.audit-cat.cat-fixed_recipients { background: #f6edfa; color: #8e44ad; }
+.audit-cat.cat-flow_toggle      { background: #e8f6ee; color: #166534; }
+.audit-cat.cat-recipient_master { background: #fdf6e3; color: #8a6d00; }
+.audit-cat.cat-room_email       { background: #f1f4f9; color: #5b6b80; }
+
+.audit-empty { padding: 14px; font-size: 13px; color: #8a94a6; text-align: center; }
