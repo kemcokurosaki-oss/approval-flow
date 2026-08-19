@@ -262,11 +262,13 @@
     .cfg-btn-green { background: #2ba55d; }
     .cfg-group-header { display: flex; align-items: center; gap: 8px; padding: 9px 18px; background: #eef2f8; font-size: 13px; font-weight: 700; color: #3d4a5d; }
     .cfg-group-count { background: #fff; border-radius: 10px; padding: 1px 8px; font-size: 11px; color: #5b6b80; }
-    .cfg-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-    .cfg-table th { text-align: left; font-size: 11px; font-weight: 700; color: #8a94a6; padding: 8px 18px; border-bottom: 1px solid #eef1f6; white-space: nowrap; }
-    .cfg-table td { padding: 9px 18px; border-bottom: 1px solid #f3f5f9; vertical-align: middle; }
-    .cfg-name { font-weight: 700; color: #16233a; white-space: nowrap; }
-    .cfg-mail { color: #8a94a6; white-space: nowrap; }
+    /* 名簿テーブル：実際の画面と同じく列幅を固定し、はみ出した文字は省略記号（…）で切る（横スクロール不要） */
+    .cfg-roster-head, .cfg-roster-row { display: grid; grid-template-columns: 78px 168px 42px 44px minmax(150px, 1fr) 48px; column-gap: 8px; padding: 8px 18px; border-bottom: 1px solid #f3f5f9; }
+    .cfg-roster-head { align-items: center; background: #fbfcfe; color: #9aa5b6; font-weight: 700; font-size: 11px; }
+    .cfg-roster-row { align-items: start; font-size: 12.5px; }
+    .cfg-roster-ellip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cfg-name { font-weight: 700; color: #16233a; }
+    .cfg-mail { color: #8a94a6; }
     .cfg-edit { border: 1px solid #d7dee9; border-radius: 6px; padding: 3px 10px; font-size: 11px; color: #3d4a5d; background: #fff; white-space: nowrap; }
 
     /* 実際の名簿画面の見た目に合わせたマーク・バッジ */
