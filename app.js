@@ -3572,17 +3572,47 @@ async function showRosterScreen() {
     const departments = sortDepartments([...new Set(rows.flatMap(r => [r.department, ...(r.extraDepartments || [])]))]);
 
     const renderRow = (r, isConcurrent) => {
-        const badges = [...getApproverBadges(r), ...getFixedRecipientBadges(r)];
-        const badgesHtml = badges.map(b => `<span class="recipient-tag" style="margin-right:4px;">${esc(b)}</span>`).join('');
         const key = r.profileId ? `profile:${r.profileId}` : `recipient:${r.recipientId}`;
-        const loginNote = (r.source === 'profile' || r.source === 'both') ? '・ログイン可' : '';
-        const concurrentNote = isConcurrent ? ' <span style="color:#8a6d00;">（兼務）</span>' : '';
+        const canLogin = (r.source === 'profile' || r.source === 'both');
+
+        // 「承認者: 〇〇」「固定宛先: 〇〇（未選択）」からフロー名だけを取り出す
+        const approverFlows = getApproverBadges(r).map(b => b.replace(/^承認者:\s*/, ''));
+        const fixedFlows = getFixedRecipientBadges(r).map(b => ({
+            label: b.replace(/^固定宛先:\s*/, '').replace(/（未選択）$/, ''),
+            selected: !/（未選択）$/.test(b)
+        }));
+
+        const approverLine = approverFlows.length ? `
+            <div class="roster-badge-line">
+                <span class="roster-badge-label roster-badge-label-approver">承認</span>
+                <span class="roster-chips">${approverFlows.map(f => `<span class="roster-chip-approver">${esc(f)}</span>`).join('')}</span>
+            </div>` : '';
+
+        const fixedLine = fixedFlows.length ? `
+            <div class="roster-badge-line">
+                <span class="roster-badge-label roster-badge-label-fixed">宛先</span>
+                <span class="roster-chips">${fixedFlows.map(f =>
+                    `<span class="roster-chip-fixed${f.selected ? '' : ' is-unselected'}"${f.selected ? '' : ' title="固定宛先の候補（未選択）"'}>${esc(f.label)}</span>`
+                ).join('')}</span>
+            </div>` : '';
+
+        const badgesHtml = (approverLine || fixedLine)
+            ? approverLine + fixedLine
+            : '<span class="roster-none">—</span>';
+
+        const marks = (isConcurrent ? '<span class="roster-mark roster-mark-concurrent" title="兼務">兼</span>' : '')
+                    + (r.active === false ? '<span class="roster-mark roster-mark-inactive" title="無効">無</span>' : '');
+
         return `
-            <div class="settings-check-row" style="justify-content:space-between; flex-wrap:wrap;">
-                <span>${esc(r.name)}${concurrentNote}${r.active === false ? ' <span style="color:#e74c3c;">（無効）</span>' : ''}
-                    <span style="color:#999; font-size:13px;">${esc(r.email)}・${esc(TIER_LABELS[r.tier] || r.tier)}${loginNote}</span>
-                    ${badgesHtml}</span>
-                <button class="btn btn-xs btn-outline" onclick="editRosterMember('${key}')">編集</button>
+            <div class="roster-row">
+                <div class="roster-name roster-ellip" title="${esc(r.name)}">${esc(r.name)}${marks}</div>
+                <div class="roster-email roster-ellip" title="${esc(r.email)}">${esc(r.email)}</div>
+                <div class="roster-tier">${esc(TIER_LABELS[r.tier] || r.tier)}</div>
+                <div class="roster-login">${canLogin
+                    ? '<span class="roster-login-yes">可</span>'
+                    : '<span class="roster-login-no">—</span>'}</div>
+                <div class="roster-badges">${badgesHtml}</div>
+                <div><button class="btn-xs" onclick="editRosterMember('${key}')">編集</button></div>
             </div>
         `;
     };
@@ -3593,8 +3623,19 @@ async function showRosterScreen() {
         const items = [...mainItems, ...concurrentItems].sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
         const itemsHtml = items.map(r => renderRow(r, r.department !== dept)).join('');
         return `
-            <div class="settings-flow-group">
-                <div class="settings-flow-title">${esc(dept)}</div>
+            <div class="settings-flow-group roster-group">
+                <div class="roster-group-header">
+                    <span class="settings-flow-title">${esc(dept)}</span>
+                    <span class="roster-group-count">${items.length}</span>
+                </div>
+                <div class="roster-head">
+                    <div>名前</div>
+                    <div>メールアドレス</div>
+                    <div>役職</div>
+                    <div>ログイン</div>
+                    <div>承認者・固定宛先</div>
+                    <div></div>
+                </div>
                 ${itemsHtml}
             </div>`;
     }).join('');
@@ -3602,10 +3643,9 @@ async function showRosterScreen() {
     body.innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">部署ごとの名簿管理</div>
-        <div class="settings-note">ログインアカウントの有無に関わらず、部署単位で全担当者を管理します。ログイン可能な担当者の役職を変更すると、承認フローの判定にもそのまま反映されます。</div>
-        <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; margin:10px 0 16px; flex-wrap:wrap;">
             <button class="btn btn-primary btn-sm" onclick="addRosterMember()">＋ 非ログイン担当者を追加</button>
-            <button class="btn btn-secondary btn-sm" onclick="addLoginRosterMember()">＋ ログイン可能な担当者を追加</button>
+            <button class="btn btn-sm btn-roster-add-login" onclick="addLoginRosterMember()">＋ ログイン可能な担当者を追加</button>
         </div>
         ${groupsHtml}
     `;
