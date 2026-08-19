@@ -3604,10 +3604,11 @@ async function editRosterMember(key) {
     const body = document.getElementById('settings_body');
 
     if (kind === 'profile') {
-        const { data: record } = await db.from('profiles').select('id, name, email, department, role').eq('id', id).single();
+        const { data: record } = await db.from('profiles').select('id, name, email, department, role, extra_departments').eq('id', id).single();
         if (!record) { showToast('データが見つかりません', 'error'); return; }
         const tierOptions = DEPT_TIER_TO_PROFILE_ROLE[record.department] ? ['staff', 'manager', 'director'] : ['staff'];
         const currentTier = roleToTier(record.role);
+        const extraDepts = record.extra_departments || [];
         body.innerHTML = `
             <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
             <div class="section-title" style="margin-top:10px;">担当者を編集</div>
@@ -3620,6 +3621,16 @@ async function editRosterMember(key) {
                 <select id="rm_tier" ${tierOptions.length === 1 ? 'disabled' : ''}>
                     ${tierOptions.map(t => `<option value="${t}" ${t === currentTier ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
                 </select>
+            </div>
+            <div class="form-group">
+                <label>兼任部署（複数選択可）</label>
+                <div class="settings-note" style="margin-bottom:6px;">通知の宛先候補として、他部署の固定宛先グループにも表示されるようになります（承認権限には影響しません）。</div>
+                ${DEPARTMENT_ORDER.filter(d => d !== record.department).map(d => `
+                    <label class="settings-check-row">
+                        <input type="checkbox" class="rm_extra_dept" value="${esc(d)}" ${extraDepts.includes(d) ? 'checked' : ''}>
+                        <span>${esc(d)}</span>
+                    </label>
+                `).join('')}
             </div>
             <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
             <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteLoginRosterMember('${id}')">退職処理（アカウント削除）</button>
