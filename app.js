@@ -5094,26 +5094,24 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     // 全開催案内共通（常務・製管・品証・技戦は設定画面で個人単位に選択）
     const dyn = getDynamicRecipientPlan(flowType);
     await addFixedRecipientsPreview();
-    if (dyn.kumitate) for (const o of kumitateOwners) await addPbyName(o);
-    if (dyn.shiunten) for (const o of shiuntenOwnersFallback) await addPbyName(o);
+    if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);
+    if (dyn.shiunten_owner) for (const o of shiuntenOwnersFallback) await addPbyName(o);
     if (dyn.sales)    await addOwnerByName(salesOwner);
-    if (dyn.sekkei) {
-        for (const o of sekkeiOwnersFallback) await addOwnerByName(o);
-        // 設計管理職: 担当者の上長を members テーブルから取得
-        await addSekkeiSupervisors();
-    }
+    if (dyn.sekkei_owner) for (const o of sekkeiOwnersFallback) await addOwnerByName(o);
+    // 設計管理職: 担当者の上長を members テーブルから取得
+    if (dyn.sekkei_manager) await addSekkeiSupervisors();
 
     // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
-    if (dyn.kumitate && kumitateOwners.length > 0) {
+    if (dyn.kumitate_manager && kumitateOwners.length > 0) {
         await addP({ role: 'assembly_manager' });
     }
-    if (dyn.shiunten && shiuntenOwnersFallback.length > 0) {
+    if (dyn.shiunten_manager && shiuntenOwnersFallback.length > 0) {
         await addP({ role: 'operations_manager' });
         await addP({ role: 'operations_director' });
     }
 
     // 複数機械選択時は残りの機械の組立担当者も追加
-    if (dyn.kumitate) {
+    if (dyn.kumitate_owner) {
         for (let i = 1; i < machineNames.length; i++) {
             const { data: mt } = await db.from('tasks')
                 .select('owner').eq('project_number', projectNum).eq('text', '機械組立').eq('machine', machineNames[i]);
