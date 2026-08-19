@@ -3420,9 +3420,16 @@ async function showRecipientsDetailScreen(flowType) {
         }
         groupsHtml.push(`
             <div class="settings-flow-group">
-                <div class="settings-flow-title">${esc(g.label)}</div>
+                <div class="settings-flow-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>${esc(g.label)}</span>
+                    ${candidates.length > 1 ? `
+                        <span>
+                            <button type="button" class="btn btn-xs btn-outline" onclick="toggleGroupCheckboxes('${g.key}', true)">全員ON</button>
+                            <button type="button" class="btn btn-xs btn-outline" onclick="toggleGroupCheckboxes('${g.key}', false)">全員OFF</button>
+                        </span>` : ''}
+                </div>
                 ${candidates.length ? candidates.map(c => `
-                    <label class="settings-check-row">
+                    <label class="settings-check-row" data-group-key="${g.key}">
                         <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}>
                         <span>${esc(c.name || '—')}</span>
                         <span style="color:#999; font-size:13px;">${esc(c.email || '')}</span>
