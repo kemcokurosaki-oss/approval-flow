@@ -3464,12 +3464,20 @@ async function showRecipientsDetailScreen(flowType) {
     `;
 }
 
+// 固定宛先グループ内のチェックボックスを一括ON/OFFする
+function toggleGroupCheckboxes(groupKey, checked) {
+    document.querySelectorAll(`#settings_body [data-group-key="${groupKey}"] input[type="checkbox"]`)
+        .forEach(cb => { cb.checked = checked; });
+}
+
 async function saveRecipientDetail(flowType) {
     if (requireLogin()) return;
     const checkedBoxes = [...document.querySelectorAll('#settings_body [data-recipient-kind]:checked')];
     const profileIds   = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'profile').map(cb => cb.dataset.recipientId);
     const recipientIds = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'recipient').map(cb => cb.dataset.recipientId);
     const names = checkedBoxes.map(cb => cb.closest('label')?.querySelector('span')?.textContent || '').filter(Boolean);
+
+    if (checkedBoxes.length === 0 && !confirm('固定宛先が0件になります。このまま保存しますか？')) return;
 
     const dynGroups = DYNAMIC_RECIPIENT_GROUPS[flowType] || [];
     const dynValue = {};
