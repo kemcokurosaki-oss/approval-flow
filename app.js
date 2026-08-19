@@ -3475,7 +3475,6 @@ async function showRecipientsDetailScreen(flowType) {
         <div class="recip-group">
             <div class="recip-group-header">
                 <span class="recip-group-title">工番担当者の自動通知</span>
-                <span class="recip-group-kind">部署単位でON / OFF</span>
             </div>
             ${dynGroups.map(g => `
                 <label class="recip-dyn-row">
