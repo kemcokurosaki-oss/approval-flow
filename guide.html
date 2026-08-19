@@ -975,39 +975,49 @@
             <p>部署ごとに担当者を一覧表示し、追加・編集ができます。ログインアカウント（profiles）と、ログインしない連絡先のみの名簿（メール転送のみ等）をまとめて1つの一覧として管理します。</p>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup" style="max-width:640px;">
+            <div class="mockup" style="max-width:600px;">
                 <div class="cfg-toolbar">
                     <span class="cfg-btn cfg-btn-blue">＋ 非ログイン担当者を追加<span class="callout">1</span></span>
                     <span class="cfg-btn cfg-btn-green">＋ ログイン可能な担当者を追加</span>
                 </div>
                 <div class="cfg-group-header">組立 <span class="cfg-group-count">4</span><span class="callout">2</span></div>
-                <div style="overflow-x:auto;">
-                <table class="cfg-table" style="min-width:660px;">
-                    <tr><th>名前</th><th>メールアドレス</th><th>役職<span class="callout">3</span></th><th>ログイン<span class="callout">4</span></th><th>承認者・固定宛先<span class="callout">5</span></th><th></th></tr>
-                    <tr>
-                        <td class="cfg-name">山田</td><td class="cfg-mail">y-yamada@kusakabe.com</td><td>部員</td>
-                        <td><span class="cfg-login-yes">可</span></td><td>—</td><td><span class="cfg-edit">編集</span></td>
-                    </tr>
-                    <tr>
-                        <td class="cfg-name">佐藤<span class="cfg-mark cfg-mark-dup" title="兼務">兼</span><span class="callout">6</span></td><td class="cfg-mail">s-sato@kusakabe.com</td><td>部員</td>
-                        <td><span class="cfg-login-yes">可</span></td>
-                        <td><div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">出荷確定申請</span></div></td>
-                        <td><span class="cfg-edit">編集</span></td>
-                    </tr>
-                    <tr>
-                        <td class="cfg-name">田中</td><td class="cfg-mail">t-tanaka@kusakabe.com</td><td>部長</td>
-                        <td><span class="cfg-login-yes">可</span></td>
-                        <td>
-                            <div class="cfg-badge-line"><span class="cfg-badge-label is-approver">承認</span><span class="cfg-chip-approver">組立完了申請</span></div>
-                            <div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">試運転完了申請</span></div>
-                        </td>
-                        <td><span class="cfg-edit">編集</span></td>
-                    </tr>
-                    <tr>
-                        <td class="cfg-name">鈴木<span class="cfg-mark cfg-mark-off" title="無効">無</span><span class="callout">6</span></td><td class="cfg-mail">t-suzuki@kusakabe.com</td><td>部員</td>
-                        <td><span class="cfg-login-no">—</span></td><td>—</td><td><span class="cfg-edit">編集<span class="callout">7</span></span></td>
-                    </tr>
-                </table>
+                <div class="cfg-roster-head">
+                    <div>名前</div><div>メールアドレス</div><div>役職<span class="callout">3</span></div><div>ログイン<span class="callout">4</span></div><div>承認者・固定宛先<span class="callout">5</span></div><div></div>
+                </div>
+                <div class="cfg-roster-row">
+                    <div class="cfg-name cfg-roster-ellip" title="山田">山田</div>
+                    <div class="cfg-mail cfg-roster-ellip" title="y-yamada@kusakabe.com">y-yamada@kusakabe.com</div>
+                    <div>部員</div>
+                    <div><span class="cfg-login-yes">可</span></div>
+                    <div>—</div>
+                    <div><span class="cfg-edit">編集</span></div>
+                </div>
+                <div class="cfg-roster-row">
+                    <div class="cfg-name cfg-roster-ellip">佐藤<span class="cfg-mark cfg-mark-dup" title="兼務">兼</span><span class="callout">6</span></div>
+                    <div class="cfg-mail cfg-roster-ellip" title="s-sato@kusakabe.com">s-sato@kusakabe.com</div>
+                    <div>部員</div>
+                    <div><span class="cfg-login-yes">可</span></div>
+                    <div><div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">出荷確定申請</span></div></div>
+                    <div><span class="cfg-edit">編集</span></div>
+                </div>
+                <div class="cfg-roster-row">
+                    <div class="cfg-name cfg-roster-ellip" title="田中">田中</div>
+                    <div class="cfg-mail cfg-roster-ellip" title="t-tanaka@kusakabe.com">t-tanaka@kusakabe.com</div>
+                    <div>部長</div>
+                    <div><span class="cfg-login-yes">可</span></div>
+                    <div>
+                        <div class="cfg-badge-line"><span class="cfg-badge-label is-approver">承認</span><span class="cfg-chip-approver">組立完了申請</span></div>
+                        <div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">試運転完了申請</span></div>
+                    </div>
+                    <div><span class="cfg-edit">編集</span></div>
+                </div>
+                <div class="cfg-roster-row">
+                    <div class="cfg-name cfg-roster-ellip">鈴木<span class="cfg-mark cfg-mark-off" title="無効">無</span><span class="callout">6</span></div>
+                    <div class="cfg-mail cfg-roster-ellip" title="t-suzuki@kusakabe.com">t-suzuki@kusakabe.com</div>
+                    <div>部員</div>
+                    <div><span class="cfg-login-no">—</span></div>
+                    <div>—</div>
+                    <div><span class="cfg-edit">編集<span class="callout">7</span></span></div>
                 </div>
                 <div class="mockup-caption">部署ごとの名簿管理（例）：部署単位でグループ化され、承認者・固定宛先の設定状況がバッジで一目で分かる</div>
             </div>
