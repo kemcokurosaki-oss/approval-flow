@@ -3689,7 +3689,8 @@ async function saveRosterMember(key) {
             const tier = document.getElementById('rm_tier').value;
             const roleMap = DEPT_TIER_TO_PROFILE_ROLE[current.department];
             const role = (roleMap && roleMap[tier]) ? roleMap[tier] : 'staff';
-            const { error } = await db.from('profiles').update({ name, role }).eq('id', id);
+            const extraDepartments = [...document.querySelectorAll('.rm_extra_dept:checked')].map(cb => cb.value);
+            const { error } = await db.from('profiles').update({ name, role, extra_departments: extraDepartments }).eq('id', id);
             if (error) throw error;
             await logSettingsChange('roster_edit', `${current.department}の${name}を「${TIER_LABELS[tier]}」に変更`);
         } else {
