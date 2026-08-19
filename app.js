@@ -3394,7 +3394,7 @@ function showRecipientsListScreen() {
     document.getElementById('settings_body').innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">通知の宛先設定</div>
-        <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます。工番の担当者（組立・操業・営業・設計）は別途自動で追加されますが、部署単位でON/OFFも切り替えられます。</div>
+        <div class="settings-note">開催案内・完了通知で必ず宛先に含める人を、フロー種別ごとに個人単位で選びます。工番の担当者（組立・操業・営業・設計）は別途自動で追加されますが、担当者本人・その上長を分けてON/OFFも切り替えられます。</div>
         <div class="settings-menu">${cards}</div>
     `;
 }
