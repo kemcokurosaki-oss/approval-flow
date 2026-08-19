@@ -3399,17 +3399,12 @@ async function showRecipientsDetailScreen(flowType) {
             const { data } = await db.from('profiles').select('id, name, email').eq('role', g.role);
             candidates = (data || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile', checked: plan.profileIds.includes(p.id) }));
         } else {
-            // department種別: ログインアカウント(profiles)と非ログイン名簿(notification_recipients)の両方を候補にする
-            const { data: profRows } = await db.from('profiles').select('id, name, email').eq('department', g.department);
-            let extraProfRows = [];
-            if (g.extraProfileEmails && g.extraProfileEmails.length > 0) {
-                const { data } = await db.from('profiles').select('id, name, email').in('email', g.extraProfileEmails);
-                extraProfRows = (data || []).filter(e => !(profRows || []).some(p => p.id === e.id));
-            }
+            // department種別: ログインアカウント(profiles、本来の部署 or 兼任部署が一致)と非ログイン名簿(notification_recipients)の両方を候補にする
+            const { data: profRows } = await db.from('profiles').select('id, name, email')
+                .or(`department.eq.${g.department},extra_departments.cs.{${g.department}}`);
             const { data: recRows } = await db.from('notification_recipients').select('id, name, email').eq('department', g.department).eq('active', true);
             candidates = [
                 ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
-                ...extraProfRows.map(p =>       ({ id: p.id, name: p.name, email: p.email, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
                 ...(recRows  || []).map(r => ({ id: r.id, name: r.name, email: r.email, kind: 'recipient', checked: plan.recipientIds.includes(r.id) }))
             ];
         }
