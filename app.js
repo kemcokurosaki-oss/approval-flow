@@ -606,7 +606,7 @@ async function bootApp(session) {
         profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;
 
-    // 製管2名のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
+    // 製管2名+常務のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
         document.getElementById('dev_bar').style.display = 'flex';
         document.getElementById('app').classList.add('has-dev-bar');
