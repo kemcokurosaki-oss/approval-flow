@@ -3536,7 +3536,7 @@ function getFixedRecipientBadges(row) {
         for (const g of groups) {
             const isCandidate = g.kind === 'role'
                 ? row.profileRole === g.role
-                : (row.department === g.department || (g.extraProfileEmails && row.profileId && g.extraProfileEmails.includes(row.email)));
+                : (row.department === g.department || (row.extraDepartments || []).includes(g.department));
             if (!isCandidate) continue;
             const plan = getFixedRecipientPlan(flowType);
             const selected = (row.profileId && plan.profileIds.includes(row.profileId))
