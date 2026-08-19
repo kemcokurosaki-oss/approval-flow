@@ -369,21 +369,25 @@ function getFixedRecipientPlan(flowType) {
     return { profileIds: plan.profileIds || [], recipientIds: plan.recipientIds || [] };
 }
 
-// フロー種別ごとに、工番の担当者から自動で宛先に加わるグループ（部署単位でON/OFF可能）
+// フロー種別ごとに、工番の担当者から自動で宛先に加わるグループ（担当者本人／上長を分けてON/OFF可能）
+// assemblyのkumitateは組立担当者自身が申請するフローのため上長（組立課長）は含まない
 const DYNAMIC_RECIPIENT_GROUPS = {
-    assembly:          ['kumitate', 'shiunten', 'sales', 'sekkei'],
-    test_run:          ['kumitate', 'shiunten', 'sales', 'sekkei'],
-    shipping_meeting:  ['kumitate', 'shiunten', 'sales', 'sekkei'],
-    simple_inspection: ['kumitate', 'sales', 'sekkei'],
-    inspection:        ['kumitate', 'shiunten', 'sales', 'sekkei'],
-    shipping:          ['kumitate', 'shiunten', 'sales', 'sekkei']
+    assembly:          ['kumitate_owner', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
+    test_run:          ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
+    shipping_meeting:  ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
+    simple_inspection: ['kumitate_owner', 'kumitate_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
+    inspection:        ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager'],
+    shipping:          ['kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'sales', 'sekkei_owner', 'sekkei_manager']
     // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ）
 };
 const DYNAMIC_GROUP_LABELS = {
-    kumitate: '組立担当者（組立課長を含む）',
-    shiunten: '操業担当者（操業課長・部長を含む）',
-    sales:    '営業担当者',
-    sekkei:   '設計担当者（上長への通知を含む）'
+    kumitate_owner:   '組立担当者（本人）',
+    kumitate_manager: '組立課長・部長',
+    shiunten_owner:   '操業担当者（本人）',
+    shiunten_manager: '操業課長・部長',
+    sales:            '営業担当者',
+    sekkei_owner:     '設計担当者（本人）',
+    sekkei_manager:   '設計担当者の上長'
 };
 // フロー種別ごとの動的宛先ON/OFF設定（未設定のグループはON扱い＝従来通りの動作）
 function getDynamicRecipientPlan(flowType) {
