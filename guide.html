@@ -966,54 +966,55 @@
 
             <h3>①部署ごとの名簿管理</h3>
             <p>部署ごとに担当者を一覧表示し、追加・編集ができます。ログインアカウント（profiles）と、ログインしない連絡先のみの名簿（メール転送のみ等）をまとめて1つの一覧として管理します。</p>
-            <div class="compare">
-            <div class="compare-visual">
-            <div class="mockup" style="max-width:640px;">
+            <div class="mockup" style="max-width:760px;">
                 <div class="cfg-toolbar">
                     <span class="cfg-btn cfg-btn-blue">＋ 非ログイン担当者を追加<span class="callout">1</span></span>
                     <span class="cfg-btn cfg-btn-green">＋ ログイン可能な担当者を追加</span>
                 </div>
                 <div class="cfg-group-header">組立 <span class="cfg-group-count">4</span><span class="callout">2</span></div>
-                <table class="cfg-table">
+                <div style="overflow-x:auto;">
+                <table class="cfg-table" style="min-width:660px;">
                     <tr><th>名前</th><th>メールアドレス</th><th>役職<span class="callout">3</span></th><th>ログイン<span class="callout">4</span></th><th>承認者・固定宛先<span class="callout">5</span></th><th></th></tr>
                     <tr>
                         <td class="cfg-name">山田</td><td class="cfg-mail">y-yamada@kusakabe.com</td><td>部員</td>
-                        <td class="cfg-ok">可</td><td>—</td><td><span class="cfg-edit">編集</span></td>
+                        <td><span class="cfg-login-yes">可</span></td><td>—</td><td><span class="cfg-edit">編集</span></td>
                     </tr>
                     <tr>
-                        <td class="cfg-name">佐藤<span class="cfg-mark cfg-mark-dup" title="兼務">兼</span></td><td class="cfg-mail">s-sato@kusakabe.com</td><td>部員</td>
-                        <td class="cfg-ok">可</td><td><span class="cfg-chip cfg-chip-fixed">出荷確定申請</span></td><td><span class="cfg-edit">編集</span></td>
+                        <td class="cfg-name">佐藤<span class="cfg-mark cfg-mark-dup" title="兼務">兼</span><span class="callout">6</span></td><td class="cfg-mail">s-sato@kusakabe.com</td><td>部員</td>
+                        <td><span class="cfg-login-yes">可</span></td>
+                        <td><div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">出荷確定申請</span></div></td>
+                        <td><span class="cfg-edit">編集</span></td>
                     </tr>
                     <tr>
                         <td class="cfg-name">田中</td><td class="cfg-mail">t-tanaka@kusakabe.com</td><td>部長</td>
-                        <td class="cfg-ok">可</td><td><span class="cfg-chip cfg-chip-role">承認：組立完了申請</span><span class="cfg-chip cfg-chip-fixed">試運転完了申請</span></td><td><span class="cfg-edit">編集</span></td>
+                        <td><span class="cfg-login-yes">可</span></td>
+                        <td>
+                            <div class="cfg-badge-line"><span class="cfg-badge-label is-approver">承認</span><span class="cfg-chip-approver">組立完了申請</span></div>
+                            <div class="cfg-badge-line"><span class="cfg-badge-label is-fixed">宛先</span><span class="cfg-chip-fixed">試運転完了申請</span></div>
+                        </td>
+                        <td><span class="cfg-edit">編集</span></td>
                     </tr>
                     <tr>
                         <td class="cfg-name">鈴木<span class="cfg-mark cfg-mark-off" title="無効">無</span><span class="callout">6</span></td><td class="cfg-mail">t-suzuki@kusakabe.com</td><td>部員</td>
-                        <td class="cfg-ng">—</td><td>—</td><td><span class="cfg-edit">編集<span class="callout">7</span></span></td>
+                        <td><span class="cfg-login-no">—</span></td><td>—</td><td><span class="cfg-edit">編集<span class="callout">7</span></span></td>
                     </tr>
                 </table>
+                </div>
                 <div class="mockup-caption">部署ごとの名簿管理（例）：部署単位でグループ化され、承認者・固定宛先の設定状況がバッジで一目で分かる</div>
             </div>
-            </div>
-            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>担当者を追加：<b>非ログイン</b>（メール転送のみ）と<b>ログイン可能</b>（申請・承認ができる）の2種類</span></li>
                 <li><span class="callout">2</span><span>部署ごとにグループ化。人数バッジ付き</span></li>
                 <li><span class="callout">3</span><span>役職：<b>部員／課長／部長</b>（部署によっては課長・部長の区別なし）</span></li>
                 <li><span class="callout">4</span><span>ログイン可否：「可」はアプリにログインして申請・承認ができる人</span></li>
-                <li><span class="callout">5</span><span>承認・固定宛先バッジ：その担当者がどのフローの承認者か／固定宛先かが分かる</span></li>
-                <li><span class="callout">6</span><span>兼務マーク「兼」・無効マーク「無」（異動・退職者は削除せず無効にする）</span></li>
+                <li><span class="callout">5</span><span>承認・固定宛先バッジ：青地の「承認」はそのフローの承認者、白地の「宛先」は固定宛先に選ばれているフロー</span></li>
+                <li><span class="callout">6</span><span>兼務マーク「兼」（黄色）・無効マーク「無」（赤）。異動・退職者は削除せず「無効」にする</span></li>
                 <li><span class="callout">7</span><span>「編集」から役職・兼任部署の変更や、退職処理（アカウント削除）ができる</span></li>
             </ol>
-            </div>
-            </div>
             <div class="note">担当者の異動・退職時はこの画面で編集してください。削除ではなく「無効」にすると、過去の申請・承認の記録を残したまま通知対象から外せます。</div>
 
             <h3>②通知の宛先設定</h3>
             <p>フロー（組立完了・外観検査・出荷確認会議など）ごとに、名簿の中から実際にメール通知する人・部署を選びます。一覧からフローを選ぶと詳細画面が開きます。</p>
-            <div class="compare">
-            <div class="compare-visual">
             <div class="mockup" style="max-width:640px;">
                 <div class="cfg-recip-row cfg-recip-head"><div>フロー<span class="callout">1</span></div><div>固定宛先<span class="callout">2</span></div><div>工番担当者の自動通知<span class="callout">3</span></div><div></div></div>
                 <div class="cfg-recip-row"><div>組立完了申請</div><div>3名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›<span class="callout">4</span></div></div>
@@ -1022,18 +1023,12 @@
                 <div class="cfg-recip-row"><div>出荷確定申請</div><div>7名</div><div><span class="cfg-dyn-off">3件OFF</span></div><div class="cfg-chevron">›</div></div>
                 <div class="mockup-caption">通知の宛先設定（一覧）：フローごとの固定宛先の人数と、工番担当者の自動通知のON/OFF状況が並ぶ</div>
             </div>
-            </div>
-            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>フロー名（組立完了申請・出荷確定申請など）</span></li>
                 <li><span class="callout">2</span><span>固定宛先に選ばれている人数</span></li>
                 <li><span class="callout">3</span><span>工番担当者の自動通知：<b>全てON／〇件OFF／対象外</b>（そもそも自動通知の対象がないフロー）</span></li>
                 <li><span class="callout">4</span><span>行をクリックすると詳細画面へ</span></li>
             </ol>
-            </div>
-            </div>
-            <div class="compare">
-            <div class="compare-visual">
             <div class="mockup" style="max-width:640px;">
                 <div class="cfg-group-header">品証 役職から選択<span class="cfg-group-count">1/1</span></div>
                 <div class="cfg-check-row"><input type="checkbox" checked disabled><span class="cfg-name">田中</span><span class="cfg-mail">t-tanaka@kusakabe.com</span></div>
@@ -1046,22 +1041,16 @@
                 <div class="cfg-recip-row" style="grid-template-columns:1fr auto;"><div>固定宛先 選択中 <b>3名</b></div><div><span class="cfg-btn cfg-btn-blue">保存する</span><span class="callout">3</span></div></div>
                 <div class="mockup-caption">通知の宛先設定（詳細・組立完了申請の例）：役職・部署ごとのグループからチェックで固定宛先を選ぶ</div>
             </div>
-            </div>
-            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>役職（品証・製管など）または部署ごとのグループから、通知したい人にチェックを入れる</span></li>
                 <li><span class="callout">2</span><span>固定宛先とは別に、その工番の担当者へ自動で通知するかをグループ単位でON/OFF</span></li>
                 <li><span class="callout">3</span><span>「保存する」を押すまで反映されない。固定宛先を0件で保存しようとすると確認ダイアログが出る</span></li>
             </ol>
-            </div>
-            </div>
             <div class="note">誰にも通知が届かなくなる変更（固定宛先0件など）は特に慎重に。保存前に選択人数を必ず確認してください。</div>
 
             <h3>③変更履歴</h3>
             <p>「名簿編集」「通知の宛先」「フローON/OFF」などの変更をいつ・誰が行ったかを最新100件まで確認できます。項目・期間で絞り込み検索が可能です。設定ミスの調査や、変更内容の確認に使ってください。</p>
-            <div class="compare">
-            <div class="compare-visual">
-            <div class="mockup" style="max-width:640px;">
+            <div class="mockup" style="max-width:680px;">
                 <div class="cfg-audit-date">2026/8/19（水）<span class="callout">1</span></div>
                 <div class="cfg-audit-row"><span class="cfg-audit-time">08:43</span><span>黒崎</span><span class="cfg-audit-badge roster">名簿編集<span class="callout">2</span></span><span>組立のテスト太郎を退職処理（アカウント削除）<span class="callout">3</span></span></div>
                 <div class="cfg-audit-row"><span class="cfg-audit-time">08:28</span><span>黒崎</span><span class="cfg-audit-badge roster">名簿編集</span><span>組立にテスト太郎のログインアカウントを追加</span></div>
@@ -1070,16 +1059,12 @@
                 <div class="cfg-audit-row"><span class="cfg-audit-time">09:26</span><span>黒崎</span><span class="cfg-audit-badge flow">フローON/OFF</span><span>3196 — RG:試運転完了申請をON</span></div>
                 <div class="mockup-caption">変更履歴：日付ごとにまとめて表示。上部の絞り込み<span class="callout" style="margin-left:0;">4</span>で項目・期間を指定できる</div>
             </div>
-            </div>
-            <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>日付ごとにグループ化されて表示される（最新100件）</span></li>
                 <li><span class="callout">2</span><span>変更のカテゴリ：<b>名簿編集／通知の宛先／フローON・OFF</b></span></li>
                 <li><span class="callout">3</span><span>誰が・何を変更したかの詳細</span></li>
                 <li><span class="callout">4</span><span>項目（カテゴリ）と期間で絞り込み検索できる</span></li>
             </ol>
-            </div>
-            </div>
         </section>
 
     </main>
