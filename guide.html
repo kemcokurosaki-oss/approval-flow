@@ -312,7 +312,7 @@
 
     /* ---------- イラストと説明文の左右比較レイアウト ---------- */
     .compare { display: flex; align-items: flex-start; gap: 24px; max-width: 1200px; margin: 18px 0 26px; flex-wrap: wrap; }
-    .compare-visual { flex: 0 1 auto; }
+    .compare-visual { flex: 0 0 auto; } /* イラストは縮めない。幅が足りない場合は説明文ごと次の行へ折り返す */
     .compare-visual .mockup { margin: 0; }
     .compare-notes { flex: 1 1 260px; min-width: 240px; }
     .compare-notes .callout-list { margin: 0; }
