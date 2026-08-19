@@ -3711,29 +3711,65 @@ async function editRosterMember(key) {
         const extraDepts = record.extra_departments || [];
         body.innerHTML = `
             <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">← 戻る</button></div>
-            <div class="section-title" style="margin-top:10px;">担当者を編集</div>
-            <div class="settings-note">ログインアカウントを持つ担当者です。部署の変更はここでは行えません。</div>
-            <div class="form-group"><label>名前</label><input type="text" id="rm_name" value="${esc(record.name)}"></div>
-            <div class="form-group"><label>メールアドレス</label><input type="text" value="${esc(record.email)}" disabled></div>
-            <div class="form-group"><label>部署</label><input type="text" value="${esc(record.department)}" disabled></div>
-            <div class="form-group">
-                <label>役職</label>
-                <select id="rm_tier" ${tierOptions.length === 1 ? 'disabled' : ''}>
-                    ${tierOptions.map(t => `<option value="${t}" ${t === currentTier ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
-                </select>
+            <div class="rm-title-row">
+                <span class="rm-title">担当者を編集</span>
+                <span class="rm-badge-login">ログインアカウントあり</span>
             </div>
-            <div class="form-group">
-                <label>兼任部署（複数選択可）</label>
-                <div class="settings-note" style="margin-bottom:6px;">通知の宛先候補として、他部署の固定宛先グループにも表示されるようになります（承認権限には影響しません）。</div>
-                ${DEPARTMENT_ORDER.filter(d => d !== record.department).map(d => `
-                    <label class="settings-check-row">
-                        <input type="checkbox" class="rm_extra_dept" value="${esc(d)}" ${extraDepts.includes(d) ? 'checked' : ''}>
-                        <span>${esc(d)}</span>
-                    </label>
-                `).join('')}
+
+            <div class="rm-card">
+                <div class="rm-card-header">基本情報</div>
+                <div class="rm-card-body">
+                    <div class="rm-field">
+                        <label for="rm_name">名前</label>
+                        <input type="text" id="rm_name" value="${esc(record.name)}">
+                    </div>
+                    <div class="rm-field">
+                        <span class="rm-label">メールアドレス</span>
+                        <span class="rm-readonly">${esc(record.email)}<span class="rm-readonly-note">変更不可</span></span>
+                    </div>
+                    <div class="rm-field">
+                        <span class="rm-label">部署</span>
+                        <span class="rm-readonly">${esc(record.department)}<span class="rm-readonly-note">変更不可</span></span>
+                    </div>
+                    <div class="rm-field">
+                        <label for="rm_tier">役職</label>
+                        ${tierOptions.length === 1
+                            ? `<span class="rm-readonly">${esc(TIER_LABELS[currentTier] || currentTier)}<span class="rm-readonly-note">この部署は変更不可</span></span>
+                               <input type="hidden" id="rm_tier" value="${esc(currentTier)}">`
+                            : `<select id="rm_tier">
+                                   ${tierOptions.map(t => `<option value="${t}" ${t === currentTier ? 'selected' : ''}>${TIER_LABELS[t]}</option>`).join('')}
+                               </select>`}
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="saveRosterMember('${key}')">保存する</button>
-            <button class="btn btn-danger" style="margin-left:8px;" onclick="deleteLoginRosterMember('${id}')">退職処理（アカウント削除）</button>
+
+            <div class="rm-card">
+                <div class="rm-card-header">
+                    兼任部署
+                    <span class="rm-card-note">通知の宛先候補にのみ影響（承認権限は変わりません）</span>
+                </div>
+                <div class="rm-dept-grid">
+                    ${DEPARTMENT_ORDER.filter(d => d !== record.department).map(d => `
+                        <label class="rm-dept-chip">
+                            <input type="checkbox" class="rm_extra_dept" value="${esc(d)}" ${extraDepts.includes(d) ? 'checked' : ''}>
+                            <span>${esc(d)}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="rm-danger">
+                <div class="rm-danger-header">退職・アカウント削除</div>
+                <div class="rm-danger-body">
+                    <span class="rm-danger-note">ログインアカウントを削除します。過去の申請・承認の記録は残ります。</span>
+                    <button class="rm-danger-btn" onclick="deleteLoginRosterMember('${id}')">退職処理（アカウント削除）</button>
+                </div>
+            </div>
+
+            <div class="rm-footer">
+                <button class="btn btn-sm btn-secondary" onclick="showRosterScreen()">キャンセル</button>
+                <button class="btn btn-primary rm-footer-save" onclick="saveRosterMember('${key}')">保存する</button>
+            </div>
         `;
     } else {
         const { data: record } = await db.from('notification_recipients').select('id, name, email, department, role, active').eq('id', id).single();
