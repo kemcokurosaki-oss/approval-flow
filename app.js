@@ -3457,12 +3457,6 @@ async function showRecipientsDetailScreen(flowType) {
     `;
 }
 
-// 固定宛先グループ内のチェックボックスを一括ON/OFFする
-function toggleGroupCheckboxes(groupKey, checked) {
-    document.querySelectorAll(`#settings_body [data-group-key="${groupKey}"] input[type="checkbox"]`)
-        .forEach(cb => { cb.checked = checked; });
-}
-
 async function saveRecipientDetail(flowType) {
     if (requireLogin()) return;
     const checkedBoxes = [...document.querySelectorAll('#settings_body [data-recipient-kind]:checked')];
