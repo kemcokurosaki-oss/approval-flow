@@ -20,6 +20,11 @@ const USERS = [
   { email: 'm-shibata@kusakabe.com',   name: '柴田' },
   { email: 'k-hashimoto@kusakabe.com', name: '橋本' },
   { email: 'r-tateno@kusakabe.com',    name: '立野' },
+  { email: 'g-ohnishi@kusakabe.com',   name: '大西(元)' },
+  { email: 'y-ohnishi@kusakabe.com',   name: '大西(優)' },
+  { email: 's-kimoto@kusakabe.com',    name: '木本' },
+  { email: 'i-maeda@kusakabe.com',     name: '前田' },
+  { email: 'n-ohshige@kusakabe.com',   name: '大重' },
 ];
 
 function generateTempPassword() {
