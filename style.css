@@ -1025,7 +1025,7 @@
         .step-date  { font-size: 14px; color: #bbb; margin-top: 1px; }
 
         /* ===== Login ===== */
-        #login_overlay {
+        #login_overlay, #setpw_overlay {
             display: none;
             position: fixed;
             inset: 0;
@@ -1034,8 +1034,8 @@
             align-items: center;
             justify-content: center;
         }
-        #login_overlay.visible { display: flex; }
-        #login_dialog {
+        #login_overlay.visible, #setpw_overlay.visible { display: flex; }
+        #login_dialog, #setpw_dialog {
             position: relative;
             background: #fff;
             border-radius: 10px;
