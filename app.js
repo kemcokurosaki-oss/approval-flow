@@ -55,7 +55,10 @@ const db = supabase.createClient(S_URL, S_KEY, {
     auth: {
         flowType:      'implicit',
         persistSession: true,
-        storage:        _memStorage
+        storage:        _memStorage,
+        // URLの#access_token等はこちらで手動処理する（招待/リセットリンク→パスワード設定画面の判定のため）。
+        // 自動検出のままだと本処理より先にトークンが消費され、type=invite/recoveryの判定ができなくなる。
+        detectSessionInUrl: false
     }
 });
 
