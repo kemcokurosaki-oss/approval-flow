@@ -1904,11 +1904,11 @@
         .mph-pnum, .mph-customer { color: #16233a; }
 
         /* ----- ログイン ----- */
-        #login_dialog { border-radius: 14px; border-color: #e5e9f1; box-shadow: 0 20px 60px rgba(20,36,63,.18); }
-        #login_dialog h2 { color: #16233a; }
-        #login_dialog input { border-radius: 9px; border-color: #e0e6ef; font-family: inherit; }
-        #login_dialog .login-btn { border-radius: 9px; background: #2f6fb0; font-family: inherit; }
-        #login_dialog .login-btn:hover { background: #255d97; }
+        #login_dialog, #setpw_dialog { border-radius: 14px; border-color: #e5e9f1; box-shadow: 0 20px 60px rgba(20,36,63,.18); }
+        #login_dialog h2, #setpw_dialog h2 { color: #16233a; }
+        #login_dialog input, #setpw_dialog input { border-radius: 9px; border-color: #e0e6ef; font-family: inherit; }
+        #login_dialog .login-btn, #setpw_dialog .login-btn { border-radius: 9px; background: #2f6fb0; font-family: inherit; }
+        #login_dialog .login-btn:hover, #setpw_dialog .login-btn:hover { background: #255d97; }
 
 
         /* =========================================================
