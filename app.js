@@ -6506,6 +6506,21 @@ db.auth.onAuthStateChange((event, session) => {
 
 // ===== ページロード時にセッションを復元 =====
 (async () => {
+    // 招待・パスワードリセットのメールリンクから来た場合は、通常ログインより先に判定する
+    const hashAuth = parseAuthHash();
+    if (hashAuth && (hashAuth.type === 'invite' || hashAuth.type === 'recovery')) {
+        const { data, error } = await db.auth.setSession({
+            access_token:  hashAuth.accessToken,
+            refresh_token: hashAuth.refreshToken
+        });
+        // トークンが残ったままリロードされると再処理されるため、URLから消す
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (!error && data.session) {
+            showSetPasswordScreen(data.session);
+            return;
+        }
+    }
+
     const accessToken  = localStorage.getItem('ap_access_token');
     const refreshToken = localStorage.getItem('ap_refresh_token');
     if (!accessToken) { await bootGuest(); return; } // 未ログイン → 閲覧のみで起動
