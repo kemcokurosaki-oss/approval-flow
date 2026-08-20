@@ -532,6 +532,61 @@ function hideLoginOverlay() {
     document.getElementById('login_overlay').classList.remove('visible');
 }
 
+// ===== 招待・パスワードリセットからのパスワード設定 =====
+let _pendingSetPwSession = null;
+
+// メールのリンクから戻ってきたときのURL（#access_token=...&type=invite 等）を読み取る
+function parseAuthHash() {
+    const hash = window.location.hash;
+    if (!hash || hash.length < 2) return null;
+    const params = new URLSearchParams(hash.slice(1));
+    const accessToken  = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type         = params.get('type');
+    if (!accessToken) return null;
+    return { accessToken, refreshToken, type };
+}
+
+function showSetPasswordScreen(session) {
+    _pendingSetPwSession = session;
+    document.getElementById('setpw_overlay').classList.add('visible');
+}
+function hideSetPasswordScreen() {
+    document.getElementById('setpw_overlay').classList.remove('visible');
+}
+
+async function doSetPassword() {
+    const pw1   = document.getElementById('setpw_password').value;
+    const pw2   = document.getElementById('setpw_password2').value;
+    const errEl = document.getElementById('setpw_error');
+    errEl.textContent = '';
+
+    if (pw1.length < 6) {
+        errEl.textContent = 'パスワードは6文字以上で入力してください。';
+        return;
+    }
+    if (pw1 !== pw2) {
+        errEl.textContent = '確認用パスワードが一致しません。';
+        return;
+    }
+
+    const { error } = await db.auth.updateUser({ password: pw1 });
+    if (error) {
+        errEl.textContent = 'パスワードの設定に失敗しました。リンクの有効期限が切れている可能性があります。再度招待・リセットをご依頼ください。';
+        return;
+    }
+
+    const { data: sessionData } = await db.auth.getSession();
+    const session = sessionData?.session || _pendingSetPwSession;
+    if (session) {
+        localStorage.setItem('ap_access_token',  session.access_token);
+        localStorage.setItem('ap_refresh_token', session.refresh_token);
+    }
+
+    hideSetPasswordScreen();
+    await bootApp(session);
+}
+
 // 未ログイン時の操作をブロックし、ログイン画面を促す（実際の可否はDB側RLSで担保。これはUXのための案内）
 function requireLogin() {
     if (!currentUser?.id) {
