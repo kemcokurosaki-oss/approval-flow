@@ -575,7 +575,11 @@ async function doSetPassword() {
 
     const { error } = await db.auth.updateUser({ password: pw1 });
     if (error) {
-        errEl.textContent = 'パスワードの設定に失敗しました。リンクの有効期限が切れている可能性があります。再度招待・リセットをご依頼ください。';
+        if (error.code === 'same_password') {
+            errEl.textContent = '現在のパスワードと同じです。別のパスワードを入力してください。';
+        } else {
+            errEl.textContent = `パスワードの設定に失敗しました（${error.message || error.code || 'エラー'}）。リンクの有効期限切れの場合は再度招待・リセットをご依頼ください。`;
+        }
         return;
     }
 
