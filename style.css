@@ -1068,7 +1068,7 @@
         .login-brand-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
         .login-brand-name { font-size: 17px; font-weight: 700; color: #16233a; }
         .login-brand-sub  { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #7d93b8; }
-        #login_dialog input {
+        #login_dialog input, #setpw_dialog input {
             width: 100%;
             padding: 9px 12px;
             margin-bottom: 10px;
@@ -1076,8 +1076,8 @@
             border-radius: 5px;
             font-size: 14px;
         }
-        #login_error { color: #e74c3c; font-size: 13px; margin-bottom: 10px; min-height: 16px; }
-        #login_dialog .login-btn {
+        #login_error, #setpw_error { color: #e74c3c; font-size: 13px; margin-bottom: 10px; min-height: 16px; }
+        #login_dialog .login-btn, #setpw_dialog .login-btn {
             width: 100%;
             padding: 10px;
             background: #1e3a5f;
@@ -1088,7 +1088,7 @@
             font-size: 15px;
             font-weight: bold;
         }
-        #login_dialog .login-btn:hover { background: #2a5080; }
+        #login_dialog .login-btn:hover, #setpw_dialog .login-btn:hover { background: #2a5080; }
 
         /* ===== View-Only Mode（製管など進捗一覧のみ） ===== */
         /* .is-view-only handled by new layout rules above */
