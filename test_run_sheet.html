@@ -634,8 +634,8 @@ async function init() {
     sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
 
     if (draft.sheet_data) {
-        checks      = draft.sheet_data.check_items  || {};
-        moushiokuri = draft.sheet_data.moushiokuri  || [];
+        checks       = draft.sheet_data.check_items   || {};
+        pendingItems = draft.sheet_data.pending_items || [];
         if (draft.sheet_data.meta?.author && !sheetMeta.author) {
             sheetMeta.author = draft.sheet_data.meta.author;
             document.getElementById('sheet_author').textContent = sheetMeta.author;
@@ -645,7 +645,7 @@ async function init() {
             document.getElementById('sheet_completion_date').value = sheetMeta.completion_date;
         }
         restoreChecks();
-        renderMoushiokuri();
+        renderPendingItems();
     }
 
     document.getElementById('loading').classList.remove('visible');
