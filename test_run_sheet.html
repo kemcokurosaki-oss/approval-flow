@@ -439,7 +439,7 @@ const broadcastChannel = new BroadcastChannel('approval_sheet');
 
 let draftId      = null;
 let checks       = {};
-let moushiokuri  = [];
+let pendingItems = [];
 let saveTimer    = null;
 let isSaving     = false;
 let sheetMeta    = { author: '', date: '', completion_date: '' };
