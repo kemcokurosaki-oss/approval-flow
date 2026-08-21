@@ -536,8 +536,8 @@ async function init() {
 
         const isApproved = req.status === 'approved';
         setSheetInfoHeader(req.project_number, req.machine_name);
-        checks      = req.sheet_data.check_items  || {};
-        moushiokuri = req.sheet_data.moushiokuri  || [];
+        checks       = req.sheet_data.check_items   || {};
+        pendingItems = req.sheet_data.pending_items || [];
 
         const meta = req.sheet_data.meta || {};
         let authorName = meta.author || '';
