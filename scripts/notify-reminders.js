@@ -184,8 +184,12 @@ async function runApprovalReminders() {
           `承認フロー管理システムにログインして承認をお願いします。\n\n` +
           `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
+        const ccEmails = step.approver_role === 'operations_director'
+          ? OPERATIONS_DIRECTOR_REMINDER_CC.filter(email => email !== approver.email)
+          : [];
+
         try {
-          await sendEmail(approver.email, approver.name, subject, text);
+          await sendEmail(approver.email, approver.name, subject, text, ccEmails);
           await supabaseInsert('approval_notifications', {
             request_id:        req.id,
             recipient_id:      approver.id,
