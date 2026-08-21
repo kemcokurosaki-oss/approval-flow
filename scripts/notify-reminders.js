@@ -49,6 +49,11 @@ const PENDING_REMINDER_CC = [
   'e-kurosaki@kusakabe.com',  // 製管（黒崎）
 ];
 
+// 承認催促（操業部長宛て）のCC固定宛先（操業・野津）
+const OPERATIONS_DIRECTOR_REMINDER_CC = [
+  'y-notsu@kusakabe.com', // 操業（野津）
+];
+
 function requireEnv(name, v) {
   if (!v) throw new Error(`環境変数 ${name} が未設定です`);
 }
