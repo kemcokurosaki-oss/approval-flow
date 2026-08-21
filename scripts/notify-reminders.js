@@ -433,9 +433,7 @@ async function runInvitationReminders() {
 
   // 品証・製管スタッフを取得
   const qualityProfs = await supabaseFetch(`profiles?role=eq.quality&select=id,name,email`);
-  const seikanProfs  = await supabaseFetch(
-    `profiles?department=eq.${encodeURIComponent('製管')}&role=eq.staff&select=id,name,email`
-  );
+  const seikanProfs  = await supabaseFetch(`profiles?role=eq.production_control&select=id,name,email`);
   const seenIds = new Set();
   const recipients = [...(qualityProfs || []), ...(seikanProfs || [])].filter(p => {
     if (!p.id || seenIds.has(p.id)) return false;
