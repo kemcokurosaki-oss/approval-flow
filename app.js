@@ -213,6 +213,12 @@ const DEPT_SUPERVISOR_ROLES = {
     '操業': ['operations_manager', 'operations_director']
 };
 
+// 組立・試運転フロー → 申請全体のペンディングを完了操作できる上長ロール（担当者未設定の項目でも操作可）
+const FLOW_SUPERVISOR_ROLES = {
+    assembly: ['assembly_manager', 'assembly_director'],
+    test_run: ['operations_manager', 'operations_director']
+};
+
 // タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
 function isSupervisorOfOwner(ownerName) {
     if (!ownerName) return false;
