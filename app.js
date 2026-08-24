@@ -1982,7 +1982,9 @@ function _canCompletePendingItem(req, item) {
         : ['submitted', 'in_review', 'approved'].includes(req.status);
     if (!statusOk) return false;
     const isOwner      = !!(item.owner && currentProfile?.name === item.owner);
-    const isSupervisor = isQaFlow && isSupervisorOfOwner(item.owner);
+    const isSupervisor = isQaFlow
+        ? isSupervisorOfOwner(item.owner)
+        : (FLOW_SUPERVISOR_ROLES[req.flow_type] || []).includes(getEffectiveRole());
     const isMyRequest  = req.requester_id === currentUser.id;
     return isQualityOrSeikan || isOwner || isSupervisor || (!isQaFlow && isMyRequest);
 }
