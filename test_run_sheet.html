@@ -707,7 +707,7 @@ function setSaveStatus(state) {
 async function saveNow() {
     if (isSaving || !draftId) return;
     isSaving = true;
-    const sheetData = { check_items: checks, moushiokuri, meta: sheetMeta };
+    const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
     const { error } = await db.from('approval_requests')
         .update({ sheet_data: sheetData }).eq('id', draftId);
     isSaving = false;
