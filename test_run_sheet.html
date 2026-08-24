@@ -827,7 +827,7 @@ function setViewMode() {
     document.body.classList.add('view-mode');
     const legend = document.querySelector('.sheet-legend');
     if (legend) legend.textContent = '各項目の実施結果';
-    renderMoushiokuri_view();
+    renderPendingItemsView();
     const footerInner = document.querySelector('.sheet-footer-inner');
     if (footerInner) footerInner.innerHTML =
         '<button class="b-print" onclick="window.print()">印刷 / PDF保存</button>' +
