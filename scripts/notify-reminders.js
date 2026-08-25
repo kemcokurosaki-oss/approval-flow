@@ -42,17 +42,31 @@ const QA_MEETING_LABELS = {
 // 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
 const QA_MEETING_FLOWS = Object.keys(QA_MEETING_LABELS);
 
-// ペンディング期日超過催促のCC固定宛先（品証・製管）
-const PENDING_REMINDER_CC = [
-  't-tanaka@kusakabe.com',    // 品証（田中）
-  's-morimura@kusakabe.com',  // 製管（森村）
-  'e-kurosaki@kusakabe.com',  // 製管（黒崎）
-];
+// リマインダー催促のCC固定宛先（アプリの設定画面「リマインダー通知のCC設定」で編集可能。
+// Supabase reminder_settings テーブル（key: reminder_cc_recipients）から読み込む）
+let REMINDER_CC_EMAILS = {
+  approval_reminder_operations_director: [], // 承認催促（操業部長宛て）のCC
+  pending_item_reminder:                 [], // ペンディング項目期日超過催促のCC
+};
 
-// 承認催促（操業部長宛て）のCC固定宛先（操業・野津）
-const OPERATIONS_DIRECTOR_REMINDER_CC = [
-  'y-notsu@kusakabe.com', // 操業（野津）
-];
+async function loadReminderCcSettings() {
+  const rows = await supabaseFetch(`reminder_settings?key=eq.reminder_cc_recipients&select=value`);
+  const plan = (rows && rows[0]?.value) || {};
+  for (const key of Object.keys(REMINDER_CC_EMAILS)) {
+    const p = plan[key] || {};
+    const emails = [];
+    if ((p.profileIds || []).length > 0) {
+      const profs = await supabaseFetch(`profiles?id=in.(${p.profileIds.join(',')})&select=email`);
+      (profs || []).forEach(r => { if (r.email) emails.push(r.email); });
+    }
+    if ((p.recipientIds || []).length > 0) {
+      const recs = await supabaseFetch(`notification_recipients?id=in.(${p.recipientIds.join(',')})&active=eq.true&select=email`);
+      (recs || []).forEach(r => { if (r.email) emails.push(r.email); });
+    }
+    REMINDER_CC_EMAILS[key] = emails;
+  }
+  console.log(`CC設定ロード: 承認催促(操業部長)=${REMINDER_CC_EMAILS.approval_reminder_operations_director.length}件, ペンディング期日超過=${REMINDER_CC_EMAILS.pending_item_reminder.length}件`);
+}
 
 function requireEnv(name, v) {
   if (!v) throw new Error(`環境変数 ${name} が未設定です`);
