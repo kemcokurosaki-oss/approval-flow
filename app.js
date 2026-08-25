@@ -905,7 +905,7 @@ async function deleteEmptyPackingTasks(projectNumber) {
     }
 }
 
-async function onProjectChange() {
+async function onProjectChange(lockedMachine = null) {
     const num    = currentProjectNum;
     const infoEl = document.getElementById('submit_project_info');
     const machineGroup = document.getElementById('submit_machine_group');
@@ -926,7 +926,7 @@ async function onProjectChange() {
 
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange');
+        await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange', lockedMachine);
         machineGroup.style.display = 'block';
         flowEl.style.display       = 'none';
     } finally {
