@@ -199,7 +199,7 @@ async function runApprovalReminders() {
           `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
         const ccEmails = step.approver_role === 'operations_director'
-          ? OPERATIONS_DIRECTOR_REMINDER_CC.filter(email => email !== approver.email)
+          ? REMINDER_CC_EMAILS.approval_reminder_operations_director.filter(email => email !== approver.email)
           : [];
 
         try {
