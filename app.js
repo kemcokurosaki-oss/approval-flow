@@ -3425,6 +3425,7 @@ async function openSettingsModal() {
     closeSidePanel(); // マイページと同じ側面に表示されるため、開いていれば閉じておく
     document.getElementById('settings_modal').classList.add('open');
     await loadFlowSettings();
+    await loadReminderCcSettings();
     showSettingsMenu();
 }
 
