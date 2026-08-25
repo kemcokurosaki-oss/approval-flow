@@ -219,6 +219,12 @@ const FLOW_SUPERVISOR_ROLES = {
     test_run: ['operations_manager', 'operations_director']
 };
 
+// 組立・試運転フロー → 担当部署（部員全員が完了操作できる）
+const FLOW_DEPARTMENTS = {
+    assembly: '組立',
+    test_run: '操業'
+};
+
 // タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
 function isSupervisorOfOwner(ownerName) {
     if (!ownerName) return false;
