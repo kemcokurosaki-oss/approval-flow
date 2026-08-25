@@ -5054,7 +5054,7 @@ async function _loadMachineCheckboxes(projectNum, listId, onChangeFn, lockedMach
         list.innerHTML = `
             <label>
                 <input type="checkbox" value="${esc(lockedMachine)}" checked disabled style="display:none">
-                <span>${esc(lockedMachine)}</span>
+                <span class="machine-locked-name">${esc(lockedMachine)}</span>
             </label>`;
         return;
     }
