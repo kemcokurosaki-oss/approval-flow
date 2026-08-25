@@ -3656,6 +3656,98 @@ async function saveRecipientDetail(flowType) {
     }
 }
 
+// ----- リマインダー通知のCC設定（個人単位） -----
+function showReminderCcSettingsScreen() {
+    settingsView = 'reminder_cc_list';
+    const rows = REMINDER_CC_ITEMS.map(item => {
+        const plan  = getReminderCcPlan(item.key);
+        const count = plan.profileIds.length + plan.recipientIds.length;
+        return `
+        <button class="recip-row" onclick="showReminderCcDetailScreen('${item.key}')">
+            <span class="recip-flow-name">${esc(item.label)}</span>
+            <span class="recip-fixed-count">${count}名</span>
+            <span class="recip-chevron">›</span>
+        </button>`;
+    }).join('');
+
+    document.getElementById('settings_body').innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">リマインダー通知のCC設定</div>
+        <div class="recip-list">
+            ${rows}
+        </div>
+    `;
+}
+
+async function showReminderCcDetailScreen(itemKey) {
+    settingsView = 'reminder_cc_detail';
+    const item = REMINDER_CC_ITEMS.find(i => i.key === itemKey);
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const plan = getReminderCcPlan(itemKey);
+    const { data: profRows } = await db.from('profiles').select('id, name, email, department').order('department').order('name');
+    const { data: recRows }  = await db.from('notification_recipients').select('id, name, email').eq('active', true).order('name');
+
+    const candidates = [
+        ...(profRows || []).map(p => ({ id: p.id, name: p.name, email: p.email, dept: p.department, kind: 'profile',   checked: plan.profileIds.includes(p.id) })),
+        ...(recRows  || []).map(r => ({ id: r.id, name: r.name, email: r.email, dept: '',            kind: 'recipient', checked: plan.recipientIds.includes(r.id) }))
+    ];
+    const checkedCount = candidates.filter(c => c.checked).length;
+
+    const rowsHtml = candidates.map(c => `
+        <label class="recip-person-row">
+            <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}
+                   onchange="updateRecipientSelectedCount()">
+            <span class="recip-person-name" title="${esc(c.name || '')}">${esc(c.name || '—')}${c.dept ? `（${esc(c.dept)}）` : ''}</span>
+            <span class="recip-person-email" title="${esc(c.email || '')}">${esc(c.email || '')}</span>
+        </label>
+    `).join('');
+
+    body.innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showReminderCcSettingsScreen()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">${esc(item.label)}</div>
+        <div class="recip-group">
+            ${rowsHtml}
+        </div>
+        <div class="recip-footer">
+            <span class="recip-footer-count">選択中 <strong id="recip_selected_count">${checkedCount}名</strong></span>
+            <button class="btn btn-primary" onclick="saveReminderCcDetail('${itemKey}')">保存する</button>
+        </div>
+    `;
+}
+
+async function saveReminderCcDetail(itemKey) {
+    if (requireLogin()) return;
+    const item = REMINDER_CC_ITEMS.find(i => i.key === itemKey);
+    const checkedBoxes = [...document.querySelectorAll('#settings_body [data-recipient-kind]:checked')];
+    const profileIds   = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'profile').map(cb => cb.dataset.recipientId);
+    const recipientIds = checkedBoxes.filter(cb => cb.dataset.recipientKind === 'recipient').map(cb => cb.dataset.recipientId);
+    const names = checkedBoxes.map(cb => cb.closest('label')?.querySelector('span')?.textContent || '').filter(Boolean);
+
+    if (checkedBoxes.length === 0 && !confirm('CC宛先が0件になります。このまま保存しますか？')) return;
+
+    showLoading('保存中...');
+    try {
+        const { data } = await db.from('reminder_settings').select('value').eq('key', 'reminder_cc_recipients').single();
+        const value = data?.value || {};
+        value[itemKey] = { profileIds, recipientIds };
+        const { error } = await db.from('reminder_settings')
+            .update({ value, updated_at: new Date().toISOString(), updated_by: currentUser.email })
+            .eq('key', 'reminder_cc_recipients');
+        if (error) throw error;
+        reminderCcRecipients = value;
+
+        await logSettingsChange('reminder_cc_recipients', `${item.label}を変更（CC: ${names.join('、') || 'なし'}）`);
+        showToast('CC設定を保存しました。', 'success');
+        showReminderCcSettingsScreen();
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ----- 部署ごとの名簿管理（profiles + notification_recipients 統合表示） -----
 function roleToTier(role) { return PROFILE_ROLE_TO_TIER[role] || 'staff'; }
 
