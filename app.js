@@ -5036,11 +5036,30 @@ async function resubmit(requestId) {
 }
 
 // ===== 共通ヘルパー =====
-async function _loadMachineCheckboxes(projectNum, listId, onChangeFn) {
+async function _loadMachineCheckboxes(projectNum, listId, onChangeFn, lockedMachine = null) {
+    const list = document.getElementById(listId);
+    const group = list.closest('.form-group');
+    const toggleBtn = group?.querySelector('.machine-checkbox-bar .btn-xs');
+    const label = group?.querySelector('label');
+
+    if (lockedMachine) {
+        // ステップ表示から機械が確定した状態で開いているため、選び直しはさせない
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (label) label.textContent = '機械名 *';
+        list.innerHTML = `
+            <label>
+                <input type="checkbox" value="${esc(lockedMachine)}" checked disabled style="display:none">
+                <span>${esc(lockedMachine)}</span>
+            </label>`;
+        return;
+    }
+
+    if (toggleBtn) toggleBtn.style.display = '';
+    if (label) label.textContent = '機械名 *（複数選択可）';
+
     const { data } = await db.from('tasks')
         .select('machine').eq('project_number', projectNum).eq('text', '機械組立').not('machine', 'is', null);
     const machines = [...new Set((data || []).map(t => t.machine).filter(Boolean))].sort();
-    const list = document.getElementById(listId);
     if (machines.length === 0) {
         list.innerHTML = '<div style="color:#aaa;font-size:13px;">機械が見つかりません</div>';
         return;
