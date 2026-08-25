@@ -3666,6 +3666,7 @@ function showReminderCcSettingsScreen() {
         <button class="recip-row" onclick="showReminderCcDetailScreen('${item.key}')">
             <span class="recip-flow-name">${esc(item.label)}</span>
             <span class="recip-fixed-count">${count}名</span>
+            <span></span>
             <span class="recip-chevron">›</span>
         </button>`;
     }).join('');
