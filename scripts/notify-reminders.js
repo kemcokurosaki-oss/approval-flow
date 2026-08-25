@@ -620,6 +620,7 @@ async function main() {
   console.log(`実行日 (JST): ${tokyoDateStr()}`);
 
   await loadCompletedProjects();
+  await loadReminderCcSettings();
   await runApprovalReminders();
   await runSubmissionReminders();
   await runInvitationReminders();
