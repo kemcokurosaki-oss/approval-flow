@@ -2650,11 +2650,13 @@ function buildPendingSectionInner(req, isMyRequest) {
     const isQaFlow   = QA_MEETING_FLOWS.includes(req.flow_type);
     // 組立・試運転フローの担当部署の上司（組立課長・部長／操業課長・部長）も完了操作できる
     const isFlowSupervisor = (FLOW_SUPERVISOR_ROLES[req.flow_type] || []).includes(getEffectiveRole());
-    // 組立・試運転フローは「申請者本人」「品証・製管」「担当部署の課長・部長」が完了操作できる（担当者本人は下記itemCanComplete参照）
+    // 組立・試運転フローは担当部署（組立部／操業部）の部員なら誰でも完了操作できる
+    const isFlowDeptMember = getEffectiveDept() === FLOW_DEPARTMENTS[req.flow_type];
+    // 組立・試運転フローは「申請者本人」「品証・製管」「担当部署の課長・部長」「担当部署の部員全員」が完了操作できる（担当者本人は下記itemCanComplete参照）
     const statusOkForNonQa = ['submitted', 'in_review', 'approved'].includes(req.status);
     const canComplete = isQaFlow
         ? null // QAフローは項目ごとに判定する（下記itemCanComplete）
-        : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan || isFlowSupervisor));
+        : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan || isFlowSupervisor || isFlowDeptMember));
     // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能）
     const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : statusOkForNonQa);
     const allItems = req.sheet_data?.pending_items || [];
