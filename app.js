@@ -2352,10 +2352,9 @@ async function openDraftInSubmitModal(draftId) {
         document.getElementById('submit_machine_group').style.display = 'block';
         document.getElementById('flow_detect_group').style.display = 'none';
 
-        await _loadMachineCheckboxes(draft.project_number, 'submit_machine_list', 'onMachineChange');
-        const cb = [...document.querySelectorAll('#submit_machine_list input[type="checkbox"]')]
-            .find(c => c.value === draft.machine_name);
-        if (cb) { cb.checked = true; await onMachineChange(); }
+        // 下書きも組立・試運転限定のため、確定済みの機械をロック表示する
+        await _loadMachineCheckboxes(draft.project_number, 'submit_machine_list', 'onMachineChange', draft.machine_name);
+        await onMachineChange();
 
         const btnGoSheet = document.getElementById('btn_go_sheet');
         const btnSubmit  = document.getElementById('submit_btn');
