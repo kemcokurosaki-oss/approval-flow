@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>通知一覧 | 承認フロー管理システム</title>
+<style>
+    :root {
+        --border: #e5e9f1;
+        --head-bg: #f6f8fb;
+        --text-main: #16233a;
+        --text-sub: #5b6b80;
+        --text-faint: #9aa5b6;
+        --accent: #2f6fb0;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background: #f4f6fa;
+        color: var(--text-main);
+        margin: 0;
+        padding: 24px;
+        line-height: 1.6;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .lead { color: var(--text-sub); font-size: 13px; margin: 0 0 24px; }
+    .lead code { background: #eef1f6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+    nav.toc {
+        display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    nav.toc a {
+        display: inline-block; padding: 6px 14px; border-radius: 20px;
+        background: #fff; border: 1px solid var(--border); color: var(--accent);
+        text-decoration: none; font-size: 13px; font-weight: 600;
+    }
+    nav.toc a:hover { background: var(--head-bg); }
+    section { margin-bottom: 40px; }
+    h2 {
+        font-size: 17px; border-left: 4px solid var(--accent); padding-left: 10px;
+        margin: 0 0 6px;
+    }
+    .section-desc { color: var(--text-sub); font-size: 13px; margin: 0 0 14px; }
+    h3 {
+        font-size: 13px; color: var(--text-sub); text-transform: uppercase;
+        letter-spacing: .04em; margin: 22px 0 8px;
+    }
+    table {
+        width: 100%; border-collapse: collapse; background: #fff;
+        border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+        font-size: 13px;
+    }
+    caption { display: none; }
+    thead th {
+        background: var(--head-bg); text-align: left; padding: 9px 12px;
+        font-size: 11px; color: var(--text-faint); font-weight: 700;
+        letter-spacing: .03em; border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    tbody td {
+        padding: 9px 12px; border-bottom: 1px solid #f4f6fa; vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fbfcfe; }
+    td.num { color: var(--text-faint); font-variant-numeric: tabular-nums; width: 28px; }
+    td.name { font-weight: 700; white-space: nowrap; }
+    td.type-code { font-family: Consolas, Menlo, monospace; font-size: 11.5px; color: var(--text-sub); white-space: nowrap; }
+    .badge {
+        display: inline-block; padding: 1px 8px; border-radius: 10px;
+        font-size: 11px; font-weight: 700; background: #eef1f6; color: var(--text-sub);
+        white-space: nowrap;
+    }
+    .badge.on   { background: #e6f4ea; color: #1e7b34; }
+    .badge.off  { background: #fbeaea; color: #a33; }
+    .note {
+        background: #fffbea; border: 1px solid #f0e4b0; border-radius: 8px;
+        padding: 10px 14px; font-size: 12.5px; color: #6b5a1a; margin-top: 10px;
+    }
+    footer { color: var(--text-faint); font-size: 12px; margin-top: 40px; border-top: 1px solid var(--border); padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <h1>通知一覧 — 承認フロー管理システム</h1>
+    <p class="lead">
+        管理者（製管）向けの参照資料。アプリのコード（<code>app.js</code> / <code>scripts/notify-reminders.js</code> / <code>scripts/notify-approval.js</code>）の実装内容をもとに作成。仕様変更時はこのページも合わせて更新すること。
+    </p>
+
+    <nav class="toc">
+        <a href="#reminders">① リマインダー通知（催促）</a>
+        <a href="#approval">② 承認フロー通知（通常通知）</a>
+    </nav>
+
+    <section id="reminders">
+        <h2>① リマインダー通知（催促）</h2>
+        <p class="section-desc">
+            対象: <code>scripts/notify-reminders.js</code>　実行: GitHub Actions
+            <code>.github/workflows/notify-reminders.yml</code>（本来は毎日9:00 JST自動実行想定だが、現状cronはコメントアウトで無効化・手動実行のみ）
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th><th>種類</th><th>対象フロー</th><th>送るタイミング・頻度</th><th>宛先（TO）</th><th>CC</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="num">1</td>
+                    <td class="name">承認催促</td>
+                    <td>機械組立・試運転・工場出荷<br><span class="badge">出荷準備は承認不要のため対象外</span></td>
+                    <td>申請の翌日以降、未承認（submitted）のままなら毎日</td>
+                    <td>該当承認ステップの承認者ロールに該当する全員</td>
+                    <td>承認者ロールが操業部長の場合のみ、操業（野津）を固定CC　<span class="badge">画面から変更可</span></td>
+                </tr>
+                <tr>
+                    <td class="num">2</td>
+                    <td class="name">申請催促</td>
+                    <td>機械組立・試運転・出荷準備・工場出荷</td>
+                    <td>紐づくタスクの終了日を過ぎた翌日から毎日（工場出荷のみ予定日の前日から）</td>
+                    <td>機械組立/試運転/出荷準備はタスク担当者（owner）、工場出荷は品証・製管スタッフ全員</td>
+                    <td>機械組立→組立の課長・部長／試運転→操業の課長・部長／出荷準備・工場出荷→なし</td>
+                </tr>
+                <tr>
+                    <td class="num">3</td>
+                    <td class="name">案内催促</td>
+                    <td>簡易検査・外観検査・出荷確認会議</td>
+                    <td>基準タスク（簡易検査・外観検査は機械組立、出荷確認会議は自身）の終了/開始日の3日前から毎日（期日を過ぎても未送付なら継続）</td>
+                    <td>品証・製管スタッフ全員</td>
+                    <td>なし</td>
+                </tr>
+                <tr>
+                    <td class="num">4</td>
+                    <td class="name">ペンディング項目<br>期日超過催促</td>
+                    <td>全フロー共通<br><span class="badge">実質は簡易検査・外観検査・出荷確認会議のみ（出荷準備はペンディング項目を持たないため対象外）</span></td>
+                    <td>完了予定日（due）を過ぎた翌日から、完了にするまで毎日</td>
+                    <td>ペンディング項目の担当者（owner）</td>
+                    <td>品証（田中）・製管（森村・黒崎）を固定CC　<span class="badge">画面から変更可</span></td>
+                </tr>
+                <tr>
+                    <td class="num">5</td>
+                    <td class="name">完了処理催促</td>
+                    <td>簡易検査・外観検査・出荷確認会議</td>
+                    <td>開催日（inspection_date）を過ぎた翌日から、「完了にする」処理をするまで毎日</td>
+                    <td>品証（quality）ロール全員</td>
+                    <td>製管（production_control）ロール全員</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="note">
+            宛先は原則としてSupabaseの <code>profiles</code> テーブルのロール（role）に基づいて動的に決まる。
+            #1・#4のCCのみロールに紐づかない個人固定のため、アプリの設定画面（⚙️ → 通知・宛先設定 → リマインダー通知のCC設定）から変更できる。編集できるのは管理者（<code>ADMIN_EMAILS</code>）のみ。
+            送信タイミング（何日前/後から送るか）は現状コード直書きで、設定画面からは変更できない。
+            重複送信防止は <code>approval_notifications</code> テーブルで管理。
+        </div>
+    </section>
+
+    <section id="approval">
+        <h2>② 承認フロー通知（通常通知）</h2>
+        <p class="section-desc">
+            対象: <code>app.js</code>（宛先決定・<code>approval_notifications</code>への記録）＋ <code>scripts/notify-approval.js</code>（本文生成・実送信）
+            実行: GitHub Actions <code>.github/workflows/notify-approval.yml</code>（本来は15分毎自動実行想定だが、現状cronはコメントアウトで無効化・手動実行のみ）
+        </p>
+
+        <h3>承認・却下</h3>
+        <table>
+            <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="num">1</td><td class="name">承認依頼</td><td class="type-code">approval_request</td>
+                    <td>申請ボタン押下（初回申請）／並列承認でStep1が承認されStep2に進む時／出荷フローで品証が本申請（常務承認へ）する時／確定出荷日変更で再承認が必要な時</td>
+                    <td>assembly・test_run・shipping</td>
+                    <td>該当承認ステップの承認者ロールを持つ<code>profiles</code>全員</td>
+                </tr>
+                <tr>
+                    <td class="num">2</td><td class="name">再申請</td><td class="type-code">resubmit</td>
+                    <td>却下された申請を修正し、再申請ボタンで送り直した時</td>
+                    <td>承認ステップを持つフロー（assembly・test_run・shipping）</td>
+                    <td>全承認ステップの承認者ロール（製管を除く）に紐づく<code>profiles</code></td>
+                </tr>
+                <tr>
+                    <td class="num">3</td><td class="name">完了通知</td><td class="type-code">completed</td>
+                    <td>全承認完了時（並列承認のどちらかが承認、または直列の最終承認）／出荷準備は申請と同時（承認不要のため）</td>
+                    <td>assembly・test_run・shipping・shipping_prep</td>
+                    <td>フローごとの動的宛先（工番担当者・部署管理職）＋設定画面の固定宛先＋承認者本人</td>
+                </tr>
+                <tr>
+                    <td class="num">4</td><td class="name">他者承認完了（対応不要）</td><td class="type-code">completed_by_other</td>
+                    <td>並列承認（assembly・test_run）で一方が承認し、他方の承認ステップが自動キャンセルされた時</td>
+                    <td>assembly・test_run</td>
+                    <td>キャンセルされた側の承認者ロールに紐づく<code>profiles</code></td>
+                </tr>
+                <tr>
+                    <td class="num">5</td><td class="name">却下通知</td><td class="type-code">rejected</td>
+                    <td>却下ボタン押下（コメント必須）時</td>
+                    <td>承認ステップを持つ全フロー</td>
+                    <td>申請者本人のみ</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>出荷日（確定・仮）関連</h3>
+        <table>
+            <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="num">6</td><td class="name">確定出荷日 入力依頼</td><td class="type-code">shipping_date_request</td>
+                    <td>品証が出荷確定申請を起票した時</td>
+                    <td>shipping</td>
+                    <td><code>app_settings</code>（sales_person_map）由来の担当営業</td>
+                </tr>
+                <tr>
+                    <td class="num">7</td><td class="name">確定出荷日 入力済み</td><td class="type-code">shipping_date_input_done</td>
+                    <td>営業が確定出荷日を入力した時</td>
+                    <td>shipping</td>
+                    <td>申請者本人＋品証（quality）全員＋製管（production_control）全員</td>
+                </tr>
+                <tr>
+                    <td class="num">8</td><td class="name">仮出荷予定日 入力依頼</td><td class="type-code">tentative_shipping_date_request</td>
+                    <td>簡易検査／外観検査の開催案内を「完了にする」処理をした時に付随して発生</td>
+                    <td>simple_inspection・inspection</td>
+                    <td>担当営業（sales_person_map由来）</td>
+                </tr>
+                <tr>
+                    <td class="num">9</td><td class="name">仮出荷予定日 入力済み</td><td class="type-code">tentative_shipping_date_input_done</td>
+                    <td>営業が仮出荷予定日を入力、または既確定分を変更した時</td>
+                    <td>simple_inspection・inspection</td>
+                    <td>品証（quality）全員＋製管（production_control）全員</td>
+                </tr>
+                <tr>
+                    <td class="num">10</td><td class="name">仮出荷予定日 確定</td><td class="type-code">tentative_shipping_confirmed</td>
+                    <td>品証・製管が仮出荷予定日を確認・確定ボタンを押した時</td>
+                    <td>simple_inspection・inspection</td>
+                    <td>申請者（検査案内送信者）＋品証全員＋製管全員</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ペンディング項目（簡易検査・外観検査・出荷確認会議では「タスク」表記）</h3>
+        <table>
+            <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="num">11</td><td class="name">担当割り当て</td><td class="type-code">pending_item_assigned</td>
+                    <td>ペンディング項目／タスクの追加時に担当者を指定、または編集で担当者を変更した時</td>
+                    <td>assembly・test_run・simple_inspection・inspection・shipping_meeting<br><span class="badge">出荷準備は対象外（ペンディング項目自体を持たない）</span></td>
+                    <td>担当者名で<code>profiles</code>検索、いなければ<code>notification_recipients</code>をメールで</td>
+                </tr>
+                <tr>
+                    <td class="num">12</td><td class="name">完了通知</td><td class="type-code">pending_item_completed</td>
+                    <td>ペンディング項目／タスクの完了ボタン押下時</td>
+                    <td>同上</td>
+                    <td>品証全員＋製管全員（操作した本人は除外）</td>
+                </tr>
+                <tr>
+                    <td class="num">13</td><td class="name">完了取消通知</td><td class="type-code">pending_item_uncompleted</td>
+                    <td>完了取消ボタン押下時</td>
+                    <td>同上</td>
+                    <td>品証全員＋製管全員（操作した本人は除外）</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>開催案内・日程変更・キャンセル（簡易検査・外観検査・出荷確認会議）</h3>
+        <table>
+            <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="num">14</td><td class="name">簡易検査 開催案内</td><td class="type-code">simple_inspection_invite</td>
+                    <td>開催案内を送信した時</td>
+                    <td>simple_inspection</td>
+                    <td>動的宛先（組立/営業/設計担当者・管理職）＋設定画面の固定宛先</td>
+                </tr>
+                <tr>
+                    <td class="num">15</td><td class="name">外観検査 開催案内</td><td class="type-code">inspection_invite</td>
+                    <td>開催案内を送信した時</td>
+                    <td>inspection</td>
+                    <td>動的宛先（組立/試運転/営業/設計担当者・管理職）＋設定画面の固定宛先</td>
+                </tr>
+                <tr>
+                    <td class="num">16</td><td class="name">出荷確認会議 開催案内</td><td class="type-code">shipping_meeting_invite</td>
+                    <td>開催案内を送信した時</td>
+                    <td>shipping_meeting</td>
+                    <td>動的宛先＋固定宛先＋会場（<code>ROOM_EMAILS</code>固定マップ）の会議室メール</td>
+                </tr>
+                <tr>
+                    <td class="num">17</td><td class="name">簡易検査 日程変更</td><td class="type-code">simple_inspection_reschedule</td>
+                    <td>日程変更を保存した時</td>
+                    <td>simple_inspection</td>
+                    <td>その申請で既にメール送信済みの通知の宛先を再利用</td>
+                </tr>
+                <tr>
+                    <td class="num">18</td><td class="name">外観検査 日程変更</td><td class="type-code">inspection_reschedule</td>
+                    <td>日程変更を保存した時</td>
+                    <td>inspection</td>
+                    <td>同上</td>
+                </tr>
+                <tr>
+                    <td class="num">19</td><td class="name">出荷確認会議 日程変更</td><td class="type-code">shipping_meeting_reschedule</td>
+                    <td>日程変更を保存した時</td>
+                    <td>shipping_meeting</td>
+                    <td>同上</td>
+                </tr>
+                <tr>
+                    <td class="num">20</td><td class="name">簡易検査 キャンセル</td><td class="type-code">simple_inspection_cancel</td>
+                    <td>キャンセル実行時</td>
+                    <td>simple_inspection</td>
+                    <td>既送信済み通知の宛先を再利用（未送信の招待自体は削除）</td>
+                </tr>
+                <tr>
+                    <td class="num">21</td><td class="name">外観検査 キャンセル</td><td class="type-code">inspection_cancel</td>
+                    <td>キャンセル実行時</td>
+                    <td>inspection</td>
+                    <td>同上</td>
+                </tr>
+                <tr>
+                    <td class="num">22</td><td class="name">出荷確認会議 キャンセル</td><td class="type-code">shipping_meeting_cancel</td>
+                    <td>キャンセル実行時</td>
+                    <td>shipping_meeting</td>
+                    <td>同上</td>
+                </tr>
+                <tr>
+                    <td class="num">23</td><td class="name">（汎用フォールバック）</td><td class="type-code">default</td>
+                    <td>app.js側での明示的な発生箇所なし</td>
+                    <td>—</td>
+                    <td><code>notify-approval.js</code>側で未知の<code>notification_type</code>だった場合のみ使われる本文テンプレート</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            日程変更・キャンセル系（17〜22）は、招待メールを実際に受け取った人（<code>emailed_at</code>が入っている人）にだけ変更・キャンセルの通知が飛ぶ設計。<br>
+            担当者変更や完了取消などの「訂正」操作時には、まだ送信されていない（<code>emailed_at</code>が空の）旧通知を取り消す仕組みがあり、誤送信を防いでいる。<br>
+            現状、宛先は設定画面（⚙️ → 通知・宛先設定 → 通知の宛先設定）からフローごとに固定宛先・工番担当者の自動通知ON/OFFを編集可能。
+        </div>
+    </section>
+
+    <footer>
+        作成: 2026-08-25（承認フロー管理システムのコード調査に基づく）。仕様変更時は本ページの更新を忘れないこと。
+    </footer>
+
+</div>
+</body>
+</html>
