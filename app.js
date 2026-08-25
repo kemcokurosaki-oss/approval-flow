@@ -3700,8 +3700,9 @@ async function showReminderCcDetailScreen(itemKey) {
         <label class="recip-person-row">
             <input type="checkbox" data-recipient-kind="${c.kind}" data-recipient-id="${c.id}" ${c.checked ? 'checked' : ''}
                    onchange="updateRecipientSelectedCount()">
-            <span class="recip-person-name" title="${esc(c.name || '')}">${esc(c.name || '—')}${c.dept ? `（${esc(c.dept)}）` : ''}</span>
+            <span class="recip-person-name" title="${esc(c.name || '')}">${esc(c.name || '—')}</span>
             <span class="recip-person-email" title="${esc(c.email || '')}">${esc(c.email || '')}</span>
+            ${c.dept ? `<span class="recip-note" title="${esc(c.dept)}">${esc(c.dept)}</span>` : '<span></span>'}
         </label>
     `).join('');
 
