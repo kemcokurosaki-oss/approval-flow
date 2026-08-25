@@ -4559,7 +4559,7 @@ async function saveEditQaPendingItem(requestId, idx) {
                 .eq('notification_type', 'pending_item_assigned')
                 .eq('detail', prevContent)
                 .is('emailed_at', null);
-            await _notifyPendingOwner(requestId, newOwner, false, content);
+            await _notifyPendingOwner(requestId, newOwner, content);
         }
 
         qaEditingPendingIdx = null;
