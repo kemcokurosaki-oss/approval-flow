@@ -378,6 +378,23 @@ async function logSettingsChange(category, summary) {
     await db.from('settings_audit_log').insert({ changed_by: currentUser.email, category, summary });
 }
 
+// ===== 設定画面（reminder_settings） =====
+// リマインダー通知（scripts/notify-reminders.js）のCC宛先のうち、
+// ロールでは決まらず個人単位で固定しているもの
+const REMINDER_CC_ITEMS = [
+    { key: 'approval_reminder_operations_director', label: '承認催促（操業部長宛て）のCC' },
+    { key: 'pending_item_reminder',                 label: 'ペンディング項目期日超過催促のCC' }
+];
+let reminderCcRecipients = {};
+async function loadReminderCcSettings() {
+    const { data } = await db.from('reminder_settings').select('value').eq('key', 'reminder_cc_recipients').maybeSingle();
+    reminderCcRecipients = data?.value || {};
+}
+function getReminderCcPlan(itemKey) {
+    const plan = reminderCcRecipients[itemKey] || {};
+    return { profileIds: plan.profileIds || [], recipientIds: plan.recipientIds || [] };
+}
+
 // フロー種別ごとの固定宛先（個人のprofile ID・notification_recipients ID）
 function getFixedRecipientPlan(flowType) {
     const plan = flowSettings.fixedRecipients[flowType] || {};
