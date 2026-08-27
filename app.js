@@ -2846,7 +2846,7 @@ async function openDetailModal(requestId) {
     let hasPackingShipping = false;
     let packingState = 'unknown'; // 'yes'（実タスクあり）/ 'no'（なしと設定済み）/ 'unknown'（未定）
     const shippingDateMismatches = [];
-    if (['shipping', 'simple_inspection', 'inspection'].includes(req.flow_type)) {
+    if (req.flow_type === 'shipping') {
         const [{ data: factoryTasks }, { data: packingTasks }] = await Promise.all([
             req.machine_name
                 ? db.from('tasks').select('end_date').eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '工場出荷').limit(1)
@@ -2860,8 +2860,8 @@ async function openDetailModal(requestId) {
 
         const factoryTaskDate = factoryTasks?.[0]?.end_date || null;
         const packingTaskDate = packingTasks?.[0]?.end_date || null;
-        const approvalFactoryDate = req.flow_type === 'shipping' ? req.confirmed_shipping_date : req.tentative_shipping_date;
-        const approvalPackingDate = req.flow_type === 'shipping' ? req.packing_confirmed_shipping_date : req.packing_tentative_shipping_date;
+        const approvalFactoryDate = req.confirmed_shipping_date;
+        const approvalPackingDate = req.packing_confirmed_shipping_date;
 
         if (approvalFactoryDate && factoryTaskDate && approvalFactoryDate !== factoryTaskDate) {
             shippingDateMismatches.push(`工場出荷: 承認フロー ${fmtDate(approvalFactoryDate)} / 工程表 ${fmtDate(factoryTaskDate)}`);
