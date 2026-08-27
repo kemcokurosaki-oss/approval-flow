@@ -1139,7 +1139,7 @@ async function loadPendingSide() {
     });
 
     // フロー名は見出し側で表示済みのため、カード内では省略して申請タブのカードと行数を揃える
-    const PACKING_RELEVANT_FLOWS = ['shipping', 'simple_inspection', 'inspection', 'tentative_shipping'];
+    const PACKING_RELEVANT_FLOWS = ['shipping', 'simple_inspection', 'inspection'];
     const renderPendingCard = item => {
         const machineHtml = item.machineName ? '<span class="side-card-machine">' + esc(item.machineName) + '</span>' : '';
         const packingWarningHtml = (PACKING_RELEVANT_FLOWS.includes(item.flowType)
