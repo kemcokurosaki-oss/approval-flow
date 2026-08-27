@@ -1544,54 +1544,38 @@ function renderProgressCards() {
     // 梱包出荷の有無を設定できるのは営業・品証・製管のみ
     const canSetPacking = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isQualityOrSeikan;
 
-    // 出荷予定日表示: 工程表（工場出荷タスク終了日）をベースに、仮出荷予定日→確定出荷日の順で上書きする
+    // 出荷予定日表示: 確定出荷日が未入力の間は工程表（工場出荷タスク終了日）をそのまま表示し、
     // 確定出荷日が入ったらラベルも「出荷予定日」→「確定出荷日」に切り替える
     const getEffectiveShippingDate = (num) => {
-        let tentative = null, confirmed = null;
+        let confirmed = null;
         Object.values(projectData[num] || {}).forEach(mData => {
             const shipReq = mData.flows['shipping'];
             if (shipReq?.confirmed_shipping_date && (!confirmed || shipReq.confirmed_shipping_date < confirmed)) {
                 confirmed = shipReq.confirmed_shipping_date;
             }
-            [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
-                if (req?.tentative_shipping_date && (!tentative || req.tentative_shipping_date < tentative)) {
-                    tentative = req.tentative_shipping_date;
-                }
-            });
         });
-        return { date: confirmed || tentative || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
+        return { date: confirmed || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
     };
 
     // 出荷予定日表示（機械単位）: 同工番内でも機械ごとに出荷日が異なる場合に個別表示するための算出
     const getEffectiveShippingDateForMachine = (num, machine) => {
         const mData = projectData[num][machine];
-        let tentative = null, confirmed = null;
         const shipReq = mData.flows['shipping'];
-        if (shipReq?.confirmed_shipping_date) confirmed = shipReq.confirmed_shipping_date;
-        [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
-            if (req?.tentative_shipping_date && (!tentative || req.tentative_shipping_date < tentative)) {
-                tentative = req.tentative_shipping_date;
-            }
-        });
+        const confirmed = shipReq?.confirmed_shipping_date || null;
         const fallback = (taskInfoMap || {})[`${num}__${machine}__工場出荷`]?.end_date || null;
-        return { date: confirmed || tentative || fallback || null, isConfirmed: !!confirmed };
+        return { date: confirmed || fallback || null, isConfirmed: !!confirmed };
     };
 
-    // 梱包出荷日表示: 工程表（梱包出荷タスク終了日）をベースに、梱包仮出荷日→梱包確定出荷日の順で上書きする
+    // 梱包出荷日表示: 確定梱包出荷日が未入力の間は工程表（梱包出荷タスク終了日）をそのまま表示する
     const getEffectivePackingShippingDate = (num) => {
-        let tentative = null, confirmed = null;
+        let confirmed = null;
         Object.values(projectData[num] || {}).forEach(mData => {
             const shipReq = mData.flows['shipping'];
             if (shipReq?.packing_confirmed_shipping_date && (!confirmed || shipReq.packing_confirmed_shipping_date < confirmed)) {
                 confirmed = shipReq.packing_confirmed_shipping_date;
             }
-            [mData.flows['simple_inspection'], mData.flows['inspection']].forEach(req => {
-                if (req?.packing_tentative_shipping_date && (!tentative || req.packing_tentative_shipping_date < tentative)) {
-                    tentative = req.packing_tentative_shipping_date;
-                }
-            });
         });
-        return { date: confirmed || tentative || projectsMap[num]?.packing_shipping_date || null, isConfirmed: !!confirmed };
+        return { date: confirmed || projectsMap[num]?.packing_shipping_date || null, isConfirmed: !!confirmed };
     };
 
     // 未申請・未承認判定（組立・試運転・出荷確定）
