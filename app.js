@@ -904,8 +904,8 @@ async function choosePackingStatus(num, status) {
         // 「なし」確定時、工程表に残っている空日付のプレースホルダータスクは不要になるため削除する
         await deleteEmptyPackingTasks(num);
     }
-    // 「あり」の場合は工程表には触れない。右上表示が「梱包出荷日：未定」に変わり、
-    // 後で仮出荷日（packing_tentative_shipping_date等）が入力された時点で実際の日付表示に切り替わる
+    // 「あり」の場合は工程表には触れない。右上表示が「梱包出荷：あり（未入力）」に変わり、
+    // 工程表に梱包出荷日が入るか確定梱包出荷日が入力された時点で実際の日付表示に切り替わる
     renderProgressCards();
 }
 
