@@ -1097,7 +1097,7 @@ async function loadPendingSide() {
         statusText: '🔴 要承認',
     }));
 
-    // 営業: 確定出荷日・仮出荷予定日の入力待ちになっている申請を取得
+    // 営業: 確定出荷日の入力待ちになっている申請を取得
     let salesItems = [];
     if (isSales) {
         const { data: salesReqs } = await db.from('approval_requests')
@@ -1112,42 +1112,9 @@ async function loadPendingSide() {
             date:       r.created_at,
             statusText: '🔴 確定出荷日 入力待ち',
         }));
-
-        // 仮出荷予定日は簡易検査/外観検査の申請そのものに付随（開催完了済み・未入力のもの）
-        const { data: tentativeReqs } = await db.from('approval_requests')
-            .select('id, project_number, machine_name, created_at')
-            .in('flow_type', ['simple_inspection', 'inspection']).eq('status', 'approved')
-            .is('tentative_shipping_date', null);
-        salesItems.push(...(tentativeReqs || []).map(r => ({
-            id:         r.id,
-            pNum:       r.project_number || '—',
-            machineName: r.machine_name || '',
-            flowType:   'tentative_shipping',
-            flowLabel:  '仮出荷予定日',
-            date:       r.created_at,
-            statusText: '🔴 仮出荷予定日 入力待ち',
-        })));
     }
 
-    // 品証・製管: 営業入力済みの仮出荷予定日の確認待ちを取得（同じく簡易検査/外観検査の申請に付随）
-    let qorsItems = [];
-    if (isQorS) {
-        const { data: confirmReqs } = await db.from('approval_requests')
-            .select('id, project_number, machine_name, created_at')
-            .in('flow_type', ['simple_inspection', 'inspection']).eq('status', 'approved')
-            .not('tentative_shipping_date', 'is', null).is('tentative_shipping_confirmed_at', null);
-        qorsItems = (confirmReqs || []).map(r => ({
-            id:         r.id,
-            pNum:       r.project_number || '—',
-            machineName: r.machine_name || '',
-            flowType:   'tentative_shipping',
-            flowLabel:  '仮出荷予定日',
-            date:       r.created_at,
-            statusText: '🔴 仮出荷予定日 確認待ち',
-        }));
-    }
-
-    let combined = [...actionable, ...salesItems, ...qorsItems];
+    let combined = [...actionable, ...salesItems];
     combined = combined.filter(item => matchesMypageFilterMode(item.pNum));
 
     // バッジ更新（side_badge_pending と side_pending_count 両方）
