@@ -5138,16 +5138,12 @@ async function _getPrepBlockers(projectNum, machine) {
     const priorFlows = _priorSteps(chain, 'shipping_prep');
     if (priorFlows.length === 0) return [];
     const { data: reqs } = await db.from('approval_requests')
-        .select('flow_type, status, sheet_data, tentative_shipping_date, tentative_shipping_confirmed_at')
+        .select('flow_type, status, sheet_data')
         .eq('project_number', projectNum).eq('machine_name', machine)
         .in('flow_type', priorFlows);
     const blockers = [];
     for (const flowType of priorFlows) {
         const req = (reqs || []).find(r => r.flow_type === flowType);
-        // 簡易検査・外観検査は、開催完了後に仮出荷予定日が品証・製管に確認されるまで出荷準備を申請できない
-        if ((flowType === 'simple_inspection' || flowType === 'inspection') && req?.status === 'approved' && !req.tentative_shipping_confirmed_at) {
-            blockers.push({ flowType: 'tentative_shipping', label: '仮出荷予定日', count: 0, notApproved: true });
-        }
         const items = (req?.sheet_data?.pending_items || [])
             .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
         if (items.length > 0) blockers.push({ flowType, count: items.length });
