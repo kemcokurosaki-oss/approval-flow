@@ -3234,41 +3234,10 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     `;
 }
 
-// ===== 営業: 仮出荷予定日入力フッター =====
-// hasPackingShipping=true の場合、梱包出荷日（仮）の入力欄も並べて表示する
-// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
-function buildTentativeDateFooterInner(req, hasPackingShipping, packingState) {
-    const packingBox = hasPackingShipping ? `
-        <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（仮）を入力してください</span>
-            <input type="date" id="packing_tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
-        </div>` : '';
-    const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
-        <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-            <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
-        </div>` : '';
-    return `
-        <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
-            ${packingBox}
-            ${packingWarningBox}
-            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（仮）' : '仮出荷予定日'}を入力してください</span>
-                <input type="date" id="tentative_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
-            </div>
-        </div>
-        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        <button class="btn btn-success"   onclick="submitTentativeShippingDate('${req.id}')">入力する</button>
-    `;
-}
-
 // ===== 「日付を変更する」クリック時にフッターを編集フォームへ切り替える =====
 function showChangeConfirmedDateFooter(requestId) {
     if (!currentDetailReq || currentDetailReq.id !== requestId) return;
     document.getElementById('detail_footer').innerHTML = buildChangeConfirmedDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
-}
-function showChangeTentativeDateFooter(requestId) {
-    if (!currentDetailReq || currentDetailReq.id !== requestId) return;
-    document.getElementById('detail_footer').innerHTML = buildChangeTentativeDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
 }
 
 // ===== 確定出荷日の変更フォーム（現在値をプリフィルし、常務承認済み等であれば再承認が必要になる） =====
