@@ -3197,16 +3197,6 @@ async function openDetailModal(requestId) {
             <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
             <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
-    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
-        && !req.tentative_shipping_date && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildTentativeDateFooterInner(req, hasPackingShipping, packingState);
-    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved'
-        && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at && isQualityOrSeikan) {
-        footer.innerHTML = `
-            ${changeDateFooterLinkHtml}
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-            <button class="btn btn-success"   onclick="confirmTentativeShippingDate('${req.id}')">確認して確定する</button>
-        `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
     } else if (changeDateFooterLinkHtml) {
