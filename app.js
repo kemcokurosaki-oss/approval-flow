@@ -435,9 +435,6 @@ const FLOW_LABELS = {
     test_run:            '試運転完了申請',
     simple_inspection:   '簡易検査開催案内',
     inspection:          '外観検査開催案内',
-    // tentative_shipping: 独立したフローではなく簡易検査/外観検査に付随する値だが、
-    // 対応待ち一覧（サイドバー）でのグルーピング表示用ラベルとして使用する
-    tentative_shipping:  '仮出荷予定日',
     shipping_meeting:    '出荷確認会議開催案内',
     shipping_prep:       '出荷準備完了申請',
     shipping:            '出荷確定申請'
