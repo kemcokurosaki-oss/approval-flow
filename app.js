@@ -4614,17 +4614,9 @@ async function finalizeQaMeeting(requestId) {
 
     showLoading('処理中...');
     try {
-        const { data: req } = await db.from('approval_requests')
-            .select('flow_type, project_number').eq('id', requestId).single();
-
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
-
-        // 簡易検査・外観検査の完了後、営業へ仮出荷予定日の入力を依頼する（同じ申請に付随。別フローは起票しない）
-        if (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') {
-            await _notifyTentativeShippingDateRequest(requestId, req.project_number);
-        }
 
         closeDetailModal();
         await refreshAll();
@@ -4633,27 +4625,6 @@ async function finalizeQaMeeting(requestId) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
         hideLoading();
-    }
-}
-
-// 検査完了をきっかけに、営業へ仮出荷予定日の入力を依頼する通知を送る（同一申請の tentative_shipping_date 列に入力してもらう）
-async function _notifyTentativeShippingDateRequest(requestId, projectNum) {
-    const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
-    const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[projectNum] || null;
-    if (!salesOwner) return;
-
-    const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
-    if (pRows?.length > 0) {
-        await db.from('approval_notifications').insert(
-            pRows.map(p => ({ request_id: requestId, recipient_id: p.id, notification_type: 'tentative_shipping_date_request' }))
-        );
-    } else {
-        const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', salesOwner).eq('active', true);
-        if (nRows?.length > 0) {
-            await db.from('approval_notifications').insert(
-                nRows.map(n => ({ request_id: requestId, recipient_email: n.email, notification_type: 'tentative_shipping_date_request' }))
-            );
-        }
     }
 }
 
