@@ -1708,7 +1708,7 @@ function renderProgressCards() {
         let packingDateLabel = '';
         if (hasAnyPacking) {
             const { date: effectivePackingDate, isConfirmed: packingDateConfirmed } = getEffectivePackingShippingDate(num);
-            // 「あり」確定後、まだ仮出荷日等が未入力の間は「あり（未入力）」を表示する。
+            // 「あり」確定後、工程表にも承認フローにも日付がまだ無い間は「あり（未入力）」を表示する。
             // 「梱包出荷：未定」（有無不明・オレンジの警告バッジ）と紛らわしくならないよう、
             // 文言に「未定」を使わず、色も警告色ではないニュートラルな prog-card-date のままにする
             // （工程表の梱包出荷タスクには触れず、承認フロー側の表示のみ切り替える）
