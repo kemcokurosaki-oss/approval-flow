@@ -3090,7 +3090,7 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
 
-    // ヘッダー下の補足情報（1行目: 開催日・場所、2行目: 出荷予定日。仮出荷予定日は品証・製管の確認が完了するまでは表示しない）
+    // ヘッダー下の補足情報（1行目: 開催日・場所、2行目: 出荷予定日）
     const eventInfoParts = [];
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date) {
         eventInfoParts.push(`開催日: ${fmtDate(req.inspection_date)}${req.inspection_time ? ' ' + req.inspection_time : ''}`);
