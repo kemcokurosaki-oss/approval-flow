@@ -1060,7 +1060,6 @@ async function loadPendingSide() {
     const role    = getEffectiveRole();
     const dept    = getEffectiveDept();
     const isSales = role === 'staff' && dept === '営業';
-    const isQorS  = role === 'quality' || role === 'production_control';
     const el      = document.getElementById('side_content_pending');
     if (!el) return;
 
