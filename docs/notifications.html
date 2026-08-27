@@ -198,7 +198,7 @@
             </tbody>
         </table>
 
-        <h3>出荷日（確定・仮）関連</h3>
+        <h3>確定出荷日関連</h3>
         <table>
             <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
             <tbody>
@@ -214,24 +214,6 @@
                     <td>shipping</td>
                     <td>申請者本人＋品証（quality）全員＋製管（production_control）全員</td>
                 </tr>
-                <tr>
-                    <td class="num">8</td><td class="name">仮出荷予定日 入力依頼</td><td class="type-code">tentative_shipping_date_request</td>
-                    <td>簡易検査／外観検査の開催案内を「完了にする」処理をした時に付随して発生</td>
-                    <td>simple_inspection・inspection</td>
-                    <td>担当営業（sales_person_map由来）</td>
-                </tr>
-                <tr>
-                    <td class="num">9</td><td class="name">仮出荷予定日 入力済み</td><td class="type-code">tentative_shipping_date_input_done</td>
-                    <td>営業が仮出荷予定日を入力、または既確定分を変更した時</td>
-                    <td>simple_inspection・inspection</td>
-                    <td>品証（quality）全員＋製管（production_control）全員</td>
-                </tr>
-                <tr>
-                    <td class="num">10</td><td class="name">仮出荷予定日 確定</td><td class="type-code">tentative_shipping_confirmed</td>
-                    <td>品証・製管が仮出荷予定日を確認・確定ボタンを押した時</td>
-                    <td>simple_inspection・inspection</td>
-                    <td>申請者（検査案内送信者）＋品証全員＋製管全員</td>
-                </tr>
             </tbody>
         </table>
 
@@ -240,19 +222,19 @@
             <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
             <tbody>
                 <tr>
-                    <td class="num">11</td><td class="name">担当割り当て</td><td class="type-code">pending_item_assigned</td>
+                    <td class="num">8</td><td class="name">担当割り当て</td><td class="type-code">pending_item_assigned</td>
                     <td>ペンディング項目／タスクの追加時に担当者を指定、または編集で担当者を変更した時</td>
                     <td>assembly・test_run・simple_inspection・inspection・shipping_meeting<br><span class="badge">出荷準備は対象外（ペンディング項目自体を持たない）</span></td>
                     <td>担当者名で<code>profiles</code>検索、いなければ<code>notification_recipients</code>をメールで</td>
                 </tr>
                 <tr>
-                    <td class="num">12</td><td class="name">完了通知</td><td class="type-code">pending_item_completed</td>
+                    <td class="num">9</td><td class="name">完了通知</td><td class="type-code">pending_item_completed</td>
                     <td>ペンディング項目／タスクの完了ボタン押下時</td>
                     <td>同上</td>
                     <td>品証全員＋製管全員（操作した本人は除外）</td>
                 </tr>
                 <tr>
-                    <td class="num">13</td><td class="name">完了取消通知</td><td class="type-code">pending_item_uncompleted</td>
+                    <td class="num">10</td><td class="name">完了取消通知</td><td class="type-code">pending_item_uncompleted</td>
                     <td>完了取消ボタン押下時</td>
                     <td>同上</td>
                     <td>品証全員＋製管全員（操作した本人は除外）</td>
@@ -265,61 +247,61 @@
             <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
             <tbody>
                 <tr>
-                    <td class="num">14</td><td class="name">簡易検査 開催案内</td><td class="type-code">simple_inspection_invite</td>
+                    <td class="num">11</td><td class="name">簡易検査 開催案内</td><td class="type-code">simple_inspection_invite</td>
                     <td>開催案内を送信した時</td>
                     <td>simple_inspection</td>
                     <td>動的宛先（組立/営業/設計担当者・管理職）＋設定画面の固定宛先</td>
                 </tr>
                 <tr>
-                    <td class="num">15</td><td class="name">外観検査 開催案内</td><td class="type-code">inspection_invite</td>
+                    <td class="num">12</td><td class="name">外観検査 開催案内</td><td class="type-code">inspection_invite</td>
                     <td>開催案内を送信した時</td>
                     <td>inspection</td>
                     <td>動的宛先（組立/試運転/営業/設計担当者・管理職）＋設定画面の固定宛先</td>
                 </tr>
                 <tr>
-                    <td class="num">16</td><td class="name">出荷確認会議 開催案内</td><td class="type-code">shipping_meeting_invite</td>
+                    <td class="num">13</td><td class="name">出荷確認会議 開催案内</td><td class="type-code">shipping_meeting_invite</td>
                     <td>開催案内を送信した時</td>
                     <td>shipping_meeting</td>
                     <td>動的宛先＋固定宛先＋会場（<code>ROOM_EMAILS</code>固定マップ）の会議室メール</td>
                 </tr>
                 <tr>
-                    <td class="num">17</td><td class="name">簡易検査 日程変更</td><td class="type-code">simple_inspection_reschedule</td>
+                    <td class="num">14</td><td class="name">簡易検査 日程変更</td><td class="type-code">simple_inspection_reschedule</td>
                     <td>日程変更を保存した時</td>
                     <td>simple_inspection</td>
                     <td>その申請で既にメール送信済みの通知の宛先を再利用</td>
                 </tr>
                 <tr>
-                    <td class="num">18</td><td class="name">外観検査 日程変更</td><td class="type-code">inspection_reschedule</td>
+                    <td class="num">15</td><td class="name">外観検査 日程変更</td><td class="type-code">inspection_reschedule</td>
                     <td>日程変更を保存した時</td>
                     <td>inspection</td>
                     <td>同上</td>
                 </tr>
                 <tr>
-                    <td class="num">19</td><td class="name">出荷確認会議 日程変更</td><td class="type-code">shipping_meeting_reschedule</td>
+                    <td class="num">16</td><td class="name">出荷確認会議 日程変更</td><td class="type-code">shipping_meeting_reschedule</td>
                     <td>日程変更を保存した時</td>
                     <td>shipping_meeting</td>
                     <td>同上</td>
                 </tr>
                 <tr>
-                    <td class="num">20</td><td class="name">簡易検査 キャンセル</td><td class="type-code">simple_inspection_cancel</td>
+                    <td class="num">17</td><td class="name">簡易検査 キャンセル</td><td class="type-code">simple_inspection_cancel</td>
                     <td>キャンセル実行時</td>
                     <td>simple_inspection</td>
                     <td>既送信済み通知の宛先を再利用（未送信の招待自体は削除）</td>
                 </tr>
                 <tr>
-                    <td class="num">21</td><td class="name">外観検査 キャンセル</td><td class="type-code">inspection_cancel</td>
+                    <td class="num">18</td><td class="name">外観検査 キャンセル</td><td class="type-code">inspection_cancel</td>
                     <td>キャンセル実行時</td>
                     <td>inspection</td>
                     <td>同上</td>
                 </tr>
                 <tr>
-                    <td class="num">22</td><td class="name">出荷確認会議 キャンセル</td><td class="type-code">shipping_meeting_cancel</td>
+                    <td class="num">19</td><td class="name">出荷確認会議 キャンセル</td><td class="type-code">shipping_meeting_cancel</td>
                     <td>キャンセル実行時</td>
                     <td>shipping_meeting</td>
                     <td>同上</td>
                 </tr>
                 <tr>
-                    <td class="num">23</td><td class="name">（汎用フォールバック）</td><td class="type-code">default</td>
+                    <td class="num">20</td><td class="name">（汎用フォールバック）</td><td class="type-code">default</td>
                     <td>app.js側での明示的な発生箇所なし</td>
                     <td>—</td>
                     <td><code>notify-approval.js</code>側で未知の<code>notification_type</code>だった場合のみ使われる本文テンプレート</td>
