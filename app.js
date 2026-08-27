@@ -3075,10 +3075,6 @@ async function openDetailModal(requestId) {
         statusNote = '営業担当者による確定出荷日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm') {
         statusNote = '営業担当者が確定出荷日を入力しました。品証が内容を確認し「内容を確認し申請する」を押すと常務に承認依頼が届きます。';
-    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved' && !req.tentative_shipping_date) {
-        statusNote = '営業担当者による仮出荷予定日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
-    } else if ((req.flow_type === 'simple_inspection' || req.flow_type === 'inspection') && req.status === 'approved' && req.tentative_shipping_date && !req.tentative_shipping_confirmed_at) {
-        statusNote = '営業担当者が仮出荷予定日を入力しました。品証・製管が内容を確認し「確認して確定する」を押すと確定します。';
     } else if (req.status === 'rejected' && isMyRequest) {
         statusNote = '却下されました。内容を確認・修正のうえ「再申請する」から再申請してください。';
     }
