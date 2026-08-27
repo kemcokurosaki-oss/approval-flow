@@ -188,20 +188,6 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
-    case 'tentative_shipping_confirmed': {
-      const tentativeDate = req?.tentative_shipping_date
-        ? `\n仮出荷予定日: ${req.tentative_shipping_date}` : '';
-      return {
-        from,
-        subject: `【仮出荷予定日確定】${pStr}`,
-        text:
-          `${recipientName} 様\n\n` +
-          `${pStr} の仮出荷予定日が確定しました。` +
-          tentativeDate +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
-      };
-    }
-
     case 'completed_by_other':
       return {
         from,
