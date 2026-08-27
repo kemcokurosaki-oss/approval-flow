@@ -802,15 +802,25 @@ function setCheck(itemId, val, btn, cls) {
     scheduleSave();
 }
 
-// グループ内の未入力項目だけを一括で○にする（既に入力済みの項目は上書きしない）
+// グループ内が全て○済みなら一括解除、そうでなければ未入力項目だけを一括で○にする（×・―が付いた項目は上書きしない）
 function bulkSetGroupOK(btn) {
     const group = btn.closest('.sheet-group');
     if (!group) return;
-    group.querySelectorAll('.sheet-item').forEach(item => {
+    const items = [...group.querySelectorAll('.sheet-item')];
+    const itemIds = items.map(item => item.querySelector('.sheet-no')?.textContent.trim()).filter(Boolean);
+    if (itemIds.length === 0) return;
+    const allMaru = itemIds.every(id => checks[id]?.result === '○');
+
+    items.forEach(item => {
         const itemId = item.querySelector('.sheet-no')?.textContent.trim();
-        if (!itemId || checks[itemId]) return;
+        if (!itemId) return;
         const maruBtn = [...item.querySelectorAll('.sheet-btn')].find(b => b.textContent.trim() === '○');
-        if (maruBtn) setCheck(itemId, '○', maruBtn, 'maru');
+        if (!maruBtn) return;
+        if (allMaru) {
+            if (checks[itemId]?.result === '○') setCheck(itemId, '○', maruBtn, 'maru');
+        } else if (!checks[itemId]) {
+            setCheck(itemId, '○', maruBtn, 'maru');
+        }
     });
 }
 
