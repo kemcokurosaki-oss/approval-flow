@@ -2904,17 +2904,13 @@ async function openDetailModal(requestId) {
     const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
         && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
         && (isSales || isQualityOrSeikan) && !myStep;
-    const canChangeTentativeDate = (req.flow_type === 'simple_inspection' || req.flow_type === 'inspection')
-        && !!req.tentative_shipping_date && (isSales || isQualityOrSeikan) && !myStep;
-    const changeDateOnclick = canChangeConfirmedDate ? `showChangeConfirmedDateFooter('${req.id}')` : `showChangeTentativeDateFooter('${req.id}')`;
-    const changeDateLabel = canChangeConfirmedDate
-        ? (hasPackingShipping ? '工場出荷日・梱包出荷日を変更する' : '確定出荷日を変更する')
-        : (hasPackingShipping ? '工場出荷日・梱包出荷日を変更する' : '仮出荷予定日を変更する');
+    const changeDateOnclick = `showChangeConfirmedDateFooter('${req.id}')`;
+    const changeDateLabel = hasPackingShipping ? '工場出荷日・梱包出荷日を変更する' : '確定出荷日を変更する';
     // ズレ警告バナー内に変更ボタンを表示する場合は、フッター側には重複して表示しない
-    const changeDateBannerButtonHtml = (canChangeConfirmedDate || canChangeTentativeDate)
+    const changeDateBannerButtonHtml = canChangeConfirmedDate
         ? `<button type="button" class="btn btn-outline" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
         : '';
-    const changeDateFooterLinkHtml = (!shippingDateMismatches.length && (canChangeConfirmedDate || canChangeTentativeDate))
+    const changeDateFooterLinkHtml = (!shippingDateMismatches.length && canChangeConfirmedDate)
         ? `<button type="button" class="btn btn-outline" style="margin-right:auto;" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
         : '';
 
