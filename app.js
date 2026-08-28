@@ -1737,10 +1737,12 @@ function renderProgressCards() {
         const packingState = getPackingDisplayState(num, hasActualPackingTask);
         const hasAnyPacking = packingState === 'yes';
 
-        // 機械ごとに出荷日が異なる場合は右上にまとめず各機械行に個別表示し、揃っている場合は従来通り右上に1本表示する
+        // 機械ごとに出荷日が異なる場合、または分割出荷（1機械に工場出荷タスクが複数）がある場合は
+        // 右上にまとめず各機械行に個別表示し、揃っている場合は従来通り右上に1本表示する
         const machineShipDates = machines.map(m => Object.assign({ machine: m }, getEffectiveShippingDateForMachine(num, m)));
         const uniqueShipDates = new Set(machineShipDates.filter(d => d.date).map(d => d.date));
-        const perMachineShipDateDiffers = machines.length > 1 && uniqueShipDates.size > 1;
+        const hasSplitShippingInProject = machines.some(m => ((shippingTasksMap || {})[`${num}__${m}`] || []).length >= 2);
+        const perMachineShipDateDiffers = (machines.length > 1 && uniqueShipDates.size > 1) || hasSplitShippingInProject;
         const machineShipDateMap = {};
         machineShipDates.forEach(d => { machineShipDateMap[d.machine] = d; });
 
