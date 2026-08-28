@@ -2377,6 +2377,18 @@ function closeSubmitModal() {
     ui.send('CLOSE');
 }
 
+// 2000番台：ユニット単位申請時、申請モーダルのヘッダーに選択中ユニット名を表示する
+function _updateSubmitUnitDisplay() {
+    const el = document.getElementById('submit_unit_display');
+    if (!el) return;
+    if (currentUnitName) {
+        el.textContent = `ユニット: ${currentUnitName}`;
+        el.style.display = '';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
 // ===== 自主点検シート =====
 async function goToSheetStep() {
     const projectNum = currentProjectNum;
