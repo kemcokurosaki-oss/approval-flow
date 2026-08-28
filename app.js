@@ -1889,13 +1889,7 @@ function renderShipAfterPendingList(wrap) {
 
     let nums = baseNums.filter(num => is2000sSeries(num) === (progressTab === 'assembly_report'));
     if (progressFilterMine) {
-        const myName = currentProfile?.name;
-        if (myName) {
-            nums = nums.filter(num => {
-                const owners = projectsMap[num]?.owners;
-                return owners && owners.has(myName);
-            });
-        }
+        nums = nums.filter(num => projectMatchesMine(num));
     }
     if (progressFilterPrefix) {
         nums = nums.filter(num => matchesPrefix(num, progressFilterPrefix));
