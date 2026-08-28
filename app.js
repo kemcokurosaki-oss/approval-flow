@@ -3103,6 +3103,7 @@ let _unitListModalCtx = null;
 
 async function openUnitListModal(projectNum, machine, flowType) {
     document.getElementById('detail_modal').classList.add('open');
+    document.querySelector('#detail_modal .modal').classList.add('unit-list-mode');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
     document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
     ui.send('OPEN_DETAIL');
@@ -3116,38 +3117,77 @@ async function openUnitListModal(projectNum, machine, flowType) {
     const reqByUnit = {};
     (reqs || []).forEach(r => { reqByUnit[r.unit_name] = r; });
 
+    // 行に出す申請者名をまとめて取得
+    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const requesterNames = {};
+    if (requesterIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
+        (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
+    }
+
     const pInfo = projectsMap[projectNum] || {};
     const canApply = canApplyFlow(flowType);
     _unitListModalCtx = { projectNum, machine, flowType, reqByUnit };
 
+    const counts = {};
     const rows = unitNames.map(unitName => {
         const req = reqByUnit[unitName];
-        let statusHtml, selectable;
+        let label, badgeClass, selectable;
         if (!req) {
-            statusHtml = '<span class="status-badge s-gray">未申請</span>';
-            selectable = canApply;
+            label = '未申請'; badgeClass = 's-gray'; selectable = canApply;
         } else if (req.status === 'draft') {
-            statusHtml = '<span class="status-badge s-gray">入力中</span>';
-            selectable = req.requester_id === currentUser.id;
+            label = '入力中';  badgeClass = 's-gray'; selectable = req.requester_id === currentUser.id;
         } else {
-            statusHtml = `<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}">${esc(statusBadgeLabel(req))}</span>`;
+            label = statusBadgeLabel(req);
+            badgeClass = STATUS_CLASSES[req.status] || 's-pending';
             selectable = true;
         }
+        counts[label] = (counts[label] || 0) + 1;
+
+        // 申請者・申請日（下書きは「下書きあり」として見せる）
+        let meta = '';
+        if (req) {
+            const who  = requesterNames[req.requester_id] || '';
+            const when = req.submitted_at || req.created_at;
+            const date = when ? fmtDate(when) : '';
+            const head = req.status === 'draft' ? '下書きあり' : '申請';
+            meta = [head, who, date].filter(Boolean).join(' ');
+        }
+
         const rowClass = 'unit-list-row' + (selectable ? ' is-selectable' : ' is-disabled');
         const onclickAttr = selectable ? ` onclick="selectUnitListRow(this, '${esc(unitName)}')"` : '';
         return `<div class="${rowClass}"${onclickAttr}>
-            <div class="unit-list-name">${esc(unitName)}</div>
-            <div class="unit-list-status">${statusHtml}</div>
+            <div class="unit-list-row-main">
+                <div class="unit-list-dot"><i></i></div>
+                <div class="unit-list-name">${esc(unitName)}</div>
+                <div class="unit-list-status"><span class="status-badge ${badgeClass}">${esc(label)}</span></div>
+            </div>
+            <div class="unit-list-meta">${esc(meta)}</div>
         </div>`;
+    }).join('');
+
+    // 状態ごとの件数チップ（一覧の上に出す）
+    const countChips = Object.keys(counts).map(label => {
+        const statusKey = Object.keys(STATUS_LABELS).find(k => STATUS_LABELS[k] === label);
+        const cls = (label === '未申請' || label === '入力中') ? 's-gray' : (STATUS_CLASSES[statusKey] || 's-pending');
+        return `<span class="unit-list-count status-badge ${cls}">${esc(label)} ${counts[label]}</span>`;
     }).join('');
 
     document.getElementById('detail_title').textContent = `${FLOW_LABELS[flowType] || flowType}（ユニット別）`;
     document.getElementById('detail_body').innerHTML = `
-        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
-        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
-        <hr class="section-divider">
+        <div class="mph-header">
+            <div class="mph-pnum">${esc(projectNum)}【${esc(machine)}】</div>
+            <div class="mph-customer">${esc(pInfo.customer_name || '')}</div>
+        </div>
+        ${pInfo.project_details ? `<div class="mph-name">${esc(pInfo.project_details)}</div>` : ''}
+        <div class="unit-list-head">
+            <span class="unit-list-head-label">申請するユニットを1つ選んでください</span>
+            <span class="unit-list-head-spacer"></span>
+            ${countChips}
+        </div>
         <div class="unit-list-wrap" id="unit_list_wrap">${rows}</div>`;
     document.getElementById('detail_footer').innerHTML = `
+        <span class="unit-list-footer-hint" id="unit_list_hint"></span>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-primary" id="unit_list_action_btn" disabled>ユニットを選択してください</button>`;
 }
@@ -3156,6 +3196,9 @@ async function openUnitListModal(projectNum, machine, flowType) {
 function selectUnitListRow(el, unitName) {
     document.querySelectorAll('#unit_list_wrap .unit-list-row').forEach(r => r.classList.remove('is-active'));
     el.classList.add('is-active');
+
+    const hint = document.getElementById('unit_list_hint');
+    if (hint) hint.textContent = `選択中：${unitName}`;
 
     const btn = document.getElementById('unit_list_action_btn');
     if (!btn || !_unitListModalCtx) return;
@@ -3801,6 +3844,7 @@ function buildQaFooterInner(req) {
 
 function closeDetailModal() {
     document.getElementById('detail_modal').classList.remove('open');
+    document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
     ui.send('CLOSE');
 }
 
