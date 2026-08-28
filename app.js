@@ -3440,18 +3440,26 @@ function showChangeConfirmedDateFooter(requestId) {
 
 // ===== 確定出荷日の変更フォーム（現在値をプリフィルし、常務承認済み等であれば再承認が必要になる） =====
 function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
+    const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を変更してください</span>
             <input type="date" id="packing_sales_date_input" value="${req.packing_confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
+    const dateLabel = hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日';
+    const dateBox2 = isSplitShipping ? `
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ②${dateLabel}を変更してください</span>
+                <input type="date" id="sales_date_input_2" value="${req.confirmed_shipping_date_2 || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
+            </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を変更してください</span>
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${isSplitShipping ? '①' : ''}${dateLabel}を変更してください</span>
                 <input type="date" id="sales_date_input" value="${req.confirmed_shipping_date || ''}" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
+            ${dateBox2}
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="changeConfirmedShippingDate('${req.id}')">変更する</button>
