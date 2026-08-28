@@ -6132,11 +6132,14 @@ async function submitShipping() {
 // 営業: 確定出荷日を入力（品証の確認待ちへ）
 async function submitSalesShippingDate(requestId) {
     if (requireLogin()) return;
+    const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const dateVal        = document.getElementById('sales_date_input')?.value;
+    const dateVal2       = isSplitShipping ? (document.getElementById('sales_date_input_2')?.value || null) : null;
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
 
     if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
+    if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
     if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
 
     showLoading('処理中...');
@@ -6146,6 +6149,7 @@ async function submitSalesShippingDate(requestId) {
             status: 'awaiting_shipping_confirm',
             updated_at: new Date().toISOString()
         };
+        if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
         if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
 
         const { data: req, error } = await db.from('approval_requests')
@@ -6168,7 +6172,7 @@ async function submitSalesShippingDate(requestId) {
             );
         }
 
-        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, factoryDate2: dateVal2, packingDate: packingDateVal });
 
         closeDetailModal();
         await refreshAll();
