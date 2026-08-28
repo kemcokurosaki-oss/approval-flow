@@ -3013,7 +3013,7 @@ async function openAssemblyGroupDetailModal(projectNum, machine) {
             sheetLinkHtml = `<button class="btn btn-secondary" style="font-size:13px; padding:5px 14px; margin-top:6px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>`;
         }
         return `
-        <div class="section-title">${esc(label)}　<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}" style="font-size:12px;">${esc(STATUS_LABELS[req.status] || req.status)}</span></div>
+        <div class="section-title">${esc(label)}　<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}" style="font-size:12px;">${esc(statusBadgeLabel(req))}</span></div>
         <div class="steps-list">${_renderSingleApprovalStep(req, steps, approverNames)}</div>
         ${sheetLinkHtml}`;
     };
