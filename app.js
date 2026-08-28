@@ -2407,14 +2407,15 @@ async function goToSheetStep() {
         const machine = machineNums[0];
         const note = document.getElementById('submit_note').value.trim();
 
-        const { data: existing } = await db.from('approval_requests')
+        let existingQuery = db.from('approval_requests')
             .select('id')
             .eq('project_number', projectNum)
             .eq('machine_name', machine)
             .eq('flow_type', currentFlowType)
             .eq('status', 'draft')
-            .eq('requester_id', currentUser.id)
-            .maybeSingle();
+            .eq('requester_id', currentUser.id);
+        existingQuery = currentUnitName ? existingQuery.eq('unit_name', currentUnitName) : existingQuery.is('unit_name', null);
+        const { data: existing } = await existingQuery.maybeSingle();
 
         if (existing) {
             currentDraftId = existing.id;
@@ -2425,6 +2426,7 @@ async function goToSheetStep() {
             const { data: newDraft, error } = await db.from('approval_requests').insert({
                 project_number: projectNum,
                 machine_name:   machine,
+                unit_name:      currentUnitName || null,
                 flow_type:      currentFlowType,
                 status:         'draft',
                 requester_id:   currentUser.id,
