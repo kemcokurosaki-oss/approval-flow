@@ -3059,10 +3059,12 @@ async function openDetailModal(requestId) {
     if (req.flow_type === 'shipping') {
         const [{ data: factoryTasks }, { data: packingTasks }] = await Promise.all([
             req.machine_name
-                ? db.from('tasks').select('end_date').eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '工場出荷').limit(1)
+                ? db.from('tasks').select('end_date').eq('project_number', pNum).eq('machine', req.machine_name).eq('text', '工場出荷').order('end_date', { ascending: true })
                 : Promise.resolve({ data: [] }),
             db.from('tasks').select('start_date, end_date').eq('project_number', pNum).eq('text', '梱包出荷').limit(1)
         ]);
+        // 分割出荷（同一機械に工場出荷タスクが複数）の件数。①②の入力欄出し分けに使う
+        currentDetailShippingTaskCount = (factoryTasks || []).length || 1;
         // 梱包出荷は有無未定の間、開始日・終了日が空のプレースホルダータスクとして工程表に常設されるため、
         // 実際に日付が入って初めて「梱包出荷あり」として扱う
         hasPackingShipping = !!(packingTasks && packingTasks.length > 0 && packingTasks[0].start_date);
