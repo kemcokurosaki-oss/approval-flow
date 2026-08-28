@@ -5011,15 +5011,31 @@ async function syncTaskCompletionOnFlowApproval(req) {
 // FLOW_TASK_SYNC_ENABLED（完了フラグ連携用）とは独立したフラグ
 const SHIPPING_DATE_TASK_SYNC_ENABLED = true;
 
-async function syncShippingDateToTasks(req, { factoryDate, packingDate } = {}) {
+async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packingDate } = {}) {
     if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
     if (!req?.project_number) return;
     try {
         if (factoryDate && req.machine_name) {
-            await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate })
-                .eq('project_number', req.project_number)
-                .eq('machine', req.machine_name)
-                .eq('text', '工場出荷');
+            // 分割出荷（同一機械に工場出荷タスクが2件）の場合は、end_date昇順で①②それぞれのタスク行を個別に更新する
+            if (factoryDate2) {
+                const { data: factoryTasks } = await db.from('tasks')
+                    .select('id, end_date')
+                    .eq('project_number', req.project_number)
+                    .eq('machine', req.machine_name)
+                    .eq('text', '工場出荷')
+                    .order('end_date', { ascending: true });
+                if (factoryTasks?.[0]) {
+                    await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate }).eq('id', factoryTasks[0].id);
+                }
+                if (factoryTasks?.[1]) {
+                    await db.from('tasks').update({ start_date: factoryDate2, end_date: factoryDate2 }).eq('id', factoryTasks[1].id);
+                }
+            } else {
+                await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate })
+                    .eq('project_number', req.project_number)
+                    .eq('machine', req.machine_name)
+                    .eq('text', '工場出荷');
+            }
         }
         if (packingDate) {
             // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
