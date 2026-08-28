@@ -3158,15 +3158,7 @@ async function openDetailModal(requestId) {
         }
     }
     currentDetailHasPackingShipping = hasPackingShipping;
-    const slbl   = (req.flow_type === 'shipping' && req.status === 'submitted')
-        ? '常務承認待ち'
-        : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted')
-        ? '開催待ち'
-        : (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'approved')
-        ? '開催済み'
-        : (req.flow_type === 'shipping_prep' && req.status === 'approved')
-        ? '完了'
-        : (STATUS_LABELS[req.status] || req.status);
+    const slbl   = statusBadgeLabel(req);
 
     // 自分が担当すべきステップか確認（shipping_prep は承認不要のため対象外）
     const myStep = steps.find(s =>
