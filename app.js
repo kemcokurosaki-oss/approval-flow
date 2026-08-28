@@ -6222,11 +6222,14 @@ async function confirmAndSubmitShipping(requestId) {
 // 承認ステップをリセットして常務の再承認を必須にする
 async function changeConfirmedShippingDate(requestId) {
     if (requireLogin()) return;
+    const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const dateVal        = document.getElementById('sales_date_input')?.value;
+    const dateVal2       = isSplitShipping ? (document.getElementById('sales_date_input_2')?.value || null) : null;
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
 
     if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
+    if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
     if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
 
     showLoading('処理中...');
@@ -6239,6 +6242,7 @@ async function changeConfirmedShippingDate(requestId) {
         const needsReapproval = current.status === 'submitted' || current.status === 'approved';
 
         const updatePayload = { confirmed_shipping_date: dateVal, updated_at: new Date().toISOString() };
+        if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
         if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
         if (needsReapproval) {
             updatePayload.status      = 'submitted';
