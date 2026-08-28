@@ -2211,9 +2211,9 @@ async function openFlowModalPreset(el, overrideFlowType) {
     const projectNum = el.dataset.num;
     const machineName = el.dataset.machine;
 
-    // 2000番台でその機械にユニットが複数ある場合、フロー丸クリックはユニット一覧モーダル側の
-    // openUnitListModal から個別に呼ばれる想定だが、念のためここでも複数ユニットなら中間モーダルを挟む
-    if (flowType === 'assembly' || flowType === 'test_run') {
+    // 2000番台の組立でその機械にユニットが複数ある場合、フロー丸クリックはユニット一覧モーダル側の
+    // openUnitListModal から個別に呼ばれる想定だが、念のためここでも複数ユニットなら中間モーダルを挟む（試運転は機械単位のまま対象外）
+    if (flowType === 'assembly') {
         const unitNames = getUnitNames(progressCachedData?.unitListMap, projectNum, machineName, flowType);
         if (unitNames.length > 1) {
             openUnitListModal(projectNum, machineName, flowType);
