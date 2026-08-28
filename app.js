@@ -1745,18 +1745,25 @@ function renderProgressCards() {
         const packingState = getPackingDisplayState(num, hasActualPackingTask);
         const hasAnyPacking = packingState === 'yes';
 
-        // 機械ごとに出荷日が異なる場合、または分割出荷（1機械に工場出荷タスクが複数）がある場合は
-        // 右上にまとめず各機械行に個別表示し、揃っている場合は従来通り右上に1本表示する
+        // 機械が複数あって出荷日が異なる場合、または複数機械のいずれかで分割出荷（工場出荷タスクが複数）がある場合は
+        // 右上にまとめず各機械行に個別表示し、それ以外は従来通り右上に1本（分割出荷なら①②2本）表示する
         const machineShipDates = machines.map(m => Object.assign({ machine: m }, getEffectiveShippingDateForMachine(num, m)));
         const uniqueShipDates = new Set(machineShipDates.filter(d => d.date).map(d => d.date));
         const hasSplitShippingInProject = machines.some(m => ((shippingTasksMap || {})[`${num}__${m}`] || []).length >= 2);
-        const perMachineShipDateDiffers = (machines.length > 1 && uniqueShipDates.size > 1) || hasSplitShippingInProject;
+        const perMachineShipDateDiffers = machines.length > 1 && (uniqueShipDates.size > 1 || hasSplitShippingInProject);
         const machineShipDateMap = {};
         machineShipDates.forEach(d => { machineShipDateMap[d.machine] = d; });
 
         let shippingDateLabel;
         if (perMachineShipDateDiffers) {
             shippingDateLabel = '';
+        } else if (machines.length === 1 && hasSplitShippingInProject) {
+            // 機械1台の分割出荷は右上にまとめて①②を並べて表示する（prog-card-datesが縦積みにする）
+            shippingDateLabel = getShippingEntriesForMachine(num, machines[0]).filter(e => e.date).map(e => {
+                const baseLabel = hasAnyPacking ? '工場出荷日' : (e.isConfirmed ? '確定出荷日' : '出荷予定日');
+                const labelText = e.seq ? `${e.seq === 1 ? '①' : '②'}${baseLabel}` : baseLabel;
+                return buildShipDateSpan(labelText, e.date, e.isConfirmed);
+            }).join('');
         } else {
             const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
             const baseLabel = hasAnyPacking ? '工場出荷日' : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日');
