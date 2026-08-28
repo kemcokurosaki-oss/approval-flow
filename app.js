@@ -1988,14 +1988,14 @@ async function openFlowModalPreset(el) {
     const findCb = (listId) =>
         [...document.querySelectorAll(`#${listId} input[type="checkbox"]`)].find(c => c.value === machineName);
 
-    if (flowType === 'assembly' || flowType === 'test_run' || flowType === 'shipping_prep') {
+    if (flowType === 'assembly' || flowType === 'electrical' || flowType === 'test_run' || flowType === 'shipping_prep') {
         openSubmitModal(flowType);
         currentProjectNum = projectNum;
         const p = projectsMap[projectNum] || {};
         const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
         document.getElementById('submit_project_display').textContent = projectNum;
-        // 組立・試運転はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
-        const isMachineLocked = flowType === 'assembly' || flowType === 'test_run';
+        // 組立・電装・試運転はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
+        const isMachineLocked = flowType === 'assembly' || flowType === 'electrical' || flowType === 'test_run';
         await onProjectChange(isMachineLocked ? machineName : null);
         if (isMachineLocked) {
             await onMachineChange();
