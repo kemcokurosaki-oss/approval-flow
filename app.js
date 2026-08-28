@@ -3053,6 +3053,71 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
         </div>`;
 }
 
+// ===== ユニット一覧モーダル（2000番台、機械にユニットが複数ある場合の組立/試運転フロー） =====
+// 機械のフロー丸から開き、ユニットごとの申請状況を一覧表示して個別の申請・詳細確認へ誘導する
+async function openUnitListModal(projectNum, machine, flowType) {
+    document.getElementById('detail_modal').classList.add('open');
+    document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
+    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+    ui.send('OPEN_DETAIL');
+
+    const unitNames = getUnitNames(progressCachedData?.unitListMap, projectNum, machine, flowType);
+
+    const { data: reqs } = await db.from('approval_requests')
+        .select('*')
+        .eq('project_number', projectNum).eq('machine_name', machine)
+        .eq('flow_type', flowType).not('unit_name', 'is', null);
+    const reqByUnit = {};
+    (reqs || []).forEach(r => { reqByUnit[r.unit_name] = r; });
+
+    const pInfo = projectsMap[projectNum] || {};
+    const canApply = canApplyFlow(flowType);
+
+    const rows = unitNames.map(unitName => {
+        const req = reqByUnit[unitName];
+        let statusHtml, actionHtml;
+        if (!req) {
+            statusHtml = '<span class="status-badge s-gray">未申請</span>';
+            actionHtml = canApply
+                ? `<button class="btn btn-primary btn-sm" onclick="applyUnitFlowFromListModal('${flowType}', '${esc(projectNum)}', '${esc(machine)}', '${esc(unitName)}')">申請する →</button>`
+                : '';
+        } else if (req.status === 'draft') {
+            statusHtml = '<span class="status-badge s-gray">入力中</span>';
+            actionHtml = (req.requester_id === currentUser.id)
+                ? `<button class="btn btn-secondary btn-sm" onclick="closeDetailModal(); openDraftInSubmitModal('${req.id}')">続きを入力する →</button>`
+                : '<span style="font-size:12px;color:#aaa;">申請者が入力中</span>';
+        } else {
+            statusHtml = `<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}">${esc(statusBadgeLabel(req))}</span>`;
+            actionHtml = `<button class="btn btn-secondary btn-sm" onclick="closeDetailModal(); openDetailModal('${req.id}')">詳細を見る →</button>`;
+        }
+        return `<div class="unit-list-row">
+            <div class="unit-list-name">${esc(unitName)}</div>
+            <div class="unit-list-status">${statusHtml}</div>
+            <div class="unit-list-action">${actionHtml}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('detail_title').textContent = `${FLOW_LABELS[flowType] || flowType}（ユニット別）`;
+    document.getElementById('detail_body').innerHTML = `
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
+        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        <hr class="section-divider">
+        <div class="unit-list-wrap">${rows}</div>`;
+    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+}
+
+// ユニット一覧モーダルの「申請する」から申請モーダルへ（工事番号・機械・ユニットをプリセットして遷移）
+async function applyUnitFlowFromListModal(flowType, projectNum, machine, unitName) {
+    closeDetailModal();
+    openSubmitModal(flowType);
+    currentProjectNum = projectNum;
+    currentUnitName   = unitName;
+    document.getElementById('submit_project_display').textContent = projectNum;
+    _updateSubmitUnitDisplay();
+    await onProjectChange(machine);
+    await onMachineChange();
+}
+
 // ===== 組立＋電装 合成詳細モーダル =====
 // 電気艤装タスクがある機械の「組立」丸アイコンから開く。組立・電装それぞれの承認状況を分けて表示する。
 async function openAssemblyGroupDetailModal(projectNum, machine) {
