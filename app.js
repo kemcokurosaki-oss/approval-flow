@@ -1035,19 +1035,23 @@ async function onMachineChange() {
     // 1台選択: 工程表の実タスクに基づく詳細フロー検出
     const machine = machines[0];
     const chain = await _getMachineFlowChain(num, machine);
-    const doneFlows = await _getMachineDoneFlows(num, machine);
+    const { approved: approvedRaw, electricalRequired } = await _getRawFlowStatus(num, machine);
 
-    // 組立・電装は並行フロー（どちらが「今回」でも、もう一方を前後フローとしては出さない）
-    const excludeFromChain = (currentFlowType === 'assembly' || currentFlowType === 'electrical')
-        ? new Set(['assembly', 'electrical'])
-        : new Set([currentFlowType]);
-    const doneList     = chain.filter(t => !excludeFromChain.has(t) && doneFlows.has(t));
-    const upcomingList = chain.filter(t => !excludeFromChain.has(t) && !doneFlows.has(t));
+    // 電気艤装タスクがある機械は、組立の直後に電装を挿入して常に両方の状況を表示する
+    // （組立・電装は並行フローのため、どちらから見ても組立→電装→出荷の順・各自の実際の状況で見せる）
+    let displayChain = chain;
+    if (electricalRequired) {
+        const idx = displayChain.indexOf('assembly');
+        displayChain = [...displayChain.slice(0, idx + 1), 'electrical', ...displayChain.slice(idx + 1)];
+    }
 
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
-        doneList.map(t => _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')).join('') +
-        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[currentFlowType] || '完了通知'}（今回）`) +
-        upcomingList.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
+        displayChain.map(t => t === currentFlowType
+            ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[t] || '完了通知'}（今回）`)
+            : approvedRaw.has(t)
+                ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')
+                : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)
+        ).join('') +
         `</div>`;
     flowEl.style.display = 'block';
     if (currentFlowType === 'shipping_prep') {
