@@ -3292,7 +3292,12 @@ async function openDetailModal(requestId) {
         shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
     }
     if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
-        shippingInfoParts.push(`${req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日'}: ${fmtDate(req.confirmed_shipping_date)}`);
+        const factoryDateLabel = req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日';
+        const isSplitShipping  = currentDetailShippingTaskCount >= 2;
+        shippingInfoParts.push(`${isSplitShipping ? '①' : ''}${factoryDateLabel}: ${fmtDate(req.confirmed_shipping_date)}`);
+        if (isSplitShipping && req.confirmed_shipping_date_2) {
+            shippingInfoParts.push(`②${factoryDateLabel}: ${fmtDate(req.confirmed_shipping_date_2)}`);
+        }
     }
 
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
