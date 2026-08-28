@@ -3003,9 +3003,9 @@ async function openAssemblyGroupDetailModal(projectNum, machine) {
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
-        ${renderBlock(assemblyReq, '組立')}
+        ${renderBlock(assemblyReq, '組立', 'assembly')}
         <hr class="section-divider">
-        ${renderBlock(electricalReq, '電装')}
+        ${renderBlock(electricalReq, '電装', 'electrical')}
     `;
 
     // 自分が承認できるステップがある方だけ、承認・却下ボタンを出す（組立・電装どちらも組立部長が対象になり得る）
