@@ -1423,7 +1423,7 @@ async function loadProgress() {
 
     // 機械ごとのフロー状態チェック用セット（project__machine__taskText）
     const { data: machineTasks } = await db.from('tasks')
-        .select('project_number, machine, text, end_date, is_completed')
+        .select('project_number, machine, unit, text, end_date, is_completed')
         .in('text', ['機械組立', '電気艤装', '外観検査', '試運転', '出荷確認会議', '出荷準備', '工場出荷', '梱包出荷'])
         .not('machine', 'is', null);
 
@@ -1431,6 +1431,34 @@ async function loadProgress() {
         (machineTasks || []).map(t => `${t.project_number}__${t.machine}__${t.text}`)
     );
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
+
+    // 2000番台のユニット単位承認判定用：project__machine__flowType → ユニーク unit 名配列（ソート済み）
+    // assembly=機械組立タスクのunit値、test_run=試運転タスクのunit値をそれぞれ独立に集計する
+    const UNIT_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転' };
+    const unitListMap = {};
+    (machineTasks || []).forEach(t => {
+        const flowType = Object.keys(UNIT_FLOW_TASK_TEXT).find(k => UNIT_FLOW_TASK_TEXT[k] === t.text);
+        if (!flowType) return;
+        const unit = (t.unit || '').trim();
+        if (!unit) return;
+        const key = `${t.project_number}__${t.machine}__${flowType}`;
+        if (!unitListMap[key]) unitListMap[key] = new Set();
+        unitListMap[key].add(unit);
+    });
+    Object.keys(unitListMap).forEach(k => { unitListMap[k] = [...unitListMap[k]].sort(); });
+    const getUnitNames = (num, machine, flowType) => unitListMap[`${num}__${machine}__${flowType}`] || [];
+
+    // 未申請催促バッジのユニット別判定用（project__machine__unit__taskText → {end_date, is_completed}）
+    const unitTaskInfoMap = {};
+    (machineTasks || []).forEach(t => {
+        const unit = (t.unit || '').trim();
+        if (!unit) return;
+        const key = `${t.project_number}__${t.machine}__${unit}__${t.text}`;
+        const existing = unitTaskInfoMap[key];
+        if (!existing || (t.end_date && (!existing.end_date || t.end_date < existing.end_date))) {
+            unitTaskInfoMap[key] = { end_date: t.end_date, is_completed: t.is_completed };
+        }
+    });
 
     // 未申請催促（組立・試運転・工場出荷）の期日判定用（project__machine__taskText → {end_date, is_completed}）
     // 同一機械に同名タスクが複数ある場合（分割出荷の工場出荷など）は、最も早い end_date のものを採用する
