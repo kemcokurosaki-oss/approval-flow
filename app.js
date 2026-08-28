@@ -149,7 +149,7 @@ const ROOM_EMAILS = {
 const is2000sSeries = num => { const n = parseInt(num, 10); return n >= 2000 && n <= 2999; };
 // テンプレートC（3C/4C）の工番判定
 const isTemplateC = num => /^[34]C/i.test(num);
-// 点検系（3T/4T）の工番判定（承認フロー対象外）
+// 点検系（3T/4T）の工番判定（D番と同様、機械組立タスクがある工番だけ承認フロー対象）
 const isTInspectionSeries = num => /^[34]T/i.test(num);
 // 5番台・7番台の工番判定（承認フロー対象外）
 const is5or7Series = num => /^[57]/.test(num);
