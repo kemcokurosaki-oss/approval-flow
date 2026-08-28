@@ -321,6 +321,7 @@ async function switchDevRole(value) {
 
     const DEMO_LABELS = {
         staff_kumitate:      '組立担当者',
+        staff_denki:         '電装担当者',
         staff_shiunten:      '試運転担当者（操業）',
         assembly_manager:    '組立課長',
         assembly_director:   '組立部長',
