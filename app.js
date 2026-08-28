@@ -812,6 +812,24 @@ async function loadProjects() {
         }
     });
 
+    // 営業担当者（自分の工番フィルタ用）：tasks.ownerは代理対応等で実担当と食い違うことがあるため、
+    // 正式な工番別担当マスタであるapp_settings(sales_person_map)を使う
+    const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
+    const salesPersonMap = sData?.value ? JSON.parse(sData.value) : {};
+    Object.entries(salesPersonMap).forEach(([num, name]) => {
+        if (projectsMap[num] && name) projectsMap[num].salesOwner = name;
+    });
+}
+
+// 「自分の担当」フィルタの判定。営業部は正式担当マスタ(sales_person_map)、それ以外はタスク担当者欄で判定する
+function projectMatchesMine(num) {
+    const myName = currentProfile?.name;
+    if (!myName) return false;
+    if (currentProfile?.department === '営業') {
+        return projectsMap[num]?.salesOwner === myName;
+    }
+    const owners = projectsMap[num]?.owners;
+    return !!(owners && owners.has(myName));
 }
 
 const simpleInspectionProjectNums = new Set(); // 簡易検査タスクがある工番
