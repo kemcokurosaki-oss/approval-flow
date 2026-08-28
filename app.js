@@ -1964,9 +1964,6 @@ function renderProgressCards() {
                 let flowDateStr = '';
                 if (isMultiUnit) {
                     // バッジ数字は分かりにくいため付けない。状態は丸の色（集約状態）のみで表現する
-                } else if (isAssemblyGroup && !req && !elecReq) {
-                    // 未申請でも、この機械が電装対象であることは常に分かるようにしておく
-                    flowDateStr = '電装あり';
                 } else if (isAssemblyGroup && isEffectivelyApproved) {
                     // 組立・電装とも承認済み＝組立フロー全体の完了。後から承認された方の日付を完了日とする
                     const reqDate  = req?.updated_at   ? new Date(req.updated_at)   : null;
