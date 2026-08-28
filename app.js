@@ -6267,7 +6267,7 @@ async function changeConfirmedShippingDate(requestId) {
             }
         }
 
-        await syncShippingDateToTasks(req, { factoryDate: dateVal, packingDate: packingDateVal });
+        await syncShippingDateToTasks(req, { factoryDate: dateVal, factoryDate2: dateVal2, packingDate: packingDateVal });
 
         closeDetailModal();
         await refreshAll();
