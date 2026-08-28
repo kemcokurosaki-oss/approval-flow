@@ -1911,11 +1911,15 @@ function renderProgressCards() {
             const machineLabel = machines.length > 1 ? '<div class="prog-machine-label">【' + esc(machine) + '】</div>' : '';
             // 分割出荷（工場出荷タスクが2件）の機械は①②それぞれの日付を並べて表示する
             const machineShipEntries = perMachineShipDateDiffers ? getShippingEntriesForMachine(num, machine) : [];
-            const machineShipHtml = machineShipEntries.filter(e => e.date).map(e => {
+            const machineShipSpans = machineShipEntries.filter(e => e.date).map(e => {
                 const baseLabel = hasAnyPacking ? '工場出荷日' : (e.isConfirmed ? '確定出荷日' : '出荷予定日');
                 const labelText = e.seq ? `${e.seq === 1 ? '①' : '②'}${baseLabel}` : baseLabel;
                 return buildShipDateSpan(labelText, e.date, e.isConfirmed);
-            }).join('');
+            });
+            // 複数spanをまとめて1つのflexアイテムにし、row-headerのspace-betweenレイアウトを崩さないようにする
+            const machineShipHtml = machineShipSpans.length > 0
+                ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + machineShipSpans.join('') + '</div>'
+                : '';
             const rowHeader = (machineLabel || machineShipHtml)
                 ? '<div class="prog-machine-row-header">' + machineLabel + machineShipHtml + '</div>'
                 : '';
