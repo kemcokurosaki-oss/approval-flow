@@ -1893,8 +1893,8 @@ function renderProgressCards() {
                 let isEffectivelyApproved;
                 let multiUnitAggStatus = null;
 
-                // 2000番台でその機械にユニットが複数ある場合、フロー丸は全ユニットの集約状態を表示する
-                const unitNames = (is2000sSeries(num) && (f.type === 'assembly' || f.type === 'test_run'))
+                // 2000番台の組立のみ、その機械にユニットが複数ある場合はフロー丸が全ユニットの集約状態を表示する（試運転は機械単位のまま）
+                const unitNames = (is2000sSeries(num) && f.type === 'assembly')
                     ? getUnitNames(unitListMap, num, machine, f.type) : [];
                 const isMultiUnit = unitNames.length > 1;
 
