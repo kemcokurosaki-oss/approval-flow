@@ -216,14 +216,16 @@ const DEPT_SUPERVISOR_ROLES = {
 
 // 組立・試運転フロー → 申請全体のペンディングを完了操作できる上長ロール（担当者未設定の項目でも操作可）
 const FLOW_SUPERVISOR_ROLES = {
-    assembly: ['assembly_manager', 'assembly_director'],
-    test_run: ['operations_manager', 'operations_director']
+    assembly:   ['assembly_manager', 'assembly_director'],
+    test_run:   ['operations_manager', 'operations_director'],
+    electrical: ['assembly_director']
 };
 
 // 組立・試運転フロー → 担当部署（部員全員が完了操作できる）
 const FLOW_DEPARTMENTS = {
-    assembly: '組立',
-    test_run: '操業'
+    assembly:   '組立',
+    test_run:   '操業',
+    electrical: '電装'
 };
 
 // タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
