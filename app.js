@@ -1883,7 +1883,8 @@ function renderProgressCards() {
                 return false;
             });
 
-            const electricalApplicable = hasTask(num, machine, '電気艤装');
+            // 2000番台は組立・試運転フローのみ対象で電装フロー自体が出ないため、電装合成表示は常に無効化する
+            const electricalApplicable = !is2000sSeries(num) && hasTask(num, machine, '電気艤装');
 
             const nodes = applicable.map((f, i) => {
                 // 組立ノードは、電気艤装タスクがある機械では電装フローの承認状況も合成して1つの丸で表示する
@@ -1893,7 +1894,16 @@ function renderProgressCards() {
                 let fcClass, icon, clickAttr = '', clickable = '';
                 let isEffectivelyApproved;
 
-                if (isAssemblyGroup) {
+                // 2000番台でその機械にユニットが複数ある場合、フロー丸は全ユニットの集約状態を表示する
+                const unitNames = (is2000sSeries(num) && (f.type === 'assembly' || f.type === 'test_run'))
+                    ? getUnitNames(unitListMap, num, machine, f.type) : [];
+                const isMultiUnit = unitNames.length > 1;
+
+                if (isMultiUnit) {
+                    const aggStatus = aggregateUnitFlowStatus(mData, f.type, unitNames);
+                    ({ fcClass, icon } = deriveFlowVisual(aggStatus));
+                    isEffectivelyApproved = aggStatus === 'approved';
+                } else if (isAssemblyGroup) {
                     const bothApproved = req?.status === 'approved' && elecReq?.status === 'approved';
                     isEffectivelyApproved = bothApproved;
                     if (!req && !elecReq) {
