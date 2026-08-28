@@ -1934,7 +1934,11 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if (isAssemblyGroup && (req || elecReq)) {
+                if (isMultiUnit) {
+                    // 複数ユニットの機械は、まずユニット一覧モーダルを開いて個別に申請・確認する
+                    clickAttr = `onclick="event.stopPropagation(); openUnitListModal('${esc(num)}', '${esc(machine)}', '${f.type}')"`;
+                    clickable = ' clickable';
+                } else if (isAssemblyGroup && (req || elecReq)) {
                     // 組立・電装どちらかが申請済みなら、両方のステップ表示をまとめた合成詳細モーダルを開く
                     clickAttr = `onclick="event.stopPropagation(); openAssemblyGroupDetailModal('${esc(num)}', '${esc(machine)}')"`;
                     clickable = ' clickable';
