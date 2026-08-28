@@ -3401,6 +3401,7 @@ async function openDetailModal(requestId) {
 // hasPackingShipping=true の場合、梱包出荷日（確定）の入力欄も並べて表示する
 // packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
 function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
+    const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
@@ -3410,14 +3411,21 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
         <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
             <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</span>
         </div>` : '';
+    const dateLabel = hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日';
+    const dateBox2 = isSplitShipping ? `
+            <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ②${dateLabel}を入力してください</span>
+                <input type="date" id="sales_date_input_2" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
+            </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
             ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日'}を入力してください</span>
+                <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${isSplitShipping ? '①' : ''}${dateLabel}を入力してください</span>
                 <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
+            ${dateBox2}
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
