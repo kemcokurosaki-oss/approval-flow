@@ -250,6 +250,7 @@ function canApplyFlow(flowType) {
     const dept  = getEffectiveDept();
     const isQorS = role === 'quality' || role === 'production_control';
     if (flowType === 'assembly')         return (role === 'staff' && dept === '組立') || role === 'assembly_manager';
+    if (flowType === 'electrical')       return role === 'staff' && dept === '電装';
     if (flowType === 'test_run')         return (role === 'staff' && dept === '操業') || role === 'operations_manager';
     if (flowType === 'shipping_prep')    return dept === '組立' || dept === '営業';
     if (flowType === 'simple_inspection' || flowType === 'inspection' ||
