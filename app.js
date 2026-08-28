@@ -1760,26 +1760,57 @@ function renderProgressCards() {
                 return false;
             });
 
-            const nodes = applicable.map((f, i) => {
-                const req = mData.flows[f.type];
-                let fcClass, icon, clickAttr = '', clickable = '';
+            const electricalApplicable = hasTask(num, machine, '電気艤装');
 
-                if (!req) {
-                    fcClass = 'fc-empty'; icon = '○';
-                } else if (req.status === 'approved') {
-                    fcClass = 'fc-done'; icon = '✓';
-                } else if (req.status === 'rejected') {
-                    fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
-                } else if (req.status === 'draft') {
-                    fcClass = 'fc-draft'; icon = '✏';
+            const nodes = applicable.map((f, i) => {
+                // 組立ノードは、電気艤装タスクがある機械では電装フローの承認状況も合成して1つの丸で表示する
+                const isAssemblyGroup = f.type === 'assembly' && electricalApplicable;
+                const req     = mData.flows[f.type];
+                const elecReq = isAssemblyGroup ? mData.flows['electrical'] : null;
+                let fcClass, icon, clickAttr = '', clickable = '';
+                let isEffectivelyApproved;
+
+                if (isAssemblyGroup) {
+                    const bothApproved = req?.status === 'approved' && elecReq?.status === 'approved';
+                    isEffectivelyApproved = bothApproved;
+                    if (!req && !elecReq) {
+                        fcClass = 'fc-empty'; icon = '○';
+                    } else if (bothApproved) {
+                        fcClass = 'fc-done'; icon = '✓';
+                    } else if (req?.status === 'rejected' || elecReq?.status === 'rejected') {
+                        fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
+                    } else if (req?.status === 'draft' || elecReq?.status === 'draft') {
+                        fcClass = 'fc-draft'; icon = '✏';
+                    } else {
+                        fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
+                    }
                 } else {
-                    fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
+                    isEffectivelyApproved = req?.status === 'approved';
+                    if (!req) {
+                        fcClass = 'fc-empty'; icon = '○';
+                    } else if (req.status === 'approved') {
+                        fcClass = 'fc-done'; icon = '✓';
+                    } else if (req.status === 'rejected') {
+                        fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
+                    } else if (req.status === 'draft') {
+                        fcClass = 'fc-draft'; icon = '✏';
+                    } else {
+                        fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
+                    }
                 }
 
                 const canApply = canApplyFlow(f.type);
 
-                if (!req && canApply && !progressFilterCompleted) {
+                if (isAssemblyGroup && (req || elecReq)) {
+                    // 組立・電装どちらかが申請済みなら、両方のステップ表示をまとめた合成詳細モーダルを開く
+                    clickAttr = `onclick="event.stopPropagation(); openAssemblyGroupDetailModal('${esc(num)}', '${esc(machine)}')"`;
+                    clickable = ' clickable';
+                } else if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
+                    clickable = ' clickable can-apply';
+                } else if (isAssemblyGroup && !req && !elecReq && electricalApplicable && canApplyFlow('electrical') && !progressFilterCompleted) {
+                    // 組立側は申請権限が無いが、電装側は申請できるユーザー（電装課）向け
+                    clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this, 'electrical')"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
                     // そのフローを申請できるロールのみクリック可能（例：組立担当者のみ assembly draft を操作可）
@@ -1794,7 +1825,10 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (req && req.status !== 'draft') {
+                if (isAssemblyGroup && (req || elecReq)) {
+                    const shortStatus = (r) => !r ? '未申請' : r.status === 'approved' ? '✓' : r.status === 'rejected' ? '×' : r.status === 'draft' ? '入力中' : '○';
+                    flowDateStr = `組立${shortStatus(req)}/電装${shortStatus(elecReq)}`;
+                } else if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
