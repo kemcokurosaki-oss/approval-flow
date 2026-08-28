@@ -2055,7 +2055,7 @@ function renderProgressCards() {
                     data-num="${esc(num)}"
                     data-machine="${esc(machine)}">
                     <div class="flow-circle ${fcClass}">${icon}</div>
-                    <div class="flow-label"><span style="position:relative; display:inline-block;">${esc(f.label)}${isAssemblyGroup ? '<span style="position:absolute; left:100%; top:50%; transform:translateY(-50%); margin-left:2px;">⚡</span>' : ''}</span></div>
+                    <div class="flow-label"><span style="position:relative; display:inline-block;">${esc(f.label)}${isAssemblyGroup ? '<span style="position:absolute; left:100%; top:50%; transform:translateY(-50%);">⚡</span>' : ''}</span></div>
                     ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
                     ${pendingBadge}
                     ${overdueBadge}
