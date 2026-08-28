@@ -544,8 +544,6 @@ const STATUS_CLASSES = {
 
 // ステータスバッジの表示文言（フロー種別ごとに承認者が異なるため、submitted/approved等は flow_type で読み替える）
 function statusBadgeLabel(req) {
-    if (req.flow_type === 'shipping' && req.status === 'submitted')        return '常務承認待ち';
-    if (req.flow_type === 'electrical' && req.status === 'submitted')      return '部長承認待ち';
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'submitted') return '開催待ち';
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.status === 'approved')  return '開催済み';
     if (req.flow_type === 'shipping_prep' && req.status === 'approved')    return '完了';
