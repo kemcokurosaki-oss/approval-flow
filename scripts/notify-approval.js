@@ -122,7 +122,8 @@ function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence =
 function buildEmail(type, req, recipientName, extra = {}) {
   const pNum       = req?.project_number || '—';
   const machineName = req?.machine_name || '';
-  const pStr       = machineName ? `${pNum} ${machineName}` : pNum; // "1234 機械A"
+  const unitName    = req?.unit_name || '';
+  const pStr       = machineName ? `${pNum} ${machineName}${unitName ? '・' + unitName : ''}` : pNum; // "1234 機械A・BD"
   const flow       = FLOW_LABELS[req?.flow_type]         || req?.flow_type || '—';
   const flowReq    = FLOW_LABELS_REQUEST[req?.flow_type] || flow; // 承認依頼・再申請用
   const note       = req?.note ? `\nコメント: ${req.note}` : '';
