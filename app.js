@@ -3347,14 +3347,12 @@ async function openDetailModal(requestId) {
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
             </div>
         </div>` : ''}
-        ${req.sheet_data && (req.flow_type === 'assembly' || req.flow_type === 'test_run') ? (() => {
-            const isAssembly = req.flow_type === 'assembly';
+        ${req.sheet_data && SHEET_FLOW_META[req.flow_type] ? (() => {
+            const meta = SHEET_FLOW_META[req.flow_type];
             const isApproved = req.status === 'approved';
-            const sectionTitle = isAssembly
-                ? (isApproved ? '機械組立完了報告書' : '機械組立完了チェックシート')
-                : (isApproved ? '社内試運転完了報告書' : '社内試運転完了チェックシート');
-            const btnLabel = isApproved ? sectionTitle : (isAssembly ? 'チェックシート' : 'チェックシート');
-            const sheetFile = isAssembly ? 'sheet.html' : 'test_run_sheet.html';
+            const sectionTitle = isApproved ? meta.doneLabel : meta.label;
+            const btnLabel = isApproved ? sectionTitle : 'チェックシート';
+            const sheetFile = meta.file;
 
             // 却下されて再申請可能な本人には、閲覧専用ではなく編集可能なチェックシートを開く
             const canEdit  = req.status === 'rejected' && isMyRequest;
