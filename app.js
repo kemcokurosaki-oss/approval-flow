@@ -2422,8 +2422,8 @@ async function openDraftInSubmitModal(draftId) {
         const btnSubmit  = document.getElementById('submit_btn');
         const indicator  = document.getElementById('sheet_entry_indicator');
 
-        const needsSheet = draft.flow_type === 'assembly' || draft.flow_type === 'test_run';
-        const sheetLabel = draft.flow_type === 'test_run' ? '社内試運転完了チェックシート' : '機械組立完了チェックシート';
+        const needsSheet = !!SHEET_FLOW_META[draft.flow_type];
+        const sheetLabel = SHEET_FLOW_META[draft.flow_type]?.label || '';
 
         if (draft.sheet_data && needsSheet) {
             const savedChecks = draft.sheet_data.check_items || {};
