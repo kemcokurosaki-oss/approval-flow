@@ -1891,6 +1891,7 @@ function renderProgressCards() {
                 const elecReq = isAssemblyGroup ? mData.flows['electrical'] : null;
                 let fcClass, icon, clickAttr = '', clickable = '';
                 let isEffectivelyApproved;
+                let multiUnitAggStatus = null;
 
                 // 2000番台でその機械にユニットが複数ある場合、フロー丸は全ユニットの集約状態を表示する
                 const unitNames = (is2000sSeries(num) && (f.type === 'assembly' || f.type === 'test_run'))
@@ -1898,9 +1899,9 @@ function renderProgressCards() {
                 const isMultiUnit = unitNames.length > 1;
 
                 if (isMultiUnit) {
-                    const aggStatus = aggregateUnitFlowStatus(mData, f.type, unitNames);
-                    ({ fcClass, icon } = deriveFlowVisual(aggStatus));
-                    isEffectivelyApproved = aggStatus === 'approved';
+                    multiUnitAggStatus = aggregateUnitFlowStatus(mData, f.type, unitNames);
+                    ({ fcClass, icon } = deriveFlowVisual(multiUnitAggStatus));
+                    isEffectivelyApproved = multiUnitAggStatus === 'approved';
                 } else if (isAssemblyGroup) {
                     const bothApproved = req?.status === 'approved' && elecReq?.status === 'approved';
                     isEffectivelyApproved = bothApproved;
