@@ -2014,8 +2014,8 @@ function switchTab(tab) {
 }
 
 // ===== Flow Modal Preset（カードのステップサークルクリックで工番・機械をプリセット） =====
-async function openFlowModalPreset(el) {
-    const flowType   = el.dataset.flowType;
+async function openFlowModalPreset(el, overrideFlowType) {
+    const flowType   = overrideFlowType || el.dataset.flowType;
     const projectNum = el.dataset.num;
     const machineName = el.dataset.machine;
 
