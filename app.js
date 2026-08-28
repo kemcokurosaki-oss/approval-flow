@@ -495,7 +495,7 @@ const TIER_LABELS = { staff: '部員', manager: '課長', director: '部長' };
 // approval_steps.approver_role として実際に使われる値 → 対応する申請フロー種別（名簿の承認者バッジ表示用）
 const APPROVER_ROLE_FLOWS = {
     assembly_manager:    ['assembly'],
-    assembly_director:   ['assembly'],
+    assembly_director:   ['assembly', 'electrical'],
     operations_manager:  ['test_run'],
     operations_director: ['test_run']
 };
