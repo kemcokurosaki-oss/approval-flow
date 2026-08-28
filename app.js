@@ -1935,8 +1935,9 @@ function renderProgressCards() {
 
                 if (isMultiUnit) {
                     // 複数ユニットの機械は、まずユニット一覧モーダルを開いて個別に申請・確認する
+                    // 未申請かつ申請可能な状態は、単一ユニットの機械と同じ見た目（点線＝can-apply）にする
                     clickAttr = `onclick="event.stopPropagation(); openUnitListModal('${esc(num)}', '${esc(machine)}', '${f.type}')"`;
-                    clickable = ' clickable';
+                    clickable = (canApply && !progressFilterCompleted && multiUnitAggStatus === 'empty') ? ' clickable can-apply' : ' clickable';
                 } else if (isAssemblyGroup && (req || elecReq)) {
                     // 組立・電装どちらかが申請済みなら、両方のステップ表示をまとめた合成詳細モーダルを開く
                     clickAttr = `onclick="event.stopPropagation(); openAssemblyGroupDetailModal('${esc(num)}', '${esc(machine)}')"`;
