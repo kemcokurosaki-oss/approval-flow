@@ -1965,10 +1965,25 @@ function renderProgressCards() {
                 } else if (isAssemblyGroup && !req && !elecReq) {
                     // 未申請でも、この機械が電装対象であることは常に分かるようにしておく
                     flowDateStr = '電装あり';
+                } else if (isAssemblyGroup && isEffectivelyApproved) {
+                    // 組立・電装とも承認済み＝組立フロー全体の完了。後から承認された方の日付を完了日とする
+                    const reqDate  = req?.updated_at   ? new Date(req.updated_at)   : null;
+                    const elecDate = elecReq?.updated_at ? new Date(elecReq.updated_at) : null;
+                    const latest = [reqDate, elecDate].filter(Boolean).sort((a, b) => b - a)[0];
+                    flowDateStr = latest ? `完了 ${latest.getMonth()+1}/${latest.getDate()}` : '完了';
                 } else if (isAssemblyGroup && (req || elecReq)) {
-                    // ○×のチェックシート記号と紛らわしいため使わず、メインの丸アイコンと同じ記号体系（▶進行中・✓承認済み・×却下・✏入力中）に揃える
-                    const shortStatus = (r) => !r ? '未' : r.status === 'approved' ? '✓' : r.status === 'rejected' ? '×' : r.status === 'draft' ? '✏' : '▶';
-                    flowDateStr = `組立${shortStatus(req)}/電装${shortStatus(elecReq)}`;
+                    // 組立・電装の内訳は詳細画面で確認する運用のため、ここでは動きがある方（組立優先）の状態だけをこれまで通りの形式で出す
+                    const primary = req || elecReq;
+                    if (primary.status === 'draft') {
+                        flowDateStr = '入力中';
+                    } else {
+                        const dateIso = (primary.status === 'approved' || primary.status === 'rejected') ? primary.updated_at : primary.created_at;
+                        if (dateIso) {
+                            const d = new Date(dateIso);
+                            const prefix = primary.status === 'approved' ? '完了' : primary.status === 'rejected' ? '却下' : '申請';
+                            flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                        }
+                    }
                 } else if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
