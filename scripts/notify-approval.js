@@ -171,6 +171,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
       const completedSubject = isShipping ? `【出荷確定通知】${pStr}` : `【${flow}】${pStr}`;
       const completedBody = req?.flow_type === 'assembly'
         ? `${pStr} の機械組立が完了しました。`
+        : req?.flow_type === 'electrical'
+        ? `${pStr} の電装が完了しました。`
         : req?.flow_type === 'test_run'
         ? `${pStr} の試運転が完了しました。`
         : req?.flow_type === 'shipping_prep'
