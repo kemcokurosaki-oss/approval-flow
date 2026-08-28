@@ -5265,10 +5265,12 @@ async function syncTaskCompletionOnFlowApproval(req) {
     const taskText = FLOW_APPROVAL_TASK_TEXT[req?.flow_type];
     if (!taskText || !req.project_number || !req.machine_name) return;
     try {
-        await db.from('tasks').update({ is_completed: true })
+        let q = db.from('tasks').update({ is_completed: true })
             .eq('project_number', req.project_number)
             .eq('machine', req.machine_name)
             .eq('text', taskText);
+        if (req.unit_name) q = q.eq('unit', req.unit_name); // ユニット単位申請の場合は対象ユニットのタスク行のみ更新する
+        await q;
     } catch (e) {
         console.warn('全体工程表への完了連携に失敗:', e);
     }
