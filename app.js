@@ -1446,7 +1446,6 @@ async function loadProgress() {
         unitListMap[key].add(unit);
     });
     Object.keys(unitListMap).forEach(k => { unitListMap[k] = [...unitListMap[k]].sort(); });
-    const getUnitNames = (num, machine, flowType) => unitListMap[`${num}__${machine}__${flowType}`] || [];
 
     // 未申請催促バッジのユニット別判定用（project__machine__unit__taskText → {end_date, is_completed}）
     const unitTaskInfoMap = {};
