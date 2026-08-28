@@ -907,17 +907,42 @@
 
         /* ===== ユニット一覧モーダル（2000番台、複数ユニットの機械） ===== */
         /* 一覧性を優先し、行ごとのボタンは置かず、クリックで選択→フッターの単一ボタンで確定する */
-        .unit-list-wrap { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
-        .unit-list-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 12px; padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa;
+        /* カードは2段組み（左列を上から埋めて下まで行ったら右列の上へ）で、
+           ユニット名・状態・申請者／申請日を1枚にまとめる */
+        .unit-list-head {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            margin-top: 16px; padding-bottom: 10px; border-bottom: 1px solid #eef1f6;
         }
+        .unit-list-head-label  { font-size: 13px; font-weight: bold; color: #8a94a6; }
+        .unit-list-head-spacer { flex: 1; }
+        .unit-list-count       { font-size: 12px; font-weight: bold; border-radius: 20px; padding: 3px 10px; }
+
+        .unit-list-wrap { columns: 2; column-gap: 8px; margin-top: 12px; }
+        .unit-list-row {
+            display: flex; flex-direction: column; gap: 5px;
+            padding: 10px 12px; border: 1px solid #e5e9f1; border-radius: 10px; background: #fff;
+            break-inside: avoid; margin-bottom: 8px;
+        }
+        .unit-list-row-main { display: flex; align-items: center; gap: 10px; }
+        .unit-list-dot {
+            width: 17px; height: 17px; border-radius: 50%;
+            border: 2px solid #d3dbe7; background: #fff; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .unit-list-dot i { display: block; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
         .unit-list-row.is-selectable { cursor: pointer; }
-        .unit-list-row.is-selectable:hover { background: #eef3fa; border-color: #c7d5e8; }
-        .unit-list-row.is-active { background: #dbe8f8; border-color: #1e3a5f; }
+        .unit-list-row.is-selectable:hover { background: #f6f8fb; border-color: #cdd8e8; }
+        .unit-list-row.is-active { background: #eef4fb; border-color: #2f6fb0; box-shadow: 0 0 0 2px rgba(47,111,176,.18); }
+        .unit-list-row.is-active .unit-list-dot   { border-color: #2f6fb0; background: #2f6fb0; }
+        .unit-list-row.is-active .unit-list-dot i { background: #fff; }
         .unit-list-row.is-disabled { opacity: 0.6; }
-        .unit-list-name   { font-weight: bold; color: #1e3a5f; min-width: 80px; }
-        .unit-list-status { flex: 1; }
+        .unit-list-name { font-size: 16px; font-weight: bold; color: #16233a; flex: 1; letter-spacing: .02em; }
+        .unit-list-status .status-badge { font-size: 12px; padding: 3px 10px; }
+        .unit-list-meta { font-size: 12px; color: #8a94a6; padding-left: 27px; min-height: 17px; }
+        .unit-list-footer-hint { flex: 1; font-size: 13px; color: #8a94a6; }
+
+        /* ユニット一覧のときだけ、モーダル高さを内容に合わせる（下部の余白をなくす） */
+        #detail_modal .modal.unit-list-mode { height: auto; max-height: 90vh; }
 
         /* ===== フロー情報ボックス（申請モーダル内） ===== */
         .flow-info-box {
