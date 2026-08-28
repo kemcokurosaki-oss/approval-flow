@@ -1662,13 +1662,7 @@ function renderProgressCards() {
 
     // 自分の工番フィルタ
     if (progressFilterMine) {
-        const myName = currentProfile?.name;
-        if (myName) {
-            nums = nums.filter(num => {
-                const owners = projectsMap[num]?.owners;
-                return owners && owners.has(myName);
-            });
-        }
+        nums = nums.filter(num => projectMatchesMine(num));
     }
 
     // 工番種別フィルタ
