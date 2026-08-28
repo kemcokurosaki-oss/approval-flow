@@ -1598,13 +1598,26 @@ function renderProgressCards() {
         return { date: confirmed || projectsMap[num]?.shipping_date || null, isConfirmed: !!confirmed };
     };
 
-    // 出荷予定日表示（機械単位）: 同工番内でも機械ごとに出荷日が異なる場合に個別表示するための算出
-    const getEffectiveShippingDateForMachine = (num, machine) => {
+    // 出荷予定日表示（機械単位）: 分割出荷（1機械に工場出荷タスクが複数）の場合は①②の2件を返す
+    // 戻り値は常に配列（通常1件、分割出荷時は2件）。各要素は { date, isConfirmed, seq }（seqは分割出荷時のみ1/2、それ以外はnull）
+    const getShippingEntriesForMachine = (num, machine) => {
         const mData = projectData[num][machine];
         const shipReq = mData.flows['shipping'];
+        const shippingTasks = (shippingTasksMap || {})[`${num}__${machine}`] || [];
+        if (shippingTasks.length >= 2) {
+            return [
+                { date: shipReq?.confirmed_shipping_date   || shippingTasks[0].end_date || null, isConfirmed: !!shipReq?.confirmed_shipping_date,   seq: 1 },
+                { date: shipReq?.confirmed_shipping_date_2 || shippingTasks[1].end_date || null, isConfirmed: !!shipReq?.confirmed_shipping_date_2, seq: 2 }
+            ];
+        }
         const confirmed = shipReq?.confirmed_shipping_date || null;
-        const fallback = (taskInfoMap || {})[`${num}__${machine}__工場出荷`]?.end_date || null;
-        return { date: confirmed || fallback || null, isConfirmed: !!confirmed };
+        const fallback = shippingTasks[0]?.end_date || (taskInfoMap || {})[`${num}__${machine}__工場出荷`]?.end_date || null;
+        return [{ date: confirmed || fallback || null, isConfirmed: !!confirmed, seq: null }];
+    };
+    // 同工番内でも機械ごとに出荷日が異なる場合に個別表示するための算出（代表値＝先頭エントリ）
+    const getEffectiveShippingDateForMachine = (num, machine) => {
+        const [entry] = getShippingEntriesForMachine(num, machine);
+        return entry;
     };
 
     // 梱包出荷日表示: 確定梱包出荷日が未入力の間は工程表（梱包出荷タスク終了日）をそのまま表示する
