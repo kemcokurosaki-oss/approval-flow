@@ -1431,8 +1431,8 @@ async function loadProgress() {
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
 
     // 2000番台のユニット単位承認判定用：project__machine__flowType → ユニーク unit 名配列（ソート済み）
-    // assembly=機械組立タスクのunit値、test_run=試運転タスクのunit値をそれぞれ独立に集計する
-    const UNIT_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転' };
+    // ユニット単位申請の対象は組立のみ（試運転は機械単位のまま）
+    const UNIT_FLOW_TASK_TEXT = { assembly: '機械組立' };
     const unitListMap = {};
     (machineTasks || []).forEach(t => {
         const flowType = Object.keys(UNIT_FLOW_TASK_TEXT).find(k => UNIT_FLOW_TASK_TEXT[k] === t.text);
