@@ -436,6 +436,13 @@ function getDynamicRecipientPlan(flowType) {
     return result;
 }
 
+// チェックシートを伴うフロー種別 → シートファイル・表示ラベル（申請モーダル・詳細モーダルで共通利用）
+const SHEET_FLOW_META = {
+    assembly:   { file: 'sheet.html',          label: '機械組立完了チェックシート',   doneLabel: '機械組立完了報告書' },
+    test_run:   { file: 'test_run_sheet.html', label: '社内試運転完了チェックシート', doneLabel: '社内試運転完了報告書' },
+    electrical: { file: 'denki_sheet.html',    label: '電気艤装完了チェックシート',   doneLabel: '電気艤装完了報告書' }
+};
+
 const FLOW_LABELS = {
     assembly:            '組立完了申請',
     electrical:          '電装完了申請',
