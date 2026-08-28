@@ -2186,7 +2186,8 @@ function openSubmitModal(flowType = 'assembly') {
 
     // モーダルタイトルをフロー種別で切り替え
     document.getElementById('submit_modal_title').textContent =
-        flowType === 'test_run'     ? '試運転完了通知 — 申請' :
+        flowType === 'test_run'      ? '試運転完了通知 — 申請' :
+        flowType === 'electrical'    ? '電装完了通知 — 申請' :
         flowType === 'shipping_prep' ? '出荷準備完了 — 申請' : '組立完了通知 — 申請';
 
     // 承認者選択グループは非表示（assembly は課長・部長両方に通知するため選択不要）
@@ -2195,7 +2196,7 @@ function openSubmitModal(flowType = 'assembly') {
     // チェックシートリセット
     sheetChecks = {};
     pendingItems = [];
-    const needsSheetModal = flowType === 'assembly' || flowType === 'test_run';
+    const needsSheetModal = !!SHEET_FLOW_META[flowType];
     if (needsSheetModal) {
         document.querySelectorAll('#sheet_modal .sheet-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('#sheet_modal .sheet-note').forEach(n => { n.value = ''; });
