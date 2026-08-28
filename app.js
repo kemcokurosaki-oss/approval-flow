@@ -1040,7 +1040,7 @@ async function onMachineChange() {
     // 電気艤装タスクがある機械は、組立の直後に電装を挿入して常に両方の状況を表示する
     // （組立・電装は並行フローのため、どちらから見ても組立→電装→出荷の順・各自の実際の状況で見せる）
     let displayChain = chain;
-    if (electricalRequired) {
+    if ((electricalRequired || currentFlowType === 'electrical') && !displayChain.includes('electrical')) {
         const idx = displayChain.indexOf('assembly');
         displayChain = [...displayChain.slice(0, idx + 1), 'electrical', ...displayChain.slice(idx + 1)];
     }
