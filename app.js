@@ -5205,9 +5205,19 @@ function toggleAllMachines(listId, btn) {
 }
 
 async function _getMachineDoneFlows(projectNum, machine) {
-    const { data } = await db.from('approval_requests')
-        .select('flow_type').eq('project_number', projectNum).eq('machine_name', machine).eq('status', 'approved');
-    return new Set((data || []).map(r => r.flow_type));
+    const [{ data: approvedRows }, { data: elecTaskRows }] = await Promise.all([
+        db.from('approval_requests').select('flow_type')
+            .eq('project_number', projectNum).eq('machine_name', machine).eq('status', 'approved'),
+        db.from('tasks').select('id')
+            .eq('project_number', projectNum).eq('machine', machine).eq('text', '電気艤装').limit(1)
+    ]);
+    const approved = new Set((approvedRows || []).map(r => r.flow_type));
+    // 電気艤装タスクがある機械は、組立・電装の両方が承認されて初めて「組立」完了扱いにする
+    const electricalRequired = (elecTaskRows || []).length > 0;
+    if (electricalRequired && approved.has('assembly') && !approved.has('electrical')) {
+        approved.delete('assembly');
+    }
+    return approved;
 }
 
 // 工程表の実タスク（sort_order）から、その機械に該当する中間フロー（簡易検査・外観検査・試運転・出荷確認会議）を
