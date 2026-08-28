@@ -1987,7 +1987,18 @@ function renderProgressCards() {
                 }
 
                 let pendingBadge = '';
-                if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
+                if (isMultiUnit) {
+                    // 複数ユニット時は全ユニットの未解決ペンディングを合算する
+                    const reqsByUnit = mData.units[f.type] || {};
+                    const unresolved = unitNames.flatMap(u => {
+                        const r = reqsByUnit[u];
+                        if (!r || r.status === 'draft') return [];
+                        return (r.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.completed);
+                    });
+                    if (unresolved.length > 0) {
+                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolved.length}件</div>`;
+                    }
+                } else if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
                     const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
                     const unresolved = pItems.filter(p => !p.completed);
                     if (unresolved.length > 0) {
@@ -1997,11 +2008,30 @@ function renderProgressCards() {
 
                 // 未申請・未承認バッジ（フィルタと連動）
                 let overdueBadge = '';
-                const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
-                const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
-                if (isMainOverdueFlow || isInviteOverdueFlow) {
-                    const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
-                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
+                if (isMultiUnit) {
+                    const reqsByUnit = mData.units[f.type] || {};
+                    const taskText   = OVERDUE_FLOW_TASK_TEXT[f.type];
+                    const unitIsOverdue = (u) => {
+                        const r = reqsByUnit[u];
+                        if (r && r.status !== 'draft') return r.status === 'submitted' || r.status === 'in_review';
+                        if (!taskText) return false;
+                        const info = (unitTaskInfoMap || {})[`${num}__${machine}__${u}__${taskText}`];
+                        return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+                    };
+                    if (unitNames.some(unitIsOverdue)) {
+                        const anyUnapproved = unitNames.some(u => {
+                            const r = reqsByUnit[u];
+                            return r && (r.status === 'submitted' || r.status === 'in_review');
+                        });
+                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${anyUnapproved ? '未承認' : '未申請'}</div>`;
+                    }
+                } else {
+                    const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
+                    const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
+                    if (isMainOverdueFlow || isInviteOverdueFlow) {
+                        const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
+                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
+                    }
                 }
 
                 const connector = i < applicable.length - 1
