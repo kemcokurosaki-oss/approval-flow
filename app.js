@@ -2310,6 +2310,7 @@ let selectedApproverRole = 'assembly_manager';
 let sheetChecks = {};
 let pendingItems = [];
 let currentDraftId = null;
+let currentUnitName = null; // 2000番台：ユニット単位申請時の選択中ユニット名（null=ユニット区分なし）
 let sheetAutoSaveTimer = null;
 
 function selectApprover(role) {
