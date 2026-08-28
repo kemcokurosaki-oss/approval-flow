@@ -3100,7 +3100,10 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
 }
 
 // ===== ユニット一覧モーダル（2000番台、機械にユニットが複数ある場合の組立/試運転フロー） =====
-// 機械のフロー丸から開き、ユニットごとの申請状況を一覧表示して個別の申請・詳細確認へ誘導する
+// 機械のフロー丸から開き、ユニットごとの申請状況を一覧表示する。行をクリックして1つ選択し、
+// フッターの単一アクションボタンで申請・詳細確認・続きの入力へ進む（一覧性を優先し行ごとのボタンは置かない）
+let _unitListModalCtx = null;
+
 async function openUnitListModal(projectNum, machine, flowType) {
     document.getElementById('detail_modal').classList.add('open');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
@@ -3118,28 +3121,26 @@ async function openUnitListModal(projectNum, machine, flowType) {
 
     const pInfo = projectsMap[projectNum] || {};
     const canApply = canApplyFlow(flowType);
+    _unitListModalCtx = { projectNum, machine, flowType, reqByUnit };
 
     const rows = unitNames.map(unitName => {
         const req = reqByUnit[unitName];
-        let statusHtml, actionHtml;
+        let statusHtml, selectable;
         if (!req) {
             statusHtml = '<span class="status-badge s-gray">未申請</span>';
-            actionHtml = canApply
-                ? `<button class="btn btn-primary btn-sm" onclick="applyUnitFlowFromListModal('${flowType}', '${esc(projectNum)}', '${esc(machine)}', '${esc(unitName)}')">申請する →</button>`
-                : '';
+            selectable = canApply;
         } else if (req.status === 'draft') {
             statusHtml = '<span class="status-badge s-gray">入力中</span>';
-            actionHtml = (req.requester_id === currentUser.id)
-                ? `<button class="btn btn-secondary btn-sm" onclick="closeDetailModal(); openDraftInSubmitModal('${req.id}')">続きを入力する →</button>`
-                : '<span style="font-size:12px;color:#aaa;">申請者が入力中</span>';
+            selectable = req.requester_id === currentUser.id;
         } else {
             statusHtml = `<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}">${esc(statusBadgeLabel(req))}</span>`;
-            actionHtml = `<button class="btn btn-secondary btn-sm" onclick="closeDetailModal(); openDetailModal('${req.id}')">詳細を見る →</button>`;
+            selectable = true;
         }
-        return `<div class="unit-list-row">
+        const rowClass = 'unit-list-row' + (selectable ? ' is-selectable' : ' is-disabled');
+        const onclickAttr = selectable ? ` onclick="selectUnitListRow(this, '${esc(unitName)}')"` : '';
+        return `<div class="${rowClass}"${onclickAttr}>
             <div class="unit-list-name">${esc(unitName)}</div>
             <div class="unit-list-status">${statusHtml}</div>
-            <div class="unit-list-action">${actionHtml}</div>
         </div>`;
     }).join('');
 
@@ -3148,8 +3149,49 @@ async function openUnitListModal(projectNum, machine, flowType) {
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
-        <div class="unit-list-wrap">${rows}</div>`;
-    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+        <div class="unit-list-wrap" id="unit_list_wrap">${rows}</div>`;
+    document.getElementById('detail_footer').innerHTML = `
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn btn-primary" id="unit_list_action_btn" disabled>ユニットを選択してください</button>`;
+}
+
+// ユニット一覧モーダルの行クリック: 選択状態にして、フッターのアクションボタンを対象ユニットの状態に応じて更新する
+function selectUnitListRow(el, unitName) {
+    document.querySelectorAll('#unit_list_wrap .unit-list-row').forEach(r => r.classList.remove('is-active'));
+    el.classList.add('is-active');
+
+    const btn = document.getElementById('unit_list_action_btn');
+    if (!btn || !_unitListModalCtx) return;
+    const req = _unitListModalCtx.reqByUnit[unitName];
+    btn.disabled = false;
+    btn.dataset.unit = unitName;
+    btn.onclick = () => confirmUnitListSelection();
+    if (!req) {
+        btn.textContent = `${unitName} を申請する →`;
+    } else if (req.status === 'draft') {
+        btn.textContent = `${unitName} の続きを入力する →`;
+    } else {
+        btn.textContent = `${unitName} の詳細を見る →`;
+    }
+}
+
+// フッターのアクションボタン確定: 選択中ユニットの状態に応じて申請・下書き再開・詳細表示へ振り分ける
+async function confirmUnitListSelection() {
+    if (!_unitListModalCtx) return;
+    const btn = document.getElementById('unit_list_action_btn');
+    const unitName = btn?.dataset.unit;
+    if (!unitName) return;
+    const { projectNum, machine, flowType, reqByUnit } = _unitListModalCtx;
+    const req = reqByUnit[unitName];
+    if (!req) {
+        await applyUnitFlowFromListModal(flowType, projectNum, machine, unitName);
+    } else if (req.status === 'draft') {
+        closeDetailModal();
+        await openDraftInSubmitModal(req.id);
+    } else {
+        closeDetailModal();
+        await openDetailModal(req.id);
+    }
 }
 
 // ユニット一覧モーダルの「申請する」から申請モーダルへ（工事番号・機械・ユニットをプリセットして遷移）
