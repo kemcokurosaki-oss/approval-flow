@@ -1870,7 +1870,10 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (isAssemblyGroup && (req || elecReq)) {
+                if (isAssemblyGroup && !req && !elecReq) {
+                    // 未申請でも、この機械が電装対象であることは常に分かるようにしておく
+                    flowDateStr = '電装あり';
+                } else if (isAssemblyGroup && (req || elecReq)) {
                     const shortStatus = (r) => !r ? '未申請' : r.status === 'approved' ? '✓' : r.status === 'rejected' ? '×' : r.status === 'draft' ? '入力中' : '○';
                     flowDateStr = `組立${shortStatus(req)}/電装${shortStatus(elecReq)}`;
                 } else if (req && req.status !== 'draft') {
