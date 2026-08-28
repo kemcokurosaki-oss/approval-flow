@@ -2605,6 +2605,10 @@ async function submitRequest() {
                     ];
                     notifyRoles = ['assembly_manager', 'assembly_director'];
                 }
+            } else if (currentFlowType === 'electrical') {
+                // 電装: 課長相当のロールが無いため、常に組立部長の単一ステップ
+                stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }];
+                notifyRoles = ['assembly_director'];
             } else {
                 // test_run: assemblyと同じ並列承認（どちらかが承認で完了）
                 if (submitterRole === 'operations_manager') {
