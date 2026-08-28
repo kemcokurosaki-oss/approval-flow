@@ -1534,6 +1534,8 @@ function matchesPrefix(num, prefix) {
     if (prefix === '4')    return /^4\d/.test(num);
     if (prefix === '3C')   return /^3C/i.test(num);
     if (prefix === '4C')   return /^4C/i.test(num);
+    if (prefix === '3T')   return /^3T/i.test(num);
+    if (prefix === '4T')   return /^4T/i.test(num);
     if (prefix === 'D')    return /^D/i.test(num);
     if (prefix === '2000') return is2000sSeries(num);
     return true;
