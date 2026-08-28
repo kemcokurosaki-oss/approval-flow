@@ -111,6 +111,8 @@ def parse_code(i, terminator=None):
             continue
         if c == '{':
             stack.append((c, calc_line(i)))
+            if terminator == '}template':
+                depth += 1
             i += 1
             continue
         if c in ')]':
