@@ -2961,9 +2961,20 @@ async function openAssemblyGroupDetailModal(projectNum, machine) {
             return `<div class="section-title">${esc(label)}</div><div class="empty" style="padding:6px 0;"><div class="empty-text">未申請</div></div>`;
         }
         const steps = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
+        const meta = SHEET_FLOW_META[req.flow_type];
+        let sheetLinkHtml = '';
+        if (req.sheet_data && meta) {
+            const isApproved  = req.status === 'approved';
+            const sectionTitle = isApproved ? meta.doneLabel : meta.label;
+            const canEdit  = req.status === 'rejected' && req.requester_id === currentUser.id;
+            const sheetUrl = canEdit ? `${meta.file}?draft_id=${req.id}` : `${meta.file}?view=1&id=${req.id}`;
+            const linkLabel = canEdit ? `${sectionTitle}を修正する →` : `${sectionTitle}を確認する →`;
+            sheetLinkHtml = `<button class="btn btn-secondary" style="font-size:13px; padding:5px 14px; margin-top:6px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>`;
+        }
         return `
         <div class="section-title">${esc(label)}　<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}" style="font-size:12px;">${esc(STATUS_LABELS[req.status] || req.status)}</span></div>
-        <div class="steps-list">${_renderSingleApprovalStep(req, steps, approverNames)}</div>`;
+        <div class="steps-list">${_renderSingleApprovalStep(req, steps, approverNames)}</div>
+        ${sheetLinkHtml}`;
     };
 
     document.getElementById('detail_title').textContent = '組立フロー';
