@@ -903,6 +903,17 @@
         .mph-pnum     { font-size: 18px; font-weight: bold; color: #1e3a5f; white-space: nowrap; }
         .mph-customer { font-size: 19px; font-weight: bold; color: #1e3a5f; }
         .mph-name     { font-size: 15px; color: #666; margin-top: 3px; }
+        .mph-unit     { font-size: 14px; font-weight: bold; color: #1e3a5f; margin-top: 2px; }
+
+        /* ===== ユニット一覧モーダル（2000番台、複数ユニットの機械） ===== */
+        .unit-list-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .unit-list-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa;
+        }
+        .unit-list-name   { font-weight: bold; color: #1e3a5f; min-width: 80px; }
+        .unit-list-status { flex: 1; }
+        .unit-list-action { flex-shrink: 0; }
 
         /* ===== フロー情報ボックス（申請モーダル内） ===== */
         .flow-info-box {
