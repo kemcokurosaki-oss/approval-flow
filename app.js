@@ -2843,6 +2843,34 @@ function buildQaResultSectionInner(req, isMyRequest) {
         ${body}`;
 }
 
+// assembly・test_run・electrical: 複数ステップのうち承認/却下が確定した1つ、または申請中の状態を丸1つで表示する
+// （課長/部長の並列承認や電装の単一承認など、フロー種別が異なっても表示形式は共通）
+function _renderSingleApprovalStep(req, steps, approverNames) {
+    const approvedStep = steps.find(s => s.status === 'approved');
+    const rejectedStep = steps.find(s => s.status === 'rejected');
+    const activeStep   = approvedStep || rejectedStep;
+    let icon, sc;
+    if      (approvedStep)               { icon = '✓'; sc = 'sc-approved'; }
+    else if (rejectedStep)               { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
+    else if (req.status === 'submitted') { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
+    else                                  { icon = '○';  sc = 'sc-waiting'; }
+    const who   = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
+    const when  = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
+    const label = approvedStep ? '承認' : rejectedStep ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
+    return `
+        <div class="step-item">
+            <div class="step-circle ${sc}">${icon}</div>
+            <div class="step-detail">
+                <div class="step-label">${label}</div>
+                ${who
+                    ? `<div class="step-name">${esc(who)}</div>`
+                    : '<div class="step-name" style="color:#bbb;">未</div>'}
+                ${activeStep?.comment ? `<div class="step-comment">"${esc(activeStep.comment)}"</div>` : ''}
+                ${when               ? `<div class="step-date">${when}</div>` : ''}
+            </div>
+        </div>`;
+}
+
 // ===== Detail Modal =====
 async function openDetailModal(requestId) {
     document.getElementById('detail_modal').classList.add('open');
