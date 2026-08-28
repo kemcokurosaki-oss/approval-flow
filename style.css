@@ -906,14 +906,18 @@
         .mph-unit     { font-size: 14px; font-weight: bold; color: #1e3a5f; margin-top: 2px; }
 
         /* ===== ユニット一覧モーダル（2000番台、複数ユニットの機械） ===== */
-        .unit-list-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        /* 一覧性を優先し、行ごとのボタンは置かず、クリックで選択→フッターの単一ボタンで確定する */
+        .unit-list-wrap { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
         .unit-list-row {
             display: flex; align-items: center; justify-content: space-between;
-            gap: 12px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa;
+            gap: 12px; padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa;
         }
+        .unit-list-row.is-selectable { cursor: pointer; }
+        .unit-list-row.is-selectable:hover { background: #eef3fa; border-color: #c7d5e8; }
+        .unit-list-row.is-active { background: #dbe8f8; border-color: #1e3a5f; }
+        .unit-list-row.is-disabled { opacity: 0.6; }
         .unit-list-name   { font-weight: bold; color: #1e3a5f; min-width: 80px; }
         .unit-list-status { flex: 1; }
-        .unit-list-action { flex-shrink: 0; }
 
         /* ===== フロー情報ボックス（申請モーダル内） ===== */
         .flow-info-box {
