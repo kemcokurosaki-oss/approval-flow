@@ -2871,6 +2871,102 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
         </div>`;
 }
 
+// ===== 組立＋電装 合成詳細モーダル =====
+// 電気艤装タスクがある機械の「組立」丸アイコンから開く。組立・電装それぞれの承認状況を分けて表示する。
+async function openAssemblyGroupDetailModal(projectNum, machine) {
+    document.getElementById('detail_modal').classList.add('open');
+    document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
+    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+    ui.send('OPEN_DETAIL');
+
+    const { data: reqs } = await db.from('approval_requests')
+        .select(`*, approval_steps ( id, step_order, approver_role, approver_id, status, comment, decided_at )`)
+        .eq('project_number', projectNum).eq('machine_name', machine)
+        .in('flow_type', ['assembly', 'electrical']);
+
+    const assemblyReq   = (reqs || []).find(r => r.flow_type === 'assembly')   || null;
+    const electricalReq = (reqs || []).find(r => r.flow_type === 'electrical') || null;
+
+    // 下書きは申請者本人の申請モーダルへ誘導する（合成モーダルでは扱わない）
+    const ownDraft = [assemblyReq, electricalReq].find(r => r?.status === 'draft' && r.requester_id === currentUser.id);
+    if (ownDraft) {
+        document.getElementById('detail_modal').classList.remove('open');
+        ui.send('CLOSE');
+        await openDraftInSubmitModal(ownDraft.id);
+        return;
+    }
+
+    const approverIds = [...new Set(
+        [assemblyReq, electricalReq].filter(Boolean)
+            .flatMap(r => (r.approval_steps || []).filter(s => s.approver_id).map(s => s.approver_id))
+    )];
+    let approverNames = {};
+    if (approverIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', approverIds);
+        if (prs) prs.forEach(p => { approverNames[p.id] = p.name; });
+    }
+
+    const pInfo = projectsMap[projectNum] || {};
+
+    const renderBlock = (req, label) => {
+        if (!req) {
+            return `<div class="section-title">${esc(label)}</div><div class="empty" style="padding:6px 0;"><div class="empty-text">未申請</div></div>`;
+        }
+        const steps = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
+        return `
+        <div class="section-title">${esc(label)}　<span class="status-badge ${STATUS_CLASSES[req.status] || 's-pending'}" style="font-size:12px;">${esc(STATUS_LABELS[req.status] || req.status)}</span></div>
+        <div class="steps-list">${_renderSingleApprovalStep(req, steps, approverNames)}</div>`;
+    };
+
+    document.getElementById('detail_title').textContent = '組立フロー';
+    document.getElementById('detail_body').innerHTML = `
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
+        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        <hr class="section-divider">
+        ${renderBlock(assemblyReq, '組立')}
+        <hr class="section-divider">
+        ${renderBlock(electricalReq, '電装')}
+    `;
+
+    // 自分が承認できるステップがある方だけ、承認・却下ボタンを出す（組立・電装どちらも組立部長が対象になり得る）
+    const findMyStep = (req) => !req ? null : (req.approval_steps || []).find(s =>
+        s.approver_role === getEffectiveRole() && s.status === 'pending' && req.status === 'submitted'
+    ) || null;
+    const myAssemblyStep   = findMyStep(assemblyReq);
+    const myElectricalStep = findMyStep(electricalReq);
+
+    const footerParts = ['<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>'];
+    if (myAssemblyStep) {
+        footerParts.push(`<button class="btn btn-danger" onclick="rejectGroupStep('${assemblyReq.id}','${myAssemblyStep.id}','assembly','${esc(projectNum)}','${esc(machine)}')">組立を却下</button>`);
+        footerParts.push(`<button class="btn btn-success" onclick="approveGroupStep('${assemblyReq.id}','${myAssemblyStep.id}',${myAssemblyStep.step_order},'assembly','${esc(projectNum)}','${esc(machine)}')">組立を承認</button>`);
+    }
+    if (myElectricalStep) {
+        footerParts.push(`<button class="btn btn-danger" onclick="rejectGroupStep('${electricalReq.id}','${myElectricalStep.id}','electrical','${esc(projectNum)}','${esc(machine)}')">電装を却下</button>`);
+        footerParts.push(`<button class="btn btn-success" onclick="approveGroupStep('${electricalReq.id}','${myElectricalStep.id}',${myElectricalStep.step_order},'electrical','${esc(projectNum)}','${esc(machine)}')">電装を承認</button>`);
+    }
+    if (myAssemblyStep || myElectricalStep) {
+        document.getElementById('detail_body').innerHTML += `
+        <hr class="section-divider">
+        <div class="form-group">
+            <label>コメント（任意）</label>
+            <textarea id="approval_comment" placeholder="承認・却下の理由など（却下時は必須）"></textarea>
+        </div>`;
+    }
+    document.getElementById('detail_footer').innerHTML = footerParts.join('');
+}
+
+// 合成モーダルの承認・却下ボタンから、対象のサブフロー（組立/電装）を指定して既存の承認処理を呼び出す薄いラッパー
+async function approveGroupStep(requestId, stepId, stepOrder, flowType, projectNum, machine) {
+    currentDetailReq = { id: requestId, flow_type: flowType, project_number: projectNum, machine_name: machine };
+    currentDetailFlowType = flowType;
+    await approveStep(requestId, stepId, stepOrder);
+}
+async function rejectGroupStep(requestId, stepId, flowType, projectNum, machine) {
+    currentDetailReq = { id: requestId, flow_type: flowType, project_number: projectNum, machine_name: machine };
+    currentDetailFlowType = flowType;
+    await rejectStep(requestId, stepId);
+}
+
 // ===== Detail Modal =====
 async function openDetailModal(requestId) {
     document.getElementById('detail_modal').classList.add('open');
