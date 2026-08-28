@@ -1863,7 +1863,7 @@ function renderProgressCards() {
                 }
 
                 const connector = i < applicable.length - 1
-                    ? `<div class="flow-connector ${(req && req.status === 'approved') ? 'fc-line-done' : 'fc-line-pending'}"></div>`
+                    ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
                 return `<div class="flow-node${clickable}" ${clickAttr}
                     data-flow-type="${f.type}"
