@@ -1407,10 +1407,25 @@ async function loadProgress() {
     const hasTask = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
 
     // 未申請催促（組立・試運転・工場出荷）の期日判定用（project__machine__taskText → {end_date, is_completed}）
+    // 同一機械に同名タスクが複数ある場合（分割出荷の工場出荷など）は、最も早い end_date のものを採用する
     const taskInfoMap = {};
     (machineTasks || []).forEach(t => {
-        taskInfoMap[`${t.project_number}__${t.machine}__${t.text}`] = { end_date: t.end_date, is_completed: t.is_completed };
+        const key = `${t.project_number}__${t.machine}__${t.text}`;
+        const existing = taskInfoMap[key];
+        if (!existing || (t.end_date && (!existing.end_date || t.end_date < existing.end_date))) {
+            taskInfoMap[key] = { end_date: t.end_date, is_completed: t.is_completed };
+        }
     });
+
+    // 工場出荷タスクは分割出荷（1機械に複数）に対応するため、end_date昇順の配列でも保持する
+    // （project__machine → [{end_date, is_completed}, ...]、早い順）
+    const shippingTasksMap = {};
+    (machineTasks || []).filter(t => t.text === '工場出荷').forEach(t => {
+        const key = `${t.project_number}__${t.machine}`;
+        if (!shippingTasksMap[key]) shippingTasksMap[key] = [];
+        shippingTasksMap[key].push({ end_date: t.end_date, is_completed: t.is_completed });
+    });
+    Object.values(shippingTasksMap).forEach(arr => arr.sort((a, b) => (a.end_date || '9999-99-99').localeCompare(b.end_date || '9999-99-99')));
 
     // 工番レベルのフロータスク（machine不問）- 簡易検査/外観検査/出荷確認会議/梱包出荷はproject全体に1つの場合がある
     const { data: projectFlowTasks } = await db.from('tasks')
