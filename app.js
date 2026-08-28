@@ -500,7 +500,7 @@ const APPROVER_ROLE_FLOWS = {
     operations_director: ['test_run']
 };
 // 名簿一覧の部署表示順（未知の部署は末尾に五十音順で追加）
-const DEPARTMENT_ORDER = ['組立', '操業', '設計', '営業', '技戦', '物流', '品証', '製管'];
+const DEPARTMENT_ORDER = ['組立', '電装', '操業', '設計', '営業', '技戦', '物流', '品証', '製管'];
 function sortDepartments(depts) {
     return [...depts].sort((a, b) => {
         const ia = DEPARTMENT_ORDER.indexOf(a), ib = DEPARTMENT_ORDER.indexOf(b);
