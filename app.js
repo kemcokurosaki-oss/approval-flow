@@ -1508,17 +1508,23 @@ async function loadProgress() {
         const num = (t.project_number || '').toString().trim();
         if (!num || !t.machine) return;
         if (!projectData[num]) projectData[num] = {};
-        if (!projectData[num][t.machine]) projectData[num][t.machine] = { flows: {} };
+        if (!projectData[num][t.machine]) projectData[num][t.machine] = { flows: {}, units: {} };
     });
 
-    // 申請レコードを反映
+    // 申請レコードを反映（unit_nameがある申請はunits側、無い申請は従来通りflows側へ）
     (allReqs || []).forEach(req => {
         const num     = req.project_number;
         const machine = req.machine_name;
         if (!num || !machine) return;
         if (!projectData[num]) projectData[num] = {};
-        if (!projectData[num][machine]) projectData[num][machine] = { flows: {} };
-        projectData[num][machine].flows[req.flow_type] = req;
+        if (!projectData[num][machine]) projectData[num][machine] = { flows: {}, units: {} };
+        if (req.unit_name) {
+            const u = projectData[num][machine].units;
+            if (!u[req.flow_type]) u[req.flow_type] = {};
+            u[req.flow_type][req.unit_name] = req;
+        } else {
+            projectData[num][machine].flows[req.flow_type] = req;
+        }
     });
 
     const baseNums = Object.keys(projectData).filter(num => {
