@@ -2992,31 +2992,9 @@ async function openDetailModal(requestId) {
     }
 
     let stepsHtml;
-    if (req.flow_type === 'assembly' || req.flow_type === 'test_run') {
-        // assembly/test_run: 単一の「承認」として表示、承認者名・役職を表示
-        const approvedStep = steps.find(s => s.status === 'approved');
-        const rejectedStep = steps.find(s => s.status === 'rejected');
-        const activeStep   = approvedStep || rejectedStep;
-        let icon, sc;
-        if      (approvedStep)                          { icon = '✓'; sc = 'sc-approved'; }
-        else if (rejectedStep)                          { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
-        else if (req.status === 'submitted')            { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
-        else                                            { icon = '○';  sc = 'sc-waiting'; }
-        const who      = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
-        const when     = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
-        const label    = approvedStep ? '承認' : rejectedStep ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
-        stepsHtml = `
-        <div class="step-item">
-            <div class="step-circle ${sc}">${icon}</div>
-            <div class="step-detail">
-                <div class="step-label">${label}</div>
-                ${who
-                    ? `<div class="step-name">${esc(who)}</div>`
-                    : '<div class="step-name" style="color:#bbb;">未</div>'}
-                ${activeStep?.comment ? `<div class="step-comment">"${esc(activeStep.comment)}"</div>` : ''}
-                ${when               ? `<div class="step-date">${when}</div>` : ''}
-            </div>
-        </div>`;
+    if (req.flow_type === 'assembly' || req.flow_type === 'test_run' || req.flow_type === 'electrical') {
+        // assembly/test_run/electrical: 単一の「承認」として表示、承認者名・役職を表示
+        stepsHtml = _renderSingleApprovalStep(req, steps, approverNames);
     } else if (req.flow_type === 'shipping') {
         // shipping: 常務承認ステップ（担当者確認は参考情報として別枠に表示）
         const step = steps[0];
