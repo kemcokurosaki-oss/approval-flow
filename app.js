@@ -2401,7 +2401,7 @@ async function openDraftInSubmitModal(draftId) {
         currentFlowType  = draft.flow_type;
         currentProjectNum = draft.project_number;
 
-        const titleMap = { assembly: '組立完了通知 — 申請', test_run: '試運転完了通知 — 申請' };
+        const titleMap = { assembly: '組立完了通知 — 申請', electrical: '電装完了通知 — 申請', test_run: '試運転完了通知 — 申請' };
         document.getElementById('submit_modal_title').textContent = titleMap[draft.flow_type] || '申請';
         document.getElementById('submit_approver_group').style.display = 'none';
 
