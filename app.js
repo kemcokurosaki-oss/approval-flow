@@ -1962,7 +1962,9 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (isAssemblyGroup && !req && !elecReq) {
+                if (isMultiUnit) {
+                    // バッジ数字は分かりにくいため付けない。状態は丸の色（集約状態）のみで表現する
+                } else if (isAssemblyGroup && !req && !elecReq) {
                     // 未申請でも、この機械が電装対象であることは常に分かるようにしておく
                     flowDateStr = '電装あり';
                 } else if (isAssemblyGroup && (req || elecReq)) {
