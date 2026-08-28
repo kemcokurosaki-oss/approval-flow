@@ -437,6 +437,7 @@ function getDynamicRecipientPlan(flowType) {
 
 const FLOW_LABELS = {
     assembly:            '組立完了申請',
+    electrical:          '電装完了申請',
     test_run:            '試運転完了申請',
     simple_inspection:   '簡易検査開催案内',
     inspection:          '外観検査開催案内',
