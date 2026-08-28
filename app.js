@@ -1037,8 +1037,12 @@ async function onMachineChange() {
     const chain = await _getMachineFlowChain(num, machine);
     const doneFlows = await _getMachineDoneFlows(num, machine);
 
-    const doneList     = chain.filter(t => t !== currentFlowType && doneFlows.has(t));
-    const upcomingList = chain.filter(t => t !== currentFlowType && !doneFlows.has(t));
+    // 組立・電装は並行フロー（どちらが「今回」でも、もう一方を前後フローとしては出さない）
+    const excludeFromChain = (currentFlowType === 'assembly' || currentFlowType === 'electrical')
+        ? new Set(['assembly', 'electrical'])
+        : new Set([currentFlowType]);
+    const doneList     = chain.filter(t => !excludeFromChain.has(t) && doneFlows.has(t));
+    const upcomingList = chain.filter(t => !excludeFromChain.has(t) && !doneFlows.has(t));
 
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
         doneList.map(t => _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')).join('') +
