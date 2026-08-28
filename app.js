@@ -3035,6 +3035,16 @@ async function openAssemblyGroupDetailModal(projectNum, machine) {
     document.getElementById('detail_footer').innerHTML = footerParts.join('');
 }
 
+// 合成モーダルの「未申請」側から、その場で申請モーダルへ（工事番号・機械をプリセットして）遷移する
+async function applyFlowFromGroupModal(flowType, projectNum, machine) {
+    closeDetailModal();
+    openSubmitModal(flowType);
+    currentProjectNum = projectNum;
+    document.getElementById('submit_project_display').textContent = projectNum;
+    await onProjectChange(machine);
+    await onMachineChange();
+}
+
 // 合成モーダルの承認・却下ボタンから、対象のサブフロー（組立/電装）を指定して既存の承認処理を呼び出す薄いラッパー
 async function approveGroupStep(requestId, stepId, stepOrder, flowType, projectNum, machine) {
     currentDetailReq = { id: requestId, flow_type: flowType, project_number: projectNum, machine_name: machine };
