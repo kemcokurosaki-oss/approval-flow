@@ -2779,6 +2779,7 @@ async function submitRequest() {
                 ({ data: req, error: e1 } = await db.from('approval_requests').insert({
                     project_number: projectNum,
                     machine_name:   machineNum,
+                    unit_name:      currentUnitName || null,
                     flow_type:      currentFlowType,
                     status:         initialStatus,
                     requester_id:   currentUser.id,
