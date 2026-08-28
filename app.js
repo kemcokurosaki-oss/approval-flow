@@ -522,8 +522,8 @@ function sortDepartments(depts) {
 
 const STATUS_LABELS = {
     draft:      '入力中',
-    submitted:  '課長承認待ち',
-    in_review:  '部長承認待ち',
+    submitted:  '承認待ち',
+    in_review:  '承認待ち',
     approved:   '承認完了',
     rejected:   '却下',
     cancelled:  'キャンセル',
