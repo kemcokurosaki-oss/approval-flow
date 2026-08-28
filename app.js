@@ -2275,7 +2275,7 @@ async function goToSheetStep() {
             currentDraftId = newDraft.id;
         }
 
-        const sheetUrl = currentFlowType === 'test_run' ? 'test_run_sheet.html' : 'sheet.html';
+        const sheetUrl = SHEET_FLOW_META[currentFlowType].file;
         window.open(`${sheetUrl}?draft_id=${currentDraftId}`, '_blank');
         await loadMineSide();
     } catch (e) {
@@ -2288,7 +2288,7 @@ async function goToSheetStep() {
 // 「変更する」ボタン: 既存の下書きをシートで再度開く
 function reopenSheetTab() {
     if (!currentDraftId) { showToast('下書きIDが不明です。再度「次へ」を押してください', 'error'); return; }
-    const sheetUrl = currentFlowType === 'test_run' ? 'test_run_sheet.html' : 'sheet.html';
+    const sheetUrl = SHEET_FLOW_META[currentFlowType].file;
     window.open(`${sheetUrl}?draft_id=${currentDraftId}`, '_blank');
 }
 
