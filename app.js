@@ -1448,14 +1448,14 @@ async function loadProgress() {
 
     const baseNums = Object.keys(projectData).filter(num => {
         if (projectsMap[num] === undefined) return false;
-        if (isTInspectionSeries(num)) return false;
-        if (is5or7Series(num))        return false;
+        if (is5or7Series(num)) return false;
         if (is2000sSeries(num)) {
             // 2000番台は組立・試運転フローのみ対象のため、いずれかのタスクがある工番だけ表示する
             const machines = Object.keys(projectData[num]);
             return machines.some(m => hasTask(num, m, '機械組立') || hasTask(num, m, '試運転'));
         }
-        if (isDSeries(num)) {
+        if (isDSeries(num) || isTInspectionSeries(num)) {
+            // D番・点検系(3T/4T)は基本的に機械組立を伴わないため、機械組立タスクがある工番だけ表示する
             const machines = Object.keys(projectData[num]);
             return machines.some(m => hasTask(num, m, '機械組立'));
         }
