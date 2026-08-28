@@ -2236,7 +2236,7 @@ async function goToSheetStep() {
     const machineNums = getSelectedMachines('submit_machine_list');
     if (!projectNum)              { showToast('工事番号を選択してください', 'error'); return; }
     if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    const needsSheetFlow = currentFlowType === 'assembly' || currentFlowType === 'test_run';
+    const needsSheetFlow = !!SHEET_FLOW_META[currentFlowType];
     if (!needsSheetFlow) { submitRequest(); return; }
     if (machineNums.length > 1) {
         showToast('報告書は1台ずつ申請してください', 'error');
