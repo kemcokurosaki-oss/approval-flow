@@ -5310,16 +5310,23 @@ function toggleAllMachines(listId, btn) {
     checkboxes[0]?.dispatchEvent(new Event('change'));
 }
 
-async function _getMachineDoneFlows(projectNum, machine) {
+// その機械の生の承認済みflow_type集合と、電装フローが該当するか（電気艤装タスクの有無）を取得する
+async function _getRawFlowStatus(projectNum, machine) {
     const [{ data: approvedRows }, { data: elecTaskRows }] = await Promise.all([
         db.from('approval_requests').select('flow_type')
             .eq('project_number', projectNum).eq('machine_name', machine).eq('status', 'approved'),
         db.from('tasks').select('id')
             .eq('project_number', projectNum).eq('machine', machine).eq('text', '電気艤装').limit(1)
     ]);
-    const approved = new Set((approvedRows || []).map(r => r.flow_type));
+    return {
+        approved: new Set((approvedRows || []).map(r => r.flow_type)),
+        electricalRequired: (elecTaskRows || []).length > 0
+    };
+}
+
+async function _getMachineDoneFlows(projectNum, machine) {
+    const { approved, electricalRequired } = await _getRawFlowStatus(projectNum, machine);
     // 電気艤装タスクがある機械は、組立・電装の両方が承認されて初めて「組立」完了扱いにする
-    const electricalRequired = (elecTaskRows || []).length > 0;
     if (electricalRequired && approved.has('assembly') && !approved.has('electrical')) {
         approved.delete('assembly');
     }
