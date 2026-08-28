@@ -3566,7 +3566,7 @@ async function openDetailModal(requestId) {
     }
 
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
-    const headerLine1Left = `${esc(pNum)}${req.machine_name ? `【${esc(req.machine_name)}】` : ''}`;
+    const headerLine1Left = `${esc(pNum)}${req.machine_name ? `【${esc(req.machine_name)}${req.unit_name ? '・' + esc(req.unit_name) : ''}】` : ''}`;
     document.getElementById('detail_body').innerHTML = `
         <div style="display:grid; grid-template-columns:max-content 1fr; column-gap:10px; align-items:baseline;">
             <div style="font-size:18px;font-weight:bold;color:#1e3a5f;white-space:nowrap;">${headerLine1Left}</div>
