@@ -19,6 +19,7 @@ const ROOM_EMAILS = {
 
 const FLOW_LABELS = {
   assembly:           '組立',
+  electrical:         '電装',
   test_run:           '試運転',
   simple_inspection:  '簡易検査',
   inspection:         '外観検査',
