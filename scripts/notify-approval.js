@@ -34,6 +34,7 @@ const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting']
 // 承認依頼・再申請・却下・他者完了の件名用ラベル（申請系表記）
 const FLOW_LABELS_REQUEST = {
   assembly:      '組立完了申請',
+  electrical:    '電装完了申請',
   test_run:      '試運転完了申請',
   shipping_prep: '出荷準備完了申請',
   shipping:      '出荷確定申請',
