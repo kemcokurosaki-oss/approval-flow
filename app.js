@@ -270,8 +270,8 @@ function applyRoleLayout(role) {
     const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || role === 'quality' || role === 'production_control';
     // 品証、および製管は同一権限（グローバル変数に保存）
     isQualityOrSeikan = role === 'quality' || role === 'production_control';
-    // 組立・操業 staff + 組立課長 + 操業課長 + 営業staff（出荷準備申請）が申請可
-    const isApplicant = (role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業'))
+    // 組立・操業・電装 staff + 組立課長 + 操業課長 + 営業staff（出荷準備申請）が申請可
+    const isApplicant = (role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業' || dept === '電装'))
                       || role === 'assembly_manager'
                       || role === 'operations_manager';
     const isViewOnly  = role === 'staff' && !isApplicant && dept !== '製管';
