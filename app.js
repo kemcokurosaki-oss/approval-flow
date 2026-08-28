@@ -191,6 +191,7 @@ let qaEditingPendingIdx  = null; // 開催結果セクションで編集中の�
 // flowTypes: 自分の申請タブで表示するフロー種別（デモ用フィルタ）
 const DEV_ROLE_MAP = {
     staff_kumitate:      { role: 'staff',               department: '組立', flowTypes: ['assembly'] },
+    staff_denki:         { role: 'staff',               department: '電装', flowTypes: ['electrical'] },
     staff_shiunten:      { role: 'staff',               department: '操業', flowTypes: ['test_run'] },
     assembly_manager:    { role: 'assembly_manager',    department: '組立', flowTypes: ['assembly'] },
     assembly_director:   { role: 'assembly_director',   department: '組立', flowTypes: [] },
