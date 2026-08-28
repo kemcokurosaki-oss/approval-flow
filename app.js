@@ -2974,9 +2974,12 @@ async function openAssemblyGroupDetailModal(projectNum, machine) {
 
     const pInfo = projectsMap[projectNum] || {};
 
-    const renderBlock = (req, label) => {
+    const renderBlock = (req, label, flowType) => {
         if (!req) {
-            return `<div class="section-title">${esc(label)}</div><div class="empty" style="padding:6px 0;"><div class="empty-text">未申請</div></div>`;
+            const applyBtn = canApplyFlow(flowType)
+                ? `<button class="btn btn-primary" style="font-size:13px; padding:6px 16px; margin-top:6px;" onclick="applyFlowFromGroupModal('${flowType}', '${esc(projectNum)}', '${esc(machine)}')">${esc(label)}を申請する →</button>`
+                : '';
+            return `<div class="section-title">${esc(label)}</div><div class="empty" style="padding:6px 0;"><div class="empty-text">未申請</div></div>${applyBtn}`;
         }
         const steps = (req.approval_steps || []).sort((a, b) => a.step_order - b.step_order);
         const meta = SHEET_FLOW_META[req.flow_type];
