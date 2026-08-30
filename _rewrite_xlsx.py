@@ -8,14 +8,13 @@ path = glob.glob("修正内容一覧_20260827-0828.xlsx")[0]
 wb = openpyxl.load_workbook(path)
 ws = wb.worksheets[0]
 
-# 既存内容をクリア
+# 既存内容をクリア（先にマージ解除してからセルをクリア）
+for rng in list(ws.merged_cells.ranges):
+    ws.unmerge_cells(str(rng))
 for row in ws.iter_rows():
     for cell in row:
         cell.value = None
         cell.fill = PatternFill(fill_type=None)
-ws.merged_cells.ranges = list(ws.merged_cells.ranges)
-for rng in list(ws.merged_cells.ranges):
-    ws.unmerge_cells(str(rng))
 
 DATA = [
     ("新機能追加", [
