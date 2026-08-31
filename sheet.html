@@ -792,6 +792,8 @@ async function init() {
 
         const metaBox = document.querySelector('.sheet-meta-box');
         if (metaBox) metaBox.style.display = 'none';
+        const itemsGroup = document.getElementById('assembly_items_group');
+        if (itemsGroup) itemsGroup.style.display = 'none';
 
         if (isApproved) {
             document.getElementById('doc_title_top').textContent = '機械組立完了報告書';
