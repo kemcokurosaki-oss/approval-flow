@@ -3791,6 +3791,13 @@ function buildQaFooterInner(req) {
 }
 
 function closeDetailModal() {
+    // 組立フロー詳細から個別申請の詳細を開いた場合は、閉じずに組立フロー詳細に戻る
+    if (assemblyDetailReturnProjectNum) {
+        const returnNum = assemblyDetailReturnProjectNum;
+        assemblyDetailReturnProjectNum = null;
+        openAssemblyFlowDetailModal(returnNum);
+        return;
+    }
     document.getElementById('detail_modal').classList.remove('open');
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
     currentAssemblyDetailProjectNum = null;
