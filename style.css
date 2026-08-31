@@ -958,7 +958,10 @@
         .unit-list-link { font-size: 13px; color: #2f6fb0; font-weight: 600; }
         .unit-list-link:hover { color: #1a4a7a; text-decoration: underline; }
         .unit-list-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-        .btn-apply-xs { border: none; background: #2f6fb0; color: #fff; }
+        .btn-apply-xs {
+            padding: 4px 12px; font-size: 13px; border-radius: 4px;
+            border: none; background: #2f6fb0; color: #fff; cursor: pointer;
+        }
         .btn-apply-xs:hover { background: #24568c; }
         .unit-list-footer-hint { flex: 1; font-size: 13px; color: #8a94a6; }
 
