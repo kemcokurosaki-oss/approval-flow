@@ -1793,7 +1793,7 @@ function renderProgressCards() {
     }
 
     // 組立(assembly)は機械・ユニットが工程表と紐づかないため、このmachine単位ループから外し
-    // renderAssemblyBlock()で工番カード内に別枠表示する。電装(electrical)は組立との合成をやめ独立表示にする
+    // renderAssemblyFlowRow()で工番全体を1つのフロー丸として別行に表示する。電装(electrical)は組立との合成をやめ独立表示にする
     const FLOW_DEFS = [
         { type: 'electrical',         label: '電装',       alwaysShow: false },
         { type: 'simple_inspection',  label: '簡易検査',   alwaysShow: false },
