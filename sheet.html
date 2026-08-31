@@ -670,9 +670,11 @@ function renderAssemblyItemRow(item, i) {
             const unitIsKnown = candidates.includes(item.unit);
             if (item._unitFree || (item.unit && !unitIsKnown)) {
                 unitHtml = `
-                    <input type="text" class="pending-content" placeholder="ユニット（自由入力）" value="${esc(item.unit)}"
-                        oninput="updateAssemblyUnit(${i}, this.value)">
-                    <button type="button" class="btn-danger-xs" style="margin-top:4px;" onclick="clearAssemblyUnitFreeInput(${i})">候補から選ぶ</button>`;
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="ユニット（自由入力）" value="${esc(item.unit)}"
+                            oninput="updateAssemblyUnit(${i}, this.value)">
+                        <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyUnitFreeInput(${i})">候補に戻す</button>
+                    </div>`;
             } else {
                 const uOptions = ['<option value="">選択してください</option>']
                     .concat(candidates.filter(u => u !== '-').map(u => `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`))
