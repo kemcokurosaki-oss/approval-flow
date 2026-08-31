@@ -539,6 +539,8 @@ const broadcastChannel = new BroadcastChannel('approval_sheet');
 
 let draftId = null;
 let checks = {};
+let assemblyItems = [];
+let isAssembly2000sProject = false;
 let pendingItems = [];
 let saveTimer = null;
 let isSaving = false;
