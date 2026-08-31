@@ -958,8 +958,8 @@
         .unit-list-link { font-size: 13px; color: #2f6fb0; font-weight: 600; }
         .unit-list-link:hover { color: #1a4a7a; text-decoration: underline; }
         .unit-list-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-        .btn-primary-xs { border: none; background: #2f6fb0; color: #fff; }
-        .btn-primary-xs:hover { background: #24568c; }
+        .btn-apply-xs { border: none; background: #2f6fb0; color: #fff; }
+        .btn-apply-xs:hover { background: #24568c; }
         .unit-list-footer-hint { flex: 1; font-size: 13px; color: #8a94a6; }
 
         /* ユニット一覧のときだけ、モーダル高さを内容に合わせる（下部の余白をなくす） */
