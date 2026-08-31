@@ -1409,8 +1409,13 @@ async function loadProgress() {
     // 全申請レコードを機械名付きで取得（shippingの承認者名表示のためapproval_stepsも含む）
     const { data: allReqs } = await db
         .from('approval_requests')
-        .select('id, project_number, machine_name, unit_name, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date, inspection_date, inspection_time, requester_id, sheet_data, approval_steps(approver_id, status)')
+        .select('id, project_number, machine_name, unit_name, assembly_items, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date, inspection_date, inspection_time, requester_id, sheet_data, approval_steps(approver_id, status)')
         .order('updated_at', { ascending: true });
+
+    // 工番単位の組立完了確定（電装合成表示・前フロー判定の代替に使う。TBD: 確定操作の権限者は後日決定）
+    const { data: confirmedRows } = await db.from('assembly_completion_confirmations').select('project_number, confirmed_by, confirmed_at');
+    const assemblyConfirmedMap = {};
+    (confirmedRows || []).forEach(r => { assemblyConfirmedMap[r.project_number] = r; });
 
     // shipping承認済みの承認者名マップを構築
     const shippingApproverIds = [...new Set(
