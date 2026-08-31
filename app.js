@@ -2071,34 +2071,45 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         .order('created_at', { ascending: true });
 
     const pInfo = projectsMap[projectNum] || {};
-    const myDraft = (reqs || []).find(r => r.status === 'draft' && r.requester_id === currentUser.id);
 
-    // 機械・ユニット単位に展開した行データ
-    const rows = [];
-    (reqs || []).forEach(req => {
-        getAssemblyItemsForReq(req).forEach(it => {
-            if (!it || !it.machine) return;
-            rows.push({ machine: it.machine, unit: it.unit, req });
-        });
-    });
+    // 申請(下書き含む)単位でグループ化する。1申請=複数機械・ユニットをまとめられるため、
+    // 機械・ユニット単位の行ではなく申請単位の行として表示し、同じ工番に複数の下書きが並行してあっても良い
+    const groups = (reqs || []).map(req => ({
+        req,
+        items: getAssemblyItemsForReq(req).filter(it => it && it.machine)
+    }));
 
-    const rowsHtml = rows.length === 0
+    const rowsHtml = groups.length === 0
         ? '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>'
-        : rows.map(r => {
-            const cls = STATUS_CLASSES[r.req.status] || 's-gray';
-            const label = r.req.status === 'draft' ? '下書き' : statusBadgeLabel(r.req);
-            const unitLabel = (r.unit && r.unit !== '-') ? `${r.machine}・${r.unit}` : r.machine;
-            const isOwnDraft = r.req.status === 'draft' && r.req.requester_id === currentUser.id;
-            const onclickAttr = isOwnDraft
-                ? `onclick="reopenAssemblySheetFromDetail('${r.req.id}')"`
-                : `onclick="viewAssemblyRequestDetail('${r.req.id}', '${esc(projectNum)}')"`;
-            const linkLabel = isOwnDraft ? '続きを入力する →' : '詳細を見る →';
-            return `<div class="unit-list-row is-selectable" ${onclickAttr}>
+        : groups.map(g => {
+            const cls = STATUS_CLASSES[g.req.status] || 's-gray';
+            const label = g.req.status === 'draft' ? '下書き' : statusBadgeLabel(g.req);
+            const machineLabel = g.items.length > 0
+                ? g.items.map(it => (it.unit && it.unit !== '-') ? `${it.machine}・${it.unit}` : it.machine).join('、')
+                : '（機械未入力）';
+            const isOwnDraft = g.req.status === 'draft' && g.req.requester_id === currentUser.id;
+
+            if (isOwnDraft) {
+                const submitBtn = g.items.length > 0
+                    ? `<button class="btn-xs btn-primary-xs" onclick="submitAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">申請する</button>`
+                    : '';
+                return `<div class="unit-list-row">
+                    <div class="unit-list-row-main">
+                        <div class="unit-list-name">${esc(machineLabel)}</div>
+                        <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
+                    </div>
+                    <div class="unit-list-row-actions">
+                        <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${g.req.id}')">続きを入力する →</span>
+                        ${submitBtn}
+                    </div>
+                </div>`;
+            }
+            return `<div class="unit-list-row is-selectable" onclick="viewAssemblyRequestDetail('${g.req.id}', '${esc(projectNum)}')">
                 <div class="unit-list-row-main">
-                    <div class="unit-list-name">${esc(unitLabel)}</div>
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
-                <div class="unit-list-link">${linkLabel}</div>
+                <div class="unit-list-link">詳細を見る →</div>
             </div>`;
         }).join('');
 
@@ -2113,31 +2124,18 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const canApply   = canApplyFlow('assembly');
     const canConfirm = canConfirmAssemblyCompletion();
+    const hasAnyItems = groups.some(g => g.items.length > 0);
 
-    let actionHtml = '';
-    let draftNoteHtml = '';
-    if (myDraft) {
-        const hasItems = getAssemblyItemsForReq(myDraft).length > 0;
-        if (hasItems) {
-            actionHtml = `<button class="btn btn-secondary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを修正する</button>
-               <button class="btn btn-primary" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}')">申請する</button>`;
-            draftNoteHtml = `<div style="margin-top:10px;font-size:13px;color:#8a4b00;background:#fff8e6;border:1px solid #f0d98c;border-radius:6px;padding:8px 12px;">
-                ↑「下書き」の機械・ユニットは、まだ申請されていません。他の機械・ユニットを追加したい場合は「チェックシートを修正する」から同じ下書きに追加してください。
-            </div>`;
-        } else {
-            actionHtml = `<button class="btn btn-primary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを入力する →</button>`;
-        }
-    } else if (canApply) {
-        // 既に申請済みの機械・ユニットがある場合は「追加で申請する」ことが伝わる文言にする
-        const addLabel = rows.length > 0 ? '＋ 他の機械・ユニットを申請する →' : '＋ チェックシートを入力する →';
-        actionHtml = `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">${addLabel}</button>`;
-    }
+    // 同じ工番に複数の下書きを同時に持てるため、「新しい機械・ユニットを申請する」ボタンは常に表示する
+    const actionHtml = canApply
+        ? `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 新しい機械・ユニットを申請する →</button>`
+        : '';
 
     let confirmHtml = '';
     if (confirmedRow) {
         confirmHtml = `<div style="margin-top:12px;font-size:13px;color:#166534;">✓ 組立完了確定済み（${esc(confirmedByName)} ${fmtDate((confirmedRow.confirmed_at || '').slice(0, 10))}）` +
             (canConfirm ? ` <button class="btn-danger-xs" onclick="unconfirmAssemblyCompletionFromDetail('${esc(projectNum)}')">取消</button>` : '') + `</div>`;
-    } else if (canConfirm && rows.length > 0) {
+    } else if (canConfirm && hasAnyItems) {
         confirmHtml = `<div style="margin-top:12px;"><button class="btn btn-success" onclick="confirmAssemblyCompletionFromDetail('${esc(projectNum)}')">組立完了にする</button></div>`;
     }
 
@@ -2148,7 +2146,6 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <hr class="section-divider">
         <div class="section-title">機械・ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
-        ${draftNoteHtml}
         ${confirmHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
