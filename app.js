@@ -6732,7 +6732,8 @@ async function recordFlowNotifications(requestId, flowType) {
     // 工番・機械名・申請者IDを取得
     const { data: req } = await db.from('approval_requests').select('project_number, machine_name, requester_id').eq('id', requestId).single();
     const projectNum = req?.project_number;
-    const machineName = req?.machine_name;
+    // 組立(assembly)は機械名が工程表と紐づかない自由入力/要約文字列のため、機械では絞り込まず工番全体でオーナーを検索する
+    const machineName = flowType === 'assembly' ? null : req?.machine_name;
     if (!projectNum) return;
 
     // 対象機械のタスクオーナーを取得（機械名がある場合は機械でフィルタ）
