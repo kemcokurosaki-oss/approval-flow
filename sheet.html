@@ -1176,7 +1176,10 @@ function suspendSheet() {
         return;
     }
     clearTimeout(saveTimer);
-    saveNow().then(() => window.close());
+    saveNow().then(() => {
+        broadcastChannel.postMessage({ type: 'sheet_suspend', draftId });
+        window.close();
+    });
 }
 
 // 完了: 保存 → 申請画面に通知 → タブを閉じる
