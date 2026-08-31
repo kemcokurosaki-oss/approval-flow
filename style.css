@@ -933,11 +933,11 @@
         .unit-list-head-spacer { flex: 1; }
         .unit-list-count       { font-size: 12px; font-weight: bold; border-radius: 20px; padding: 3px 10px; }
 
-        .unit-list-wrap { columns: 2; column-gap: 8px; margin-top: 12px; }
+        .unit-list-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .unit-list-row {
             display: flex; flex-direction: column; gap: 5px;
             padding: 10px 12px; border: 1px solid #e5e9f1; border-radius: 10px; background: #fff;
-            break-inside: avoid; margin-bottom: 8px;
+            flex: 1 1 calc(50% - 4px); min-width: 260px; box-sizing: border-box;
         }
         .unit-list-row-main { display: flex; align-items: center; gap: 10px; }
         .unit-list-dot {
