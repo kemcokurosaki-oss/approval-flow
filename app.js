@@ -2044,6 +2044,18 @@ function computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedM
     return 'active';
 }
 
+// 2000番台は標準リストの機械コード（CC/PC/TR等）が工程表(tasks)のmachine名と同じ体系のため、
+// 申請データのmachineと工程表のmachineを突き合わせて、機械ごとの実際の申請状況を判定できる
+function computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyConfirmedMap) {
+    if ((assemblyConfirmedMap || {})[num]) return 'approved';
+    const reqs = ((assemblyReqsByProject || {})[num] || [])
+        .filter(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
+    if (reqs.length === 0) return 'empty';
+    if (reqs.some(r => r.status === 'rejected')) return 'rejected';
+    if (reqs.every(r => r.status === 'draft')) return 'draft';
+    return 'active';
+}
+
 
 // 組立完了の工番単位確定操作を行える権限があるか（TBD: 正式な権限者は後日決定。暫定的に組立課長・部長）
 function canConfirmAssemblyCompletion() {
