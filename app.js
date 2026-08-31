@@ -2091,7 +2091,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
             if (isOwnDraft) {
                 const submitBtn = g.items.length > 0
-                    ? `<button class="btn-xs btn-primary-xs" onclick="submitAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">申請する</button>`
+                    ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">申請する</button>`
                     : '';
                 return `<div class="unit-list-row">
                     <div class="unit-list-row-main">
