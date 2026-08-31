@@ -1902,6 +1902,8 @@
         .flow-pending-badge { font-size: 12px; background: #f6edfa; color: #8e44ad; border-radius: 20px; padding: 2px 9px; }
         .flow-pending-badge .si-badge { display: none; }
         .flow-overdue-badge { font-size: 12px; color: #c0392b; background: #fdecec; border-radius: 20px; padding: 2px 9px; }
+        .flow-subgroup { gap: 12px; }
+        .flow-subcol-label { font-size: 11px; color: #8a94a6; }
         .resubmit-badge { border-radius: 20px; padding: 2px 8px; }
 
         /* ----- サイドタブ／マイページ ----- */
