@@ -1861,11 +1861,15 @@ function renderProgressCards() {
             packingDateLabel = `<span class="${badgeClass}"${badgeOnclick}>⚠ 梱包出荷：未定${canSetPacking ? ' ▾' : ''}</span>`;
         }
 
-        const machineRows = machines.map(machine => {
-            const mData = projectData[num][machine];
-            const tplC  = isTemplateC(num);
+        // 組立(assembly)は機械・ユニットが工程表と紐づかないため工番全体で1つに集約するが、
+        // 見た目は他フローと同じ「機械行の中の丸」として、各機械行の先頭に共通で表示する（ラインで他フローとつながる）
+        const assemblyAggStatus = computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedMap);
 
-            const applicable = FLOW_DEFS.filter(f => {
+        const machineRows = (machines.length > 0 ? machines : [null]).map(machine => {
+            const mData = machine ? projectData[num][machine] : null;
+            const tplC  = machine ? isTemplateC(num) : false;
+
+            const applicable = machine ? FLOW_DEFS.filter(f => {
                 // 2000番台工事は組立・試運転フローのみ対象（出荷系・検査系は完全に対象外）
                 if (is2000sSeries(num) && f.type !== 'test_run') return false;
                 if (f.alwaysShow) return true;
@@ -1876,9 +1880,39 @@ function renderProgressCards() {
                 if (f.type === 'shipping_meeting')  return hasProjectFlow(num, '出荷確認会議') || hasTask(num, machine, '出荷確認会議') || !!mData.flows['shipping_meeting'];
                 if (f.type === 'shipping_prep')     return hasTask(num, machine, '出荷準備')   || !!mData.flows['shipping_prep'];
                 return false;
-            });
+            }) : [];
+            // 組立は常に先頭に表示する疑似エントリとして合成する
+            const fullChain = [{ type: 'assembly', label: '組立', __isAssembly: true }, ...applicable];
 
-            const nodes = applicable.map((f, i) => {
+            const nodes = fullChain.map((f, i) => {
+                if (f.__isAssembly) {
+                    const { fcClass, icon } = deriveFlowVisual(assemblyAggStatus);
+                    const isEffectivelyApproved = assemblyAggStatus === 'approved';
+                    const canApply = canApplyFlow('assembly');
+                    const clickable = (canApply && !progressFilterCompleted) ? ' clickable can-apply' : ' clickable';
+
+                    let flowDateStr = '';
+                    if (assemblyAggStatus === 'approved') {
+                        const confirmedAt = (assemblyConfirmedMap || {})[num]?.confirmed_at;
+                        if (confirmedAt) flowDateStr = `完了 ${fmtDate(confirmedAt.slice(0, 10))}`;
+                    } else if (assemblyAggStatus === 'draft') {
+                        flowDateStr = '入力中';
+                    } else if (((assemblyReqsByProject || {})[num] || []).length > 0) {
+                        flowDateStr = '申請中';
+                    }
+
+                    const connector = i < fullChain.length - 1
+                        ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
+                        : '';
+                    return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); openAssemblyFlowDetailModal('${esc(num)}')"
+                        data-flow-type="assembly"
+                        data-num="${esc(num)}">
+                        <div class="flow-circle ${fcClass}">${icon}</div>
+                        <div class="flow-label">組立</div>
+                        ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
+                    </div>${connector}`;
+                }
+
                 const req = mData.flows[f.type];
                 let fcClass, icon, clickAttr = '', clickable = '';
                 const isEffectivelyApproved = req?.status === 'approved';
@@ -1947,7 +1981,7 @@ function renderProgressCards() {
                     overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
                 }
 
-                const connector = i < applicable.length - 1
+                const connector = i < fullChain.length - 1
                     ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
                 return `<div class="flow-node${clickable}" ${clickAttr}
