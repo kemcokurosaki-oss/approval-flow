@@ -2650,12 +2650,17 @@ async function openDraftInSubmitModal(draftId) {
         document.getElementById('submit_project_name_display').textContent = p.project_details || '—';
         document.getElementById('submit_project_info').style.display = 'contents';
         document.getElementById('submit_note').value = draft.note || '';
-        document.getElementById('submit_machine_group').style.display = 'block';
         document.getElementById('flow_detect_group').style.display = 'none';
 
-        // 下書きも組立・試運転限定のため、確定済みの機械をロック表示する
-        await _loadMachineCheckboxes(draft.project_number, 'submit_machine_list', 'onMachineChange', draft.machine_name);
-        await onMachineChange();
+        if (draft.flow_type === 'assembly') {
+            // 組立は機械・ユニットを工程表と紐づけないため、機械選択欄は出さない（チェックシート側で入力済み）
+            document.getElementById('submit_machine_group').style.display = 'none';
+        } else {
+            document.getElementById('submit_machine_group').style.display = 'block';
+            // 下書きも試運転限定のため、確定済みの機械をロック表示する
+            await _loadMachineCheckboxes(draft.project_number, 'submit_machine_list', 'onMachineChange', draft.machine_name);
+            await onMachineChange();
+        }
 
         const btnGoSheet = document.getElementById('btn_go_sheet');
         const btnSubmit  = document.getElementById('submit_btn');
