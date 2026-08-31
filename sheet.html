@@ -1171,6 +1171,10 @@ function renderPendingItemsView() {
 
 // 中断: 保存してタブを閉じる（申請画面には通知しない）
 function suspendSheet() {
+    if (assemblyItems.filter(it => it && it.machine).length === 0) {
+        alert('機械を1件以上入力してから一時保存してください');
+        return;
+    }
     clearTimeout(saveTimer);
     saveNow().then(() => window.close());
 }
