@@ -2041,32 +2041,6 @@ function computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedM
     return 'active';
 }
 
-function renderAssemblyFlowRow(num, assemblyReqsByProject, assemblyConfirmedMap) {
-    const status = computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedMap);
-    const { fcClass, icon } = deriveFlowVisual(status);
-    const reqs = (assemblyReqsByProject || {})[num] || [];
-
-    let flowDateStr = '';
-    if (status === 'approved') {
-        const confirmedAt = (assemblyConfirmedMap || {})[num]?.confirmed_at;
-        if (confirmedAt) flowDateStr = `完了 ${fmtDate(confirmedAt.slice(0, 10))}`;
-    } else if (status === 'draft') {
-        flowDateStr = '入力中';
-    } else if (reqs.length > 0) {
-        flowDateStr = '申請中';
-    }
-
-    return `<div class="prog-machine-row">
-        <div class="flow-steps">
-            <div class="flow-node clickable" onclick="event.stopPropagation(); openAssemblyFlowDetailModal('${esc(num)}')"
-                data-flow-type="assembly" data-num="${esc(num)}">
-                <div class="flow-circle ${fcClass}">${icon}</div>
-                <div class="flow-label">組立</div>
-                ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
-            </div>
-        </div>
-    </div>`;
-}
 
 // 組立完了の工番単位確定操作を行える権限があるか（TBD: 正式な権限者は後日決定。暫定的に組立課長・部長）
 function canConfirmAssemblyCompletion() {
