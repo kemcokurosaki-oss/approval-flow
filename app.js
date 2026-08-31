@@ -2470,6 +2470,7 @@ let currentDraftId = null;
 let currentUnitName = null; // 2000番台：ユニット単位申請時の選択中ユニット名（null=ユニット区分なし）
 let sheetAutoSaveTimer = null;
 let currentAssemblyDetailProjectNum = null; // 組立フロー詳細モーダルで開いている工番（sheet.html完了通知の再描画に使う）
+let assemblyDetailReturnProjectNum = null; // 個別申請の詳細画面(openDetailModal)を組立フロー詳細から開いた場合の戻り先工番
 
 function selectApprover(role) {
     selectedApproverRole = role;
