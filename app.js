@@ -1703,7 +1703,8 @@ function renderProgressCards() {
     };
 
     // 未申請・未承認判定（組立・試運転・出荷確定）
-    const OVERDUE_FLOW_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷', electrical: '電気艤装' };
+    // 組立(assembly)は機械・ユニットが工程表と紐づかなくなったため、機械単位の未申請催促は一時的に無効化（TBD: 別途再設計）
+    const OVERDUE_FLOW_TASK_TEXT = { test_run: '試運転', shipping: '工場出荷', electrical: '電気艤装' };
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const isFlowOverdue = (num, machine, flowType, req) => {
         if (req && req.status !== 'draft') {
