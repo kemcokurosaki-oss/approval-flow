@@ -2444,37 +2444,61 @@ function _updateSubmitUnitDisplay() {
 // ===== 自主点検シート =====
 async function goToSheetStep() {
     const projectNum = currentProjectNum;
-    const machineNums = getSelectedMachines('submit_machine_list');
-    if (!projectNum)              { showToast('工事番号を選択してください', 'error'); return; }
-    if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    const isAssembly = currentFlowType === 'assembly';
+    const machineNums = isAssembly ? [] : getSelectedMachines('submit_machine_list');
+    if (!projectNum)                       { showToast('工事番号を選択してください', 'error'); return; }
+    if (!isAssembly && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
     const needsSheetFlow = !!SHEET_FLOW_META[currentFlowType];
     if (!needsSheetFlow) { submitRequest(); return; }
-    if (machineNums.length > 1) {
+    if (!isAssembly && machineNums.length > 1) {
         showToast('報告書は1台ずつ申請してください', 'error');
         return;
     }
 
     showLoading('下書きを保存中...');
     try {
-        const machine = machineNums[0];
         const note = document.getElementById('submit_note').value.trim();
 
-        let existingQuery = db.from('approval_requests')
-            .select('id')
-            .eq('project_number', projectNum)
-            .eq('machine_name', machine)
-            .eq('flow_type', currentFlowType)
-            .eq('status', 'draft')
-            .eq('requester_id', currentUser.id);
-        existingQuery = currentUnitName ? existingQuery.eq('unit_name', currentUnitName) : existingQuery.is('unit_name', null);
-        const { data: existing } = await existingQuery.maybeSingle();
+        let existing;
+        if (isAssembly) {
+            // 組立は機械・ユニットを工程表と紐づけないため、工番・申請者単位で下書きを一意に扱う
+            ({ data: existing } = await db.from('approval_requests')
+                .select('id')
+                .eq('project_number', projectNum)
+                .eq('flow_type', currentFlowType)
+                .eq('status', 'draft')
+                .eq('requester_id', currentUser.id)
+                .maybeSingle());
+        } else {
+            const machine = machineNums[0];
+            let existingQuery = db.from('approval_requests')
+                .select('id')
+                .eq('project_number', projectNum)
+                .eq('machine_name', machine)
+                .eq('flow_type', currentFlowType)
+                .eq('status', 'draft')
+                .eq('requester_id', currentUser.id);
+            existingQuery = currentUnitName ? existingQuery.eq('unit_name', currentUnitName) : existingQuery.is('unit_name', null);
+            ({ data: existing } = await existingQuery.maybeSingle());
+        }
 
         if (existing) {
             currentDraftId = existing.id;
             await db.from('approval_requests')
                 .update({ note: note || null })
                 .eq('id', existing.id);
+        } else if (isAssembly) {
+            const { data: newDraft, error } = await db.from('approval_requests').insert({
+                project_number: projectNum,
+                flow_type:      currentFlowType,
+                status:         'draft',
+                requester_id:   currentUser.id,
+                note:           note || null
+            }).select().single();
+            if (error) throw error;
+            currentDraftId = newDraft.id;
         } else {
+            const machine = machineNums[0];
             const { data: newDraft, error } = await db.from('approval_requests').insert({
                 project_number: projectNum,
                 machine_name:   machine,
