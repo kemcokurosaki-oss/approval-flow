@@ -2155,23 +2155,16 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 }
 
 async function startNewAssemblySheetFromDetail(projectNum) {
-    // 1工番×1申請者につき下書きは1つまで。既にあれば新規作成せずそれを開く
-    const { data: existing } = await db.from('approval_requests')
-        .select('id')
-        .eq('project_number', projectNum).eq('flow_type', 'assembly')
-        .eq('status', 'draft').eq('requester_id', currentUser.id)
-        .maybeSingle();
-    let draftId = existing?.id;
-    if (!draftId) {
-        const { data: newDraft, error } = await db.from('approval_requests').insert({
-            project_number: projectNum,
-            flow_type:      'assembly',
-            status:         'draft',
-            requester_id:   currentUser.id
-        }).select().single();
-        if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
-        draftId = newDraft.id;
-    }
+    // 同じ工番・同じ申請者でも、複数の下書きを同時に保持できる（機械・ユニットをまとめて申請したい場合と、
+    // 別々に分けて申請したい場合の両方に対応するため、押すたびに新しい下書きを作成する）
+    const { data: newDraft, error } = await db.from('approval_requests').insert({
+        project_number: projectNum,
+        flow_type:      'assembly',
+        status:         'draft',
+        requester_id:   currentUser.id
+    }).select().single();
+    if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
+    const draftId = newDraft.id;
     window.open(`sheet.html?draft_id=${draftId}`, '_blank');
     await loadMineSide();
     await renderAssemblyFlowDetailBody(projectNum);
