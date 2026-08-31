@@ -2115,12 +2115,18 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const canConfirm = canConfirmAssemblyCompletion();
 
     let actionHtml = '';
+    let draftNoteHtml = '';
     if (myDraft) {
         const hasItems = getAssemblyItemsForReq(myDraft).length > 0;
-        actionHtml = hasItems
-            ? `<button class="btn btn-secondary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを修正する</button>
-               <button class="btn btn-primary" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}')">申請する</button>`
-            : `<button class="btn btn-primary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを入力する →</button>`;
+        if (hasItems) {
+            actionHtml = `<button class="btn btn-secondary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを修正する</button>
+               <button class="btn btn-primary" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}')">申請する</button>`;
+            draftNoteHtml = `<div style="margin-top:10px;font-size:13px;color:#8a4b00;background:#fff8e6;border:1px solid #f0d98c;border-radius:6px;padding:8px 12px;">
+                ↑「下書き」の機械・ユニットは、まだ申請されていません。他の機械・ユニットを追加したい場合は「チェックシートを修正する」から同じ下書きに追加してください。
+            </div>`;
+        } else {
+            actionHtml = `<button class="btn btn-primary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを入力する →</button>`;
+        }
     } else if (canApply) {
         // 既に申請済みの機械・ユニットがある場合は「追加で申請する」ことが伝わる文言にする
         const addLabel = rows.length > 0 ? '＋ 他の機械・ユニットを申請する →' : '＋ チェックシートを入力する →';
@@ -2142,6 +2148,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <hr class="section-divider">
         <div class="section-title">機械・ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
+        ${draftNoteHtml}
         ${confirmHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
