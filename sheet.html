@@ -764,7 +764,7 @@ async function init() {
         }
 
         const isApproved = req.status === 'approved';
-        setSheetInfoHeader(req.project_number, req.machine_name);
+        setSheetInfoHeader(req.project_number);
         checks       = req.sheet_data.check_items   || {};
         pendingItems = req.sheet_data.pending_items || [];
 
