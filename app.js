@@ -1890,7 +1890,9 @@ function renderProgressCards() {
                     const { fcClass, icon } = deriveFlowVisual(assemblyAggStatus);
                     const isEffectivelyApproved = assemblyAggStatus === 'approved';
                     const canApply = canApplyFlow('assembly');
-                    const clickable = (canApply && !progressFilterCompleted) ? ' clickable can-apply' : ' clickable';
+                    // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない
+                    const canApplyNow = canApply && !progressFilterCompleted && (assemblyAggStatus === 'empty' || assemblyAggStatus === 'draft');
+                    const clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
 
                     let flowDateStr = '';
                     if (assemblyAggStatus === 'approved') {
