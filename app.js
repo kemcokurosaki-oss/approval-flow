@@ -984,6 +984,13 @@ async function onProjectChange(lockedMachine = null) {
     document.getElementById('submit_project_name_display').textContent = p.project_details || '—';
     infoEl.style.display = 'block';
 
+    // 組立(assembly)は機械・ユニットを工程表と紐づけない。機械選択欄は出さず、チェックシート側で入力する
+    if (currentFlowType === 'assembly') {
+        machineGroup.style.display = 'none';
+        flowEl.style.display       = 'none';
+        return;
+    }
+
     showLoading('読み込み中...');
     try {
         await _loadMachineCheckboxes(num, 'submit_machine_list', 'onMachineChange', lockedMachine);
