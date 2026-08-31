@@ -1805,7 +1805,7 @@ function renderProgressCards() {
     const html = nums.map(num => {
         const pInfo    = projectsMap[num] || {};
         const label    = [pInfo.customer_name, pInfo.project_details].filter(Boolean).join('　');
-        const machines = Object.keys(projectData[num]).sort();
+        const machines = Object.keys(projectData[num] || {}).sort();
         const hasActualPackingTask = hasProjectFlow(num, '梱包出荷') || machines.some(m => hasTask(num, m, '梱包出荷'));
         const packingState = getPackingDisplayState(num, hasActualPackingTask);
         const hasAnyPacking = packingState === 'yes';
