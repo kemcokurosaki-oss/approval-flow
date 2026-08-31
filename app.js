@@ -1860,8 +1860,9 @@ function renderProgressCards() {
 
             const applicable = FLOW_DEFS.filter(f => {
                 // 2000番台工事は組立・試運転フローのみ対象（出荷系・検査系は完全に対象外）
-                if (is2000sSeries(num) && f.type !== 'assembly' && f.type !== 'test_run') return false;
+                if (is2000sSeries(num) && f.type !== 'test_run') return false;
                 if (f.alwaysShow) return true;
+                if (f.type === 'electrical')        return hasTask(num, machine, '電気艤装')     || !!mData.flows['electrical'];
                 if (f.type === 'test_run')          return hasTask(num, machine, '試運転')     || !!mData.flows['test_run'];
                 if (f.type === 'simple_inspection') return hasProjectFlow(num, '簡易検査')     || hasTask(num, machine, '簡易検査')     || !!mData.flows['simple_inspection'];
                 if (f.type === 'inspection')        return hasProjectFlow(num, '外観検査')     || hasTask(num, machine, '外観検査')     || !!mData.flows['inspection'];
@@ -1870,76 +1871,30 @@ function renderProgressCards() {
                 return false;
             });
 
-            // 2000番台は組立・試運転フローのみ対象で電装フロー自体が出ないため、電装合成表示は常に無効化する
-            const electricalApplicable = !is2000sSeries(num) && hasTask(num, machine, '電気艤装');
-
             const nodes = applicable.map((f, i) => {
-                // 組立ノードは、電気艤装タスクがある機械では電装フローの承認状況も合成して1つの丸で表示する
-                const isAssemblyGroup = f.type === 'assembly' && electricalApplicable;
-                const req     = mData.flows[f.type];
-                const elecReq = isAssemblyGroup ? mData.flows['electrical'] : null;
+                const req = mData.flows[f.type];
                 let fcClass, icon, clickAttr = '', clickable = '';
-                let isEffectivelyApproved;
-                let multiUnitAggStatus = null;
+                const isEffectivelyApproved = req?.status === 'approved';
 
-                // 2000番台の組立のみ、その機械にユニットが複数ある場合はフロー丸が全ユニットの集約状態を表示する（試運転は機械単位のまま）
-                const unitNames = (is2000sSeries(num) && f.type === 'assembly')
-                    ? getUnitNames(unitListMap, num, machine, f.type) : [];
-                const isMultiUnit = unitNames.length > 1;
-
-                if (isMultiUnit) {
-                    multiUnitAggStatus = aggregateUnitFlowStatus(mData, f.type, unitNames);
-                    ({ fcClass, icon } = deriveFlowVisual(multiUnitAggStatus));
-                    isEffectivelyApproved = multiUnitAggStatus === 'approved';
-                } else if (isAssemblyGroup) {
-                    const bothApproved = req?.status === 'approved' && elecReq?.status === 'approved';
-                    isEffectivelyApproved = bothApproved;
-                    if (!req && !elecReq) {
-                        fcClass = 'fc-empty'; icon = '○';
-                    } else if (bothApproved) {
-                        fcClass = 'fc-done'; icon = '✓';
-                    } else if (req?.status === 'rejected' || elecReq?.status === 'rejected') {
-                        fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
-                    } else if (req?.status === 'draft' || elecReq?.status === 'draft') {
-                        fcClass = 'fc-draft'; icon = '✏';
-                    } else {
-                        fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
-                    }
+                if (!req) {
+                    fcClass = 'fc-empty'; icon = '○';
+                } else if (req.status === 'approved') {
+                    fcClass = 'fc-done'; icon = '✓';
+                } else if (req.status === 'rejected') {
+                    fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
+                } else if (req.status === 'draft') {
+                    fcClass = 'fc-draft'; icon = '✏';
                 } else {
-                    isEffectivelyApproved = req?.status === 'approved';
-                    if (!req) {
-                        fcClass = 'fc-empty'; icon = '○';
-                    } else if (req.status === 'approved') {
-                        fcClass = 'fc-done'; icon = '✓';
-                    } else if (req.status === 'rejected') {
-                        fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
-                    } else if (req.status === 'draft') {
-                        fcClass = 'fc-draft'; icon = '✏';
-                    } else {
-                        fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
-                    }
+                    fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
                 }
 
                 const canApply = canApplyFlow(f.type);
 
-                if (isMultiUnit) {
-                    // 複数ユニットの機械は、まずユニット一覧モーダルを開いて個別に申請・確認する
-                    // 未申請かつ申請可能な状態は、単一ユニットの機械と同じ見た目（点線＝can-apply）にする
-                    clickAttr = `onclick="event.stopPropagation(); openUnitListModal('${esc(num)}', '${esc(machine)}', '${f.type}')"`;
-                    clickable = (canApply && !progressFilterCompleted && multiUnitAggStatus === 'empty') ? ' clickable can-apply' : ' clickable';
-                } else if (isAssemblyGroup && (req || elecReq)) {
-                    // 組立・電装どちらかが申請済みなら、両方のステップ表示をまとめた合成詳細モーダルを開く
-                    clickAttr = `onclick="event.stopPropagation(); openAssemblyGroupDetailModal('${esc(num)}', '${esc(machine)}')"`;
-                    clickable = ' clickable';
-                } else if (!req && canApply && !progressFilterCompleted) {
+                if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
-                } else if (isAssemblyGroup && !req && !elecReq && electricalApplicable && canApplyFlow('electrical') && !progressFilterCompleted) {
-                    // 組立側は申請権限が無いが、電装側は申請できるユーザー（電装課）向け
-                    clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this, 'electrical')"`;
-                    clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
-                    // そのフローを申請できるロールのみクリック可能（例：組立担当者のみ assembly draft を操作可）
+                    // そのフローを申請できるロールのみクリック可能
                     if (canApply && !progressFilterCompleted) {
                         clickAttr = `onclick="event.stopPropagation(); openDraftInSubmitModal('${req.id}')"`;
                         clickable = ' clickable can-apply';
@@ -1951,28 +1906,7 @@ function renderProgressCards() {
                 }
 
                 let flowDateStr = '';
-                if (isMultiUnit) {
-                    // バッジ数字は分かりにくいため付けない。状態は丸の色（集約状態）のみで表現する
-                } else if (isAssemblyGroup && isEffectivelyApproved) {
-                    // 組立・電装とも承認済み＝組立フロー全体の完了。後から承認された方の日付を完了日とする
-                    const reqDate  = req?.updated_at   ? new Date(req.updated_at)   : null;
-                    const elecDate = elecReq?.updated_at ? new Date(elecReq.updated_at) : null;
-                    const latest = [reqDate, elecDate].filter(Boolean).sort((a, b) => b - a)[0];
-                    flowDateStr = latest ? `完了 ${latest.getMonth()+1}/${latest.getDate()}` : '完了';
-                } else if (isAssemblyGroup && (req || elecReq)) {
-                    // 組立・電装の内訳は詳細画面で確認する運用のため、ここでは動きがある方（組立優先）の状態だけをこれまで通りの形式で出す
-                    const primary = req || elecReq;
-                    if (primary.status === 'draft') {
-                        flowDateStr = '入力中';
-                    } else {
-                        const dateIso = (primary.status === 'approved' || primary.status === 'rejected') ? primary.updated_at : primary.created_at;
-                        if (dateIso) {
-                            const d = new Date(dateIso);
-                            const prefix = primary.status === 'approved' ? '完了' : primary.status === 'rejected' ? '却下' : '申請';
-                            flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
-                        }
-                    }
-                } else if (req && req.status !== 'draft') {
+                if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
@@ -1989,18 +1923,7 @@ function renderProgressCards() {
                 }
 
                 let pendingBadge = '';
-                if (isMultiUnit) {
-                    // 複数ユニット時は全ユニットの未解決ペンディングを合算する
-                    const reqsByUnit = mData.units[f.type] || {};
-                    const unresolved = unitNames.flatMap(u => {
-                        const r = reqsByUnit[u];
-                        if (!r || r.status === 'draft') return [];
-                        return (r.sheet_data?.pending_items || []).filter(p => (p.content || p.machine) && !p.completed);
-                    });
-                    if (unresolved.length > 0) {
-                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolved.length}件</div>`;
-                    }
-                } else if (req && req.status !== 'draft' && (f.type === 'assembly' || f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
+                if (req && req.status !== 'draft' && (f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
                     const pItems = (req.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
                     const unresolved = pItems.filter(p => !p.completed);
                     if (unresolved.length > 0) {
@@ -2010,68 +1933,11 @@ function renderProgressCards() {
 
                 // 未申請・未承認バッジ（フィルタと連動）
                 let overdueBadge = '';
-                if (isMultiUnit) {
-                    const reqsByUnit = mData.units[f.type] || {};
-                    const taskText   = OVERDUE_FLOW_TASK_TEXT[f.type];
-                    const unitIsOverdue = (u) => {
-                        const r = reqsByUnit[u];
-                        if (r && r.status !== 'draft') return r.status === 'submitted' || r.status === 'in_review';
-                        if (!taskText) return false;
-                        const info = (unitTaskInfoMap || {})[`${num}__${machine}__${u}__${taskText}`];
-                        return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
-                    };
-                    if (unitNames.some(unitIsOverdue)) {
-                        const anyUnapproved = unitNames.some(u => {
-                            const r = reqsByUnit[u];
-                            return r && (r.status === 'submitted' || r.status === 'in_review');
-                        });
-                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${anyUnapproved ? '未承認' : '未申請'}</div>`;
-                    }
-                } else {
-                    const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
-                    const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
-                    if (isMainOverdueFlow || isInviteOverdueFlow) {
-                        const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
-                        overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
-                    }
-                }
-
-                // 組立・電装合成ノードは、丸アイコンは合成のままにしつつ、その下の日付・バッジは組立/電装それぞれ別カラムで出す
-                let subgroupHtml = '';
-                if (isAssemblyGroup) {
-                    const buildSubCol = (subReq, subFlowType, subLabel) => {
-                        let sDate = '';
-                        if (subReq && subReq.status !== 'draft') {
-                            const dateIso = (subReq.status === 'approved' || subReq.status === 'rejected') ? subReq.updated_at : subReq.created_at;
-                            if (dateIso) {
-                                const d = new Date(dateIso);
-                                const prefix = subReq.status === 'approved' ? '完了' : subReq.status === 'rejected' ? '却下' : '申請';
-                                sDate = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
-                            }
-                        } else if (subReq && subReq.status === 'draft') {
-                            sDate = '入力中';
-                        }
-                        let sPending = '';
-                        if (subReq && subReq.status !== 'draft') {
-                            const pItems = (subReq.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
-                            const unresolved = pItems.filter(p => !p.completed);
-                            if (unresolved.length > 0) {
-                                sPending = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolved.length}件</div>`;
-                            }
-                        }
-                        let sOverdue = '';
-                        if (!!OVERDUE_FLOW_TASK_TEXT[subFlowType] && isFlowOverdue(num, machine, subFlowType, subReq)) {
-                            const isUnapproved = subReq && subReq.status !== 'draft';
-                            sOverdue = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
-                        }
-                        return `<div class="flow-subcol">
-                            <div class="flow-subcol-label">${subLabel}</div>
-                            ${sDate ? `<div class="flow-date">${sDate}</div>` : ''}
-                            ${sPending}
-                            ${sOverdue}
-                        </div>`;
-                    };
-                    subgroupHtml = `<div class="flow-subgroup">${buildSubCol(req, 'assembly', '組立')}${buildSubCol(elecReq, 'electrical', '電装')}</div>`;
+                const isMainOverdueFlow   = !!OVERDUE_FLOW_TASK_TEXT[f.type] && isFlowOverdue(num, machine, f.type, req);
+                const isInviteOverdueFlow = QA_MEETING_FLOWS.includes(f.type) && isInviteFlowOverdue(num, machine, f.type, req);
+                if (isMainOverdueFlow || isInviteOverdueFlow) {
+                    const isUnapproved = isMainOverdueFlow && req && req.status !== 'draft';
+                    overdueBadge = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
                 }
 
                 const connector = i < applicable.length - 1
@@ -2082,10 +1948,10 @@ function renderProgressCards() {
                     data-num="${esc(num)}"
                     data-machine="${esc(machine)}">
                     <div class="flow-circle ${fcClass}">${icon}</div>
-                    <div class="flow-label">${esc(isAssemblyGroup ? '組立・電装' : f.label)}</div>
-                    ${isAssemblyGroup ? subgroupHtml : (flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : '')}
-                    ${isAssemblyGroup ? '' : pendingBadge}
-                    ${isAssemblyGroup ? '' : overdueBadge}
+                    <div class="flow-label">${esc(f.label)}</div>
+                    ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
+                    ${pendingBadge}
+                    ${overdueBadge}
                 </div>${connector}`;
             }).join('');
 
