@@ -668,8 +668,11 @@ function renderAssemblyItemRow(item, i) {
             }
         }
     } else {
+        // 2000番以外は機械・ユニットともに完全自由入力
         machineHtml = `<input type="text" class="pending-content" placeholder="機械名" value="${esc(item.machine)}"
             oninput="updateAssemblyMachine(${i}, this.value)">`;
+        unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（任意）" value="${esc(item.unit || '')}"
+            oninput="updateAssemblyUnit(${i}, this.value)">`;
     }
 
     return `
@@ -678,7 +681,10 @@ function renderAssemblyItemRow(item, i) {
             ${lbl('機械')}
             ${machineHtml}
         </div>
-        ${isAssembly2000sProject ? `<div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">${lbl('ユニット')}${unitHtml}</div>` : ''}
+        <div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">
+            ${lbl('ユニット')}
+            ${unitHtml}
+        </div>
         <div style="display:flex;flex-direction:column;flex-shrink:0;">
             ${lbl(' ')}
             <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">削除</button>
