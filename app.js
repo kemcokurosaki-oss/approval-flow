@@ -2256,27 +2256,21 @@ async function openFlowModalPreset(el, overrideFlowType) {
     const projectNum = el.dataset.num;
     const machineName = el.dataset.machine;
 
-    // 2000番台の組立でその機械にユニットが複数ある場合、フロー丸クリックはユニット一覧モーダル側の
-    // openUnitListModal から個別に呼ばれる想定だが、念のためここでも複数ユニットなら中間モーダルを挟む（試運転は機械単位のまま対象外）
-    if (flowType === 'assembly') {
-        const unitNames = getUnitNames(progressCachedData?.unitListMap, projectNum, machineName, flowType);
-        if (unitNames.length > 1) {
-            openUnitListModal(projectNum, machineName, flowType);
-            return;
-        }
-    }
-
     const findCb = (listId) =>
         [...document.querySelectorAll(`#${listId} input[type="checkbox"]`)].find(c => c.value === machineName);
 
-    if (flowType === 'assembly' || flowType === 'electrical' || flowType === 'test_run' || flowType === 'shipping_prep') {
+    if (flowType === 'assembly') {
+        // 組立は機械・ユニットが工程表と紐づかないため、工番だけプリセットして開く（機械選択はチェックシート側で行う）
+        openSubmitModal('assembly');
+        currentProjectNum = projectNum;
+        document.getElementById('submit_project_display').textContent = projectNum;
+        await onProjectChange();
+    } else if (flowType === 'electrical' || flowType === 'test_run' || flowType === 'shipping_prep') {
         openSubmitModal(flowType);
         currentProjectNum = projectNum;
-        const p = projectsMap[projectNum] || {};
-        const label = [p.customer_name, p.project_details].filter(Boolean).join('　');
         document.getElementById('submit_project_display').textContent = projectNum;
-        // 組立・電装・試運転はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
-        const isMachineLocked = flowType === 'assembly' || flowType === 'electrical' || flowType === 'test_run';
+        // 電装・試運転はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
+        const isMachineLocked = flowType === 'electrical' || flowType === 'test_run';
         await onProjectChange(isMachineLocked ? machineName : null);
         if (isMachineLocked) {
             await onMachineChange();
