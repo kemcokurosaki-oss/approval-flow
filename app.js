@@ -2105,7 +2105,7 @@ function jumpToAssemblyProject(btnEl, num) {
 
 // ===== 出荷後対応ペンディング一覧（完了済み工番も含めて全工番を横断表示） =====
 function renderShipAfterPendingList(wrap) {
-    const { baseNums, projectData } = progressCachedData;
+    const { baseNums, projectData, assemblyReqsByProject } = progressCachedData;
 
     let nums = baseNums.filter(num => is2000sSeries(num) === (progressTab === 'assembly_report'));
     if (progressFilterMine) {
@@ -2129,6 +2129,15 @@ function renderShipAfterPendingList(wrap) {
                     }
                 });
             }
+        }
+        // 組立(assembly)は機械が工程表と紐づかないため、申請の機械名要約をmachineの代わりに使う
+        for (const req of (assemblyReqsByProject || {})[num] || []) {
+            const items = req?.sheet_data?.pending_items || [];
+            items.forEach((item, idx) => {
+                if (item.ship_after && !item.completed && (item.content || item.machine)) {
+                    (grouped[num] || (grouped[num] = [])).push({ machine: req.machine_name || '', req, item, idx });
+                }
+            });
         }
     }
 
