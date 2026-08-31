@@ -1906,6 +1906,27 @@
         .flow-subcol-label { font-size: 11px; color: #8a94a6; }
         .resubmit-badge { border-radius: 20px; padding: 2px 8px; }
 
+        /* ----- 組立(assembly)ブロック：申請ごとに機械・ユニットを行分解して表示 ----- */
+        .prog-assembly-block { margin-top: 10px; padding: 12px 14px; background: #f8fafc; border: 1px solid #eef1f6; border-radius: 10px; }
+        .prog-assembly-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .prog-assembly-title { font-size: 14px; font-weight: 700; color: #3d4a5d; }
+        .prog-assembly-confirm { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+        .btn-assembly-add, .btn-assembly-confirm, .btn-assembly-unconfirm {
+            font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px;
+            border: 1px solid #2f6fb0; background: #fff; color: #2f6fb0; cursor: pointer;
+        }
+        .btn-assembly-add:hover, .btn-assembly-confirm:hover, .btn-assembly-unconfirm:hover { background: #eaf2fb; }
+        .btn-assembly-unconfirm { border-color: #c0392b; color: #c0392b; }
+        .btn-assembly-unconfirm:hover { background: #fdecec; }
+        .assembly-confirm-badge { font-size: 12px; color: #8a94a6; }
+        .assembly-confirm-badge.is-confirmed { color: #166534; font-weight: 600; }
+        .prog-assembly-rows { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; }
+        .prog-assembly-empty { font-size: 13px; color: #b0b8c4; margin-top: 8px; }
+        .prog-assembly-row { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+        .prog-assembly-row:hover { background: #eef2f8; }
+        .prog-assembly-machine-label { font-size: 13px; font-weight: 600; color: #3d4a5d; }
+        .flow-circle-sm { width: 26px; height: 26px; font-size: 12px; }
+
         /* ----- サイドタブ／マイページ ----- */
         .side-tab { background: #fff; border-left: 1px solid #e3e8f0; }
         .side-tab-header { background: #16233a; font-size: 12px; letter-spacing: .08em; padding: 11px 4px; border-bottom: none; }
