@@ -649,7 +649,7 @@ function renderAssemblyItemRow(item, i) {
                 <div style="display:flex;gap:4px;align-items:center;">
                     <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="機械名（自由入力）" value="${esc(item.machine)}"
                         oninput="updateAssemblyMachine(${i}, this.value)">
-                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">標準リストから選ぶ</button>
+                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">標準に戻す</button>
                 </div>`;
         } else {
             const options = ['<option value="">選択してください</option>']
