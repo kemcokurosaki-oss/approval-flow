@@ -2461,6 +2461,7 @@ let pendingItems = [];
 let currentDraftId = null;
 let currentUnitName = null; // 2000番台：ユニット単位申請時の選択中ユニット名（null=ユニット区分なし）
 let sheetAutoSaveTimer = null;
+let currentAssemblyDetailProjectNum = null; // 組立フロー詳細モーダルで開いている工番（sheet.html完了通知の再描画に使う）
 
 function selectApprover(role) {
     selectedApproverRole = role;
