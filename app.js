@@ -2021,7 +2021,6 @@ function renderProgressCards() {
                 </div>
                 ${(packingDateLabel || shippingDateLabel) ? `<div class="prog-card-dates">${packingDateLabel}${shippingDateLabel}</div>` : ''}
             </div>
-            ${renderAssemblyFlowRow(num, assemblyReqsByProject, assemblyConfirmedMap)}
             ${machineRows}
         </div>`;
     }).join('');
