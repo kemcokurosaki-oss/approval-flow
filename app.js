@@ -2058,6 +2058,7 @@ async function openAssemblyFlowDetailModal(projectNum) {
     document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
     ui.send('OPEN_DETAIL');
     currentAssemblyDetailProjectNum = projectNum;
+    assemblyDetailReturnProjectNum = null;
     await renderAssemblyFlowDetailBody(projectNum);
 }
 
