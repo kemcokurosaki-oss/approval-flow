@@ -2090,7 +2090,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const onclickAttr = isOwnDraft
                 ? `onclick="reopenAssemblySheetFromDetail('${r.req.id}')"`
                 : `onclick="viewAssemblyRequestDetail('${r.req.id}', '${esc(projectNum)}')"`;
-            const linkLabel = isOwnDraft ? 'チェックシートの続きを入力する →' : '詳細を見る →';
+            const linkLabel = isOwnDraft ? '続きを入力する →' : '詳細を見る →';
             return `<div class="unit-list-row is-selectable" ${onclickAttr}>
                 <div class="unit-list-row-main">
                     <div class="unit-list-name">${esc(unitLabel)}</div>
