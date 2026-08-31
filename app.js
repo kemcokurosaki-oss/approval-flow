@@ -1416,6 +1416,13 @@ async function loadProgress() {
     const { data: confirmedRows } = await db.from('assembly_completion_confirmations').select('project_number, confirmed_by, confirmed_at');
     const assemblyConfirmedMap = {};
     (confirmedRows || []).forEach(r => { assemblyConfirmedMap[r.project_number] = r; });
+    const confirmedByIds = [...new Set((confirmedRows || []).map(r => r.confirmed_by).filter(Boolean))];
+    if (confirmedByIds.length > 0) {
+        const { data: confirmProfiles } = await db.from('profiles').select('id, name').in('id', confirmedByIds);
+        const confirmNameMap = {};
+        (confirmProfiles || []).forEach(p => { confirmNameMap[p.id] = p.name; });
+        Object.values(assemblyConfirmedMap).forEach(r => { r.confirmed_by_name = confirmNameMap[r.confirmed_by] || ''; });
+    }
 
     // shipping承認済みの承認者名マップを構築
     const shippingApproverIds = [...new Set(
