@@ -422,10 +422,6 @@
             <span class="sheet-meta-value" id="sheet_project_num">—</span>
         </div>
         <div class="sheet-meta-item">
-            <span class="sheet-meta-label">機械名</span>
-            <span class="sheet-meta-value" id="sheet_machine_name">—</span>
-        </div>
-        <div class="sheet-meta-item">
             <span class="sheet-meta-label">担当者</span>
             <span class="sheet-meta-value" id="sheet_author">—</span>
         </div>
@@ -434,6 +430,14 @@
             <input type="date" id="sheet_completion_date" class="sheet-meta-date-input" onchange="onCompletionDateChange(this.value)">
             <span id="date_missing_warning" class="date-missing-text">▼ 未入力です</span>
         </div>
+    </div>
+
+    <div class="sheet-group" id="assembly_items_group">
+        <div class="sheet-group-label">
+            機械・ユニット
+            <button type="button" class="btn-add-sm" onclick="addAssemblyItem()">＋ 機械を追加</button>
+        </div>
+        <div id="assembly_items_container"></div>
     </div>
 
     <div class="sheet-group">
