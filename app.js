@@ -1980,11 +1980,97 @@ function renderProgressCards() {
                 </div>
                 ${(packingDateLabel || shippingDateLabel) ? `<div class="prog-card-dates">${packingDateLabel}${shippingDateLabel}</div>` : ''}
             </div>
+            ${renderAssemblyBlock(num, assemblyReqsByProject, assemblyConfirmedMap)}
             ${machineRows}
         </div>`;
     }).join('');
 
     wrap.innerHTML = html;
+}
+
+// ===== 組立(assembly)：工番単位の申請一覧＋完了確定 =====
+// 組立は機械・ユニットが工程表と紐づかないため、他フローのような機械単位ステップ表示ではなく、
+// 申請ごとに含まれる機械・ユニットを行に分解して表示する。ステータス丸は申請レコード全体の状態を反映する
+function renderAssemblyBlock(num, assemblyReqsByProject, assemblyConfirmedMap) {
+    const reqs = (assemblyReqsByProject || {})[num] || [];
+    const rows = [];
+    reqs.forEach(req => {
+        getAssemblyItemsForReq(req).forEach(it => {
+            if (!it || !it.machine) return;
+            rows.push({ machine: it.machine, unit: it.unit, req });
+        });
+    });
+
+    const canApply = canApplyFlow('assembly');
+    const addBtnHtml = (canApply && !progressFilterCompleted)
+        ? `<button type="button" class="btn-assembly-add" onclick="event.stopPropagation(); openAssemblyNewRequest('${esc(num)}')">＋ 組立を申請する</button>`
+        : '';
+
+    const confirmed = (assemblyConfirmedMap || {})[num];
+    // 組立完了の工番単位手動確定（TBD: 確定操作の権限者は暫定的に組立課長・部長。正式な運用は別途決定）
+    const canConfirm = canConfirmAssemblyCompletion();
+    let confirmHtml;
+    if (confirmed) {
+        confirmHtml = `<span class="assembly-confirm-badge is-confirmed">✓ 組立完了確定済み（${esc(confirmed.confirmed_by_name || '')} ${fmtDate(confirmed.confirmed_at?.slice(0,10))}）</span>` +
+            (canConfirm ? ` <button type="button" class="btn-assembly-unconfirm" onclick="event.stopPropagation(); unconfirmAssemblyCompletion('${esc(num)}')">取消</button>` : '');
+    } else if (canConfirm) {
+        confirmHtml = `<button type="button" class="btn-assembly-confirm" onclick="event.stopPropagation(); confirmAssemblyCompletion('${esc(num)}')">組立完了を確定する</button>`;
+    } else {
+        confirmHtml = `<span class="assembly-confirm-badge">組立完了：未確定</span>`;
+    }
+
+    const rowsHtml = rows.length === 0
+        ? `<div class="prog-assembly-empty">組立の申請はまだありません</div>`
+        : rows.map(r => {
+            const { fcClass, icon } = deriveFlowVisual(r.req.status);
+            const canOpenDraft = r.req.status === 'draft' && canApply && !progressFilterCompleted;
+            const clickAttr = canOpenDraft
+                ? `onclick="event.stopPropagation(); openDraftInSubmitModal('${r.req.id}')"`
+                : `onclick="event.stopPropagation(); openDetailModal('${r.req.id}')"`;
+            const unitLabel = (r.unit && r.unit !== '-') ? `${r.machine}・${r.unit}` : r.machine;
+            return `<div class="prog-assembly-row clickable" ${clickAttr}>
+                <div class="flow-circle flow-circle-sm ${fcClass}">${icon}</div>
+                <span class="prog-assembly-machine-label">${esc(unitLabel)}</span>
+            </div>`;
+        }).join('');
+
+    return `<div class="prog-assembly-block">
+        <div class="prog-assembly-header">
+            <span class="prog-assembly-title">組立</span>
+            ${addBtnHtml}
+            <span class="prog-assembly-confirm">${confirmHtml}</span>
+        </div>
+        <div class="prog-assembly-rows">${rowsHtml}</div>
+    </div>`;
+}
+
+// 組立完了の工番単位確定操作を行える権限があるか（TBD: 正式な権限者は後日決定。暫定的に組立課長・部長）
+function canConfirmAssemblyCompletion() {
+    const role = getEffectiveRole();
+    return role === 'assembly_manager' || role === 'assembly_director';
+}
+
+async function openAssemblyNewRequest(num) {
+    openSubmitModal('assembly');
+    currentProjectNum = num;
+    document.getElementById('submit_project_display').textContent = num;
+    await onProjectChange();
+}
+
+async function confirmAssemblyCompletion(num) {
+    if (!confirm(`${num} の組立完了を確定します。よろしいですか？`)) return;
+    const { error } = await db.from('assembly_completion_confirmations').insert({
+        project_number: num, confirmed_by: currentUser.id
+    });
+    if (error) { showToast('確定に失敗しました: ' + error.message, 'error'); return; }
+    await loadProgress();
+}
+
+async function unconfirmAssemblyCompletion(num) {
+    if (!confirm(`${num} の組立完了確定を取り消します。よろしいですか？`)) return;
+    const { error } = await db.from('assembly_completion_confirmations').delete().eq('project_number', num);
+    if (error) { showToast('取消に失敗しました: ' + error.message, 'error'); return; }
+    await loadProgress();
 }
 
 // ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
