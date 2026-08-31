@@ -2164,8 +2164,10 @@ function reopenAssemblySheetFromDetail(requestId) {
     window.open(`sheet.html?draft_id=${requestId}`, '_blank');
 }
 
-async function viewAssemblyRequestDetail(requestId) {
-    closeDetailModal();
+async function viewAssemblyRequestDetail(requestId, projectNum) {
+    // 「閉じる」を押したら組立フロー詳細（機械・ユニット一覧）に戻れるようにする
+    currentAssemblyDetailProjectNum = null;
+    assemblyDetailReturnProjectNum = projectNum;
     await openDetailModal(requestId);
 }
 
