@@ -557,11 +557,133 @@ function esc(s) {
         .replace(/"/g, '&quot;');
 }
 
-function setSheetInfoHeader(projectNum, machineName) {
+function setSheetInfoHeader(projectNum) {
     const pn = document.getElementById('sheet_project_num');
-    const mn = document.getElementById('sheet_machine_name');
     if (pn) pn.textContent = projectNum;
-    if (mn) mn.textContent = machineName;
+    isAssembly2000sProject = isAssembly2000sSeries(projectNum);
+}
+
+// ===== 機械・ユニット入力（assemblyItems） =====
+function addAssemblyItem() {
+    assemblyItems.push({ machine: '', unit: null });
+    renderAssemblyItems();
+    scheduleSave();
+}
+
+function removeAssemblyItem(i) {
+    assemblyItems.splice(i, 1);
+    renderAssemblyItems();
+    scheduleSave();
+}
+
+function updateAssemblyMachine(i, value) {
+    assemblyItems[i].machine = value;
+    scheduleSave();
+}
+
+function onAssemblyMachineSelect(i, value) {
+    assemblyItems[i].machine = (value === '__other__') ? '' : value;
+    assemblyItems[i].unit = null;
+    renderAssemblyItems();
+    scheduleSave();
+}
+
+function clearAssemblyMachineFreeInput(i) {
+    assemblyItems[i].machine = '';
+    assemblyItems[i].unit = null;
+    renderAssemblyItems();
+    scheduleSave();
+}
+
+function updateAssemblyUnit(i, value) {
+    assemblyItems[i].unit = value;
+    scheduleSave();
+}
+
+function onAssemblyUnitSelect(i, value) {
+    if (value === '__other__') {
+        assemblyItems[i].unit = '';
+        renderAssemblyItems();
+    } else {
+        assemblyItems[i].unit = value || null;
+        scheduleSave();
+    }
+}
+
+function clearAssemblyUnitFreeInput(i) {
+    assemblyItems[i].unit = null;
+    renderAssemblyItems();
+    scheduleSave();
+}
+
+function renderAssemblyItems() {
+    const c = document.getElementById('assembly_items_container');
+    if (!c) return;
+    if (assemblyItems.length === 0) {
+        c.innerHTML = '<div class="pending-empty">機械が登録されていません。「＋ 機械を追加」から入力してください</div>';
+        return;
+    }
+    c.innerHTML = assemblyItems.map((item, i) => renderAssemblyItemRow(item, i)).join('');
+}
+
+function renderAssemblyItemRow(item, i) {
+    const lbl = (t) => `<span style="display:block;font-size:10px;color:#999;">${t}</span>`;
+    let machineHtml, unitHtml = '';
+
+    if (isAssembly2000sProject) {
+        const machineIsKnown = ASSEMBLY_MACHINE_CODES.includes(item.machine);
+        if (item.machine && !machineIsKnown) {
+            machineHtml = `
+                <input type="text" class="pending-content" placeholder="機械名（自由入力）" value="${esc(item.machine)}"
+                    oninput="updateAssemblyMachine(${i}, this.value)">
+                <button type="button" class="btn-danger-xs" style="margin-top:4px;" onclick="clearAssemblyMachineFreeInput(${i})">標準リストから選ぶ</button>`;
+        } else {
+            const options = ['<option value="">選択してください</option>']
+                .concat(ASSEMBLY_MACHINE_CODES.map(code => `<option value="${code}" ${item.machine === code ? 'selected' : ''}>${code}</option>`))
+                .concat(['<option value="__other__">その他（自由入力）</option>'])
+                .join('');
+            machineHtml = `<select class="pending-content" onchange="onAssemblyMachineSelect(${i}, this.value)">${options}</select>`;
+        }
+
+        const candidates = machineIsKnown ? ASSEMBLY_UNIT_MASTER[item.machine] : null;
+        const noUnitNeeded = candidates && candidates.length === 1 && candidates[0] === '-';
+        if (!machineIsKnown) {
+            unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（任意）" value="${esc(item.unit || '')}"
+                oninput="updateAssemblyUnit(${i}, this.value)">`;
+        } else if (noUnitNeeded) {
+            unitHtml = `<span style="font-size:12px;color:#aaa;padding:6px 0;display:block;">（ユニット選択不要）</span>`;
+        } else {
+            const unitIsKnown = candidates.includes(item.unit);
+            if (item.unit && !unitIsKnown) {
+                unitHtml = `
+                    <input type="text" class="pending-content" placeholder="ユニット（自由入力）" value="${esc(item.unit)}"
+                        oninput="updateAssemblyUnit(${i}, this.value)">
+                    <button type="button" class="btn-danger-xs" style="margin-top:4px;" onclick="clearAssemblyUnitFreeInput(${i})">候補から選ぶ</button>`;
+            } else {
+                const uOptions = ['<option value="">選択してください</option>']
+                    .concat(candidates.filter(u => u !== '-').map(u => `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`))
+                    .concat(['<option value="__other__">その他（自由入力）</option>'])
+                    .join('');
+                unitHtml = `<select class="pending-content" onchange="onAssemblyUnitSelect(${i}, this.value)">${uOptions}</select>`;
+            }
+        }
+    } else {
+        machineHtml = `<input type="text" class="pending-content" placeholder="機械名" value="${esc(item.machine)}"
+            oninput="updateAssemblyMachine(${i}, this.value)">`;
+    }
+
+    return `
+    <div class="pending-row">
+        <div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">
+            ${lbl('機械')}
+            ${machineHtml}
+        </div>
+        ${isAssembly2000sProject ? `<div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">${lbl('ユニット')}${unitHtml}</div>` : ''}
+        <div style="display:flex;flex-direction:column;flex-shrink:0;">
+            ${lbl(' ')}
+            <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">削除</button>
+        </div>
+    </div>`;
 }
 
 function fmtStampDate(iso) {
