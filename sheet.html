@@ -1007,8 +1007,14 @@ async function saveNow() {
     });
 
     const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
+    const cleanItems = assemblyItems.filter(it => it && it.machine);
     const { error } = await db.from('approval_requests')
-        .update({ sheet_data: sheetData })
+        .update({
+            sheet_data: sheetData,
+            assembly_items: cleanItems,
+            machine_name: buildAssemblyMachineNameSummary(cleanItems),
+            unit_name: null
+        })
         .eq('id', draftId);
 
     isSaving = false;
