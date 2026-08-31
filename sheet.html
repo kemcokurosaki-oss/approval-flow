@@ -1152,6 +1152,12 @@ function suspendSheet() {
 
 // 完了: 保存 → 申請画面に通知 → タブを閉じる
 async function completeSheet() {
+    // 機械・ユニットが1件も入力されていない場合は申請させない
+    if (assemblyItems.filter(it => it && it.machine).length === 0) {
+        alert('機械を1件以上入力してください');
+        return;
+    }
+
     // 未入力チェック: 各項目の直前に警告を表示
     const missing = REQUIRED_ITEM_IDS.filter(id => !checks[id]?.result);
     const dateMissing = !sheetMeta.completion_date;
