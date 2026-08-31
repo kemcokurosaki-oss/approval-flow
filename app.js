@@ -1493,8 +1493,17 @@ async function loadProgress() {
         if (!projectData[num][t.machine]) projectData[num][t.machine] = { flows: {}, units: {} };
     });
 
-    // 申請レコードを反映（unit_nameがある申請はunits側、無い申請は従来通りflows側へ）
+    // 申請レコードを反映。組立(assembly)は機械・ユニットが工程表と紐づかないため、machine_nameをキーにせず
+    // 工番ごとの申請リストとして別管理する（assemblyReqsByProject）。他フローは従来通りmachine_nameをキーにする
+    const assemblyReqsByProject = {};
     (allReqs || []).forEach(req => {
+        if (req.flow_type === 'assembly') {
+            const num = req.project_number;
+            if (!num) return;
+            if (!assemblyReqsByProject[num]) assemblyReqsByProject[num] = [];
+            assemblyReqsByProject[num].push(req);
+            return;
+        }
         const num     = req.project_number;
         const machine = req.machine_name;
         if (!num || !machine) return;
@@ -1509,18 +1518,20 @@ async function loadProgress() {
         }
     });
 
-    const baseNums = Object.keys(projectData).filter(num => {
+    const allProjectNums = new Set([...Object.keys(projectData), ...Object.keys(assemblyReqsByProject)]);
+    const baseNums = [...allProjectNums].filter(num => {
         if (projectsMap[num] === undefined) return false;
         if (is5or7Series(num)) return false;
+        const hasAssemblyReq = (assemblyReqsByProject[num] || []).length > 0;
         if (is2000sSeries(num)) {
-            // 2000番台は組立・試運転フローのみ対象のため、いずれかのタスクがある工番だけ表示する
-            const machines = Object.keys(projectData[num]);
-            return machines.some(m => hasTask(num, m, '機械組立') || hasTask(num, m, '試運転'));
+            // 2000番台は組立・試運転フローのみ対象のため、いずれかのタスク／組立申請がある工番だけ表示する
+            const machines = Object.keys(projectData[num] || {});
+            return hasAssemblyReq || machines.some(m => hasTask(num, m, '機械組立') || hasTask(num, m, '試運転'));
         }
         if (isDSeries(num) || isTInspectionSeries(num)) {
-            // D番・点検系(3T/4T)は基本的に機械組立を伴わないため、機械組立タスクがある工番だけ表示する
-            const machines = Object.keys(projectData[num]);
-            return machines.some(m => hasTask(num, m, '機械組立'));
+            // D番・点検系(3T/4T)は基本的に機械組立を伴わないため、機械組立タスク／組立申請がある工番だけ表示する
+            const machines = Object.keys(projectData[num] || {});
+            return hasAssemblyReq || machines.some(m => hasTask(num, m, '機械組立'));
         }
         return true;
     }).sort();
@@ -1530,7 +1541,7 @@ async function loadProgress() {
         return;
     }
 
-    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, unitListMap, unitTaskInfoMap };
+    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyConfirmedMap };
 
     el.innerHTML = '<div id="progress_cards_wrap"></div>';
     _syncProgressControls();
