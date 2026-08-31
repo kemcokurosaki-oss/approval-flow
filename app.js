@@ -2158,14 +2158,24 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 }
 
 async function startNewAssemblySheetFromDetail(projectNum) {
-    const { data: newDraft, error } = await db.from('approval_requests').insert({
-        project_number: projectNum,
-        flow_type:      'assembly',
-        status:         'draft',
-        requester_id:   currentUser.id
-    }).select().single();
-    if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
-    window.open(`sheet.html?draft_id=${newDraft.id}`, '_blank');
+    // 1工番×1申請者につき下書きは1つまで。既にあれば新規作成せずそれを開く
+    const { data: existing } = await db.from('approval_requests')
+        .select('id')
+        .eq('project_number', projectNum).eq('flow_type', 'assembly')
+        .eq('status', 'draft').eq('requester_id', currentUser.id)
+        .maybeSingle();
+    let draftId = existing?.id;
+    if (!draftId) {
+        const { data: newDraft, error } = await db.from('approval_requests').insert({
+            project_number: projectNum,
+            flow_type:      'assembly',
+            status:         'draft',
+            requester_id:   currentUser.id
+        }).select().single();
+        if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
+        draftId = newDraft.id;
+    }
+    window.open(`sheet.html?draft_id=${draftId}`, '_blank');
     await loadMineSide();
     await renderAssemblyFlowDetailBody(projectNum);
 }
