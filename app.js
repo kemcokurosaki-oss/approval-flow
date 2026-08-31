@@ -1623,31 +1623,21 @@ function setProgressPrefix(prefix) {
     renderProgressCards();
 }
 
-// ===== 2000番台：ユニット単位承認 集約ヘルパー =====
-// project__machine__flowType に対応するユニーク unit 名配列を返す（無ければ空配列）
-function getUnitNames(unitListMap, num, machine, flowType) {
-    return (unitListMap && unitListMap[`${num}__${machine}__${flowType}`]) || [];
+// 組立(assembly)申請1件から機械・ユニットの配列を取り出す。
+// assembly_items（新形式）が無い場合はmachine_name/unit_name（旧形式）から1件配列にフォールバックする
+function getAssemblyItemsForReq(req) {
+    if (Array.isArray(req.assembly_items) && req.assembly_items.length > 0) return req.assembly_items;
+    if (req.machine_name) return [{ machine: req.machine_name, unit: req.unit_name || null }];
+    return [];
 }
 
-// フロー丸の状態(status)→表示クラス・アイコンの対応（単一req・複数unit集約の両方から使う共通ロジック）
+// フロー丸の状態(status)→表示クラス・アイコンの対応
 function deriveFlowVisual(status) {
     if (status === 'approved') return { fcClass: 'fc-done',     icon: '✓' };
     if (status === 'rejected') return { fcClass: 'fc-rejected', icon: '<span class="fc-x-icon">×</span>' };
     if (status === 'draft')    return { fcClass: 'fc-draft',    icon: '✏' };
     if (status === 'active')   return { fcClass: 'fc-active',   icon: '<span class="fc-play-icon">▶</span>' };
     return { fcClass: 'fc-empty', icon: '○' };
-}
-
-// 複数ユニットの申請状況を1つの集約状態に変換する。
-// 優先順位: ①いずれか却下 ②全ユニット承認済み ③いずれか申請中 ④いずれか下書き ⑤該当なし
-function aggregateUnitFlowStatus(mData, flowType, unitNames) {
-    const reqsByUnit = (mData.units && mData.units[flowType]) || {};
-    const reqs = unitNames.map(u => reqsByUnit[u]).filter(Boolean);
-    if (reqs.some(r => r.status === 'rejected')) return 'rejected';
-    if (unitNames.length > 0 && reqs.length === unitNames.length && reqs.every(r => r.status === 'approved')) return 'approved';
-    if (reqs.some(r => r.status !== 'draft' && r.status !== 'approved' && r.status !== 'rejected')) return 'active';
-    if (reqs.some(r => r.status === 'draft')) return 'draft';
-    return 'empty';
 }
 
 function renderProgressCards() {
