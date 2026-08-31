@@ -2119,7 +2119,9 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                <button class="btn btn-primary" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}')">申請する</button>`
             : `<button class="btn btn-primary" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">チェックシートを入力する →</button>`;
     } else if (canApply) {
-        actionHtml = `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ チェックシートを入力する →</button>`;
+        // 既に申請済みの機械・ユニットがある場合は「追加で申請する」ことが伝わる文言にする
+        const addLabel = rows.length > 0 ? '＋ 他の機械・ユニットを申請する →' : '＋ チェックシートを入力する →';
+        actionHtml = `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">${addLabel}</button>`;
     }
 
     let confirmHtml = '';
