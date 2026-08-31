@@ -2357,11 +2357,8 @@ async function openFlowModalPreset(el, overrideFlowType) {
         [...document.querySelectorAll(`#${listId} input[type="checkbox"]`)].find(c => c.value === machineName);
 
     if (flowType === 'assembly') {
-        // 組立は機械・ユニットが工程表と紐づかないため、工番だけプリセットして開く（機械選択はチェックシート側で行う）
-        openSubmitModal('assembly');
-        currentProjectNum = projectNum;
-        document.getElementById('submit_project_display').textContent = projectNum;
-        await onProjectChange();
+        // 組立は工番全体で1つの丸として表示するため、詳細モーダル（機械・ユニット別の申請状況）を開く
+        await openAssemblyFlowDetailModal(projectNum);
     } else if (flowType === 'electrical' || flowType === 'test_run' || flowType === 'shipping_prep') {
         openSubmitModal(flowType);
         currentProjectNum = projectNum;
