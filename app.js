@@ -5796,12 +5796,23 @@ async function _getPrepBlockers(projectNum, machine) {
     const chain = await _getMachineFlowChain(projectNum, machine);
     const priorFlows = _priorSteps(chain, 'shipping_prep');
     if (priorFlows.length === 0) return [];
-    const { data: reqs } = await db.from('approval_requests')
-        .select('flow_type, status, sheet_data')
-        .eq('project_number', projectNum).eq('machine_name', machine)
-        .in('flow_type', priorFlows);
+
+    // 組立(assembly)は機械単位のmachine_name一致では判定できないため、工番単位の完了確定フラグを見る
+    const nonAssemblyFlows = priorFlows.filter(f => f !== 'assembly');
+    const { data: reqs } = nonAssemblyFlows.length > 0
+        ? await db.from('approval_requests')
+            .select('flow_type, status, sheet_data')
+            .eq('project_number', projectNum).eq('machine_name', machine)
+            .in('flow_type', nonAssemblyFlows)
+        : { data: [] };
+
     const blockers = [];
-    for (const flowType of priorFlows) {
+    if (priorFlows.includes('assembly')) {
+        const { data: confirmed } = await db.from('assembly_completion_confirmations')
+            .select('project_number').eq('project_number', projectNum).maybeSingle();
+        if (!confirmed) blockers.push({ flowType: 'assembly', notApproved: true, label: '組立完了（工番単位で未確定）' });
+    }
+    for (const flowType of nonAssemblyFlows) {
         const req = (reqs || []).find(r => r.flow_type === flowType);
         const items = (req?.sheet_data?.pending_items || [])
             .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
