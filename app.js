@@ -2806,6 +2806,15 @@ function setupSheetChannel() {
         const { type, draftId } = event.data;
         if (type !== 'sheet_complete') return;
         await loadMineSide();
+
+        // 組立フロー詳細モーダルが開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
+        const detailModal = document.getElementById('detail_modal');
+        if (detailModal.classList.contains('open') && currentAssemblyDetailProjectNum) {
+            await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
+            showToast('チェックシートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
+            return;
+        }
+
         const submitModal = document.getElementById('submit_modal');
         if (submitModal.classList.contains('open') && currentDraftId === draftId) {
             // 申請モーダルが開いていて同じ下書きなら入力済みバッジを更新
@@ -2823,6 +2832,12 @@ function setupSheetChannel() {
             }
             showToast('点検シートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
         } else {
+            // 組立(assembly)は詳細モーダル経由のフローのため、モーダルが閉じている間は自動で開かない
+            const { data: draft } = await db.from('approval_requests').select('flow_type').eq('id', draftId).single();
+            if (draft?.flow_type === 'assembly') {
+                showToast('チェックシートの入力を保存しました。進捗一覧の組立フローから内容を確認してください。', 'success');
+                return;
+            }
             // モーダルが閉じていれば自動で開く
             await openDraftInSubmitModal(draftId);
             showToast('点検シートの入力が完了しました。内容を確認して申請してください。', 'success');
