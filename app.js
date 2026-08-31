@@ -1887,20 +1887,25 @@ function renderProgressCards() {
 
             const nodes = fullChain.map((f, i) => {
                 if (f.__isAssembly) {
-                    const { fcClass, icon } = deriveFlowVisual(assemblyAggStatus);
-                    const isEffectivelyApproved = assemblyAggStatus === 'approved';
+                    // 2000番台は標準リストの機械コードが工程表のmachine名と一致するため、機械ごとの実際の申請状況を判定する。
+                    // 2000番以外は機械名が自由入力で工程表と紐づかないため、工番全体で集約した状態を使う
+                    const statusForThisRow = (machine && is2000sSeries(num))
+                        ? computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyConfirmedMap)
+                        : assemblyAggStatus;
+                    const { fcClass, icon } = deriveFlowVisual(statusForThisRow);
+                    const isEffectivelyApproved = statusForThisRow === 'approved';
                     const canApply = canApplyFlow('assembly');
                     // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない
-                    const canApplyNow = canApply && !progressFilterCompleted && (assemblyAggStatus === 'empty' || assemblyAggStatus === 'draft');
+                    const canApplyNow = canApply && !progressFilterCompleted && (statusForThisRow === 'empty' || statusForThisRow === 'draft');
                     const clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
 
                     let flowDateStr = '';
-                    if (assemblyAggStatus === 'approved') {
+                    if (statusForThisRow === 'approved') {
                         const confirmedAt = (assemblyConfirmedMap || {})[num]?.confirmed_at;
                         if (confirmedAt) flowDateStr = `完了 ${fmtDate(confirmedAt.slice(0, 10))}`;
-                    } else if (assemblyAggStatus === 'draft') {
+                    } else if (statusForThisRow === 'draft') {
                         flowDateStr = '入力中';
-                    } else if (((assemblyReqsByProject || {})[num] || []).length > 0) {
+                    } else if (statusForThisRow === 'active') {
                         flowDateStr = '申請中';
                     }
 
