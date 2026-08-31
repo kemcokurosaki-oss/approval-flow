@@ -2825,16 +2825,23 @@ function setupSheetChannel() {
     const ch = new BroadcastChannel('approval_sheet');
     ch.addEventListener('message', async (event) => {
         const { type, draftId } = event.data;
-        if (type !== 'sheet_complete') return;
+        if (type !== 'sheet_complete' && type !== 'sheet_suspend') return;
         await loadMineSide();
 
         // 組立フロー詳細モーダルが開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
+        // sheet_suspend（一時保存）でも再描画しないと、入力済みの機械・ユニットが「未入力」のまま古く表示され続ける
         const detailModal = document.getElementById('detail_modal');
         if (detailModal.classList.contains('open') && currentAssemblyDetailProjectNum) {
             await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
-            showToast('チェックシートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
+            if (type === 'sheet_complete') {
+                showToast('チェックシートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
+            } else {
+                showToast('入力内容を一時保存しました。', 'success');
+            }
             return;
         }
+
+        if (type !== 'sheet_complete') return; // 一時保存(sheet_suspend)は詳細モーダル以外では何もしない
 
         const submitModal = document.getElementById('submit_modal');
         if (submitModal.classList.contains('open') && currentDraftId === draftId) {
