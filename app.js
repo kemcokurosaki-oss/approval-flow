@@ -3782,6 +3782,7 @@ function buildQaFooterInner(req) {
 function closeDetailModal() {
     document.getElementById('detail_modal').classList.remove('open');
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
+    currentAssemblyDetailProjectNum = null;
     ui.send('CLOSE');
 }
 
