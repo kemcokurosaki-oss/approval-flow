@@ -3150,10 +3150,6 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
         </div>`;
 }
 
-// ===== （旧）ユニット一覧モーダル・組立＋電装合成詳細モーダル =====
-// 組立(assembly)のユニット単位承認・電装との合成表示は工程表(tasks)のmachine/unit列に依存していたため、
-// 組立の機械・ユニットを自由入力/標準リスト化した今回の変更で使われなくなった（削除済み）。
-/* 旧コード（削除）:
 async function openUnitListModal(projectNum, machine, flowType) {
     document.getElementById('detail_modal').classList.add('open');
     document.querySelector('#detail_modal .modal').classList.add('unit-list-mode');
