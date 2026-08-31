@@ -29,7 +29,8 @@ const FLOW_LABELS = {
   shipping:      '出荷確定申請',
 };
 const TASK_TO_FLOW = {
-  '機械組立': 'assembly',
+  // '機械組立': 'assembly', // 組立は機械・ユニットが工程表(tasks.machine)と紐づかなくなったため、
+  //                        機械単位の未申請催促は一時的に無効化（TBD: 工番単位の基準日を別途検討）
   '試運転':   'test_run',
   '出荷準備': 'shipping_prep',
   '工場出荷': 'shipping',
