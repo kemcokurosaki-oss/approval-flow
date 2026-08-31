@@ -955,6 +955,7 @@
         .unit-list-name { font-size: 16px; font-weight: bold; color: #16233a; flex: 1; letter-spacing: .02em; }
         .unit-list-status .status-badge { font-size: 12px; padding: 3px 10px; }
         .unit-list-meta { font-size: 12px; color: #8a94a6; padding-left: 27px; min-height: 17px; }
+        .unit-list-link { font-size: 12px; color: #2f6fb0; font-weight: 600; }
         .unit-list-footer-hint { flex: 1; font-size: 13px; color: #8a94a6; }
 
         /* ユニット一覧のときだけ、モーダル高さを内容に合わせる（下部の余白をなくす） */
