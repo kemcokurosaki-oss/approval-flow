@@ -937,7 +937,7 @@
         .unit-list-row {
             display: flex; flex-direction: column; gap: 5px;
             padding: 10px 12px; border: 1px solid #e5e9f1; border-radius: 10px; background: #fff;
-            flex: 1 1 calc(50% - 4px); min-width: 260px; box-sizing: border-box;
+            flex: 0 1 calc(50% - 4px); min-width: 260px; box-sizing: border-box;
         }
         .unit-list-row-main { display: flex; align-items: center; gap: 10px; }
         .unit-list-dot {
