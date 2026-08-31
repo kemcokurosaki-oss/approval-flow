@@ -582,15 +582,24 @@ function updateAssemblyMachine(i, value) {
 }
 
 function onAssemblyMachineSelect(i, value) {
-    assemblyItems[i].machine = (value === '__other__') ? '' : value;
+    if (value === '__other__') {
+        assemblyItems[i].machine = '';
+        assemblyItems[i]._machineFree = true;
+    } else {
+        assemblyItems[i].machine = value;
+        assemblyItems[i]._machineFree = false;
+    }
     assemblyItems[i].unit = null;
+    assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
     scheduleSave();
 }
 
 function clearAssemblyMachineFreeInput(i) {
     assemblyItems[i].machine = '';
+    assemblyItems[i]._machineFree = false;
     assemblyItems[i].unit = null;
+    assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
     scheduleSave();
 }
@@ -603,15 +612,18 @@ function updateAssemblyUnit(i, value) {
 function onAssemblyUnitSelect(i, value) {
     if (value === '__other__') {
         assemblyItems[i].unit = '';
+        assemblyItems[i]._unitFree = true;
         renderAssemblyItems();
     } else {
         assemblyItems[i].unit = value || null;
+        assemblyItems[i]._unitFree = false;
         scheduleSave();
     }
 }
 
 function clearAssemblyUnitFreeInput(i) {
     assemblyItems[i].unit = null;
+    assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
     scheduleSave();
 }
