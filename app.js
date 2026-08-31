@@ -2088,13 +2088,14 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const isOwnDraft = r.req.status === 'draft' && r.req.requester_id === currentUser.id;
             const onclickAttr = isOwnDraft
                 ? `onclick="reopenAssemblySheetFromDetail('${r.req.id}')"`
-                : `onclick="viewAssemblyRequestDetail('${r.req.id}')"`;
+                : `onclick="viewAssemblyRequestDetail('${r.req.id}', '${esc(projectNum)}')"`;
+            const linkLabel = isOwnDraft ? 'チェックシートの続きを入力する →' : '詳細を見る →';
             return `<div class="unit-list-row is-selectable" ${onclickAttr}>
                 <div class="unit-list-row-main">
-                    <div class="unit-list-dot"><i></i></div>
                     <div class="unit-list-name">${esc(unitLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
+                <div class="unit-list-link">${linkLabel}</div>
             </div>`;
         }).join('');
 
