@@ -2812,7 +2812,8 @@ function collectSheetData() {
 async function submitRequest() {
     if (requireLogin()) return;
     const projectNum = currentProjectNum;
-    const machineNums = getSelectedMachines('submit_machine_list');
+    const isAssembly = currentFlowType === 'assembly';
+    const machineNums = isAssembly ? [] : getSelectedMachines('submit_machine_list');
     if (!projectNum)          { showToast('工事番号が設定されていません', 'error'); return; }
     if (currentFlowType === 'shipping_prep') {
         const blockerLists = await Promise.all(machineNums.map(m => _getPrepBlockers(projectNum, m)));
@@ -2821,7 +2822,8 @@ async function submitRequest() {
             return;
         }
     }
-    if (machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (!isAssembly && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (isAssembly && !currentDraftId) { showToast('チェックシートで機械・ユニットを入力してください', 'error'); return; }
     if (currentFlowType === 'shipping_prep') {
         if (!confirm(`${machineNums.length}機械の出荷準備完了を申請します。\n承認は不要で、関係者に完了通知がすぐに送信されます。よろしいですか？`)) return;
     }
@@ -2835,87 +2837,43 @@ async function submitRequest() {
     try {
         const submitterRole = getEffectiveRole();
         let firstApproverRole = null;
+        let assemblyItemCount = 0;
 
-        // 機械ごとに申請レコードを作成（複数機械対応）
-        for (const machineNum of machineNums) {
-            // 機械ごとにタスクフラグを取得
-            const { data: mTasks } = await db.from('tasks')
-                .select('text').eq('project_number', projectNum).eq('machine', machineNum);
-            const mNames = (mTasks || []).map(t => t.text);
-
-            // shipping_prep は承認不要。申請＝完了のため、最初から completed 相当の approved で作成する
-            const initialStatus = currentFlowType === 'shipping_prep' ? 'approved' : 'submitted';
-
-            let req, e1;
-            if (currentDraftId && machineNum === machineNums[0]) {
-                // 下書きを更新して提出（sheet_data は sheet.html で保存済み）
-                ({ data: req, error: e1 } = await db.from('approval_requests').update({
-                    status:         initialStatus,
-                    note:           note || null,
-                    test_run:       mNames.includes('試運転'),
-                    has_inspection: mNames.includes('外観検査')
-                }).eq('id', currentDraftId).select().single());
-            } else {
-                const sheetData = currentFlowType === 'assembly' ? collectSheetData() : null;
-                ({ data: req, error: e1 } = await db.from('approval_requests').insert({
-                    project_number: projectNum,
-                    machine_name:   machineNum,
-                    unit_name:      currentUnitName || null,
-                    flow_type:      currentFlowType,
-                    status:         initialStatus,
-                    requester_id:   currentUser.id,
-                    note:           note || null,
-                    test_run:       mNames.includes('試運転'),
-                    has_inspection: mNames.includes('外観検査'),
-                    sheet_data:     sheetData
-                }).select().single());
+        if (isAssembly) {
+            // 組立は1申請=1レコード。複数機械・ユニットはassembly_itemsにまとめて入力済み（sheet.html側）
+            const { data: draftReq } = await db.from('approval_requests')
+                .select('assembly_items').eq('id', currentDraftId).single();
+            const items = (draftReq?.assembly_items || []).filter(it => it && it.machine);
+            if (items.length === 0) {
+                showToast('機械を1件以上入力してください（チェックシート内）', 'error');
+                return;
             }
+            assemblyItemCount = items.length;
+
+            const { data: req, error: e1 } = await db.from('approval_requests').update({
+                status:         'submitted',
+                note:           note || null,
+                machine_name:   buildAssemblyMachineNameSummary(items),
+                test_run:       null,
+                has_inspection: null
+            }).eq('id', currentDraftId).select().single();
             if (e1) throw e1;
 
-            if (currentFlowType === 'shipping_prep') {
-                // 承認ステップは作らず、関係者へ完了通知のみ記録する
-                await recordFlowNotifications(req.id, 'shipping_prep');
-                continue;
-            }
-
-            // 承認ステップ設定
-            let stepsToInsert;
-            let notifyRoles; // 承認依頼通知を送るロールの配列
-            if (currentFlowType === 'assembly') {
-                if (submitterRole === 'assembly_manager') {
-                    // 課長申請: 部長のみ1ステップ
-                    stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }];
-                    notifyRoles = ['assembly_director'];
-                } else {
-                    // staff申請: 課長・部長の並列2ステップ（どちらかが承認で完了）
-                    stepsToInsert = [
-                        { request_id: req.id, step_order: 1, approver_role: 'assembly_manager',  status: 'pending' },
-                        { request_id: req.id, step_order: 2, approver_role: 'assembly_director', status: 'pending' }
-                    ];
-                    notifyRoles = ['assembly_manager', 'assembly_director'];
-                }
-            } else if (currentFlowType === 'electrical') {
-                // 電装: 課長相当のロールが無いため、常に組立部長の単一ステップ
+            let stepsToInsert, notifyRoles;
+            if (submitterRole === 'assembly_manager') {
+                // 課長申請: 部長のみ1ステップ
                 stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }];
                 notifyRoles = ['assembly_director'];
             } else {
-                // test_run: assemblyと同じ並列承認（どちらかが承認で完了）
-                if (submitterRole === 'operations_manager') {
-                    // 課長申請: 部長のみ1ステップ
-                    stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'operations_director', status: 'pending' }];
-                    notifyRoles = ['operations_director'];
-                } else {
-                    // staff申請: 課長・部長の並列2ステップ（どちらかが承認で完了）
-                    stepsToInsert = [
-                        { request_id: req.id, step_order: 1, approver_role: 'operations_manager',  status: 'pending' },
-                        { request_id: req.id, step_order: 2, approver_role: 'operations_director', status: 'pending' }
-                    ];
-                    notifyRoles = ['operations_manager', 'operations_director'];
-                }
+                // staff申請: 課長・部長の並列2ステップ（どちらかが承認で完了）
+                stepsToInsert = [
+                    { request_id: req.id, step_order: 1, approver_role: 'assembly_manager',  status: 'pending' },
+                    { request_id: req.id, step_order: 2, approver_role: 'assembly_director', status: 'pending' }
+                ];
+                notifyRoles = ['assembly_manager', 'assembly_director'];
             }
-            if (!firstApproverRole) firstApproverRole = notifyRoles[0];
+            firstApproverRole = notifyRoles[0];
             await db.from('approval_steps').insert(stepsToInsert);
-
             for (const role of notifyRoles) {
                 const { data: approvers } = await db.from('profiles').select('id').eq('role', role);
                 if (approvers?.length > 0) {
@@ -2924,22 +2882,100 @@ async function submitRequest() {
                     );
                 }
             }
+        } else {
+            // 機械ごとに申請レコードを作成（複数機械対応。assembly以外は現状通り機械単位）
+            for (const machineNum of machineNums) {
+                // 機械ごとにタスクフラグを取得
+                const { data: mTasks } = await db.from('tasks')
+                    .select('text').eq('project_number', projectNum).eq('machine', machineNum);
+                const mNames = (mTasks || []).map(t => t.text);
+
+                // shipping_prep は承認不要。申請＝完了のため、最初から completed 相当の approved で作成する
+                const initialStatus = currentFlowType === 'shipping_prep' ? 'approved' : 'submitted';
+
+                let req, e1;
+                if (currentDraftId && machineNum === machineNums[0]) {
+                    // 下書きを更新して提出（sheet_data は sheet.html で保存済み）
+                    ({ data: req, error: e1 } = await db.from('approval_requests').update({
+                        status:         initialStatus,
+                        note:           note || null,
+                        test_run:       mNames.includes('試運転'),
+                        has_inspection: mNames.includes('外観検査')
+                    }).eq('id', currentDraftId).select().single());
+                } else {
+                    ({ data: req, error: e1 } = await db.from('approval_requests').insert({
+                        project_number: projectNum,
+                        machine_name:   machineNum,
+                        unit_name:      currentUnitName || null,
+                        flow_type:      currentFlowType,
+                        status:         initialStatus,
+                        requester_id:   currentUser.id,
+                        note:           note || null,
+                        test_run:       mNames.includes('試運転'),
+                        has_inspection: mNames.includes('外観検査'),
+                        sheet_data:     null
+                    }).select().single());
+                }
+                if (e1) throw e1;
+
+                if (currentFlowType === 'shipping_prep') {
+                    // 承認ステップは作らず、関係者へ完了通知のみ記録する
+                    await recordFlowNotifications(req.id, 'shipping_prep');
+                    continue;
+                }
+
+                // 承認ステップ設定
+                let stepsToInsert;
+                let notifyRoles; // 承認依頼通知を送るロールの配列
+                if (currentFlowType === 'electrical') {
+                    // 電装: 課長相当のロールが無いため、常に組立部長の単一ステップ
+                    stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }];
+                    notifyRoles = ['assembly_director'];
+                } else {
+                    // test_run: assemblyと同じ並列承認（どちらかが承認で完了）
+                    if (submitterRole === 'operations_manager') {
+                        // 課長申請: 部長のみ1ステップ
+                        stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'operations_director', status: 'pending' }];
+                        notifyRoles = ['operations_director'];
+                    } else {
+                        // staff申請: 課長・部長の並列2ステップ（どちらかが承認で完了）
+                        stepsToInsert = [
+                            { request_id: req.id, step_order: 1, approver_role: 'operations_manager',  status: 'pending' },
+                            { request_id: req.id, step_order: 2, approver_role: 'operations_director', status: 'pending' }
+                        ];
+                        notifyRoles = ['operations_manager', 'operations_director'];
+                    }
+                }
+                if (!firstApproverRole) firstApproverRole = notifyRoles[0];
+                await db.from('approval_steps').insert(stepsToInsert);
+
+                for (const role of notifyRoles) {
+                    const { data: approvers } = await db.from('profiles').select('id').eq('role', role);
+                    if (approvers?.length > 0) {
+                        await db.from('approval_notifications').insert(
+                            approvers.map(a => ({ request_id: req.id, recipient_id: a.id, notification_type: 'approval_request' }))
+                        );
+                    }
+                }
+            }
         }
 
         currentDraftId = null;
         closeSubmitModal();
         await refreshAll();
         ui.send('SAVED');
-        const count = machineNums.length;
-        if (currentFlowType === 'shipping_prep') {
-            showToast(`${count}機械の出荷準備完了を申請しました。\n関係者に完了通知が届きます。`, 'success');
+        if (isAssembly) {
+            const isParallelStaff = submitterRole !== 'assembly_manager';
+            const approverLabel = isParallelStaff ? '組立課長・部長' : '組立部長';
+            showToast(`組立完了を申請しました（機械${assemblyItemCount}件）。\n${approverLabel}に承認依頼が届きます。`, 'success');
+        } else if (currentFlowType === 'shipping_prep') {
+            showToast(`${machineNums.length}機械の出荷準備完了を申請しました。\n関係者に完了通知が届きます。`, 'success');
         } else {
-            const isParallelStaff = (currentFlowType === 'assembly' && submitterRole !== 'assembly_manager') ||
-                                    (currentFlowType === 'test_run'  && submitterRole !== 'operations_manager');
+            const isParallelStaff = currentFlowType === 'test_run' && submitterRole !== 'operations_manager';
             const approverLabel = isParallelStaff
-                ? (currentFlowType === 'assembly' ? '組立課長・部長' : '操業課長・部長')
+                ? '操業課長・部長'
                 : ({ assembly_director: '組立部長', operations_director: '操業部長' }[firstApproverRole] || firstApproverRole);
-            showToast(`${count}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`, 'success');
+            showToast(`${machineNums.length}機械の申請をしました。\n${approverLabel}に承認依頼が届きます。`, 'success');
         }
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
