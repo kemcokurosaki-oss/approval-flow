@@ -1025,7 +1025,10 @@ async function saveNow() {
     });
 
     const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
-    const cleanItems = assemblyItems.filter(it => it && it.machine);
+    // UI状態フラグ（_machineFree/_unitFree）はDBには保存しない
+    const cleanItems = assemblyItems
+        .filter(it => it && it.machine)
+        .map(it => ({ machine: it.machine, unit: it.unit || null }));
     const { error } = await db.from('approval_requests')
         .update({
             sheet_data: sheetData,
