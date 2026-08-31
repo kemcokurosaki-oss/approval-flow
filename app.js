@@ -2047,6 +2047,44 @@ function renderProgressCards() {
                     }
                 }
 
+                // 組立・電装合成ノードは、丸アイコンは合成のままにしつつ、その下の日付・バッジは組立/電装それぞれ別カラムで出す
+                let subgroupHtml = '';
+                if (isAssemblyGroup) {
+                    const buildSubCol = (subReq, subFlowType, subLabel) => {
+                        let sDate = '';
+                        if (subReq && subReq.status !== 'draft') {
+                            const dateIso = (subReq.status === 'approved' || subReq.status === 'rejected') ? subReq.updated_at : subReq.created_at;
+                            if (dateIso) {
+                                const d = new Date(dateIso);
+                                const prefix = subReq.status === 'approved' ? '完了' : subReq.status === 'rejected' ? '却下' : '申請';
+                                sDate = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                            }
+                        } else if (subReq && subReq.status === 'draft') {
+                            sDate = '入力中';
+                        }
+                        let sPending = '';
+                        if (subReq && subReq.status !== 'draft') {
+                            const pItems = (subReq.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+                            const unresolved = pItems.filter(p => !p.completed);
+                            if (unresolved.length > 0) {
+                                sPending = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolved.length}件</div>`;
+                            }
+                        }
+                        let sOverdue = '';
+                        if (!!OVERDUE_FLOW_TASK_TEXT[subFlowType] && isFlowOverdue(num, machine, subFlowType, subReq)) {
+                            const isUnapproved = subReq && subReq.status !== 'draft';
+                            sOverdue = `<div class="flow-overdue-badge">⚠ ${isUnapproved ? '未承認' : '未申請'}</div>`;
+                        }
+                        return `<div class="flow-subcol">
+                            <div class="flow-subcol-label">${subLabel}</div>
+                            ${sDate ? `<div class="flow-date">${sDate}</div>` : ''}
+                            ${sPending}
+                            ${sOverdue}
+                        </div>`;
+                    };
+                    subgroupHtml = `<div class="flow-subgroup">${buildSubCol(req, 'assembly', '組立')}${buildSubCol(elecReq, 'electrical', '電装')}</div>`;
+                }
+
                 const connector = i < applicable.length - 1
                     ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                     : '';
@@ -2056,9 +2094,9 @@ function renderProgressCards() {
                     data-machine="${esc(machine)}">
                     <div class="flow-circle ${fcClass}">${icon}</div>
                     <div class="flow-label">${esc(isAssemblyGroup ? '組立・電装' : f.label)}</div>
-                    ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
-                    ${pendingBadge}
-                    ${overdueBadge}
+                    ${isAssemblyGroup ? subgroupHtml : (flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : '')}
+                    ${isAssemblyGroup ? '' : pendingBadge}
+                    ${isAssemblyGroup ? '' : overdueBadge}
                 </div>${connector}`;
             }).join('');
 
