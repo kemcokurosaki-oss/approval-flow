@@ -2134,11 +2134,19 @@ async function openAssemblyMachineDetailModal(projectNum, machine) {
 
 async function renderAssemblyFlowDetailBody(projectNum) {
     const { data: reqs } = await db.from('approval_requests')
-        .select('*')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
     const pInfo = projectsMap[projectNum] || {};
+
+    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
+    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const requesterNames = {};
+    if (requesterIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
+        (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
+    }
 
     // 申請(下書き含む)単位でグループ化する。1申請=複数機械・ユニットをまとめられるため、
     // 機械・ユニット単位の行ではなく申請単位の行として表示し、同じ工番に複数の下書きが並行してあっても良い
@@ -2146,6 +2154,9 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         req,
         items: getAssemblyItemsForReq(req).filter(it => it && it.machine)
     }));
+
+    const myRole = getEffectiveRole();
+    const meta = SHEET_FLOW_META['assembly'];
 
     const rowsHtml = groups.length === 0
         ? '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>'
@@ -2172,12 +2183,38 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                     </div>
                 </div>`;
             }
-            return `<div class="unit-list-row is-selectable" onclick="viewAssemblyRequestDetail('${g.req.id}', '${esc(projectNum)}')">
+
+            // 申請者・申請日を一覧に直接表示する（個別詳細画面を経由させないため）
+            const requesterName = requesterNames[g.req.requester_id] || '—';
+            const submittedDate = g.req.created_at ? fmtDate(g.req.created_at) : '—';
+
+            // チェックシート/完了報告書へのリンク（承認済みなら報告書、却下されて自分の申請なら編集可能）
+            const isApproved = g.req.status === 'approved';
+            const canEditRejected = g.req.status === 'rejected' && g.req.requester_id === currentUser.id;
+            const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${g.req.id}` : `${meta.file}?view=1&id=${g.req.id}`;
+            const sheetLinkLabel = isApproved ? `${meta.doneLabel}を見る →` : (canEditRejected ? `${meta.label}を修正する →` : `${meta.label}を見る →`);
+
+            // 自分が承認できる保留中ステップがあれば、その場で承認・却下できるようにする
+            const myStep = (g.req.approval_steps || []).find(s =>
+                s.approver_role === myRole && s.status === 'pending' && g.req.status === 'submitted');
+
+            const approvalHtml = myStep ? `
+                <div style="margin-top:8px;">
+                    <textarea id="assembly_comment_${g.req.id}" placeholder="承認・却下の理由など（却下時は必須）" style="width:100%;min-height:40px;font-size:13px;padding:6px;box-sizing:border-box;"></textarea>
+                    <div style="display:flex;gap:8px;margin-top:6px;">
+                        <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="rejectAssemblyRequestFromList('${g.req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
+                        <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}')">承認する</button>
+                    </div>
+                </div>` : '';
+
+            return `<div class="unit-list-row">
                 <div class="unit-list-row-main">
                     <div class="unit-list-name">${esc(machineLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
-                <div class="unit-list-link">詳細を見る →</div>
+                <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                ${approvalHtml}
             </div>`;
         }).join('');
 
