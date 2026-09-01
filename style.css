@@ -964,6 +964,12 @@
         }
         .btn-apply-xs:hover { background: #24568c; }
         .unit-list-footer-hint { flex: 1; font-size: 13px; color: #8a94a6; }
+        .btn-add-new {
+            display: block; width: 100%; margin-top: 12px; padding: 10px 12px;
+            font-size: 14px; font-weight: 600; color: #2f6fb0; text-align: center;
+            background: #f4f8fd; border: 1.5px dashed #a9c6e8; border-radius: 8px; cursor: pointer;
+        }
+        .btn-add-new:hover { background: #e8f1fb; border-color: #2f6fb0; }
 
         /* ユニット一覧のときだけ、モーダル高さを内容に合わせる（下部の余白をなくす） */
         #detail_modal .modal.unit-list-mode { height: auto; max-height: 90vh; }
