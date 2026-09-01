@@ -2385,6 +2385,22 @@ async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null
     }
 }
 
+async function deleteAssemblyDraftFromDetail(draftId, projectNum) {
+    if (!confirm('この下書きを削除します。よろしいですか？')) return;
+    showLoading('削除中...');
+    try {
+        const { error } = await db.from('approval_requests').delete().eq('id', draftId).eq('status', 'draft');
+        if (error) throw error;
+        await refreshAll();
+        showToast('下書きを削除しました。', 'success');
+        await renderAssemblyFlowDetailBody(projectNum);
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 2000番台：機械ごとのユニット申請状況一覧 =====
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
