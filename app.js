@@ -3953,7 +3953,13 @@ function buildQaFooterInner(req) {
 }
 
 function closeDetailModal() {
-    // 組立フロー詳細から個別申請の詳細を開いた場合は、閉じずに組立フロー詳細に戻る
+    // 組立フロー詳細（機械レベル or 工番レベル）から個別申請の詳細を開いた場合は、閉じずに元の一覧に戻る
+    if (assemblyDetailReturnMachine) {
+        const { projectNum, machine } = assemblyDetailReturnMachine;
+        assemblyDetailReturnMachine = null;
+        openAssemblyMachineDetailModal(projectNum, machine);
+        return;
+    }
     if (assemblyDetailReturnProjectNum) {
         const returnNum = assemblyDetailReturnProjectNum;
         assemblyDetailReturnProjectNum = null;
@@ -3963,6 +3969,7 @@ function closeDetailModal() {
     document.getElementById('detail_modal').classList.remove('open');
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
     currentAssemblyDetailProjectNum = null;
+    currentAssemblyMachineDetail = null;
     ui.send('CLOSE');
 }
 
