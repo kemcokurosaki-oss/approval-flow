@@ -2308,6 +2308,11 @@ async function startNewAssemblyUnitSheetFromDetail(projectNum, machine, unit) {
     await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: unit || null }], machine);
 }
 
+// 工番レベルの一覧（2000番以外）で、工程表由来の未申請の機械・ユニットから直接申請を開始する薄いラッパー
+async function startNewAssemblyPairSheetFromDetail(projectNum, machine, unit) {
+    await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: unit || null }]);
+}
+
 function reopenAssemblySheetFromDetail(requestId) {
     window.open(`sheet.html?draft_id=${requestId}`, '_blank');
 }
