@@ -1887,8 +1887,9 @@ function renderProgressCards() {
                 if (f.__isAssembly) {
                     // 2000番台は標準リストの機械コードが工程表のmachine名と一致するため、機械ごとの実際の申請状況を判定する。
                     // 2000番以外は機械名が自由入力で工程表と紐づかないため、工番全体で集約した状態を使う
-                    const statusForThisRow = (machine && is2000sSeries(num))
-                        ? computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyConfirmedMap)
+                    const isMachineRow = machine && is2000sSeries(num);
+                    const statusForThisRow = isMachineRow
+                        ? computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyNotRequiredSet)
                         : assemblyAggStatus;
                     const { fcClass, icon } = deriveFlowVisual(statusForThisRow);
                     const isEffectivelyApproved = statusForThisRow === 'approved';
@@ -1899,8 +1900,13 @@ function renderProgressCards() {
 
                     let flowDateStr = '';
                     if (statusForThisRow === 'approved') {
-                        const confirmedAt = (assemblyConfirmedMap || {})[num]?.confirmed_at;
-                        if (confirmedAt) flowDateStr = `完了 ${fmtDate(confirmedAt.slice(0, 10))}`;
+                        // 関連する承認済み申請のうち最新の承認日を表示（全ユニットが不要マークのみで完了した場合は日付なし）
+                        const relevantReqs = ((assemblyReqsByProject || {})[num] || []).filter(r => {
+                            if (r.status !== 'approved') return false;
+                            return !isMachineRow || getAssemblyItemsForReq(r).some(it => it && it.machine === machine);
+                        });
+                        const latestDate = relevantReqs.map(r => r.updated_at).filter(Boolean).sort().slice(-1)[0];
+                        if (latestDate) flowDateStr = `完了 ${fmtDate(latestDate.slice(0, 10))}`;
                     } else if (statusForThisRow === 'draft') {
                         flowDateStr = '入力中';
                     } else if (statusForThisRow === 'active') {
