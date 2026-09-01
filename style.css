@@ -1735,6 +1735,13 @@
         .btn-icon-xs:hover { background: #e8e8e8; }
         .btn-icon-xs.btn-icon-danger { border-color: #e74c3c; color: #e74c3c; background: #fff; }
         .btn-icon-xs.btn-icon-danger:hover { background: #e74c3c; color: #fff; }
+        .btn-delete-xs {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 10px; font-size: 13px; font-weight: 600;
+            color: #5b6472; background: #eef1f5; border: none; border-radius: 6px; cursor: pointer;
+        }
+        .btn-delete-xs:hover { background: #e2e6ec; }
+        .btn-delete-xs svg { width: 14px; height: 14px; flex-shrink: 0; }
 
         /* ===== Sheet Modal (全画面) ===== */
         .modal-sheet {
