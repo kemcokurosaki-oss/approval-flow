@@ -596,7 +596,8 @@ async function loadAssemblyMachineCandidates(projectNum) {
 
 // ===== 機械・ユニット入力（assemblyItems） =====
 function addAssemblyItem() {
-    assemblyItems.push({ machine: '', unit: null });
+    const machine = (assemblyMode === 'free') ? assemblyLockedMachine : '';
+    assemblyItems.push({ machine, unit: null });
     renderAssemblyItems();
     scheduleSave();
 }
