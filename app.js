@@ -367,7 +367,9 @@ const FIXED_RECIPIENT_GROUPS = {
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' },
                          // 物流課: 本来の部署が物流の人に加え、profiles.extra_departments に'物流'を持つ兼任者も対象（山下など）
-                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }]
+                         { key: 'logistics',          label: '物流課', kind: 'department', department: '物流' }],
+    electrical:        [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
+                         { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' }]
 };
 let flowSettings   = { fixedRecipients: {}, dynamicRecipients: {} };
 async function loadFlowSettings() {
