@@ -2011,7 +2011,9 @@ function renderProgressCards() {
                 </div>${connector}`;
             }).join('');
 
-            const machineLabel = machines.length > 1 ? '<div class="prog-machine-label">【' + esc(machine) + '】</div>' : '';
+            // 2000番完了報告は機械ごとの完了判定を行うため、機械が1台でも機械名を表示する（2000番以外は複数台の時のみ）
+            const machineLabel = (machine && (machines.length > 1 || is2000sSeries(num)))
+                ? '<div class="prog-machine-label">【' + esc(machine) + '】</div>' : '';
             // 分割出荷（工場出荷タスクが2件）の機械は①②それぞれの日付を並べて表示する
             const machineShipEntries = perMachineShipDateDiffers ? getShippingEntriesForMachine(num, machine) : [];
             const machineShipSpans = machineShipEntries.filter(e => e.date).map(e => {
