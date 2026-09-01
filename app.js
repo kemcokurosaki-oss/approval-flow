@@ -2287,7 +2287,11 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
 // presetItemsを指定すると新規下書きにその機械・ユニットを事前セットする（2000番台の機械詳細モーダルから使用）。
 // machineを指定すると、完了後に工番レベルではなく機械レベルの詳細モーダルを再描画する
-async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, machine = null) {
+// assemblyMode: 2000番台のチェックシート側の入力制限を切り替えるためのフラグ（sheet_data.metaに保存し、sheet.html側で参照する）
+//   'fixed' … 固定ユニットリストの「申請する→」から開始。機械・ユニットとも変更不可、1件のみ
+//   'free'  … 「一覧にないユニットを申請する」から開始。機械は固定、ユニットは自由入力・複数追加可
+//   null    … 従来通り（非2000番、または旧仕様の下書き）。全項目編集可
+async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, machine = null, assemblyMode = null) {
     // 同じ工番・同じ申請者でも、複数の下書きを同時に保持できる（機械・ユニットをまとめて申請したい場合と、
     // 別々に分けて申請したい場合の両方に対応するため、押すたびに新しい下書きを作成する）
     const insertPayload = {
@@ -2297,6 +2301,7 @@ async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, m
         requester_id:   currentUser.id
     };
     if (presetItems) insertPayload.assembly_items = presetItems;
+    if (assemblyMode) insertPayload.sheet_data = { meta: { assembly_mode: assemblyMode, assembly_locked_machine: machine } };
     const { data: newDraft, error } = await db.from('approval_requests').insert(insertPayload).select().single();
     if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
     const draftId = newDraft.id;
@@ -2306,9 +2311,14 @@ async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, m
     else await renderAssemblyFlowDetailBody(projectNum);
 }
 
-// 2000番台：機械詳細モーダルの「申請する →」（未申請ユニット用）の薄いラッパー
+// 2000番台：固定ユニットリストの行から申請する場合の薄いラッパー（機械・ユニットとも固定＝チェックシート側で編集不可にする）
 async function startNewAssemblyUnitSheetFromDetail(projectNum, machine, unit) {
-    await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: unit || null }], machine);
+    await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: unit || null }], machine, 'fixed');
+}
+
+// 2000番台：「一覧にないユニットを申請する」から開始する薄いラッパー（機械は固定、ユニットは自由入力・複数追加可）
+async function startNewAssemblyFreeUnitSheetFromDetail(projectNum, machine) {
+    await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: null }], machine, 'free');
 }
 
 // 工番レベルの一覧（2000番以外）で、工程表由来の未申請の機械・ユニットから直接申請を開始する薄いラッパー
