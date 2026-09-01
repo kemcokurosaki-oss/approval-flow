@@ -2973,11 +2973,15 @@ function setupSheetChannel() {
         if (type !== 'sheet_complete' && type !== 'sheet_suspend') return;
         await loadMineSide();
 
-        // 組立フロー詳細モーダルが開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
+        // 組立フロー詳細モーダル（機械レベル or 工番レベル）が開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
         // sheet_suspend（一時保存）でも再描画しないと、入力済みの機械・ユニットが「未入力」のまま古く表示され続ける
         const detailModal = document.getElementById('detail_modal');
-        if (detailModal.classList.contains('open') && currentAssemblyDetailProjectNum) {
-            await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
+        if (detailModal.classList.contains('open') && (currentAssemblyDetailProjectNum || currentAssemblyMachineDetail)) {
+            if (currentAssemblyMachineDetail) {
+                await renderAssemblyMachineDetailBody(currentAssemblyMachineDetail.projectNum, currentAssemblyMachineDetail.machine);
+            } else {
+                await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
+            }
             if (type === 'sheet_complete') {
                 showToast('チェックシートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
             } else {
