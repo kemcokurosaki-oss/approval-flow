@@ -1546,7 +1546,7 @@ async function loadProgress() {
         return;
     }
 
-    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyConfirmedMap };
+    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet };
 
     el.innerHTML = '<div id="progress_cards_wrap"></div>';
     _syncProgressControls();
