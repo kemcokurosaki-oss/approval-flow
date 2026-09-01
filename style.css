@@ -1747,17 +1747,17 @@
         .unit-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
         .unit-toggle input { display: none; }
         .unit-toggle-slider {
-            position: relative; width: 34px; height: 18px; background: #ccc;
+            position: relative; width: 34px; height: 18px; background: #2f6fb0;
             border-radius: 999px; transition: background .15s; flex-shrink: 0;
         }
         .unit-toggle-slider::before {
             content: ''; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px;
             background: #fff; border-radius: 50%; transition: transform .15s;
         }
-        .unit-toggle input:checked + .unit-toggle-slider { background: #e8632c; }
+        .unit-toggle input:checked + .unit-toggle-slider { background: #ccc; }
         .unit-toggle input:checked + .unit-toggle-slider::before { transform: translateX(16px); }
-        .unit-toggle-text { font-size: 13px; color: #a7afba; font-weight: 500; transition: color .15s; }
-        .unit-toggle input:checked ~ .unit-toggle-text { color: #e8632c; font-weight: 700; }
+        .unit-toggle-text { font-size: 13px; color: #2f6fb0; font-weight: 700; transition: color .15s; }
+        .unit-toggle input:checked ~ .unit-toggle-text { color: #a7afba; font-weight: 500; }
 
         /* ===== Sheet Modal (全画面) ===== */
         .modal-sheet {
