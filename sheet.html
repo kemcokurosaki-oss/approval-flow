@@ -543,6 +543,12 @@ let assemblyItems = [];
 let isAssembly2000sProject = false;
 let assemblyMachineCandidates = {}; // { machineCode: [unit,...] } 2000番台は標準リスト、2000番以外は工程表(tasks)由来
 let useAssemblyCandidateList = false; // true: 候補select+自由入力フォールバック / false: 完全自由入力
+// 2000番台の機械詳細画面からの申請経路によって入力可否を切り替える（sheet_data.metaに保存される）
+//   'fixed' … 固定ユニットリストの行から開始。機械・ユニットとも変更不可、1件のみ
+//   'free'  … 「一覧にないユニットを申請する」から開始。機械は固定、ユニットは自由入力・複数追加可
+//   null    … 従来通り（非2000番、または旧仕様の下書き）。全項目編集可
+let assemblyMode = null;
+let assemblyLockedMachine = '';
 let pendingItems = [];
 let saveTimer = null;
 let isSaving = false;
