@@ -2457,7 +2457,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                     <label class="unit-toggle" title="不要にする">
                         <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="toggleAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
                         <span class="unit-toggle-slider"></span>
-                        <span class="unit-toggle-text">${isNotRequired ? 'ON' : 'OFF'}</span>
+                        <span class="unit-toggle-text">${isNotRequired ? 'OFF' : 'ON'}</span>
                     </label>`;
             }
 
