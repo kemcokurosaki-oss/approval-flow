@@ -667,24 +667,25 @@ function renderAssemblyItemRow(item, i) {
     const lbl = (t) => `<span style="display:block;font-size:10px;color:#999;">${t}</span>`;
     let machineHtml, unitHtml = '';
 
-    if (isAssembly2000sProject) {
-        const machineIsKnown = ASSEMBLY_MACHINE_CODES.includes(item.machine);
+    if (useAssemblyCandidateList) {
+        const machineCodes = Object.keys(assemblyMachineCandidates);
+        const machineIsKnown = machineCodes.includes(item.machine);
         if (item._machineFree || (item.machine && !machineIsKnown)) {
             machineHtml = `
                 <div style="display:flex;gap:4px;align-items:center;">
                     <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="機械名（自由入力）" value="${esc(item.machine)}"
                         oninput="updateAssemblyMachine(${i}, this.value)">
-                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">標準に戻す</button>
+                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">候補に戻す</button>
                 </div>`;
         } else {
             const options = ['<option value="">選択してください</option>']
-                .concat(ASSEMBLY_MACHINE_CODES.map(code => `<option value="${code}" ${item.machine === code ? 'selected' : ''}>${code}</option>`))
+                .concat(machineCodes.map(code => `<option value="${code}" ${item.machine === code ? 'selected' : ''}>${code}</option>`))
                 .concat(['<option value="__other__">その他（自由入力）</option>'])
                 .join('');
             machineHtml = `<select class="pending-content" onchange="onAssemblyMachineSelect(${i}, this.value)">${options}</select>`;
         }
 
-        const candidates = machineIsKnown ? ASSEMBLY_UNIT_MASTER[item.machine] : null;
+        const candidates = machineIsKnown ? assemblyMachineCandidates[item.machine] : null;
         const noUnitNeeded = candidates && candidates.length === 1 && candidates[0] === '-';
         if (!machineIsKnown) {
             unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（任意）" value="${esc(item.unit || '')}"
