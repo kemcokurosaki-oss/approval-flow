@@ -1743,6 +1743,19 @@
         }
         .btn-delete-xs:hover { background: #e2e6ec; }
         .btn-delete-xs svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .unit-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+        .unit-toggle input { display: none; }
+        .unit-toggle-slider {
+            position: relative; width: 34px; height: 18px; background: #ccc;
+            border-radius: 999px; transition: background .15s; flex-shrink: 0;
+        }
+        .unit-toggle-slider::before {
+            content: ''; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px;
+            background: #fff; border-radius: 50%; transition: transform .15s;
+        }
+        .unit-toggle input:checked + .unit-toggle-slider { background: #e74c3c; }
+        .unit-toggle input:checked + .unit-toggle-slider::before { transform: translateX(16px); }
+        .unit-toggle-text { font-size: 13px; color: #5b6472; }
 
         /* ===== Sheet Modal (全画面) ===== */
         .modal-sheet {
