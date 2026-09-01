@@ -5769,26 +5769,31 @@ async function _getRequiredFlows(projectNum, machine) {
 
 // 出荷準備より前の全フローについて、未完了かつ「出荷後対応」でないペンディング項目が残っていないか調べる
 // （出荷後の現地工事等で完了予定のペンディングはチェック対象から除外する）
+// 組立(assembly)がその機械について承認済みかどうかを、assembly_items内のmachine一致で判定する
+async function _getAssemblyBlockerForMachine(projectNum, machine) {
+    const { data: reqs } = await db.from('approval_requests')
+        .select('assembly_items, machine_name, unit_name, status')
+        .eq('project_number', projectNum).eq('flow_type', 'assembly').neq('status', 'draft');
+    const matching = (reqs || []).filter(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
+    if (matching.some(r => r.status === 'approved')) return null;
+    return { flowType: 'assembly', notApproved: true, label: '組立完了（未承認）' };
+}
+
 async function _getPrepBlockers(projectNum, machine) {
     const chain = await _getMachineFlowChain(projectNum, machine);
     const priorFlows = _priorSteps(chain, 'shipping_prep');
     if (priorFlows.length === 0) return [];
 
-    // 組立(assembly)は機械単位のmachine_name一致では判定できないため、工番単位の完了確定フラグを見る
     const nonAssemblyFlows = priorFlows.filter(f => f !== 'assembly');
-    const { data: reqs } = nonAssemblyFlows.length > 0
-        ? await db.from('approval_requests')
-            .select('flow_type, status, sheet_data')
-            .eq('project_number', projectNum).eq('machine_name', machine)
-            .in('flow_type', nonAssemblyFlows)
-        : { data: [] };
+    const [{ data: reqs }, assemblyBlocker] = await Promise.all([
+        nonAssemblyFlows.length > 0
+            ? db.from('approval_requests').select('flow_type, status, sheet_data')
+                .eq('project_number', projectNum).eq('machine_name', machine).in('flow_type', nonAssemblyFlows)
+            : Promise.resolve({ data: [] }),
+        priorFlows.includes('assembly') ? _getAssemblyBlockerForMachine(projectNum, machine) : Promise.resolve(null)
+    ]);
 
-    const blockers = [];
-    if (priorFlows.includes('assembly')) {
-        const { data: confirmed } = await db.from('assembly_completion_confirmations')
-            .select('project_number').eq('project_number', projectNum).maybeSingle();
-        if (!confirmed) blockers.push({ flowType: 'assembly', notApproved: true, label: '組立完了（工番単位で未確定）' });
-    }
+    const blockers = assemblyBlocker ? [assemblyBlocker] : [];
     for (const flowType of nonAssemblyFlows) {
         const req = (reqs || []).find(r => r.flow_type === flowType);
         const items = (req?.sheet_data?.pending_items || [])
