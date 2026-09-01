@@ -2531,7 +2531,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         }).join('');
 
     const addNewUnitHtml = canApply
-        ? `<button class="btn-add-new" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '')">＋ 一覧にないユニットを申請する</button>`
+        ? `<button class="btn-add-new" onclick="startNewAssemblyFreeUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
         : '';
 
     document.getElementById('detail_title').textContent = `組立フロー（${esc(machine)}）`;
