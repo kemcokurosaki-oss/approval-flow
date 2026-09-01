@@ -2044,35 +2044,57 @@ function renderProgressCards() {
 }
 
 // ===== 組立(assembly)：工番全体を1つのフロー丸として表示 =====
-// 組立は機械・ユニットが工程表と紐づかないため、他フローのような機械単位のステップ表示はできない。
+// 2000番以外は機械・ユニットが工程表と紐づかないため、他フローのような機械単位のステップ表示はできない。
 // そのため工番全体の全assembly申請を集約して1つの状態にし、他フローと同じ見た目(flow-node)で1行だけ表示する。
-// 機械・ユニットごとの内訳はこの丸をクリックして開く詳細モーダル(openAssemblyFlowDetailModal)側で確認する
-function computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedMap) {
-    if ((assemblyConfirmedMap || {})[num]) return 'approved';
+// 承認されればそのまま完了扱い（工番単位の手動確定は廃止）。内訳はこの丸をクリックして開く詳細モーダル側で確認する
+function computeAssemblyAggStatus(num, assemblyReqsByProject) {
     const reqs = (assemblyReqsByProject || {})[num] || [];
     if (reqs.length === 0) return 'empty';
+    if (reqs.some(r => r.status === 'approved')) return 'approved';
     if (reqs.some(r => r.status === 'rejected')) return 'rejected';
     if (reqs.every(r => r.status === 'draft')) return 'draft';
     return 'active';
 }
 
-// 2000番台は標準リストの機械コード（CC/PC/TR等）が工程表(tasks)のmachine名と同じ体系のため、
-// 申請データのmachineと工程表のmachineを突き合わせて、機械ごとの実際の申請状況を判定できる
-function computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyConfirmedMap) {
-    if ((assemblyConfirmedMap || {})[num]) return 'approved';
-    const reqs = ((assemblyReqsByProject || {})[num] || [])
-        .filter(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
-    if (reqs.length === 0) return 'empty';
-    if (reqs.some(r => r.status === 'rejected')) return 'rejected';
-    if (reqs.every(r => r.status === 'draft')) return 'draft';
-    return 'active';
+// 2000番台：標準リストの機械コード(CC/PC/TR等)に対応する固定ユニット候補＋自由入力で追加されたユニットの一覧を返す
+// （ユニット選択不要機械(-のみ)は、ユニット無しを表す空文字1件の配列にする）
+function getAssemblyUnitListForMachine(machine, reqsForProject) {
+    const fixed = ASSEMBLY_UNIT_MASTER[machine] || ['-'];
+    const base = (fixed.length === 1 && fixed[0] === '-') ? [''] : fixed.filter(u => u !== '-');
+    const extra = new Set();
+    (reqsForProject || []).forEach(req => {
+        getAssemblyItemsForReq(req).forEach(it => {
+            if (it && it.machine === machine) {
+                const u = (it.unit || '').trim();
+                if (u && u !== '-' && !base.includes(u)) extra.add(u);
+            }
+        });
+    });
+    return [...base, ...extra];
 }
 
+// 2000番台：1ユニットの状態。'done'(承認済みor不要マーク済み) | 'rejected' | 'active'(申請中) | 'draft' | 'empty'(未申請)
+function computeAssemblyUnitStatus(projectNum, machine, unit, reqsForProject, notRequiredSet) {
+    if ((notRequiredSet || new Set()).has(`${projectNum}__${machine}__${unit || ''}`)) return 'done';
+    const matching = (reqsForProject || []).filter(req =>
+        getAssemblyItemsForReq(req).some(it => it && it.machine === machine && (it.unit || '') === (unit || '')));
+    if (matching.length === 0) return 'empty';
+    if (matching.some(r => r.status === 'approved')) return 'done';
+    if (matching.some(r => r.status === 'submitted' || r.status === 'in_review')) return 'active';
+    if (matching.some(r => r.status === 'rejected')) return 'rejected';
+    return 'draft';
+}
 
-// 組立完了の工番単位確定操作を行える権限があるか（TBD: 正式な権限者は後日決定。暫定的に組立課長・部長）
-function canConfirmAssemblyCompletion() {
-    const role = getEffectiveRole();
-    return role === 'assembly_manager' || role === 'assembly_director';
+// 2000番台：その機械の全ユニット（固定＋追加分）が「承認済み or 不要マーク済み」なら機械全体を完了扱いにする
+function computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyNotRequiredSet) {
+    const reqs  = (assemblyReqsByProject || {})[num] || [];
+    const units = getAssemblyUnitListForMachine(machine, reqs);
+    const statuses = units.map(u => computeAssemblyUnitStatus(num, machine, u, reqs, assemblyNotRequiredSet));
+    if (statuses.length > 0 && statuses.every(s => s === 'done')) return 'approved';
+    if (statuses.some(s => s === 'rejected')) return 'rejected';
+    if (statuses.some(s => s === 'active'))   return 'active';
+    if (statuses.some(s => s === 'draft'))    return 'draft';
+    return 'empty';
 }
 
 // ===== 組立(assembly) 詳細モーダル =====
