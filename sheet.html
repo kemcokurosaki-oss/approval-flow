@@ -902,6 +902,16 @@ async function init() {
     // assembly_items（新形式）を使う。無ければ旧形式(machine_name/unit_name単一値)からフォールバック
     assemblyItems = Array.isArray(draft.assembly_items) ? draft.assembly_items
         : (draft.machine_name ? [{ machine: draft.machine_name, unit: draft.unit_name || null }] : []);
+
+    assemblyMode = draft.sheet_data?.meta?.assembly_mode || null;
+    assemblyLockedMachine = draft.sheet_data?.meta?.assembly_locked_machine || assemblyItems[0]?.machine || '';
+    if (assemblyMode === 'fixed') {
+        document.getElementById('assembly_add_btn')?.remove();
+    } else if (assemblyMode === 'free') {
+        const addBtn = document.getElementById('assembly_add_btn');
+        if (addBtn) addBtn.textContent = '＋ ユニットを追加';
+    }
+
     renderAssemblyItems();
 
     // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
