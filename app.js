@@ -2257,10 +2257,16 @@ async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null
     showLoading('処理中...');
     try {
         const { data: draftReq } = await db.from('approval_requests')
-            .select('assembly_items').eq('id', draftId).single();
+            .select('assembly_items, sheet_data').eq('id', draftId).single();
         const items = (draftReq?.assembly_items || []).filter(it => it && it.machine);
         if (items.length === 0) {
             showToast('機械を1件以上入力してください（チェックシート内）', 'error');
+            return;
+        }
+        const checkItems = draftReq?.sheet_data?.check_items || {};
+        const missingItems = ASSEMBLY_REQUIRED_ITEM_IDS.filter(id => !checkItems[id]?.result);
+        if (missingItems.length > 0 || !draftReq?.sheet_data?.meta?.completion_date) {
+            showToast('チェックシートの必須項目・組立完了日が未入力です。チェックシートを開いて入力してください。', 'error');
             return;
         }
 
