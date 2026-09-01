@@ -2256,9 +2256,9 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const rowsHtml = unappliedRowsHtml + existingRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>';
 
-    // 同じ工番に複数の下書きを同時に持てるため、「新しい機械・ユニットを申請する」ボタンは常に表示する
+    // 同じ工番に複数の下書きを同時に持てるため、「一覧にない機械・ユニットを申請する」ボタンは常に表示する
     const actionHtml = canApply
-        ? `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 新しい機械・ユニットを申請する →</button>`
+        ? `<button class="btn-add-new" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 一覧にない機械・ユニットを申請する</button>`
         : '';
 
     document.getElementById('detail_title').textContent = '組立フロー';
@@ -2268,10 +2268,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <hr class="section-divider">
         <div class="section-title">機械・ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
+        ${actionHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        ${actionHtml}
     `;
 }
 
