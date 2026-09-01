@@ -952,7 +952,7 @@
         .unit-list-row.is-active .unit-list-dot   { border-color: #2f6fb0; background: #2f6fb0; }
         .unit-list-row.is-active .unit-list-dot i { background: #fff; }
         .unit-list-row.is-disabled { opacity: 0.6; }
-        .unit-list-name { font-size: 20px; font-weight: 700; color: #16233a; flex: 1; letter-spacing: .04em; }
+        .unit-list-name { font-size: 19px; font-weight: 700; color: #16233a; flex: 1; letter-spacing: .04em; }
         .unit-list-status .status-badge { font-size: 13px; padding: 4px 12px; }
         .unit-list-meta { font-size: 14px; color: #8a94a6; min-height: 17px; margin-top: 4px; }
         .unit-list-link { font-size: 15px; color: #2f6fb0; font-weight: 600; }
