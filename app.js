@@ -2218,10 +2218,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                     <div class="unit-list-row-actions" style="justify-content:space-between;">
                         <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${g.req.id}')">続きを入力する →</span>
                         <div style="display:flex;gap:8px;align-items:center;">
+                            ${submitBtn}
                             <button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
-                            ${submitBtn}
                         </div>
                     </div>
                 </div>`;
