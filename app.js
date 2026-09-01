@@ -2171,9 +2171,33 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const myRole = getEffectiveRole();
     const meta = SHEET_FLOW_META['assembly'];
+    const canApply = canApplyFlow('assembly');
 
-    const rowsHtml = groups.length === 0
-        ? '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>'
+    // 工程表由来の機械・ユニットのうち、いずれの申請（下書き含む）にも含まれていないものを「未申請」として表示する
+    const appliedPairKeys = new Set();
+    groups.forEach(g => g.items.forEach(it => appliedPairKeys.add(`${it.machine}__${(it.unit || '').trim()}`)));
+    const unappliedPairs = Object.values(taskPairMap)
+        .filter(p => !appliedPairKeys.has(`${p.machine}__${(p.unit || '')}`))
+        .sort((a, b) => (a.machine + (a.unit || '')).localeCompare(b.machine + (b.unit || '')));
+
+    const unappliedRowsHtml = unappliedPairs.map(p => {
+        const label = p.unit ? `${p.machine}${p.unit}` : p.machine;
+        const actionHtml = canApply
+            ? `<div class="unit-list-row-actions">
+                   <span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyPairSheetFromDetail('${esc(projectNum)}', '${esc(p.machine)}', '${esc(p.unit || '')}')">申請する →</span>
+               </div>`
+            : '';
+        return `<div class="unit-list-row">
+            <div class="unit-list-row-main">
+                <div class="unit-list-name">${esc(label)}</div>
+                <div class="unit-list-status"><span class="status-badge s-gray">未申請</span></div>
+            </div>
+            ${actionHtml}
+        </div>`;
+    }).join('');
+
+    const existingRowsHtml = groups.length === 0
+        ? ''
         : groups.map(g => {
             const cls = STATUS_CLASSES[g.req.status] || 's-gray';
             const label = g.req.status === 'draft' ? '下書き' : statusBadgeLabel(g.req);
