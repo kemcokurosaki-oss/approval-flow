@@ -2392,7 +2392,7 @@ async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null
     }
 }
 
-async function deleteAssemblyDraftFromDetail(draftId, projectNum) {
+async function deleteAssemblyDraftFromDetail(draftId, projectNum, machine = null) {
     if (!confirm('この下書きを削除します。よろしいですか？')) return;
     showLoading('削除中...');
     try {
@@ -2400,7 +2400,8 @@ async function deleteAssemblyDraftFromDetail(draftId, projectNum) {
         if (error) throw error;
         await refreshAll();
         showToast('下書きを削除しました。', 'success');
-        await renderAssemblyFlowDetailBody(projectNum);
+        if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+        else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('削除に失敗しました: ' + e.message, 'error');
     } finally {
