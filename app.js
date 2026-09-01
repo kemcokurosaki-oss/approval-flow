@@ -2254,7 +2254,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             </div>`;
         }).join('');
 
-    const canApply = canApplyFlow('assembly');
+    const rowsHtml = unappliedRowsHtml + existingRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>';
 
     // 同じ工番に複数の下書きを同時に持てるため、「新しい機械・ユニットを申請する」ボタンは常に表示する
     const actionHtml = canApply
