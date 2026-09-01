@@ -473,7 +473,7 @@ async function main() {
   // 申請レコードを一括取得
   const reqIds = [...new Set(notifications.map(n => n.request_id))];
   const requests = await supabaseFetch(
-    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,inspection_date,inspection_time,inspection_location,confirmed_shipping_date`
+    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,inspection_date,inspection_time,inspection_location,confirmed_shipping_date,sheet_data`
   );
   const reqMap = Object.fromEntries(requests.map(r => [r.id, r]));
 
