@@ -2202,7 +2202,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const approvalHtml = myStep ? `
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
                     <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${g.req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
-                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}')">承認する</button>
+                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
                 </div>` : '';
 
             return `<div class="unit-list-row">
