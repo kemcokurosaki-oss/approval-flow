@@ -2412,53 +2412,95 @@ async function deleteAssemblyDraftFromDetail(draftId, projectNum, machine = null
 // ===== 2000番台：機械ごとのユニット申請状況一覧 =====
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
-        .select('*')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
     const { data: notReqRows } = await db.from('assembly_unit_not_required')
         .select('unit').eq('project_number', projectNum).eq('machine', machine);
     const notRequiredUnits = new Set((notReqRows || []).map(r => r.unit || ''));
-    const notRequiredSet = new Set([...notRequiredUnits].map(u => `${projectNum}__${machine}__${u}`));
 
     const units = getAssemblyUnitListForMachine(machine, reqs || []);
     const pInfo = projectsMap[projectNum] || {};
+    const meta = SHEET_FLOW_META['assembly'];
+    const myRole = getEffectiveRole();
     const canApply = canApplyFlow('assembly');
+
+    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
+    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const requesterNames = {};
+    if (requesterIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
+        (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
+    }
 
     const rowsHtml = units.length === 0
         ? '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>'
         : units.map(unit => {
-            const status = computeAssemblyUnitStatus(projectNum, machine, unit, reqs || [], notRequiredSet);
             const unitLabel = unit ? unit : '（ユニット区分なし）';
             const isNotRequired = notRequiredUnits.has(unit || '');
 
             const matching = (reqs || []).filter(req =>
                 getAssemblyItemsForReq(req).some(it => it && it.machine === machine && (it.unit || '') === (unit || '')));
             const myDraft = matching.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
-            const otherReq = matching.find(r => r.status !== 'draft') || matching.find(r => r.status === 'draft');
+            const activeReq = matching.find(r => r.status !== 'draft');
 
             let statusLabel, statusCls;
-            if (isNotRequired)        { statusLabel = '不要';   statusCls = 's-gray'; }
-            else if (!otherReq)       { statusLabel = '未申請'; statusCls = 's-gray'; }
-            else if (otherReq.status === 'draft') { statusLabel = '下書き'; statusCls = 's-gray'; }
-            else { statusLabel = statusBadgeLabel(otherReq); statusCls = STATUS_CLASSES[otherReq.status] || 's-gray'; }
+            if (isNotRequired)     { statusLabel = '不要';   statusCls = 's-gray'; }
+            else if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
+            else if (myDraft)      { statusLabel = '下書き'; statusCls = 's-gray'; }
+            else                   { statusLabel = '未申請'; statusCls = 's-gray'; }
 
-            let actionsHtml = '';
-            if (myDraft) {
+            let bodyHtml = '';
+            if (activeReq) {
+                // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
+                const requesterName = requesterNames[activeReq.requester_id] || '—';
+                const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+                const isApproved = activeReq.status === 'approved';
+                const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
+                const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
+                const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+
+                const myStep = (activeReq.approval_steps || []).find(s =>
+                    s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
+                const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
+                const approvalHtml = myStep ? `
+                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                        <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
+                        <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}', '${esc(machine)}')">承認する</button>
+                    </div>` : '';
+
+                bodyHtml = `
+                    <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                    <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                    ${approvalHtml}`;
+            } else if (myDraft) {
                 const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
-                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>` +
-                    (hasItem ? ` <button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>` : '');
-            } else if (otherReq) {
-                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="viewAssemblyRequestDetail('${otherReq.id}', '${esc(projectNum)}', '${esc(machine)}')">詳細を見る →</span>`;
+                const submitBtn = hasItem
+                    ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
+                    : '';
+                bodyHtml = `
+                    <div class="unit-list-row-actions" style="justify-content:space-between;">
+                        <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            ${submitBtn}
+                            <button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>`;
             } else if (canApply) {
-                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+                bodyHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
             }
 
-            let notReqBtn = '';
-            if (canApply && !(otherReq && otherReq.status === 'approved')) {
-                notReqBtn = isNotRequired
-                    ? `<button class="btn-danger-xs" onclick="unmarkAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">不要を取り消す</button>`
-                    : `<button class="btn-danger-xs" onclick="markAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">不要にする</button>`;
+            let toggleHtml = '';
+            if (canApply && !(activeReq && activeReq.status === 'approved')) {
+                toggleHtml = `
+                    <label class="unit-toggle" title="不要にする">
+                        <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="toggleAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
+                        <span class="unit-toggle-slider"></span>
+                        <span class="unit-toggle-text">不要</span>
+                    </label>`;
             }
 
             return `<div class="unit-list-row">
@@ -2466,12 +2508,14 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                     <div class="unit-list-name">${esc(unitLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
                 </div>
-                <div class="unit-list-row-actions">
-                    ${actionsHtml}
-                    ${notReqBtn}
-                </div>
+                ${bodyHtml}
+                <div style="display:flex;justify-content:flex-end;margin-top:6px;">${toggleHtml}</div>
             </div>`;
         }).join('');
+
+    const addNewUnitHtml = canApply
+        ? `<button class="btn-add-new" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '')">＋ 一覧にないユニットを申請する</button>`
+        : '';
 
     document.getElementById('detail_title').textContent = `組立フロー（${esc(machine)}）`;
     document.getElementById('detail_body').innerHTML = `
@@ -2480,10 +2524,16 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         <hr class="section-divider">
         <div class="section-title">ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
+        ${addNewUnitHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
     `;
+}
+
+async function toggleAssemblyUnitNotRequired(projectNum, machine, unit, checked) {
+    if (checked) await markAssemblyUnitNotRequired(projectNum, machine, unit);
+    else await unmarkAssemblyUnitNotRequired(projectNum, machine, unit);
 }
 
 async function markAssemblyUnitNotRequired(projectNum, machine, unit) {
