@@ -2451,6 +2451,16 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
             else if (myDraft)      { statusLabel = '下書き'; statusCls = 's-gray'; }
             else                   { statusLabel = '未申請'; statusCls = 's-gray'; }
 
+            let toggleHtml = '';
+            if (canApply && !(activeReq && activeReq.status === 'approved')) {
+                toggleHtml = `
+                    <label class="unit-toggle" title="不要にする">
+                        <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="toggleAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
+                        <span class="unit-toggle-slider"></span>
+                        <span class="unit-toggle-text">不要</span>
+                    </label>`;
+            }
+
             let bodyHtml = '';
             if (activeReq) {
                 // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
@@ -2471,8 +2481,10 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                     </div>` : '';
 
                 bodyHtml = `
-                    <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
-                    <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                        <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                    </div>
                     ${approvalHtml}`;
             } else if (myDraft) {
                 const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
@@ -2493,23 +2505,15 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                 bodyHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
             }
 
-            let toggleHtml = '';
-            if (canApply && !(activeReq && activeReq.status === 'approved')) {
-                toggleHtml = `
-                    <label class="unit-toggle" title="不要にする">
-                        <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="toggleAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
-                        <span class="unit-toggle-slider"></span>
-                        <span class="unit-toggle-text">不要</span>
-                    </label>`;
-            }
-
             return `<div class="unit-list-row">
                 <div class="unit-list-row-main">
                     <div class="unit-list-name">${esc(unitLabel)}</div>
-                    <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
+                        ${toggleHtml}
+                    </div>
                 </div>
                 ${bodyHtml}
-                <div style="display:flex;justify-content:flex-end;margin-top:6px;">${toggleHtml}</div>
             </div>`;
         }).join('');
 
@@ -2523,7 +2527,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
         <div class="section-title">ユニット別 申請状況</div>
-        <div class="unit-list-wrap">${rowsHtml}</div>
+        <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
         ${addNewUnitHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
