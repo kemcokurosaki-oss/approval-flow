@@ -32,11 +32,11 @@ function isAssembly2000sSeries(projectNum) {
 }
 
 // assemblyItems配列 [{machine, unit}] から、machine_nameカラム用の要約文字列を組み立てる。
-// 例: [{machine:'CC',unit:null},{machine:'PC',unit:'DS'}] → "CC / PC・DS"
+// 例: [{machine:'CC',unit:null},{machine:'PC',unit:'DS'}] → "CC / PCDS"
 function buildAssemblyMachineNameSummary(assemblyItems) {
     if (!Array.isArray(assemblyItems) || assemblyItems.length === 0) return '';
     return assemblyItems
         .filter(it => it && it.machine)
-        .map(it => (it.unit && it.unit !== '-') ? `${it.machine}・${it.unit}` : it.machine)
+        .map(it => (it.unit && it.unit !== '-') ? `${it.machine}${it.unit}` : it.machine)
         .join(' / ');
 }
