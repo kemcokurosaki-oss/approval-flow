@@ -2444,14 +2444,12 @@ async function unmarkAssemblyUnitNotRequired(projectNum, machine, unit) {
 // モーダルを閉じずに一覧を再描画する専用版。組立は常に並列承認＝どちらかが承認すれば即完了）
 async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, projectNum) {
     if (requireLogin()) return;
-    const comment = (document.getElementById(`assembly_comment_${requestId}`)?.value || '').trim();
 
     showLoading('処理中...');
     try {
         await db.from('approval_steps').update({
             status:      'approved',
             approver_id: currentUser.id,
-            comment:     comment || null,
             decided_at:  new Date().toISOString()
         }).eq('id', stepId);
 
