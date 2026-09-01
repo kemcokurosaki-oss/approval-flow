@@ -2442,6 +2442,102 @@ async function unmarkAssemblyUnitNotRequired(projectNum, machine, unit) {
     await renderAssemblyMachineDetailBody(projectNum, machine);
 }
 
+// 工番レベルの組立フロー一覧から直接承認する（既存の承認処理openDetailModal→approveStepとは別に、
+// モーダルを閉じずに一覧を再描画する専用版。組立は常に並列承認＝どちらかが承認すれば即完了）
+async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, projectNum) {
+    if (requireLogin()) return;
+    const comment = (document.getElementById(`assembly_comment_${requestId}`)?.value || '').trim();
+
+    showLoading('処理中...');
+    try {
+        await db.from('approval_steps').update({
+            status:      'approved',
+            approver_id: currentUser.id,
+            comment:     comment || null,
+            decided_at:  new Date().toISOString()
+        }).eq('id', stepId);
+
+        await db.from('approval_requests').update({
+            status:     'approved',
+            updated_at: new Date().toISOString()
+        }).eq('id', requestId);
+
+        // 並列承認: 残っている他のステップをキャンセルし、その承認者へ通知
+        const { data: otherSteps } = await db.from('approval_steps')
+            .select('id, approver_role').eq('request_id', requestId).eq('status', 'pending').neq('id', stepId);
+        if (otherSteps?.length > 0) {
+            await db.from('approval_steps').update({ status: 'cancelled' }).in('id', otherSteps.map(s => s.id));
+            for (const os of otherSteps) {
+                const { data: others } = await db.from('profiles').select('id').eq('role', os.approver_role);
+                if (others?.length > 0) {
+                    await db.from('approval_notifications').insert(
+                        others.map(a => ({ request_id: requestId, recipient_id: a.id, notification_type: 'completed_by_other' }))
+                    );
+                }
+            }
+        }
+
+        const { data: reqRow } = await db.from('approval_requests').select('*').eq('id', requestId).single();
+        await syncTaskCompletionOnFlowApproval(reqRow);
+        await recordNotifications(requestId);
+        const { data: existing } = await db.from('approval_notifications')
+            .select('id').eq('request_id', requestId).eq('recipient_id', currentUser.id)
+            .eq('notification_type', 'completed').maybeSingle();
+        if (!existing) {
+            await db.from('approval_notifications').insert({
+                request_id: requestId, recipient_id: currentUser.id, notification_type: 'completed'
+            });
+        }
+
+        await refreshAll();
+        ui.send('SAVED');
+        showToast('全承認が完了しました。関係者に通知が送られます。', 'success');
+        await renderAssemblyFlowDetailBody(projectNum);
+    } catch (e) {
+        showToast('承認処理に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function rejectAssemblyRequestFromList(requestId, stepId, projectNum) {
+    if (requireLogin()) return;
+    const comment = (document.getElementById(`assembly_comment_${requestId}`)?.value || '').trim();
+    if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        await db.from('approval_steps').update({
+            status:      'rejected',
+            approver_id: currentUser.id,
+            comment:     comment,
+            decided_at:  new Date().toISOString()
+        }).eq('id', stepId);
+
+        await db.from('approval_requests').update({
+            status:     'rejected',
+            updated_at: new Date().toISOString()
+        }).eq('id', requestId);
+
+        const { data: rejReq } = await db.from('approval_requests')
+            .select('requester_id').eq('id', requestId).single();
+        if (rejReq?.requester_id) {
+            await db.from('approval_notifications').insert({
+                request_id: requestId, recipient_id: rejReq.requester_id, notification_type: 'rejected'
+            });
+        }
+
+        await refreshAll();
+        ui.send('SAVED');
+        showToast('却下しました。申請者に通知されます。', 'success');
+        await renderAssemblyFlowDetailBody(projectNum);
+    } catch (e) {
+        showToast('処理に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
 // 進捗一覧の左フィルターパネル（.prefix-btn）と同じ見た目・選択状態になるようスタイルを共用する。
 // 絞り込みは行わず、押した工事番号のカードまでスクロールするだけの単純なジャンプ一覧。
