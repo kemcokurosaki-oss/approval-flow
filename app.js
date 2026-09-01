@@ -2149,7 +2149,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const cls = STATUS_CLASSES[g.req.status] || 's-gray';
             const label = g.req.status === 'draft' ? '下書き' : statusBadgeLabel(g.req);
             const machineLabel = g.items.length > 0
-                ? g.items.map(it => (it.unit && it.unit !== '-') ? `${it.machine}・${it.unit}` : it.machine).join('、')
+                ? g.items.map(it => (it.unit && it.unit !== '-') ? `${it.machine}${it.unit}` : it.machine).join('、')
                 : '（機械未入力）';
             const isOwnDraft = g.req.status === 'draft' && g.req.requester_id === currentUser.id;
 
