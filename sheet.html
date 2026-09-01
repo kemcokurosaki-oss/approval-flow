@@ -565,6 +565,29 @@ function setSheetInfoHeader(projectNum) {
     isAssembly2000sProject = isAssembly2000sSeries(projectNum);
 }
 
+// 機械・ユニットの選択候補を取得する。2000番台は標準リスト(CSV由来)、
+// 2000番以外は工程表(tasks)の「機械組立」タスクからmachine/unitを拾う（無ければ完全自由入力にフォールバック）
+async function loadAssemblyMachineCandidates(projectNum) {
+    if (isAssembly2000sProject) return ASSEMBLY_UNIT_MASTER;
+
+    const { data } = await db.from('tasks')
+        .select('machine, unit')
+        .eq('project_number', projectNum)
+        .eq('text', '機械組立')
+        .not('machine', 'is', null);
+
+    const map = {};
+    (data || []).forEach(t => {
+        const m = (t.machine || '').trim();
+        if (!m) return;
+        if (!map[m]) map[m] = new Set();
+        map[m].add((t.unit || '').trim() || '-');
+    });
+    const result = {};
+    Object.keys(map).sort().forEach(m => { result[m] = [...map[m]]; });
+    return result;
+}
+
 // ===== 機械・ユニット入力（assemblyItems） =====
 function addAssemblyItem() {
     assemblyItems.push({ machine: '', unit: null });
