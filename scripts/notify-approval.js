@@ -695,6 +695,7 @@ async function main() {
         text:        TEST_MODE
           ? `【テスト送信】本来の宛先: ${actualEmail}\n\n${mail.text}`
           : mail.text,
+        html:        mail.html,
         attachments,
       });
 
