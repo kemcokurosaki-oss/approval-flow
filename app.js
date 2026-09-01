@@ -2215,7 +2215,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                         <div class="unit-list-name">${esc(machineLabel)}</div>
                         <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                     </div>
-                    <div class="unit-list-row-actions">
+                    <div class="unit-list-row-actions" style="justify-content:space-between;">
                         <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${g.req.id}')">続きを入力する →</span>
                         ${submitBtn}
                     </div>
