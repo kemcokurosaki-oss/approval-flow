@@ -2461,59 +2461,62 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                     </label>`;
             }
 
-            let bodyHtml = '';
+            let metaHtml = '';
+            let linkHtml = '';
+            let approvalHtml = '';
+            let bottomRightHtml = toggleHtml;
+
             if (activeReq) {
                 // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
                 const requesterName = requesterNames[activeReq.requester_id] || '—';
                 const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+                metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
+
                 const isApproved = activeReq.status === 'approved';
                 const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
                 const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
                 const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
 
                 const myStep = (activeReq.approval_steps || []).find(s =>
                     s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
                 const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
-                const approvalHtml = myStep ? `
+                approvalHtml = myStep ? `
                     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
                         <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
                         <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}', '${esc(machine)}')">承認する</button>
                     </div>` : '';
-
-                bodyHtml = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                        <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
-                        <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
-                    </div>
-                    ${approvalHtml}`;
             } else if (myDraft) {
                 const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
+                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>`;
                 const submitBtn = hasItem
                     ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
                     : '';
-                bodyHtml = `
-                    <div class="unit-list-row-actions" style="justify-content:space-between;">
-                        <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            ${submitBtn}
-                            <button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
+                bottomRightHtml = `
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        ${submitBtn}
+                        <button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                        ${toggleHtml}
                     </div>`;
             } else if (canApply) {
-                bodyHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
             }
 
             return `<div class="unit-list-row">
-                <div class="unit-list-row-main">
-                    <div class="unit-list-name">${esc(unitLabel)}</div>
-                    <div style="display:flex;align-items:center;gap:14px;">
-                        <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
-                        ${toggleHtml}
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                        <div class="unit-list-name">${esc(unitLabel)}</div>
+                        ${metaHtml}
                     </div>
+                    <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
                 </div>
-                ${bodyHtml}
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                    <div>${linkHtml}</div>
+                    <div>${bottomRightHtml}</div>
+                </div>
+                ${approvalHtml}
             </div>`;
         }).join('');
 
