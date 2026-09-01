@@ -2666,7 +2666,8 @@ async function rejectAssemblyRequestFromList(requestId, stepId, projectNum, comm
         await refreshAll();
         ui.send('SAVED');
         showToast('却下しました。申請者に通知されます。', 'success');
-        await renderAssemblyFlowDetailBody(projectNum);
+        if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+        else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('処理に失敗しました: ' + e.message, 'error');
     } finally {
