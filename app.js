@@ -2555,7 +2555,7 @@ async function unmarkAssemblyUnitNotRequired(projectNum, machine, unit) {
 
 // 工番レベルの組立フロー一覧から直接承認する（既存の承認処理openDetailModal→approveStepとは別に、
 // モーダルを閉じずに一覧を再描画する専用版。組立は常に並列承認＝どちらかが承認すれば即完了）
-async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, projectNum, machineLabel) {
+async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, projectNum, machineLabel, machine = null) {
     if (requireLogin()) return;
     if (!confirm(`${machineLabel}を承認します。よろしいですか？`)) return;
 
