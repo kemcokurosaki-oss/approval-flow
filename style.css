@@ -959,7 +959,8 @@
         .unit-list-link:hover { color: #1a4a7a; text-decoration: underline; }
         .unit-list-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
         .btn-apply-xs {
-            padding: 4px 12px; font-size: 15px; font-weight: 500; border-radius: 4px;
+            display: inline-flex; align-items: center; height: 30px; box-sizing: border-box;
+            padding: 0 12px; font-size: 15px; font-weight: 500; border-radius: 4px;
             border: none; background: #2f6fb0; color: #fff; cursor: pointer;
         }
         .btn-apply-xs:hover { background: #24568c; }
