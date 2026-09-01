@@ -31,6 +31,46 @@ const FLOW_LABELS = {
 // 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
 
+// ===== タスクリスト送信（fix_card_sent）用ヘルパー =====
+const PHOTO_BUCKET = 'pending-item-photos';
+const FLOW_SHORT_LABEL = {
+  inspection:        '外観検査',
+  simple_inspection: '簡易検査',
+  shipping_meeting:  '出荷確認会議',
+};
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+function photoUrl(path) {
+  if (!path) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
+}
+
+// 完了予定日が3日以内(期限切れ含む)かどうか。アプリ側のpendingDueSoon()と同じ基準
+function isDueSoon(dueStr) {
+  if (!dueStr) return false;
+  const [y, m, d] = dueStr.split('-').map(Number);
+  const dueUTC = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((dueUTC - todayUTC) / 86400000);
+  return diffDays <= 3;
+}
+
+function statusCellHtml(it) {
+  if (it.completed) {
+    return `<span style="color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:2px 8px;">完了: ${esc(it.completed_date || '—')}</span>`;
+  }
+  if (isDueSoon(it.due)) {
+    return `<span style="color:#c0392b;background:#fde8e8;border-radius:4px;padding:2px 8px;">期日間近: ${esc(it.due || '—')}</span>`;
+  }
+  return `期日: ${esc(it.due || '—')}`;
+}
+
 // 承認依頼・再申請・却下・他者完了の件名用ラベル（申請系表記）
 const FLOW_LABELS_REQUEST = {
   assembly:      '組立完了申請',
