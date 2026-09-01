@@ -2203,34 +2203,51 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     `;
 }
 
-async function startNewAssemblySheetFromDetail(projectNum) {
+// presetItemsを指定すると新規下書きにその機械・ユニットを事前セットする（2000番台の機械詳細モーダルから使用）。
+// machineを指定すると、完了後に工番レベルではなく機械レベルの詳細モーダルを再描画する
+async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, machine = null) {
     // 同じ工番・同じ申請者でも、複数の下書きを同時に保持できる（機械・ユニットをまとめて申請したい場合と、
     // 別々に分けて申請したい場合の両方に対応するため、押すたびに新しい下書きを作成する）
-    const { data: newDraft, error } = await db.from('approval_requests').insert({
+    const insertPayload = {
         project_number: projectNum,
         flow_type:      'assembly',
         status:         'draft',
         requester_id:   currentUser.id
-    }).select().single();
+    };
+    if (presetItems) insertPayload.assembly_items = presetItems;
+    const { data: newDraft, error } = await db.from('approval_requests').insert(insertPayload).select().single();
     if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
     const draftId = newDraft.id;
     window.open(`sheet.html?draft_id=${draftId}`, '_blank');
     await loadMineSide();
-    await renderAssemblyFlowDetailBody(projectNum);
+    if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+    else await renderAssemblyFlowDetailBody(projectNum);
+}
+
+// 2000番台：機械詳細モーダルの「申請する →」（未申請ユニット用）の薄いラッパー
+async function startNewAssemblyUnitSheetFromDetail(projectNum, machine, unit) {
+    await startNewAssemblySheetFromDetail(projectNum, [{ machine, unit: unit || null }], machine);
 }
 
 function reopenAssemblySheetFromDetail(requestId) {
     window.open(`sheet.html?draft_id=${requestId}`, '_blank');
 }
 
-async function viewAssemblyRequestDetail(requestId, projectNum) {
-    // 「閉じる」を押したら組立フロー詳細（機械・ユニット一覧）に戻れるようにする
+async function viewAssemblyRequestDetail(requestId, projectNum, machine = null) {
+    // 「閉じる」を押したら組立フロー詳細（工番レベル or 機械レベル）に戻れるようにする
     currentAssemblyDetailProjectNum = null;
-    assemblyDetailReturnProjectNum = projectNum;
+    currentAssemblyMachineDetail = null;
+    if (machine) {
+        assemblyDetailReturnMachine = { projectNum, machine };
+        assemblyDetailReturnProjectNum = null;
+    } else {
+        assemblyDetailReturnProjectNum = projectNum;
+        assemblyDetailReturnMachine = null;
+    }
     await openDetailModal(requestId);
 }
 
-async function submitAssemblyDraftFromDetail(draftId, projectNum) {
+async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null) {
     showLoading('処理中...');
     try {
         const { data: draftReq } = await db.from('approval_requests')
@@ -2273,7 +2290,8 @@ async function submitAssemblyDraftFromDetail(draftId, projectNum) {
 
         await refreshAll();
         showToast(`組立完了を申請しました（機械${items.length}件）。`, 'success');
-        await renderAssemblyFlowDetailBody(projectNum);
+        if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+        else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
@@ -2281,22 +2299,98 @@ async function submitAssemblyDraftFromDetail(draftId, projectNum) {
     }
 }
 
-async function confirmAssemblyCompletionFromDetail(num) {
-    if (!confirm(`${num} の組立完了を確定します。よろしいですか？`)) return;
-    const { error } = await db.from('assembly_completion_confirmations').insert({
-        project_number: num, confirmed_by: currentUser.id
-    });
-    if (error) { showToast('確定に失敗しました: ' + error.message, 'error'); return; }
-    await refreshAll();
-    await renderAssemblyFlowDetailBody(num);
+// ===== 2000番台：機械ごとのユニット申請状況一覧 =====
+async function renderAssemblyMachineDetailBody(projectNum, machine) {
+    const { data: reqs } = await db.from('approval_requests')
+        .select('*')
+        .eq('project_number', projectNum).eq('flow_type', 'assembly')
+        .order('created_at', { ascending: true });
+
+    const { data: notReqRows } = await db.from('assembly_unit_not_required')
+        .select('unit').eq('project_number', projectNum).eq('machine', machine);
+    const notRequiredUnits = new Set((notReqRows || []).map(r => r.unit || ''));
+    const notRequiredSet = new Set([...notRequiredUnits].map(u => `${projectNum}__${machine}__${u}`));
+
+    const units = getAssemblyUnitListForMachine(machine, reqs || []);
+    const pInfo = projectsMap[projectNum] || {};
+    const canApply = canApplyFlow('assembly');
+
+    const rowsHtml = units.length === 0
+        ? '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>'
+        : units.map(unit => {
+            const status = computeAssemblyUnitStatus(projectNum, machine, unit, reqs || [], notRequiredSet);
+            const unitLabel = unit ? unit : '（ユニット区分なし）';
+            const isNotRequired = notRequiredUnits.has(unit || '');
+
+            const matching = (reqs || []).filter(req =>
+                getAssemblyItemsForReq(req).some(it => it && it.machine === machine && (it.unit || '') === (unit || '')));
+            const myDraft = matching.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
+            const otherReq = matching.find(r => r.status !== 'draft') || matching.find(r => r.status === 'draft');
+
+            let statusLabel, statusCls;
+            if (isNotRequired)        { statusLabel = '不要';   statusCls = 's-gray'; }
+            else if (!otherReq)       { statusLabel = '未申請'; statusCls = 's-gray'; }
+            else if (otherReq.status === 'draft') { statusLabel = '下書き'; statusCls = 's-gray'; }
+            else { statusLabel = statusBadgeLabel(otherReq); statusCls = STATUS_CLASSES[otherReq.status] || 's-gray'; }
+
+            let actionsHtml = '';
+            if (myDraft) {
+                const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
+                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>` +
+                    (hasItem ? ` <button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>` : '');
+            } else if (otherReq) {
+                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="viewAssemblyRequestDetail('${otherReq.id}', '${esc(projectNum)}', '${esc(machine)}')">詳細を見る →</span>`;
+            } else if (canApply) {
+                actionsHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+            }
+
+            let notReqBtn = '';
+            if (canApply && !(otherReq && otherReq.status === 'approved')) {
+                notReqBtn = isNotRequired
+                    ? `<button class="btn-danger-xs" onclick="unmarkAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">不要を取り消す</button>`
+                    : `<button class="btn-danger-xs" onclick="markAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">不要にする</button>`;
+            }
+
+            return `<div class="unit-list-row">
+                <div class="unit-list-row-main">
+                    <div class="unit-list-name">${esc(unitLabel)}</div>
+                    <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
+                </div>
+                <div class="unit-list-row-actions">
+                    ${actionsHtml}
+                    ${notReqBtn}
+                </div>
+            </div>`;
+        }).join('');
+
+    document.getElementById('detail_title').textContent = `組立フロー（${esc(machine)}）`;
+    document.getElementById('detail_body').innerHTML = `
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
+        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        <hr class="section-divider">
+        <div class="section-title">ユニット別 申請状況</div>
+        <div class="unit-list-wrap">${rowsHtml}</div>
+    `;
+    document.getElementById('detail_footer').innerHTML = `
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+    `;
 }
 
-async function unconfirmAssemblyCompletionFromDetail(num) {
-    if (!confirm(`${num} の組立完了確定を取り消します。よろしいですか？`)) return;
-    const { error } = await db.from('assembly_completion_confirmations').delete().eq('project_number', num);
-    if (error) { showToast('取消に失敗しました: ' + error.message, 'error'); return; }
+async function markAssemblyUnitNotRequired(projectNum, machine, unit) {
+    const { error } = await db.from('assembly_unit_not_required').upsert({
+        project_number: projectNum, machine, unit: unit || '', marked_by: currentUser.id
+    }, { onConflict: 'project_number,machine,unit' });
+    if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
     await refreshAll();
-    await renderAssemblyFlowDetailBody(num);
+    await renderAssemblyMachineDetailBody(projectNum, machine);
+}
+
+async function unmarkAssemblyUnitNotRequired(projectNum, machine, unit) {
+    const { error } = await db.from('assembly_unit_not_required').delete()
+        .eq('project_number', projectNum).eq('machine', machine).eq('unit', unit || '');
+    if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
+    await refreshAll();
+    await renderAssemblyMachineDetailBody(projectNum, machine);
 }
 
 // ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
