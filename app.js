@@ -2500,7 +2500,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
                         </button>
                         ${toggleHtml}
                     </div>`;
-            } else if (canApply) {
+            } else if (canApply && !isNotRequired) {
                 linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
             }
 
