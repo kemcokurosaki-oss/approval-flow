@@ -5816,6 +5816,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     const kumitateOwners = findOwners('機械組立');
     const shiuntenOwners = findOwners('試運転');
     const sekkeiOwners   = findOwners('出図', '設計');
+    const denkiOwners    = findOwners('電気艤装');
 
     // 試運転・出図が見つからない場合は工番全体から再検索
     const shiuntenOwnersFallback = shiuntenOwners.length > 0 ? shiuntenOwners :
