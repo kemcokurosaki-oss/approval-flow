@@ -1,16 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY       = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
-// ドメイン(kusakabe.com)をResendで認証するまでは、この送信元アドレスからのみ送信可能。
-// 未認証の間は、Resendアカウント登録に使ったメールアドレス宛にしか届かない制約がある
-const RESEND_FROM          = "承認フロー <onboarding@resend.dev>";
+const GMAIL_USER           = Deno.env.get("GMAIL_USER") ?? "";
+const GMAIL_APP_PASSWORD   = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
+const MAIL_FROM            = `"承認フロー 通知" <${GMAIL_USER}>`;
 const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
-// Resendはドメイン未認証の間、アカウント登録に使ったメールアドレス宛にしか送信できないため、テスト中はそちらに合わせる
-const TEST_EMAIL           = "kemco.kurosaki@gmail.com";
+const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
 
 // ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー
 const corsHeaders = {
