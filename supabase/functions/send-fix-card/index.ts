@@ -167,24 +167,27 @@ Deno.serve(async (req) => {
                 </table>
             </div>`;
 
-        const resendRes = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${RESEND_API_KEY}`,
+        const client = new SMTPClient({
+            connection: {
+                hostname: "smtp.gmail.com",
+                port: 465,
+                tls: true,
+                auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
             },
-            body: JSON.stringify({
-                from: RESEND_FROM,
+        });
+
+        try {
+            await client.send({
+                from: MAIL_FROM,
                 to: allEmails,
                 subject: `${TEST_MODE ? "【テスト】" : ""}【${reqRow.project_number || ""} ${reqRow.machine_name || ""}】 ${flowLabel} タスクリスト`,
                 html,
-            }),
-        });
-
-        if (!resendRes.ok) {
-            const errBody = await resendRes.text();
-            console.error("Resend error:", errBody);
-            return json({ error: `メール送信に失敗しました: ${errBody}` }, 502);
+            });
+        } catch (mailErr) {
+            console.error("Gmail送信エラー:", mailErr);
+            return json({ error: `メール送信に失敗しました: ${mailErr instanceof Error ? mailErr.message : String(mailErr)}` }, 502);
+        } finally {
+            await client.close();
         }
 
         // テストモード時は本番の通知履歴を汚さないよう監査ログへの記録をスキップする
