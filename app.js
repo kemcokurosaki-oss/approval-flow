@@ -2218,7 +2218,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                     <div class="unit-list-row-actions" style="justify-content:space-between;">
                         <span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${g.req.id}')">続きを入力する →</span>
                         <div style="display:flex;gap:8px;align-items:center;">
-                            <button class="btn-danger-xs" onclick="deleteAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">削除する</button>
+                            <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">🗑</button>
                             ${submitBtn}
                         </div>
                     </div>
