@@ -1,17 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// このFunctionは実際のメール送信は行わず、approval_notificationsへ「送信待ち」レコードを積むだけ。
+// 実際の送信は scripts/notify-approval.js（GitHub Actions、15分ごと）が拾って行う。
+// 理由: DenoのSMTPライブラリ(denomailer)経由のGmail送信で、メールヘッダーが本文に混入する問題が解決できなかったため、
+// 実績のあるnodemailer(Node.js)側に送信処理を統合した。
 
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GMAIL_USER           = Deno.env.get("GMAIL_USER") ?? "";
-const GMAIL_APP_PASSWORD   = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
-const MAIL_FROM            = `"承認フロー 通知" <${GMAIL_USER}>`;
-const PHOTO_BUCKET         = "pending-item-photos";
 const TEST_MODE            = Deno.env.get("TEST_MODE") === "true";
 const TEST_EMAIL           = "e-kurosaki@kusakabe.com";
 
-// ブラウザ(fetch)からの呼び出しを許可するためのCORSヘッダー
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -24,13 +23,6 @@ const FLOW_NOTIF_TYPE: Record<string, string> = {
     shipping_meeting:  "shipping_meeting_invite",
 };
 
-// メール件名・本文見出し用のフロー短縮名（app.js側のQA_DETAIL_TITLE_LABELSと同じ表記に揃える）
-const FLOW_SHORT_LABEL: Record<string, string> = {
-    inspection:        "外観検査",
-    simple_inspection: "簡易検査",
-    shipping_meeting:  "出荷確認会議",
-};
-
 function json(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
@@ -38,47 +30,11 @@ function json(body: unknown, status = 200) {
     });
 }
 
-function esc(s: unknown) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) =>
-        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)
-    );
-}
-
-function photoUrl(path: string | null) {
-    if (!path) return null;
-    return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
-}
-
-// 完了予定日が3日以内(期限切れ含む)かどうか。アプリ側のpendingDueSoon()と同じ基準
-function isDueSoon(dueStr: string | null) {
-    if (!dueStr) return false;
-    const [y, m, d] = dueStr.split("-").map(Number);
-    const dueUTC = Date.UTC(y, m - 1, d);
-    const now = new Date();
-    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-    const diffDays = Math.round((dueUTC - todayUTC) / 86400000);
-    return diffDays <= 3;
-}
-
-function statusCellHtml(it: any) {
-    if (it.completed) {
-        return `<span style="color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:2px 8px;">完了: ${esc(it.completed_date || "—")}</span>`;
-    }
-    if (isDueSoon(it.due)) {
-        return `<span style="color:#c0392b;background:#fde8e8;border-radius:4px;padding:2px 8px;">期日間近: ${esc(it.due || "—")}</span>`;
-    }
-    return `期日: ${esc(it.due || "—")}`;
-}
-
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     try {
-        if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-            return json({ error: "GMAIL_USER / GMAIL_APP_PASSWORD が Edge Function の secrets に設定されていません" }, 500);
-        }
-
         const authHeader = req.headers.get("Authorization") ?? "";
         const jwt = authHeader.replace(/^Bearer\s+/i, "");
         const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -97,7 +53,7 @@ Deno.serve(async (req) => {
 
         const { data: reqRow, error: reqErr } = await admin
             .from("approval_requests")
-            .select("flow_type, project_number, machine_name, inspection_date, sheet_data")
+            .select("flow_type, sheet_data")
             .eq("id", requestId)
             .single();
         if (reqErr || !reqRow) return json({ error: "対象データが見つかりません" }, 404);
@@ -116,95 +72,29 @@ Deno.serve(async (req) => {
             .eq("notification_type", notifType);
 
         const recipientIds = [...new Set((notifRows || []).map((n) => n.recipient_id).filter(Boolean))];
-        const directEmails = new Set((notifRows || []).map((n) => n.recipient_email).filter(Boolean));
+        const directEmails  = [...new Set((notifRows || []).map((n) => n.recipient_email).filter(Boolean))] as string[];
 
-        let profileEmails: string[] = [];
-        if (recipientIds.length > 0) {
-            const { data: profs } = await admin.from("profiles").select("email").in("id", recipientIds);
-            profileEmails = (profs || []).map((p) => p.email).filter(Boolean);
-        }
-        let allEmails = [...new Set([...directEmails, ...profileEmails])] as string[];
+        let inserts: Array<{ request_id: string; recipient_id?: string; recipient_email?: string; notification_type: string }>;
+
         if (TEST_MODE) {
-            allEmails = [TEST_EMAIL];
-        } else if (allEmails.length === 0) {
-            return json({ error: "送信先が見つかりません（開催案内の宛先が未登録です）" }, 400);
+            inserts = [{ request_id: requestId, recipient_email: TEST_EMAIL, notification_type: "fix_card_sent" }];
+        } else {
+            const profileInserts = recipientIds.map((id) => ({
+                request_id: requestId, recipient_id: id as string, notification_type: "fix_card_sent",
+            }));
+            const emailInserts = directEmails.map((email) => ({
+                request_id: requestId, recipient_email: email, notification_type: "fix_card_sent",
+            }));
+            inserts = [...profileInserts, ...emailInserts];
+            if (inserts.length === 0) {
+                return json({ error: "送信先が見つかりません（開催案内の宛先が未登録です）" }, 400);
+            }
         }
 
-        const rowsHtml = items.map((it: any) => `
-            <tr>
-                <td style="padding:8px;border:1px solid #ddd;text-align:center;">${
-                    it.photo_path
-                        ? `<img src="${esc(photoUrl(it.photo_path))}" width="100" style="display:block;border-radius:4px;">`
-                        : "—"
-                }</td>
-                <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || "—")}</td>
-                <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
-                <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || "—")}</td>
-                <td style="padding:8px;border:1px solid #ddd;">${statusCellHtml(it)}</td>
-            </tr>`).join("");
+        const { error: insertErr } = await admin.from("approval_notifications").insert(inserts);
+        if (insertErr) throw insertErr;
 
-        const flowLabel = FLOW_SHORT_LABEL[reqRow.flow_type as string] || "検査";
-
-        const html = `
-            <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
-                <h2 style="margin-bottom:4px;">${esc(flowLabel)} タスクリスト</h2>
-                <p style="margin-top:0;color:#666;">
-                    工事番号: ${esc(reqRow.project_number || "—")} ／
-                    機械: ${esc(reqRow.machine_name || "—")} ／
-                    検査日: ${esc(reqRow.inspection_date || "—")}
-                </p>
-                <table style="border-collapse:collapse;width:100%;font-size:14px;">
-                    <thead>
-                        <tr style="background:#f5f5f5;">
-                            <th style="padding:8px;border:1px solid #ddd;">写真</th>
-                            <th style="padding:8px;border:1px solid #ddd;">場所</th>
-                            <th style="padding:8px;border:1px solid #ddd;">内容</th>
-                            <th style="padding:8px;border:1px solid #ddd;">担当者</th>
-                            <th style="padding:8px;border:1px solid #ddd;">状態</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table>
-            </div>`;
-
-        const client = new SMTPClient({
-            connection: {
-                hostname: "smtp.gmail.com",
-                port: 465,
-                tls: true,
-                auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
-            },
-        });
-
-        try {
-            await client.send({
-                from: MAIL_FROM,
-                to: allEmails,
-                subject: `${TEST_MODE ? "【テスト】" : ""}【${reqRow.project_number || ""} ${reqRow.machine_name || ""}】 ${flowLabel} タスクリスト`,
-                content: "auto",
-                html,
-            });
-        } catch (mailErr) {
-            console.error("Gmail送信エラー:", mailErr);
-            return json({ error: `メール送信に失敗しました: ${mailErr instanceof Error ? mailErr.message : String(mailErr)}` }, 502);
-        } finally {
-            await client.close();
-        }
-
-        // テストモード時は本番の通知履歴を汚さないよう監査ログへの記録をスキップする
-        if (!TEST_MODE) {
-            const now = new Date().toISOString();
-            await admin.from("approval_notifications").insert(
-                allEmails.map((email) => ({
-                    request_id: requestId,
-                    recipient_email: email,
-                    notification_type: "fix_card_sent",
-                    emailed_at: now,
-                }))
-            );
-        }
-
-        return json({ success: true, sentTo: allEmails.length, testMode: TEST_MODE });
+        return json({ success: true, queued: inserts.length, testMode: TEST_MODE });
     } catch (e) {
         console.error(e);
         return json({ error: e instanceof Error ? e.message : String(e) }, 500);
