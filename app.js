@@ -1916,7 +1916,10 @@ function renderProgressCards() {
                     const connector = i < fullChain.length - 1
                         ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                         : '';
-                    return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); openAssemblyFlowDetailModal('${esc(num)}')"
+                    const clickHandler = isMachineRow
+                        ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
+                        : `openAssemblyFlowDetailModal('${esc(num)}')`;
+                    return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
                         data-flow-type="assembly"
                         data-num="${esc(num)}">
                         <div class="flow-circle ${fcClass}">${icon}</div>
