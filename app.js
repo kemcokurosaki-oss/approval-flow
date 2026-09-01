@@ -2138,6 +2138,20 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
+    // 工程表(tasks)からその工番の機械・ユニット一覧を取得し、まだ申請されていない組み合わせを「未申請」として表示する
+    const { data: taskRows } = await db.from('tasks')
+        .select('machine, unit')
+        .eq('project_number', projectNum)
+        .eq('text', '機械組立')
+        .not('machine', 'is', null);
+    const taskPairMap = {};
+    (taskRows || []).forEach(t => {
+        const m = (t.machine || '').trim();
+        if (!m) return;
+        const u = (t.unit || '').trim();
+        taskPairMap[`${m}__${u}`] = { machine: m, unit: u || null };
+    });
+
     const pInfo = projectsMap[projectNum] || {};
 
     // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
