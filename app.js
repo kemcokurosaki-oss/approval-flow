@@ -1862,7 +1862,7 @@ function renderProgressCards() {
 
         // 組立(assembly)は機械・ユニットが工程表と紐づかないため工番全体で1つに集約するが、
         // 見た目は他フローと同じ「機械行の中の丸」として、各機械行の先頭に共通で表示する（ラインで他フローとつながる）
-        const assemblyAggStatus = computeAssemblyAggStatus(num, assemblyReqsByProject, assemblyConfirmedMap);
+        const assemblyAggStatus = computeAssemblyAggStatus(num, assemblyReqsByProject);
 
         const machineRows = (machines.length > 0 ? machines : [null]).map(machine => {
             const mData = machine ? projectData[num][machine] : null;
