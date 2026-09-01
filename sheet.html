@@ -726,6 +726,21 @@ function renderAssemblyItemRow(item, i) {
             oninput="updateAssemblyUnit(${i}, this.value)">`;
     }
 
+    // 2000番台の機械詳細画面からの申請経路によって、機械・ユニットの編集を制限する
+    if (machineLocked) {
+        machineHtml = `<div class="locked-field">${esc(item.machine)}</div>`;
+    }
+    if (unitLocked) {
+        unitHtml = `<div class="locked-field">${item.unit ? esc(item.unit) : '（ユニット選択不要）'}</div>`;
+    }
+
+    const deleteCell = (assemblyMode === 'fixed')
+        ? ''
+        : `<div style="display:flex;flex-direction:column;flex-shrink:0;">
+               ${lbl(' ')}
+               <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">削除</button>
+           </div>`;
+
     return `
     <div class="pending-row">
         <div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">
@@ -736,10 +751,7 @@ function renderAssemblyItemRow(item, i) {
             ${lbl('ユニット')}
             ${unitHtml}
         </div>
-        <div style="display:flex;flex-direction:column;flex-shrink:0;">
-            ${lbl(' ')}
-            <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">削除</button>
-        </div>
+        ${deleteCell}
     </div>`;
 }
 
