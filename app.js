@@ -1416,17 +1416,11 @@ async function loadProgress() {
         .select('id, project_number, machine_name, unit_name, assembly_items, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date, inspection_date, inspection_time, requester_id, sheet_data, approval_steps(approver_id, status)')
         .order('updated_at', { ascending: true });
 
-    // 工番単位の組立完了確定（電装合成表示・前フロー判定の代替に使う。TBD: 確定操作の権限者は後日決定）
-    const { data: confirmedRows } = await db.from('assembly_completion_confirmations').select('project_number, confirmed_by, confirmed_at');
-    const assemblyConfirmedMap = {};
-    (confirmedRows || []).forEach(r => { assemblyConfirmedMap[r.project_number] = r; });
-    const confirmedByIds = [...new Set((confirmedRows || []).map(r => r.confirmed_by).filter(Boolean))];
-    if (confirmedByIds.length > 0) {
-        const { data: confirmProfiles } = await db.from('profiles').select('id, name').in('id', confirmedByIds);
-        const confirmNameMap = {};
-        (confirmProfiles || []).forEach(p => { confirmNameMap[p.id] = p.name; });
-        Object.values(assemblyConfirmedMap).forEach(r => { r.confirmed_by_name = confirmNameMap[r.confirmed_by] || ''; });
-    }
+    // 2000番台：機械・ユニット単位で「申請不要」とマークされたものを取得する
+    const { data: notRequiredRows } = await db.from('assembly_unit_not_required').select('project_number, machine, unit');
+    const assemblyNotRequiredSet = new Set(
+        (notRequiredRows || []).map(r => `${r.project_number}__${r.machine}__${r.unit || ''}`)
+    );
 
     // shipping承認済みの承認者名マップを構築
     const shippingApproverIds = [...new Set(
