@@ -5661,19 +5661,22 @@ function toggleAllMachines(listId, btn) {
 }
 
 // その機械の生の承認済みflow_type集合と、電装フローが該当するか（電気艤装タスクの有無）を取得する。
-// 組立(assembly)は機械・ユニットが工程表と紐づかないため機械単位のmachine_name一致では判定せず、
-// 工番単位の組立完了確定（assembly_completion_confirmations）の有無で判定する
+// 組立(assembly)は1申請に複数機械をまとめられるため、machine_nameの完全一致ではなく
+// assembly_itemsのJSON配列内にその機械が含まれる承認済み申請があるかで判定する
 async function _getRawFlowStatus(projectNum, machine) {
-    const [{ data: approvedRows }, { data: elecTaskRows }, { data: assemblyConfirmed }] = await Promise.all([
+    const [{ data: approvedRows }, { data: elecTaskRows }, { data: assemblyApprovedRows }] = await Promise.all([
         db.from('approval_requests').select('flow_type')
             .eq('project_number', projectNum).eq('machine_name', machine).eq('status', 'approved')
             .neq('flow_type', 'assembly'),
         db.from('tasks').select('id')
             .eq('project_number', projectNum).eq('machine', machine).eq('text', '電気艤装').limit(1),
-        db.from('assembly_completion_confirmations').select('project_number').eq('project_number', projectNum).maybeSingle()
+        db.from('approval_requests').select('assembly_items, machine_name, unit_name')
+            .eq('project_number', projectNum).eq('flow_type', 'assembly').eq('status', 'approved')
     ]);
     const approved = new Set((approvedRows || []).map(r => r.flow_type));
-    if (assemblyConfirmed) approved.add('assembly');
+    const assemblyApproved = (assemblyApprovedRows || [])
+        .some(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
+    if (assemblyApproved) approved.add('assembly');
     return {
         approved,
         electricalRequired: (elecTaskRows || []).length > 0
