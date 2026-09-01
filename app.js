@@ -1920,9 +1920,15 @@ function renderProgressCards() {
                     const connector = i < fullChain.length - 1
                         ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                         : '';
-                    const clickHandler = isMachineRow
-                        ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
-                        : `openAssemblyFlowDetailModal('${esc(num)}')`;
+                    // 2000番以外は1工番=1申請のため、承認済みならクリックで詳細画面を経由せず直接完了報告書を開く
+                    const approvedReq = (!isMachineRow && statusForThisRow === 'approved')
+                        ? ((assemblyReqsByProject || {})[num] || []).find(r => r.status === 'approved')
+                        : null;
+                    const clickHandler = approvedReq
+                        ? `window.open('${SHEET_FLOW_META.assembly.file}?view=1&id=${approvedReq.id}', '_blank')`
+                        : isMachineRow
+                            ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
+                            : `openAssemblyFlowDetailModal('${esc(num)}')`;
                     return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
                         data-flow-type="assembly"
                         data-num="${esc(num)}">
