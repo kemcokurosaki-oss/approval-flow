@@ -2159,31 +2159,18 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             </div>`;
         }).join('');
 
-    // 組立完了の工番単位確定状況
-    const { data: confirmedRow } = await db.from('assembly_completion_confirmations')
-        .select('confirmed_by, confirmed_at').eq('project_number', projectNum).maybeSingle();
-    let confirmedByName = '';
-    if (confirmedRow?.confirmed_by) {
-        const { data: p } = await db.from('profiles').select('name').eq('id', confirmedRow.confirmed_by).single();
-        confirmedByName = p?.name || '';
-    }
-
-    const canApply   = canApplyFlow('assembly');
-    const canConfirm = canConfirmAssemblyCompletion();
-    const hasAnyItems = groups.some(g => g.items.length > 0);
+    const canApply = canApplyFlow('assembly');
 
     // 同じ工番に複数の下書きを同時に持てるため、「新しい機械・ユニットを申請する」ボタンは常に表示する
     const actionHtml = canApply
         ? `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 新しい機械・ユニットを申請する →</button>`
         : '';
 
-    let confirmHtml = '';
-    if (confirmedRow) {
-        confirmHtml = `<div style="margin-top:12px;font-size:13px;color:#166534;">✓ 組立完了確定済み（${esc(confirmedByName)} ${fmtDate((confirmedRow.confirmed_at || '').slice(0, 10))}）` +
-            (canConfirm ? ` <button class="btn-danger-xs" onclick="unconfirmAssemblyCompletionFromDetail('${esc(projectNum)}')">取消</button>` : '') + `</div>`;
-    } else if (canConfirm && hasAnyItems) {
-        confirmHtml = `<div style="margin-top:12px;"><button class="btn btn-success" onclick="confirmAssemblyCompletionFromDetail('${esc(projectNum)}')">組立完了にする</button></div>`;
-    }
+    // 承認されたらそのまま完了扱い（工番単位の手動確定は廃止）。案内文のみ表示する
+    const isAnyApproved = groups.some(g => g.req.status === 'approved');
+    const confirmHtml = isAnyApproved
+        ? `<div style="margin-top:12px;font-size:13px;color:#166534;">✓ 承認済みの申請があります（組立完了扱い）</div>`
+        : '';
 
     document.getElementById('detail_title').textContent = '組立フロー';
     document.getElementById('detail_body').innerHTML = `
