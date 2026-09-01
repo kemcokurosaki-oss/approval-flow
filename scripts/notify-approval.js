@@ -443,6 +443,55 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
+    case 'fix_card_sent': {
+      const items = (req?.sheet_data?.pending_items || []).filter(it => it.content);
+      const flowLabelShort = FLOW_SHORT_LABEL[req?.flow_type] || '検査';
+      const rowsHtml = items.map(it => `
+        <tr>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${
+            it.photo_path
+              ? `<img src="${esc(photoUrl(it.photo_path))}" width="100" style="display:block;border-radius:4px;">`
+              : '—'
+          }</td>
+          <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || '—')}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || '—')}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${statusCellHtml(it)}</td>
+        </tr>`).join('');
+      const html = `
+        <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
+          <p>${esc(recipientName)} 様</p>
+          <h2 style="margin-bottom:4px;">${esc(flowLabelShort)} タスクリスト</h2>
+          <p style="margin-top:0;color:#666;">
+            工事番号: ${esc(pNum)} ／
+            機械: ${esc(machineName || '—')} ／
+            検査日: ${esc(req?.inspection_date || '—')}
+          </p>
+          <table style="border-collapse:collapse;width:100%;font-size:14px;">
+            <thead>
+              <tr style="background:#f5f5f5;">
+                <th style="padding:8px;border:1px solid #ddd;">写真</th>
+                <th style="padding:8px;border:1px solid #ddd;">場所</th>
+                <th style="padding:8px;border:1px solid #ddd;">内容</th>
+                <th style="padding:8px;border:1px solid #ddd;">担当者</th>
+                <th style="padding:8px;border:1px solid #ddd;">状態</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          <p style="margin-top:16px;"><a href="${APP_URL}">▼ 承認フローを開く</a></p>
+          <p style="color:#999;font-size:12px;">※このメールは自動送信です。</p>
+        </div>`;
+      return {
+        from,
+        subject: `【${pStr}】 ${flowLabelShort} タスクリスト`,
+        text:
+          `${recipientName} 様\n\n${pStr} の${flowLabelShort}タスクリストです。承認フロー管理システムでご確認ください。` +
+          `\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+        html,
+      };
+    }
+
     default:
       return {
         from,
