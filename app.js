@@ -6686,6 +6686,7 @@ async function recordFlowNotifications(requestId, flowType) {
     const kumitateOwners = findOwners('機械組立');
     const shiuntenOwners = findOwners('試運転');
     const sekkeiOwners   = findOwners('出図', '設計');
+    const denkiOwners    = findOwners('電気艤装');
 
     // 営業担当者をapp_settingsから取得
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
