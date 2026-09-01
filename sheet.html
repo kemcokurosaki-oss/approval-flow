@@ -673,6 +673,8 @@ function renderAssemblyItems() {
 function renderAssemblyItemRow(item, i) {
     const lbl = (t) => `<span style="display:block;font-size:10px;color:#999;">${t}</span>`;
     let machineHtml, unitHtml = '';
+    const machineLocked = assemblyMode === 'fixed' || assemblyMode === 'free';
+    const unitLocked = assemblyMode === 'fixed';
 
     if (useAssemblyCandidateList) {
         const machineCodes = Object.keys(assemblyMachineCandidates);
