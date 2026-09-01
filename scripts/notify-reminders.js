@@ -227,14 +227,28 @@ async function runSubmissionReminders() {
 
   const todayStr = tokyoDateStr();
 
-  // 申請済みリクエストのセット（rejected以外）
+  // 申請済みリクエストのセット（rejected以外）。test_run/shipping_prep/shippingはmachine_name一致で判定
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=in.(assembly,test_run,shipping_prep,shipping)&status=neq.rejected` +
+    `approval_requests?flow_type=in.(test_run,shipping_prep,shipping)&status=neq.rejected` +
     `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
     (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
   );
+
+  // 組立(assembly)は1申請に複数機械をまとめられるため、assembly_itemsのJSON配列を展開してキー化する
+  const assemblySubmitted = await supabaseFetch(
+    `approval_requests?flow_type=eq.assembly&status=neq.rejected` +
+    `&select=project_number,machine_name,unit_name,assembly_items`
+  );
+  (assemblySubmitted || []).forEach(r => {
+    const items = Array.isArray(r.assembly_items) && r.assembly_items.length > 0
+      ? r.assembly_items
+      : (r.machine_name ? [{ machine: r.machine_name }] : []); // 旧形式フォールバック
+    items.forEach(it => {
+      if (it && it.machine) submittedSet.add(`${r.project_number}__${it.machine}__assembly`);
+    });
+  });
 
   // 出荷確定申請の催促宛先（品証・製管スタッフ）をあらかじめ取得
   let shippingRecipients = null;
