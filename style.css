@@ -1738,7 +1738,7 @@
         .btn-icon-xs.btn-icon-danger:hover { background: #e74c3c; color: #fff; }
         .btn-delete-xs {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 26px; height: 26px; padding: 0;
+            width: 30px; height: 30px; padding: 0; box-sizing: border-box;
             color: #5b6472; background: #eef1f5; border: none; border-radius: 6px; cursor: pointer;
         }
         .btn-delete-xs:hover { background: #e2e6ec; }
