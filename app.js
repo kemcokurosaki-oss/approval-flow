@@ -2496,9 +2496,34 @@ async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, proj
     }
 }
 
-async function rejectAssemblyRequestFromList(requestId, stepId, projectNum) {
+// 却下ボタンを押した時だけ、理由入力欄を別モーダルで表示する（却下は頻度が低いため一覧には常設しない）
+function showAssemblyRejectPrompt(requestId, stepId, projectNum) {
+    document.getElementById('assembly_reject_prompt')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'assembly_reject_prompt';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,30,50,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:10px;padding:20px;width:360px;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.25);">
+            <div style="font-size:16px;font-weight:bold;margin-bottom:10px;color:#1e3a5f;">却下理由の入力</div>
+            <textarea id="assembly_reject_reason" placeholder="却下の理由を入力してください（必須）"
+                style="width:100%;min-height:80px;font-size:14px;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('assembly_reject_prompt').remove()">キャンセル</button>
+                <button class="btn btn-danger" onclick="confirmAssemblyReject('${requestId}', '${stepId}', '${esc(projectNum)}')">却下する</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+async function confirmAssemblyReject(requestId, stepId, projectNum) {
+    const reason = (document.getElementById('assembly_reject_reason')?.value || '').trim();
+    if (!reason) { showToast('却下する場合は理由を入力してください。', 'error'); return; }
+    document.getElementById('assembly_reject_prompt')?.remove();
+    await rejectAssemblyRequestFromList(requestId, stepId, projectNum, reason);
+}
+
+async function rejectAssemblyRequestFromList(requestId, stepId, projectNum, comment) {
     if (requireLogin()) return;
-    const comment = (document.getElementById(`assembly_comment_${requestId}`)?.value || '').trim();
     if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
 
     showLoading('処理中...');
