@@ -169,7 +169,11 @@ function buildEmail(type, req, recipientName, extra = {}) {
         ? `\n確定出荷日: ${req.confirmed_shipping_date}` : '';
       const approverLine = isShipping && extra?.approverName
         ? `\n承認者: ${extra.approverName}（常務）` : '';
-      const completedSubject = isShipping ? `【出荷確定通知】${pStr}` : `【${flow}】${pStr}`;
+      const completedSubject = isShipping
+        ? `【出荷確定通知】${pStr}`
+        : ['assembly', 'electrical', 'test_run', 'shipping_prep'].includes(req?.flow_type)
+        ? `【${flow}完了通知】${pStr}`
+        : `【${flow}】${pStr}`;
       const completedBody = req?.flow_type === 'assembly'
         ? `${pStr} の機械組立が完了しました。`
         : req?.flow_type === 'electrical'
