@@ -2192,19 +2192,17 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const isApproved = g.req.status === 'approved';
             const canEditRejected = g.req.status === 'rejected' && g.req.requester_id === currentUser.id;
             const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${g.req.id}` : `${meta.file}?view=1&id=${g.req.id}`;
-            const sheetLinkLabel = isApproved ? `${meta.doneLabel}を見る →` : (canEditRejected ? `${meta.label}を修正する →` : `${meta.label}を見る →`);
+            const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
 
             // 自分が承認できる保留中ステップがあれば、その場で承認・却下できるようにする
+            // （却下は頻度が低いため理由入力欄は常時表示せず、却下ボタンを押した時だけ別モーダルで入力させる）
             const myStep = (g.req.approval_steps || []).find(s =>
                 s.approver_role === myRole && s.status === 'pending' && g.req.status === 'submitted');
 
             const approvalHtml = myStep ? `
-                <div style="margin-top:8px;">
-                    <textarea id="assembly_comment_${g.req.id}" placeholder="承認・却下の理由など（却下時は必須）" style="width:100%;min-height:40px;font-size:13px;padding:6px;box-sizing:border-box;"></textarea>
-                    <div style="display:flex;gap:8px;margin-top:6px;">
-                        <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="rejectAssemblyRequestFromList('${g.req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
-                        <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}')">承認する</button>
-                    </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${g.req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
+                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}')">承認する</button>
                 </div>` : '';
 
             return `<div class="unit-list-row">
