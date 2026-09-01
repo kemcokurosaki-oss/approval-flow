@@ -75,8 +75,8 @@ Deno.serve(async (req) => {
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     try {
-        if (!RESEND_API_KEY) {
-            return json({ error: "RESEND_API_KEY が Edge Function の secrets に設定されていません" }, 500);
+        if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+            return json({ error: "GMAIL_USER / GMAIL_APP_PASSWORD が Edge Function の secrets に設定されていません" }, 500);
         }
 
         const authHeader = req.headers.get("Authorization") ?? "";
