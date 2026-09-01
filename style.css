@@ -954,7 +954,7 @@
         .unit-list-row.is-disabled { opacity: 0.6; }
         .unit-list-name { font-size: 16px; font-weight: bold; color: #16233a; flex: 1; letter-spacing: .02em; }
         .unit-list-status .status-badge { font-size: 12px; padding: 3px 10px; }
-        .unit-list-meta { font-size: 12px; color: #8a94a6; padding-left: 27px; min-height: 17px; }
+        .unit-list-meta { font-size: 12px; color: #8a94a6; min-height: 17px; margin-top: 4px; }
         .unit-list-link { font-size: 13px; color: #2f6fb0; font-weight: 600; }
         .unit-list-link:hover { color: #1a4a7a; text-decoration: underline; }
         .unit-list-row-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
