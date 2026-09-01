@@ -2261,12 +2261,6 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         ? `<button class="btn btn-primary" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 新しい機械・ユニットを申請する →</button>`
         : '';
 
-    // 承認されたらそのまま完了扱い（工番単位の手動確定は廃止）。案内文のみ表示する
-    const isAnyApproved = groups.some(g => g.req.status === 'approved');
-    const confirmHtml = isAnyApproved
-        ? `<div style="margin-top:12px;font-size:13px;color:#166534;">✓ 承認済みの申請があります（組立完了扱い）</div>`
-        : '';
-
     document.getElementById('detail_title').textContent = '組立フロー';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
@@ -2274,7 +2268,6 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <hr class="section-divider">
         <div class="section-title">機械・ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
-        ${confirmHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
