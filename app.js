@@ -5932,6 +5932,8 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     if (dyn.sekkei_owner) for (const o of sekkeiOwnersFallback) await addOwnerByName(o);
     // 設計管理職: 担当者の上長を members テーブルから取得
     if (dyn.sekkei_manager) await addSekkeiSupervisors();
+    // 電気艤装タスクがある場合のみ電装担当者も追加
+    if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
 
     // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
     if (dyn.kumitate_manager && kumitateOwners.length > 0) {
