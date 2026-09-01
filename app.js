@@ -2261,10 +2261,9 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const rowsHtml = unappliedRowsHtml + existingRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">組立の申請はまだありません</div>';
 
-    // 同じ工番に複数の下書きを同時に持てるため、「一覧にない機械・ユニットを申請する」ボタンは常に表示する
-    const actionHtml = canApply
-        ? `<button class="btn-add-new" onclick="startNewAssemblySheetFromDetail('${esc(projectNum)}')">＋ 一覧にない機械・ユニットを申請する</button>`
-        : '';
+    // 2000番以外は1工番につき1回しか申請しないため、「一覧にない機械・ユニットを申請する」ボタンは表示しない
+    // （このボタンのマークアップ・関数・CSSは2000番完了報告側での再利用のためそのまま残してある）
+    const actionHtml = '';
 
     document.getElementById('detail_title').textContent = '組立フロー';
     document.getElementById('detail_body').innerHTML = `
