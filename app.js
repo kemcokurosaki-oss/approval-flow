@@ -2124,7 +2124,6 @@ function renderProgressCards() {
     }).join('');
 
     wrap.innerHTML = html;
-    adjustAssemblyReportScrollPadding();
 }
 
 // ===== 組立(assembly)：工番全体を1つのフロー丸として表示 =====
