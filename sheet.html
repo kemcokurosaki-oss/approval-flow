@@ -733,6 +733,10 @@ function renderAssemblyItemRow(item, i) {
     }
     if (unitLocked) {
         unitHtml = `<div class="locked-field">${item.unit ? esc(item.unit) : '（ユニット選択不要）'}</div>`;
+    } else if (assemblyMode === 'free') {
+        // 固定リストにあるユニットは既に一覧から申請できるため、この経路では選択肢に出さず自由入力のみにする
+        unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（自由入力）" value="${esc(item.unit || '')}"
+            oninput="updateAssemblyUnit(${i}, this.value)">`;
     }
 
     const deleteCell = (assemblyMode === 'fixed')
