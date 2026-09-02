@@ -1880,7 +1880,6 @@ function renderProgressCards() {
                 // 2000番台工事は組立・試運転フローのみ対象（出荷系・検査系は完全に対象外）
                 if (is2000sSeries(num) && f.type !== 'test_run') return false;
                 if (f.alwaysShow) return true;
-                if (f.type === 'electrical')        return hasTask(num, machine, '電気艤装')     || !!mData.flows['electrical'];
                 if (f.type === 'test_run')          return hasTask(num, machine, '試運転')     || !!mData.flows['test_run'];
                 if (f.type === 'simple_inspection') return hasProjectFlow(num, '簡易検査')     || hasTask(num, machine, '簡易検査')     || !!mData.flows['simple_inspection'];
                 if (f.type === 'inspection')        return hasProjectFlow(num, '外観検査')     || hasTask(num, machine, '外観検査')     || !!mData.flows['inspection'];
