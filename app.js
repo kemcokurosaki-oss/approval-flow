@@ -2474,7 +2474,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
         <div class="section-title">組立 申請状況</div>
-        <div class="unit-list-wrap">${rowsHtml}</div>
+        <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
         ${actionHtml}
         ${elecSectionHtml}
     `;
