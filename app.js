@@ -2432,7 +2432,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const showElecSection = elecMachines.length > 0 || (elecReqs || []).length > 0;
     const elecSectionHtml = showElecSection ? `
         <hr class="section-divider">
-        <div class="section-title">電装 機械別 申請状況</div>
+        <div class="section-title">電装 申請状況</div>
         <div class="unit-list-wrap">${elecRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">電装の申請はまだありません</div>'}</div>
     ` : '';
 
