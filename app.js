@@ -1583,6 +1583,10 @@ function setProgressTab(tab) {
     progressFilterPrefix = ''; // タブ切替時は工番種別フィルタをリセット
     assemblyNavActiveNum = '';
     document.querySelector('.main-layout')?.classList.toggle('assembly-report-mode', tab === 'assembly_report');
+    // 進捗一覧・2000番完了報告は同じスクロール領域(.main-content)を共有しているため、
+    // タブ切替時にスクロール位置を引き継がないよう先頭に戻す
+    const mainContent = document.querySelector('.main-layout .main-content');
+    if (mainContent) mainContent.scrollTop = 0;
     _syncProgressControls();
     renderProgressCards();
 }
