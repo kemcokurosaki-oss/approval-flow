@@ -1895,36 +1895,54 @@ function renderProgressCards() {
                     // 2000番台は標準リストの機械コードが工程表のmachine名と一致するため、機械ごとの実際の申請状況を判定する。
                     // 2000番以外は機械名が自由入力で工程表と紐づかないため、工番全体で集約した状態を使う
                     const isMachineRow = machine && is2000sSeries(num);
-                    const statusForThisRow = isMachineRow
+                    const assemblyStatus = isMachineRow
                         ? computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyNotRequiredSet)
                         : assemblyAggStatus;
+
+                    // 電気艤装タスクがある機械は、組立の丸に電装の状況も統合して「組立・電装」として表示する
+                    const electricalReq = machine ? mData.flows['electrical'] : null;
+                    const hasElectrical = !!(machine && (hasTask(num, machine, '電気艤装') || electricalReq));
+                    const electricalStatus = !electricalReq ? 'empty'
+                        : electricalReq.status === 'approved' ? 'approved'
+                        : electricalReq.status === 'rejected' ? 'rejected'
+                        : electricalReq.status === 'draft'    ? 'draft'
+                        : 'active';
+
+                    // 丸の色は組立・電装の両方が承認されて初めて「完了」。片方でも進んでいれば「進行中」表示にする
+                    const statusForThisRow = !hasElectrical ? assemblyStatus
+                        : (assemblyStatus === 'rejected' || electricalStatus === 'rejected') ? 'rejected'
+                        : (assemblyStatus === 'approved' && electricalStatus === 'approved') ? 'approved'
+                        : (assemblyStatus === 'empty' && electricalStatus === 'empty') ? 'empty'
+                        : ((assemblyStatus === 'draft' || assemblyStatus === 'empty') && (electricalStatus === 'draft' || electricalStatus === 'empty')) ? 'draft'
+                        : 'active';
+
                     const { fcClass, icon } = deriveFlowVisual(statusForThisRow);
                     const isEffectivelyApproved = statusForThisRow === 'approved';
                     const canApply = canApplyFlow('assembly');
-                    // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない
-                    const canApplyNow = canApply && !progressFilterCompleted && (statusForThisRow === 'empty' || statusForThisRow === 'draft');
+                    // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない。電装統合表示時は対象外
+                    const canApplyNow = !hasElectrical && canApply && !progressFilterCompleted && (assemblyStatus === 'empty' || assemblyStatus === 'draft');
                     const clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
 
-                    let flowDateStr = '';
-                    if (statusForThisRow === 'approved') {
+                    let assemblyDateStr = '';
+                    if (assemblyStatus === 'approved') {
                         // 関連する承認済み申請のうち最新の承認日を表示（全ユニットが不要マークのみで完了した場合は日付なし）
                         const relevantReqs = ((assemblyReqsByProject || {})[num] || []).filter(r => {
                             if (r.status !== 'approved') return false;
                             return !isMachineRow || getAssemblyItemsForReq(r).some(it => it && it.machine === machine);
                         });
                         const latestDate = relevantReqs.map(r => r.updated_at).filter(Boolean).sort().slice(-1)[0];
-                        if (latestDate) flowDateStr = `完了 ${fmtDate(latestDate.slice(0, 10))}`;
-                    } else if (statusForThisRow === 'draft') {
-                        flowDateStr = '入力中';
-                    } else if (statusForThisRow === 'active') {
-                        flowDateStr = '申請中';
+                        if (latestDate) assemblyDateStr = `完了 ${fmtDate(latestDate.slice(0, 10))}`;
+                    } else if (assemblyStatus === 'draft') {
+                        assemblyDateStr = '入力中';
+                    } else if (assemblyStatus === 'active') {
+                        assemblyDateStr = '申請中';
                     }
 
                     const connector = i < fullChain.length - 1
                         ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                         : '';
-                    // 2000番以外は1工番=1申請のため、承認済みならクリックで詳細画面を経由せず直接完了報告書を開く
-                    const approvedReq = (!isMachineRow && statusForThisRow === 'approved')
+                    // 2000番以外は1工番=1申請のため、承認済みならクリックで詳細画面を経由せず直接完了報告書を開く（電装統合表示時は詳細モーダル経由に統一）
+                    const approvedReq = (!isMachineRow && assemblyStatus === 'approved' && !hasElectrical)
                         ? ((assemblyReqsByProject || {})[num] || []).find(r => r.status === 'approved')
                         : null;
                     const clickHandler = approvedReq
@@ -1932,12 +1950,50 @@ function renderProgressCards() {
                         : isMachineRow
                             ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
                             : `openAssemblyFlowDetailModal('${esc(num)}')`;
+
+                    if (!hasElectrical) {
+                        return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
+                            data-flow-type="assembly"
+                            data-num="${esc(num)}">
+                            <div class="flow-circle ${fcClass}">${icon}</div>
+                            <div class="flow-label">組立</div>
+                            ${assemblyDateStr ? `<div class="flow-date">${assemblyDateStr}</div>` : ''}
+                        </div>${connector}`;
+                    }
+
+                    // 電装側の日付表示・未申請未承認バッジ（通常のflow-nodeと同じロジック）
+                    let electricalDateStr = '';
+                    if (electricalReq && electricalReq.status !== 'draft') {
+                        const dateIso = (electricalReq.status === 'approved' || electricalReq.status === 'rejected') ? electricalReq.updated_at : electricalReq.created_at;
+                        if (dateIso) {
+                            const d = new Date(dateIso);
+                            const prefix = electricalReq.status === 'approved' ? '完了' : electricalReq.status === 'rejected' ? '却下' : '申請';
+                            electricalDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                        }
+                    } else if (electricalReq && electricalReq.status === 'draft') {
+                        electricalDateStr = '入力中';
+                    }
+                    const electricalOverdue = isFlowOverdue(num, machine, 'electrical', electricalReq);
+                    const electricalOverdueBadge = electricalOverdue
+                        ? `<div class="flow-overdue-badge">⚠ ${electricalReq && electricalReq.status !== 'draft' ? '未承認' : '未申請'}</div>`
+                        : '';
+
                     return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
                         data-flow-type="assembly"
                         data-num="${esc(num)}">
                         <div class="flow-circle ${fcClass}">${icon}</div>
-                        <div class="flow-label">組立</div>
-                        ${flowDateStr ? `<div class="flow-date">${flowDateStr}</div>` : ''}
+                        <div class="flow-label">組立・電装</div>
+                        <div class="flow-dual-status">
+                            <div class="flow-dual-col">
+                                <div class="flow-dual-col-label">組立</div>
+                                ${assemblyDateStr ? `<div class="flow-date">${assemblyDateStr}</div>` : ''}
+                            </div>
+                            <div class="flow-dual-col">
+                                <div class="flow-dual-col-label">電装</div>
+                                ${electricalDateStr ? `<div class="flow-date">${electricalDateStr}</div>` : ''}
+                                ${electricalOverdueBadge}
+                            </div>
+                        </div>
                     </div>${connector}`;
                 }
 
