@@ -643,8 +643,13 @@
         }
         .flow-node.clickable { cursor: pointer; }
         .flow-node.clickable:hover .flow-circle { opacity: 0.82; transform: scale(1.08); }
-        .flow-node.can-apply .flow-circle { border: 2px dashed #1e3a5f; }
-        .flow-node.can-apply:hover .flow-circle { background: #dbe8f8; border-color: #1e3a5f; color: #1e3a5f; opacity: 1; transform: scale(1.12); }
+        /* can-apply（申請可能を示す点線）は未申請・下書きの丸にのみ適用する。組立・電装統合表示では
+           片方が進行中/承認済み(色付きの丸)でも、もう片方が未申請なら can-apply が付くため、
+           色付きの丸まで水色ホバーにならないよう fc-empty/fc-draft のみに絞る */
+        .flow-node.can-apply .flow-circle.fc-empty,
+        .flow-node.can-apply .flow-circle.fc-draft { border: 2px dashed #1e3a5f; }
+        .flow-node.can-apply:hover .flow-circle.fc-empty,
+        .flow-node.can-apply:hover .flow-circle.fc-draft { background: #dbe8f8; border-color: #1e3a5f; color: #1e3a5f; opacity: 1; transform: scale(1.12); }
         .flow-node.can-apply:hover .flow-circle.fc-rejected { background: #e74c3c; border: 2px dashed #1e3a5f; color: #fff; }
         .flow-circle {
             width: 38px;
