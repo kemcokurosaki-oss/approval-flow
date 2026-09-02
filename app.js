@@ -1919,8 +1919,8 @@ function renderProgressCards() {
                     const { fcClass, icon } = deriveFlowVisual(statusForThisRow);
                     const isEffectivelyApproved = statusForThisRow === 'approved';
                     const canApply = canApplyFlow('assembly');
-                    // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない。電装統合表示時は対象外
-                    const canApplyNow = !hasElectrical && canApply && !progressFilterCompleted && (assemblyStatus === 'empty' || assemblyStatus === 'draft');
+                    // can-apply（点線・ホバー時の強調）は未申請/下書きのみ。申請中・承認済みの丸には付けない
+                    const canApplyNow = canApply && !progressFilterCompleted && (assemblyStatus === 'empty' || assemblyStatus === 'draft');
                     const clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
 
                     let assemblyDateStr = '';
