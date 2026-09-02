@@ -1636,6 +1636,10 @@ const ASSEMBLY_REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11
 // チェックシートの必須項目が入力済みか検証するために複製している
 const TEST_RUN_REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7a','7b','8','9'];
 
+// denki_sheet.htmlのREQUIRED_ITEM_IDSと同じ値。組立フロー詳細モーダル内の電装セクションからの「申請する」でも
+// チェックシートの必須項目が入力済みか検証するために複製している
+const ELECTRICAL_REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17'];
+
 // 組立(assembly)申請1件から機械・ユニットの配列を取り出す。
 // assembly_items（新形式）が無い場合はmachine_name/unit_name（旧形式）から1件配列にフォールバックする
 function getAssemblyItemsForReq(req) {
