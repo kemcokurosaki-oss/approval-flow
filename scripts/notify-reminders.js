@@ -235,9 +235,9 @@ async function runSubmissionReminders() {
 
   const todayStr = tokyoDateStr();
 
-  // 申請済みリクエストのセット（rejected以外）。test_run/shipping_prep/shippingはmachine_name一致で判定
+  // 申請済みリクエストのセット（rejected以外）。test_run/shipping_prep/shipping/electricalはmachine_name一致で判定
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=in.(test_run,shipping_prep,shipping)&status=neq.rejected` +
+    `approval_requests?flow_type=in.(test_run,shipping_prep,shipping,electrical)&status=neq.rejected` +
     `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
