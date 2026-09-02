@@ -149,8 +149,8 @@
         .main-layout.assembly-report-mode .prog-card { width: min(600px, 100%); scroll-margin-top: 6px; }
         /* 組立⇔試運転のマーク間をもう少し広げる */
         .main-layout.assembly-report-mode .flow-connector { min-width: 60px; }
-        /* 左の工事番号一覧とステップ表示の間隔を広げる／末尾に近いカードでもスクロール先が画面上部に来るよう下に余白を確保する */
-        .main-layout.assembly-report-mode .main-content { padding-left: 36px; padding-bottom: 80vh; }
+        /* 左の工事番号一覧とステップ表示の間隔を広げる（末尾のカードを画面上部までスクロールできる分の余白はJS側で必要量だけ動的に付与する） */
+        .main-layout.assembly-report-mode .main-content { padding-left: 36px; }
 
         /* 再申請バッジ */
         .resubmit-badge {
