@@ -3583,12 +3583,14 @@ function setupSheetChannel() {
         if (type !== 'sheet_complete' && type !== 'sheet_suspend') return;
         await loadMineSide();
 
-        // 組立フロー詳細モーダル（機械レベル or 工番レベル）が開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
-        // sheet_suspend（一時保存）でも再描画しないと、入力済みの機械・ユニットが「未入力」のまま古く表示され続ける
+        // 組立フロー詳細モーダル（機械レベル or 工番レベル）・試運転フロー機械詳細モーダルが開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
+        // sheet_suspend（一時保存）でも再描画しないと、入力済みの内容が古いまま表示され続ける
         const detailModal = document.getElementById('detail_modal');
-        if (detailModal.classList.contains('open') && (currentAssemblyDetailProjectNum || currentAssemblyMachineDetail)) {
+        if (detailModal.classList.contains('open') && (currentAssemblyDetailProjectNum || currentAssemblyMachineDetail || currentTestRunMachineDetail)) {
             if (currentAssemblyMachineDetail) {
                 await renderAssemblyMachineDetailBody(currentAssemblyMachineDetail.projectNum, currentAssemblyMachineDetail.machine);
+            } else if (currentTestRunMachineDetail) {
+                await renderTestRunMachineDetailBody(currentTestRunMachineDetail.projectNum, currentTestRunMachineDetail.machine);
             } else {
                 await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
             }
