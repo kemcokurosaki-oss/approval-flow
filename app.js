@@ -2353,6 +2353,86 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     // （このボタンのマークアップ・関数・CSSは2000番完了報告側での再利用のためそのまま残してある）
     const actionHtml = '';
 
+    // ===== 電装セクション（電気艤装タスクがある機械のみ表示） =====
+    const canApplyElec = canApplyFlow('electrical');
+    const elecAppliedMachines = new Set((elecReqs || []).map(r => r.machine_name).filter(Boolean));
+    const elecUnappliedMachines = elecMachines.filter(m => !elecAppliedMachines.has(m));
+
+    const elecUnappliedRowsHtml = elecUnappliedMachines.map(m => {
+        const actionHtml2 = canApplyElec
+            ? `<div class="unit-list-row-actions">
+                   <span class="unit-list-link" style="cursor:pointer;" onclick="startNewElectricalSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>
+               </div>`
+            : '';
+        return `<div class="unit-list-row">
+            <div class="unit-list-row-main">
+                <div class="unit-list-name">${esc(m)}</div>
+                <div class="unit-list-status"><span class="status-badge s-gray">未申請</span></div>
+            </div>
+            ${actionHtml2}
+        </div>`;
+    }).join('');
+
+    const elecExistingRowsHtml = (elecReqs || []).map(req => {
+        const cls = STATUS_CLASSES[req.status] || 's-gray';
+        const label = req.status === 'draft' ? '下書き' : statusBadgeLabel(req);
+        const machineLabel = req.machine_name || '（機械未入力）';
+        const isOwnDraft = req.status === 'draft' && req.requester_id === currentUser.id;
+
+        if (isOwnDraft) {
+            return `<div class="unit-list-row">
+                <div class="unit-list-row-main">
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
+                    <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
+                </div>
+                <div class="unit-list-row-actions" style="justify-content:space-between;">
+                    <span class="unit-list-link" style="cursor:pointer;" onclick="reopenElectricalSheetFromDetail('${req.id}')">続きを入力する →</span>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="btn-apply-xs" onclick="submitElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">申請する</button>
+                        <button class="btn-delete-xs" title="削除" onclick="deleteElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        const requesterName = requesterNames[req.requester_id] || '—';
+        const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
+        const isApproved = req.status === 'approved';
+        const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const sheetUrl = canEditRejected ? `${SHEET_FLOW_META.electrical.file}?draft_id=${req.id}` : `${SHEET_FLOW_META.electrical.file}?view=1&id=${req.id}`;
+        const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+
+        // 承認・却下ボタンは組立と共通の処理（approveAssemblyRequestFromList等）をそのまま流用する。
+        // request_id/step_id起点で動く汎用ロジックのため、flow_typeがelectricalでも問題なく動作する
+        const myStep = (req.approval_steps || []).find(s =>
+            s.approver_role === myRole && s.status === 'pending' && req.status === 'submitted');
+        const approvalHtml = myStep ? `
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
+            </div>` : '';
+
+        return `<div class="unit-list-row">
+            <div class="unit-list-row-main">
+                <div class="unit-list-name">${esc(machineLabel)}</div>
+                <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
+            </div>
+            <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+            <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+            ${approvalHtml}
+        </div>`;
+    }).join('');
+
+    const elecRowsHtml = elecUnappliedRowsHtml + elecExistingRowsHtml;
+    const showElecSection = elecMachines.length > 0 || (elecReqs || []).length > 0;
+    const elecSectionHtml = showElecSection ? `
+        <hr class="section-divider">
+        <div class="section-title">電装 機械別 申請状況</div>
+        <div class="unit-list-wrap">${elecRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">電装の申請はまだありません</div>'}</div>
+    ` : '';
+
     document.getElementById('detail_title').textContent = '組立フロー';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
@@ -2361,6 +2441,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <div class="section-title">機械・ユニット別 申請状況</div>
         <div class="unit-list-wrap">${rowsHtml}</div>
         ${actionHtml}
+        ${elecSectionHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
