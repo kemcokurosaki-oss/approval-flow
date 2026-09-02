@@ -2212,6 +2212,12 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
+    // 電気艤装タスクがある機械は、この画面内に「電装」セクションも合わせて表示する
+    const { data: elecReqs } = await db.from('approval_requests')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .eq('project_number', projectNum).eq('flow_type', 'electrical')
+        .order('created_at', { ascending: true });
+
     // 工程表(tasks)からその工番の機械・ユニット一覧を取得し、まだ申請されていない組み合わせを「未申請」として表示する
     const { data: taskRows } = await db.from('tasks')
         .select('machine, unit')
@@ -2226,10 +2232,18 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         taskPairMap[`${m}__${u}`] = { machine: m, unit: u || null };
     });
 
+    // 電気艤装タスクがある機械の一覧（未申請の電装機械を洗い出すため）
+    const { data: elecTaskRows } = await db.from('tasks')
+        .select('machine')
+        .eq('project_number', projectNum)
+        .eq('text', '電気艤装')
+        .not('machine', 'is', null);
+    const elecMachines = [...new Set((elecTaskRows || []).map(t => (t.machine || '').trim()).filter(Boolean))];
+
     const pInfo = projectsMap[projectNum] || {};
 
     // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const requesterIds = [...new Set([...(reqs || []), ...(elecReqs || [])].map(r => r.requester_id).filter(Boolean))];
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
