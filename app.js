@@ -2442,12 +2442,20 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             </div>` : '';
 
         return `<div class="unit-list-row">
-            <div class="unit-list-row-main">
-                <div class="unit-list-name">${esc(machineLabel)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
+                    <div class="unit-list-project-info">${projectInfoHtml}</div>
+                </div>
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
-            <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
-            <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:6px;">
+                <div>
+                    <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                    <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                </div>
+                <div></div>
+            </div>
             ${approvalHtml}
         </div>`;
     }).join('');
@@ -2457,7 +2465,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const elecSectionHtml = showElecSection ? `
         <hr class="section-divider">
         <div class="section-title">電装 申請状況</div>
-        <div class="unit-list-wrap">${elecRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">電装の申請はまだありません</div>'}</div>
+        <div class="unit-list-wrap unit-list-wrap-wide">${elecRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">電装の申請はまだありません</div>'}</div>
     ` : '';
 
     document.getElementById('detail_title').textContent = '組立フロー';
