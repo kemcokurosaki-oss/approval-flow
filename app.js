@@ -2447,7 +2447,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const rowsHtml = units.length === 0
         ? '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>'
         : units.map(unit => {
-            const unitLabel = unit ? unit : '（ユニット区分なし）';
+            const unitLabel = unit ? unit : machine;
             const isNotRequired = notRequiredUnits.has(unit || '');
 
             const matching = (reqs || []).filter(req =>
