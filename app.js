@@ -2696,6 +2696,307 @@ async function rejectAssemblyRequestFromList(requestId, stepId, projectNum, comm
     }
 }
 
+// ===== 2000番台：試運転フロー機械詳細モーダル =====
+// 試運転はユニット単位ではなく機械単位の申請のため、組立の機械詳細画面と同じ構成を機械1行だけに単純化して使う
+async function openTestRunMachineDetailModal(projectNum, machine) {
+    document.getElementById('detail_modal').classList.add('open');
+    document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
+    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+    ui.send('OPEN_DETAIL');
+    currentTestRunMachineDetail = { projectNum, machine };
+    await renderTestRunMachineDetailBody(projectNum, machine);
+}
+
+async function renderTestRunMachineDetailBody(projectNum, machine) {
+    const { data: reqs } = await db.from('approval_requests')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .eq('project_number', projectNum).eq('flow_type', 'test_run').eq('machine_name', machine)
+        .order('created_at', { ascending: true });
+
+    const pInfo = projectsMap[projectNum] || {};
+    const meta = SHEET_FLOW_META['test_run'];
+    const myRole = getEffectiveRole();
+    const canApply = canApplyFlow('test_run');
+
+    const myDraft = (reqs || []).find(r => r.status === 'draft' && r.requester_id === currentUser.id);
+    const activeReq = (reqs || []).find(r => r.status !== 'draft');
+
+    let statusLabel, statusCls;
+    if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
+    else if (myDraft) { statusLabel = '下書き'; statusCls = 's-gray'; }
+    else              { statusLabel = '未申請'; statusCls = 's-gray'; }
+
+    let metaHtml = '', linkHtml = '', approvalHtml = '', bottomRightHtml = '';
+
+    if (activeReq) {
+        let requesterName = '—';
+        if (activeReq.requester_id) {
+            const { data: pr } = await db.from('profiles').select('name').eq('id', activeReq.requester_id).maybeSingle();
+            requesterName = pr?.name || '—';
+        }
+        const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+        metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
+
+        const isApproved = activeReq.status === 'approved';
+        const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
+        const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
+        const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
+
+        const myStep = (activeReq.approval_steps || []).find(s =>
+            s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
+        approvalHtml = myStep ? `
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machine)}')">承認する</button>
+            </div>` : '';
+    } else if (myDraft) {
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenTestRunSheetFromDetail('${myDraft.id}')">続きを入力する →</span>`;
+        bottomRightHtml = `
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>
+                <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+            </div>`;
+    } else if (canApply) {
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">申請する →</span>`;
+    }
+
+    document.getElementById('detail_title').textContent = `試運転フロー（${esc(machine)}）`;
+    document.getElementById('detail_body').innerHTML = `
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
+        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        <hr class="section-divider">
+        <div class="unit-list-wrap unit-list-wrap-wide">
+            <div class="unit-list-row">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                        <div class="unit-list-name">${esc(machine)}</div>
+                        ${metaHtml}
+                    </div>
+                    <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                    <div>${linkHtml}</div>
+                    <div>${bottomRightHtml}</div>
+                </div>
+                ${approvalHtml}
+            </div>
+        </div>
+    `;
+    document.getElementById('detail_footer').innerHTML = `
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+    `;
+}
+
+async function startNewTestRunSheetFromDetail(projectNum, machine) {
+    const { data: newDraft, error } = await db.from('approval_requests').insert({
+        project_number: projectNum,
+        machine_name:   machine,
+        flow_type:      'test_run',
+        status:         'draft',
+        requester_id:   currentUser.id
+    }).select().single();
+    if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
+    window.open(`test_run_sheet.html?draft_id=${newDraft.id}`, '_blank');
+    await loadMineSide();
+    await renderTestRunMachineDetailBody(projectNum, machine);
+}
+
+function reopenTestRunSheetFromDetail(requestId) {
+    window.open(`test_run_sheet.html?draft_id=${requestId}`, '_blank');
+}
+
+async function submitTestRunDraftFromDetail(draftId, projectNum, machine) {
+    showLoading('処理中...');
+    try {
+        const { data: draftReq } = await db.from('approval_requests')
+            .select('sheet_data').eq('id', draftId).single();
+        const checkItems = draftReq?.sheet_data?.check_items || {};
+        const missingItems = TEST_RUN_REQUIRED_ITEM_IDS.filter(id => !checkItems[id]);
+        if (missingItems.length > 0 || !draftReq?.sheet_data?.meta?.completion_date) {
+            showToast('チェックシートの必須項目・試運転完了日が未入力です。チェックシートを開いて入力してください。', 'error');
+            return;
+        }
+
+        const { data: mTasks } = await db.from('tasks')
+            .select('text').eq('project_number', projectNum).eq('machine', machine);
+        const mNames = (mTasks || []).map(t => t.text);
+
+        const submitterRole = getEffectiveRole();
+        const { data: req, error: e1 } = await db.from('approval_requests').update({
+            status:         'submitted',
+            test_run:       mNames.includes('試運転'),
+            has_inspection: mNames.includes('外観検査')
+        }).eq('id', draftId).select().single();
+        if (e1) throw e1;
+
+        let stepsToInsert, notifyRoles;
+        if (submitterRole === 'operations_manager') {
+            stepsToInsert = [{ request_id: req.id, step_order: 1, approver_role: 'operations_director', status: 'pending' }];
+            notifyRoles = ['operations_director'];
+        } else {
+            stepsToInsert = [
+                { request_id: req.id, step_order: 1, approver_role: 'operations_manager',  status: 'pending' },
+                { request_id: req.id, step_order: 2, approver_role: 'operations_director', status: 'pending' }
+            ];
+            notifyRoles = ['operations_manager', 'operations_director'];
+        }
+        await db.from('approval_steps').insert(stepsToInsert);
+        for (const role of notifyRoles) {
+            const { data: approvers } = await db.from('profiles').select('id').eq('role', role);
+            if (approvers?.length > 0) {
+                await db.from('approval_notifications').insert(
+                    approvers.map(a => ({ request_id: req.id, recipient_id: a.id, notification_type: 'approval_request' }))
+                );
+            }
+        }
+
+        await refreshAll();
+        showToast('試運転完了を申請しました。', 'success');
+        await renderTestRunMachineDetailBody(projectNum, machine);
+    } catch (e) {
+        showToast('申請に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteTestRunDraftFromDetail(draftId, projectNum, machine) {
+    if (!confirm('この下書きを削除します。よろしいですか？')) return;
+    showLoading('削除中...');
+    try {
+        const { error } = await db.from('approval_requests').delete().eq('id', draftId).eq('status', 'draft');
+        if (error) throw error;
+        await refreshAll();
+        showToast('下書きを削除しました。', 'success');
+        await renderTestRunMachineDetailBody(projectNum, machine);
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function approveTestRunRequestFromDetail(requestId, stepId, stepOrder, projectNum, machine) {
+    if (requireLogin()) return;
+    if (!confirm(`${machine}を承認します。よろしいですか？`)) return;
+
+    showLoading('処理中...');
+    try {
+        await db.from('approval_steps').update({
+            status:      'approved',
+            approver_id: currentUser.id,
+            decided_at:  new Date().toISOString()
+        }).eq('id', stepId);
+
+        await db.from('approval_requests').update({
+            status:     'approved',
+            updated_at: new Date().toISOString()
+        }).eq('id', requestId);
+
+        // 並列承認: 残っている他のステップをキャンセルし、その承認者へ通知
+        const { data: otherSteps } = await db.from('approval_steps')
+            .select('id, approver_role').eq('request_id', requestId).eq('status', 'pending').neq('id', stepId);
+        if (otherSteps?.length > 0) {
+            await db.from('approval_steps').update({ status: 'cancelled' }).in('id', otherSteps.map(s => s.id));
+            for (const os of otherSteps) {
+                const { data: others } = await db.from('profiles').select('id').eq('role', os.approver_role);
+                if (others?.length > 0) {
+                    await db.from('approval_notifications').insert(
+                        others.map(a => ({ request_id: requestId, recipient_id: a.id, notification_type: 'completed_by_other' }))
+                    );
+                }
+            }
+        }
+
+        const { data: reqRow } = await db.from('approval_requests').select('*').eq('id', requestId).single();
+        await syncTaskCompletionOnFlowApproval(reqRow);
+        await recordNotifications(requestId);
+        const { data: existing } = await db.from('approval_notifications')
+            .select('id').eq('request_id', requestId).eq('recipient_id', currentUser.id)
+            .eq('notification_type', 'completed').maybeSingle();
+        if (!existing) {
+            await db.from('approval_notifications').insert({
+                request_id: requestId, recipient_id: currentUser.id, notification_type: 'completed'
+            });
+        }
+
+        await refreshAll();
+        ui.send('SAVED');
+        showToast('全承認が完了しました。関係者に通知が送られます。', 'success');
+        await renderTestRunMachineDetailBody(projectNum, machine);
+    } catch (e) {
+        showToast('承認処理に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 却下ボタンを押した時だけ、理由入力欄を別モーダルで表示する（組立と共通のオーバーレイ要素を再利用）
+function showTestRunRejectPrompt(requestId, stepId, projectNum, machine) {
+    document.getElementById('assembly_reject_prompt')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'assembly_reject_prompt';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,30,50,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:10px;padding:20px;width:360px;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.25);">
+            <div style="font-size:16px;font-weight:bold;margin-bottom:10px;color:#1e3a5f;">却下理由の入力</div>
+            <textarea id="assembly_reject_reason" placeholder="却下の理由を入力してください（必須）"
+                style="width:100%;min-height:80px;font-size:14px;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('assembly_reject_prompt').remove()">キャンセル</button>
+                <button class="btn btn-danger" onclick="confirmTestRunReject('${requestId}', '${stepId}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+async function confirmTestRunReject(requestId, stepId, projectNum, machine) {
+    const reason = (document.getElementById('assembly_reject_reason')?.value || '').trim();
+    if (!reason) { showToast('却下する場合は理由を入力してください。', 'error'); return; }
+    document.getElementById('assembly_reject_prompt')?.remove();
+    await rejectTestRunRequestFromDetail(requestId, stepId, projectNum, reason, machine);
+}
+
+async function rejectTestRunRequestFromDetail(requestId, stepId, projectNum, comment, machine) {
+    if (requireLogin()) return;
+    if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
+
+    showLoading('処理中...');
+    try {
+        await db.from('approval_steps').update({
+            status:      'rejected',
+            approver_id: currentUser.id,
+            comment:     comment,
+            decided_at:  new Date().toISOString()
+        }).eq('id', stepId);
+
+        await db.from('approval_requests').update({
+            status:     'rejected',
+            updated_at: new Date().toISOString()
+        }).eq('id', requestId);
+
+        const { data: rejReq } = await db.from('approval_requests')
+            .select('requester_id').eq('id', requestId).single();
+        if (rejReq?.requester_id) {
+            await db.from('approval_notifications').insert({
+                request_id: requestId, recipient_id: rejReq.requester_id, notification_type: 'rejected'
+            });
+        }
+
+        await refreshAll();
+        ui.send('SAVED');
+        showToast('却下しました。申請者に通知されます。', 'success');
+        await renderTestRunMachineDetailBody(projectNum, machine);
+    } catch (e) {
+        showToast('処理に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 2000番完了報告：工事番号→機械ジャンプ一覧（左サイド） =====
 // 進捗一覧の左フィルターパネル（.prefix-btn）と同じ見た目・選択状態になるようスタイルを共用する。
 // 絞り込みは行わず、押した工事番号のカードまでスクロールするだけの単純なジャンプ一覧。
