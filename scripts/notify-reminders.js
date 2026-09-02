@@ -24,16 +24,24 @@ const TEST_PROJECT = (process.env.TEST_PROJECT || '').trim();
 
 const FLOW_LABELS = {
   assembly:      '組立完了申請',
+  electrical:    '電装完了申請',
   test_run:      '試運転完了申請',
   shipping_prep: '出荷準備完了申請',
   shipping:      '出荷確定申請',
 };
 const TASK_TO_FLOW = {
   '機械組立': 'assembly',
+  '電気艤装': 'electrical',
   '試運転':   'test_run',
   '出荷準備': 'shipping_prep',
   '工場出荷': 'shipping',
 };
+
+// 工番2000番台（2000〜2999）の組立完了申請催促は対象外にする
+function isProjectNumberExcludedFromAssemblyReminder(projectNumber) {
+  const n = parseInt(String(projectNumber).trim(), 10);
+  return n >= 2000 && n <= 2999;
+}
 const QA_MEETING_LABELS = {
   simple_inspection: '簡易検査',
   inspection:        '外観検査',
