@@ -1799,7 +1799,6 @@ function renderProgressCards() {
 
     if (nums.length === 0) {
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">該当する工番がありません</div></div>';
-        adjustAssemblyReportScrollPadding();
         return;
     }
 
