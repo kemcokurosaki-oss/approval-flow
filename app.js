@@ -1960,7 +1960,12 @@ function renderProgressCards() {
 
                 const canApply = canApplyFlow(f.type);
 
-                if (!req && canApply && !progressFilterCompleted) {
+                if (f.type === 'test_run' && is2000sSeries(num) && machine) {
+                    // 2000番台の試運転は機械単位の申請のため、組立と同様に機械詳細画面（インラインで申請・承認まで完結）を開く
+                    clickAttr = `onclick="event.stopPropagation(); openTestRunMachineDetailModal('${esc(num)}', '${esc(machine)}')"`;
+                    const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
+                    clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
+                } else if (!req && canApply && !progressFilterCompleted) {
                     clickAttr = `onclick="event.stopPropagation(); openFlowModalPreset(this)"`;
                     clickable = ' clickable can-apply';
                 } else if (req && req.status === 'draft') {
