@@ -3621,10 +3621,11 @@ function setupSheetChannel() {
             }
             showToast('点検シートの入力が完了しました。「申請する」ボタンで申請できます。', 'success');
         } else {
-            // 組立(assembly)は詳細モーダル経由のフローのため、モーダルが閉じている間は自動で開かない
-            const { data: draft } = await db.from('approval_requests').select('flow_type').eq('id', draftId).single();
-            if (draft?.flow_type === 'assembly') {
-                showToast('チェックシートの入力を保存しました。進捗一覧の組立フローから内容を確認してください。', 'success');
+            // 組立(assembly)・2000番台の試運転(test_run)は詳細モーダル経由のフローのため、モーダルが閉じている間は自動で開かない
+            const { data: draft } = await db.from('approval_requests').select('flow_type, project_number').eq('id', draftId).single();
+            if (draft?.flow_type === 'assembly' || (draft?.flow_type === 'test_run' && is2000sSeries(draft.project_number))) {
+                const flowLabel = draft.flow_type === 'assembly' ? '組立' : '試運転';
+                showToast(`チェックシートの入力を保存しました。進捗一覧の${flowLabel}フローから内容を確認してください。`, 'success');
                 return;
             }
             // モーダルが閉じていれば自動で開く
