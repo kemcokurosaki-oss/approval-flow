@@ -664,6 +664,27 @@ function updateHeaderHeightVar() {
     document.documentElement.style.setProperty('--header-height', `${header.getBoundingClientRect().height}px`);
 }
 window.addEventListener('resize', updateHeaderHeightVar);
+window.addEventListener('resize', adjustAssemblyReportScrollPadding);
+
+// 2000番完了報告タブ：末尾の工事番号カードも画面上部までスクロールできるよう、
+// 「最後のカードが画面最上部に来た時に必要な分」だけ下余白を動的に付与する
+// （固定値だと末尾カードより下に空白がさらに残り、そこまでスクロールできてしまう）
+function adjustAssemblyReportScrollPadding() {
+    const mainContent = document.querySelector('.main-layout .main-content');
+    if (!mainContent) return;
+    if (progressTab !== 'assembly_report') {
+        mainContent.style.paddingBottom = '';
+        return;
+    }
+    const cards = mainContent.querySelectorAll('.prog-card');
+    const lastCard = cards[cards.length - 1];
+    if (!lastCard) {
+        mainContent.style.paddingBottom = '';
+        return;
+    }
+    const extra = mainContent.clientHeight - lastCard.offsetHeight;
+    mainContent.style.paddingBottom = Math.max(0, extra) + 'px';
+}
 
 async function bootApp(session) {
     currentUser = session.user;
