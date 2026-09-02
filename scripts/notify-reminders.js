@@ -37,8 +37,8 @@ const TASK_TO_FLOW = {
   '工場出荷': 'shipping',
 };
 
-// 工番2000番台（2000〜2999）の組立完了申請催促は対象外にする
-function isProjectNumberExcludedFromAssemblyReminder(projectNumber) {
+// 工番2000番台（2000〜2999）の組立・電装完了申請催促は対象外にする
+function isProjectNumberExcludedFrom2000sReminder(projectNumber) {
   const n = parseInt(String(projectNumber).trim(), 10);
   return n >= 2000 && n <= 2999;
 }
