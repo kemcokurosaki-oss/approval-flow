@@ -836,7 +836,10 @@ function setViewMode() {
 
 function suspendSheet() {
     clearTimeout(saveTimer);
-    saveNow().then(() => window.close());
+    saveNow().then(() => {
+        broadcastChannel.postMessage({ type: 'sheet_suspend', draftId });
+        window.close();
+    });
 }
 
 async function completeSheet() {
