@@ -310,7 +310,9 @@ async function runSubmissionReminders() {
     for (const task of (tasks || [])) {
       if (task.is_completed) continue;
       if (completedProjectsSet.has(String(task.project_number).trim())) continue;
-      // assembly/test_run はタスクオーナーが必須、shipping は不問
+      // 組立完了申請催促のみ、工番2000番台（2000〜2999）を対象外にする
+      if (flowType === 'assembly' && isProjectNumberExcludedFromAssemblyReminder(task.project_number)) continue;
+      // assembly/test_run/electrical はタスクオーナーが必須、shipping は不問
       if (flowType !== 'shipping' && !task.owner) continue;
       // テストモードで工事番号が指定されている場合は絞り込み
       if (TEST_MODE && TEST_PROJECT && String(task.project_number) !== TEST_PROJECT) continue;
