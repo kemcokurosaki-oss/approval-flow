@@ -698,6 +698,24 @@
             align-items: center;
             gap: 4px;
         }
+        /* 組立・電装統合表示：1つの丸の下に組立/電装それぞれの状態を並べて表示 */
+        .flow-dual-status {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .flow-dual-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            min-width: 50px;
+        }
+        .flow-dual-col-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #999;
+        }
         .flow-connector {
             flex: 1;
             height: 2px;
