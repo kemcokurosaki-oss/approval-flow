@@ -278,8 +278,9 @@ async function runSubmissionReminders() {
   async function getSuperiors(flowType) {
     if (superiorCache[flowType]) return superiorCache[flowType];
     const roleMap = {
-      assembly: 'assembly_manager,assembly_director',
-      test_run: 'operations_manager,operations_director',
+      assembly:   'assembly_manager,assembly_director',
+      electrical: 'assembly_director',
+      test_run:   'operations_manager,operations_director',
     };
     const roles = roleMap[flowType];
     if (!roles) return (superiorCache[flowType] = []);
