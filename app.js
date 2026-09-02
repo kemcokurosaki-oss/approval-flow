@@ -2373,10 +2373,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             : '';
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
-                    <div class="unit-list-name">${esc(m)}</div>
-                    <div class="unit-list-project-info">${projectInfoHtml}</div>
-                </div>
+                <div class="unit-list-name">${esc(m)}</div>
                 <div class="unit-list-status"><span class="status-badge s-gray">未申請</span></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
