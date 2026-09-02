@@ -161,7 +161,7 @@ async function runApprovalReminders() {
   // shipping_prep は承認不要（申請＝完了）のため対象外
   const cutoff = TEST_MODE ? new Date().toISOString() : todayMidnightJST();
   const requests = await supabaseFetch(
-    `approval_requests?status=eq.submitted&flow_type=in.(assembly,test_run,shipping)` +
+    `approval_requests?status=eq.submitted&flow_type=in.(assembly,electrical,test_run,shipping)` +
     `&created_at=lt.${encodeURIComponent(cutoff)}&select=id,project_number,machine_name,flow_type`
   );
 
