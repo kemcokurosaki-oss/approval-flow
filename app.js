@@ -2931,6 +2931,7 @@ let currentAssemblyDetailProjectNum = null; // 組立フロー詳細モーダル
 let currentAssemblyMachineDetail = null; // 組立フロー詳細モーダル(機械レベル、2000番台)で開いている{projectNum, machine}
 let assemblyDetailReturnProjectNum = null; // 個別申請の詳細画面(openDetailModal)を工番レベル組立フロー詳細から開いた場合の戻り先工番
 let assemblyDetailReturnMachine = null; // 個別申請の詳細画面(openDetailModal)を機械レベル組立フロー詳細から開いた場合の戻り先{projectNum, machine}
+let currentTestRunMachineDetail = null; // 試運転フロー詳細モーダル(機械レベル、2000番台)で開いている{projectNum, machine}
 
 function selectApprover(role) {
     selectedApproverRole = role;
