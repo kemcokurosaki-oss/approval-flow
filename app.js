@@ -2428,15 +2428,12 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
                 <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
                     <div class="unit-list-name">${esc(machineLabel)}</div>
-                    <div class="unit-list-project-info">${projectInfoHtml}</div>
+                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
                 </div>
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:6px;">
-                <div>
-                    <div class="unit-list-meta">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
-                    <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
-                </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
                 <div></div>
             </div>
             ${approvalHtml}
