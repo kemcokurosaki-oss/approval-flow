@@ -2379,17 +2379,21 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const elecUnappliedMachines = elecMachines.filter(m => !elecAppliedMachines.has(m));
 
     const elecUnappliedRowsHtml = elecUnappliedMachines.map(m => {
-        const actionHtml2 = canApplyElec
-            ? `<div class="unit-list-row-actions">
-                   <span class="unit-list-link" style="cursor:pointer;" onclick="startNewElectricalSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>
-               </div>`
+        const linkHtml2 = canApplyElec
+            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewElectricalSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>`
             : '';
         return `<div class="unit-list-row">
-            <div class="unit-list-row-main">
-                <div class="unit-list-name">${esc(m)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div class="unit-list-name">${esc(m)}</div>
+                    <div class="unit-list-project-info">${projectInfoHtml}</div>
+                </div>
                 <div class="unit-list-status"><span class="status-badge s-gray">未申請</span></div>
             </div>
-            ${actionHtml2}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                <div>${linkHtml2}</div>
+                <div></div>
+            </div>
         </div>`;
     }).join('');
 
