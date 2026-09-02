@@ -2392,10 +2392,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         if (isOwnDraft) {
             return `<div class="unit-list-row">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
-                        <div class="unit-list-name">${esc(machineLabel)}</div>
-                        <div class="unit-list-project-info">${projectInfoHtml}</div>
-                    </div>
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
                 <div class="unit-list-row-actions" style="justify-content:space-between;">
