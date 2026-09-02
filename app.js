@@ -4590,6 +4590,7 @@ function closeDetailModal() {
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
     currentAssemblyDetailProjectNum = null;
     currentAssemblyMachineDetail = null;
+    currentTestRunMachineDetail = null;
     ui.send('CLOSE');
 }
 
