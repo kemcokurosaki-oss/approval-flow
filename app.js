@@ -1632,6 +1632,10 @@ function setProgressPrefix(prefix) {
 // 入力済みか検証するために複製している（sheet.html側の「入力完了・申請へ進む」を経由しない申請経路のため）
 const ASSEMBLY_REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','36'];
 
+// test_run_sheet.htmlのREQUIRED_ITEM_IDSと同じ値。2000番台の機械詳細画面からの「申請する」でも
+// チェックシートの必須項目が入力済みか検証するために複製している
+const TEST_RUN_REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7a','7b','8','9'];
+
 // 組立(assembly)申請1件から機械・ユニットの配列を取り出す。
 // assembly_items（新形式）が無い場合はmachine_name/unit_name（旧形式）から1件配列にフォールバックする
 function getAssemblyItemsForReq(req) {
