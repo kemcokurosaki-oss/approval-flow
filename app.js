@@ -2582,6 +2582,84 @@ async function deleteAssemblyDraftFromDetail(draftId, projectNum, machine = null
     }
 }
 
+// ===== 組立フロー詳細モーダル内の電装セクション：新規下書き作成〜申請確定〜削除 =====
+// 電装(electrical)は組立と違いユニット概念が無く機械単位1申請のため、assembly版より単純な構成にしている
+async function startNewElectricalSheetFromDetail(projectNum, machine) {
+    const { data: newDraft, error } = await db.from('approval_requests').insert({
+        project_number: projectNum,
+        machine_name:   machine,
+        flow_type:      'electrical',
+        status:         'draft',
+        requester_id:   currentUser.id
+    }).select().single();
+    if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
+    window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${newDraft.id}`, '_blank');
+    await loadMineSide();
+    await renderAssemblyFlowDetailBody(projectNum);
+}
+
+function reopenElectricalSheetFromDetail(requestId) {
+    window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${requestId}`, '_blank');
+}
+
+async function submitElectricalDraftFromDetail(draftId, projectNum) {
+    showLoading('処理中...');
+    try {
+        const { data: draftReq } = await db.from('approval_requests')
+            .select('machine_name, sheet_data').eq('id', draftId).single();
+        if (!draftReq?.machine_name) {
+            showToast('機械が未設定です。', 'error');
+            return;
+        }
+        const checkItems = draftReq?.sheet_data?.check_items || {};
+        const missingItems = ELECTRICAL_REQUIRED_ITEM_IDS.filter(id => !checkItems[id]?.result);
+        if (missingItems.length > 0 || !draftReq?.sheet_data?.meta?.completion_date) {
+            showToast('チェックシートの必須項目・完了日が未入力です。チェックシートを開いて入力してください。', 'error');
+            return;
+        }
+
+        const { data: req, error: e1 } = await db.from('approval_requests').update({
+            status: 'submitted'
+        }).eq('id', draftId).select().single();
+        if (e1) throw e1;
+
+        // 電装: 課長相当のロールが無いため、常に組立部長の単一ステップ（submitRequest()のelectricalケースと同じ）
+        await db.from('approval_steps').insert(
+            [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }]
+        );
+        const { data: approvers } = await db.from('profiles').select('id').eq('role', 'assembly_director');
+        if (approvers?.length > 0) {
+            await db.from('approval_notifications').insert(
+                approvers.map(a => ({ request_id: req.id, recipient_id: a.id, notification_type: 'approval_request' }))
+            );
+        }
+
+        await refreshAll();
+        showToast('電装完了を申請しました。', 'success');
+        await renderAssemblyFlowDetailBody(projectNum);
+    } catch (e) {
+        showToast('申請に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function deleteElectricalDraftFromDetail(draftId, projectNum) {
+    if (!confirm('この下書きを削除します。よろしいですか？')) return;
+    showLoading('削除中...');
+    try {
+        const { error } = await db.from('approval_requests').delete().eq('id', draftId).eq('status', 'draft');
+        if (error) throw error;
+        await refreshAll();
+        showToast('下書きを削除しました。', 'success');
+        await renderAssemblyFlowDetailBody(projectNum);
+    } catch (e) {
+        showToast('削除に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // ===== 2000番台：機械ごとのユニット申請状況一覧 =====
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
