@@ -2244,6 +2244,8 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const elecMachines = [...new Set((elecTaskRows || []).map(t => (t.machine || '').trim()).filter(Boolean))];
 
     const pInfo = projectsMap[projectNum] || {};
+    // ユニットカードごとに客先名・工事名を表示するための共通テキスト（機械ユニット名の右に並べる）
+    const projectInfoHtml = [pInfo.customer_name, pInfo.project_details].filter(Boolean).map(esc).join('　');
 
     // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
     const requesterIds = [...new Set([...(reqs || []), ...(elecReqs || [])].map(r => r.requester_id).filter(Boolean))];
