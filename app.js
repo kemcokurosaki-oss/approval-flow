@@ -1984,11 +1984,22 @@ function renderProgressCards() {
                         assemblyDateStr = '申請中';
                     }
 
+                    // ペンディング項目（未完了）の件数。組立は関連申請（2000番台は当該機械分のみ）を下書き以外すべて対象に合算する
+                    const relevantAssemblyReqsAll = ((assemblyReqsByProject || {})[num] || []).filter(r => {
+                        if (r.status === 'draft') return false;
+                        return !isMachineRow || getAssemblyItemsForReq(r).some(it => it && it.machine === machine);
+                    });
+                    const assemblyPendingCount = sumUnresolvedPendingItems(relevantAssemblyReqsAll);
+                    const assemblyPendingBadge = assemblyPendingCount > 0
+                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${assemblyPendingCount}件</div>`
+                        : '';
+
                     const connector = i < fullChain.length - 1
                         ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                         : '';
-                    // 2000番以外は1工番=1申請のため、承認済みならクリックで詳細画面を経由せず直接完了報告書を開く（電装統合表示時は詳細モーダル経由に統一）
-                    const approvedReq = (!isMachineRow && assemblyStatus === 'approved' && !hasElectrical)
+                    // 2000番以外は1工番=1申請のため、承認済みかつペンディング未完了が無ければクリックで詳細画面を経由せず直接完了報告書を開く
+                    // （ペンディングが残っている場合・電装統合表示時は詳細モーダル経由に統一し、モーダル内で完了操作できるようにする）
+                    const approvedReq = (!isMachineRow && assemblyStatus === 'approved' && !hasElectrical && assemblyPendingCount === 0)
                         ? ((assemblyReqsByProject || {})[num] || []).find(r => r.status === 'approved')
                         : null;
                     const clickHandler = approvedReq
@@ -2004,6 +2015,7 @@ function renderProgressCards() {
                             <div class="flow-circle ${fcClass}">${icon}</div>
                             <div class="flow-label">組立</div>
                             ${assemblyDateStr ? `<div class="flow-date">${assemblyDateStr}</div>` : ''}
+                            ${assemblyPendingBadge}
                         </div>${connector}`;
                     }
 
