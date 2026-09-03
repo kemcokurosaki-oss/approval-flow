@@ -1674,6 +1674,16 @@ function getAssemblyItemsForReq(req) {
     return [];
 }
 
+// sheet_data.pending_items のうち内容が入力済み(content or machine)かつ未完了(!completed)の件数を数える
+function countUnresolvedPendingItems(req) {
+    const items = (req?.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
+    return items.filter(p => !p.completed).length;
+}
+// 複数申請分のペンディング未完了件数を合算する（工番・機械単位で複数申請にまたがる集計に使う）
+function sumUnresolvedPendingItems(reqs) {
+    return (reqs || []).reduce((sum, r) => sum + countUnresolvedPendingItems(r), 0);
+}
+
 // フロー丸の状態(status)→表示クラス・アイコンの対応
 function deriveFlowVisual(status) {
     if (status === 'approved') return { fcClass: 'fc-done',     icon: '✓' };
@@ -7076,8 +7086,14 @@ async function _getPrepBlockers(projectNum, machine) {
 
     const blockers = assemblyBlocker ? [assemblyBlocker] : [];
     for (const flowType of nonAssemblyFlows) {
-        const req = (reqs || []).find(r => r.flow_type === flowType);
-        const items = (req?.sheet_data?.pending_items || [])
+        const matching = (reqs || []).filter(r => r.flow_type === flowType);
+        // 却下→再申請等で同じflow_typeに複数レコードがある場合、承認済みのものを優先して判定する
+        const req = matching.find(r => r.status === 'approved') || matching[0];
+        if (!req || req.status !== 'approved') {
+            blockers.push({ flowType, notApproved: true });
+            continue;
+        }
+        const items = (req.sheet_data?.pending_items || [])
             .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
         if (items.length > 0) blockers.push({ flowType, count: items.length });
     }
