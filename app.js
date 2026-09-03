@@ -2849,9 +2849,15 @@ function buildMachineUnitRowsHtml(opts) {
 
             const isApproved = activeReq.status === 'approved';
             const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
+            const unresolvedPendingCount = countUnresolvedPendingItems(activeReq);
+            const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
             const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
-            const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
-            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
+            const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+                : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+            const sheetLinkOnclick = hasUnresolvedPending
+                ? `viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')`
+                : `window.open('${sheetUrl}', '_blank')`;
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</span>`;
 
             const myStep = (activeReq.approval_steps || []).find(s =>
                 s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
