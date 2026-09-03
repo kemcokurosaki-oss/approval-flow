@@ -449,7 +449,7 @@
 
             <div class="step-card">
                 <h3>①組立完了</h3>
-                <p class="step-desc">組立担当者が完了を申請し、組立課長・部長のどちらか一方が承認すれば完了です（両方の承認は不要）。</p>
+                <p class="step-desc">組立担当者が完了を申請し、組立課長・部長のどちらか一方が承認すれば完了です（両方の承認は不要）。<b>組立課長本人が申請した場合は、部長のみが承認します（課長への承認依頼は発生しません）。</b></p>
                 <div class="flowline">
                     <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">組立担当者</span></div>
                     <div class="flow-arrow"></div>
@@ -461,6 +461,22 @@
                 </div>
                 <div class="note">却下された場合は申請者へ「却下」メールが届きます。内容を修正して再申請すると、承認者へ「再申請」メールが届きます。また、課長・部長のどちらか一方が先に承認した場合、もう一方には「対応不要」の案内が届きます。</div>
                 <div class="note">承認完了メールは組立担当者（申請者）だけでなく、営業担当者・設計担当者（設計課長・部長を含む）、その機械に試運転がある場合は試運転担当者・操業課長・部長にも届きます。実際の宛先は工番の担当割り当てによって変わります。</div>
+            </div>
+
+            <div class="step-card">
+                <h3>①＋ 電装（電気艤装）完了</h3>
+                <p class="step-desc">機械組立とは別に、電装担当者が電気艤装の完了を申請し、組立部長が承認すると完了です。電装には課長にあたる役職がないため、承認は常に部長単独です。</p>
+                <div class="flowline">
+                    <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">電装担当者</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">承認依頼</span><span class="sub">組立部長へメール</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">✅</div><span class="label">承認</span><span class="sub">組立部長</span></div>
+                    <div class="flow-arrow"></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">承認完了</span><span class="sub">申請者・関係部署へメール</span></div>
+                </div>
+                <div class="note">却下・再申請時の通知は①組立完了と同様です。承認完了メールは電装担当者（申請者）だけでなく、営業担当者・設計担当者、組立担当者・組立課長、試運転がある場合は試運転担当者・操業課長・部長にも届きます。</div>
+                <div class="note">承認ステータス画面では①組立の丸に統合表示され、組立・電装の両方が完了して初めて①組立の工程全体が完了扱いになります。2000番台（「2000番 完了報告」画面）の電装完了申請は、承認催促・申請催促メールの対象外です。</div>
             </div>
 
             <div class="step-card">
