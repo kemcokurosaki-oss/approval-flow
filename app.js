@@ -8418,6 +8418,10 @@ db.auth.onAuthStateChange((event, session) => {
         currentUser    = null;
         currentProfile = null;
         bootGuest();
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+        // 自動リフレッシュされたトークンをlocalStorageにも反映（長時間開いたままにしても次回起動時のログイン状態を維持するため）
+        localStorage.setItem('ap_access_token',  session.access_token);
+        localStorage.setItem('ap_refresh_token', session.refresh_token);
     }
 });
 
