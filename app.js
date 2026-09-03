@@ -1973,7 +1973,10 @@ function renderProgressCards() {
                             return !isMachineRow || getAssemblyItemsForReq(r).some(it => it && it.machine === machine);
                         });
                         const latestDate = relevantReqs.map(r => r.updated_at).filter(Boolean).sort().slice(-1)[0];
-                        if (latestDate) assemblyDateStr = `完了 ${fmtDate(latestDate.slice(0, 10))}`;
+                        if (latestDate) {
+                            const d = new Date(latestDate);
+                            assemblyDateStr = `完了 ${d.getMonth()+1}/${d.getDate()}`;
+                        }
                     } else if (assemblyStatus === 'draft') {
                         assemblyDateStr = '入力中';
                     } else if (assemblyStatus === 'active') {
