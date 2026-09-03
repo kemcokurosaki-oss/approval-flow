@@ -3683,32 +3683,21 @@ async function openFlowModalPreset(el, overrideFlowType) {
             if (cb) { cb.checked = true; await onMachineChange(); }
         }
     } else if (flowType === 'simple_inspection') {
+        // 簡易検査はステップ表示で機械が確定しているため、組立・試運転と同様に選び直せないようロックする
         openSimpleInspectionModal();
         currentSiProjectNum = projectNum;
-        const pSi = projectsMap[projectNum] || {};
-        const lblSi = [pSi.customer_name, pSi.project_details].filter(Boolean).join('　');
         document.getElementById('si_project_display').textContent = projectNum;
-        await onSiProjectChange();
-        const cb = findCb('si_machine_list');
-        if (cb) { cb.checked = true; await onSiMachineChange(); }
+        await onSiProjectChange(machineName);
     } else if (flowType === 'inspection') {
         openInspectionModal();
         currentInspectionProjectNum = projectNum;
-        const pIn = projectsMap[projectNum] || {};
-        const lblIn = [pIn.customer_name, pIn.project_details].filter(Boolean).join('　');
         document.getElementById('inspection_project_display').textContent = projectNum;
-        await onInspectionProjectChange();
-        const cb = findCb('inspection_machine_list');
-        if (cb) { cb.checked = true; await onInspectionMachineChange(); }
+        await onInspectionProjectChange(machineName);
     } else if (flowType === 'shipping_meeting') {
         openShippingMeetingModal();
         currentSmProjectNum = projectNum;
-        const pSm = projectsMap[projectNum] || {};
-        const lblSm = [pSm.customer_name, pSm.project_details].filter(Boolean).join('　');
         document.getElementById('sm_project_display').textContent = projectNum;
-        await onSmProjectChange();
-        const cb = findCb('sm_machine_list');
-        if (cb) { cb.checked = true; await onSmMachineChange(); }
+        await onSmProjectChange(machineName);
     } else if (flowType === 'shipping') {
         openShippingModal();
         currentShippingProjectNum = projectNum;
@@ -4869,43 +4858,8 @@ async function openDetailModal(requestId) {
             </div>
         </div>`;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
-        const sentStep = `
-        <div class="step-item">
-            <div class="step-circle sc-submitted">✉</div>
-            <div class="step-detail">
-                <div class="step-label">開催案内送信済み</div>
-                <div class="step-name">${esc(requesterName)}</div>
-                <div class="step-date">${fmtDate(req.created_at)}</div>
-            </div>
-        </div>`;
-        let resultStep;
-        if (req.status === 'approved') {
-            resultStep = `
-        <div class="step-item">
-            <div class="step-circle sc-approved">✓</div>
-            <div class="step-detail">
-                <div class="step-label">開催済み</div>
-                <div class="step-date">${fmtDate(req.updated_at)}</div>
-            </div>
-        </div>`;
-        } else if (req.status === 'cancelled') {
-            resultStep = `
-        <div class="step-item">
-            <div class="step-circle sc-rejected"><span class="fc-x-icon">×</span></div>
-            <div class="step-detail">
-                <div class="step-label">キャンセル</div>
-            </div>
-        </div>`;
-        } else {
-            resultStep = `
-        <div class="step-item">
-            <div class="step-circle sc-waiting">○</div>
-            <div class="step-detail">
-                <div class="step-label">開催待ち</div>
-            </div>
-        </div>`;
-        }
-        stepsHtml = sentStep + resultStep;
+        // 簡易検査・外観検査・出荷確認会議は「申請・承認状況」表示自体を出さない
+        stepsHtml = '';
     } else if (req.flow_type === 'shipping_prep') {
         // shipping_prep: 承認ステップなし。申請＝完了のため、常に完了表示
         stepsHtml = `
@@ -5009,9 +4963,10 @@ async function openDetailModal(requestId) {
         </div>` : ''}
         ${statusNote ? `<div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:4px; padding:9px 12px; font-size:15px; color:#7a5c00; margin-top:8px;">${esc(statusNote)}</div>` : ''}
 
+        ${QA_MEETING_FLOWS.includes(req.flow_type) ? '' : `
         <hr class="section-divider">
         <div class="section-title">申請・承認状況</div>
-        <div class="steps-list">${QA_MEETING_FLOWS.includes(req.flow_type) ? '' : appliedStepHtml}${stepsHtml}</div>
+        <div class="steps-list">${appliedStepHtml}${stepsHtml}</div>`}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
@@ -7373,7 +7328,6 @@ function openSimpleInspectionModal() {
     document.getElementById('si_project_info').style.display  = 'none';
     document.getElementById('si_machine_group').style.display = 'none';
     document.getElementById('si_machine_list').innerHTML      = '';
-    document.getElementById('si_flow_box').style.display      = 'none';
     document.getElementById('si_recipients_step').style.display = 'none';
     document.getElementById('si_footer_step1').style.display    = '';
     document.getElementById('si_footer_step2').style.display    = 'none';
@@ -7392,11 +7346,10 @@ function closeSimpleInspectionModal() {
     document.getElementById('simple_inspection_modal').classList.remove('open');
 }
 
-async function onSiProjectChange() {
+async function onSiProjectChange(lockedMachine = null) {
     const num = currentSiProjectNum;
     document.getElementById('si_project_info').style.display  = 'none';
     document.getElementById('si_machine_group').style.display = 'none';
-    document.getElementById('si_flow_box').style.display      = 'none';
     if (!num) return;
 
     const p = projectsMap[num] || {};
@@ -7405,7 +7358,7 @@ async function onSiProjectChange() {
     document.getElementById('si_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'si_machine_list', 'onSiMachineChange');
+        await _loadMachineCheckboxes(num, 'si_machine_list', 'onSiMachineChange', lockedMachine);
         document.getElementById('si_machine_group').style.display = 'block';
     } finally {
         hideLoading();
@@ -7413,21 +7366,7 @@ async function onSiProjectChange() {
 }
 
 async function onSiMachineChange() {
-    const num      = currentSiProjectNum;
-    const machines = getSelectedMachines('si_machine_list');
-    if (machines.length === 0) { document.getElementById('si_flow_box').style.display = 'none'; return; }
-    const machine   = machines[0];
-    showLoading('読み込み中...');
-    let doneFlows, chain;
-    try {
-        doneFlows = await _getMachineDoneFlows(num, machine);
-        chain     = await _getMachineFlowChain(num, machine);
-    } finally {
-        hideLoading();
-    }
-    document.getElementById('si_flow_list').innerHTML =
-        _renderFlowStatusList(_priorSteps(chain, 'simple_inspection'), doneFlows, '簡易検査開催案内');
-    document.getElementById('si_flow_box').style.display = 'block';
+    // 機械名は丸クリックの時点で確定済み（固定表示）のため、ここでは何もしない
 }
 
 async function submitSimpleInspection() {
@@ -7484,7 +7423,6 @@ function openInspectionModal() {
     document.getElementById('inspection_project_info').style.display  = 'none';
     document.getElementById('inspection_machine_group').style.display = 'none';
     document.getElementById('inspection_machine_list').innerHTML      = '';
-    document.getElementById('inspection_flow_box').style.display      = 'none';
     document.getElementById('inspection_recipients_step').style.display = 'none';
     document.getElementById('inspection_footer_step1').style.display    = '';
     document.getElementById('inspection_footer_step2').style.display    = 'none';
@@ -7503,11 +7441,10 @@ function closeInspectionModal() {
     document.getElementById('inspection_modal').classList.remove('open');
 }
 
-async function onInspectionProjectChange() {
+async function onInspectionProjectChange(lockedMachine = null) {
     const num = currentInspectionProjectNum;
     document.getElementById('inspection_project_info').style.display  = 'none';
     document.getElementById('inspection_machine_group').style.display = 'none';
-    document.getElementById('inspection_flow_box').style.display      = 'none';
     if (!num) return;
 
     const p = projectsMap[num] || {};
@@ -7517,7 +7454,7 @@ async function onInspectionProjectChange() {
 
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'inspection_machine_list', 'onInspectionMachineChange');
+        await _loadMachineCheckboxes(num, 'inspection_machine_list', 'onInspectionMachineChange', lockedMachine);
         document.getElementById('inspection_machine_group').style.display = 'block';
     } finally {
         hideLoading();
@@ -7525,21 +7462,7 @@ async function onInspectionProjectChange() {
 }
 
 async function onInspectionMachineChange() {
-    const num      = currentInspectionProjectNum;
-    const machines = getSelectedMachines('inspection_machine_list');
-    if (machines.length === 0) { document.getElementById('inspection_flow_box').style.display = 'none'; return; }
-    const machine = machines[0]; // フロー状況は1台目で代表
-    showLoading('読み込み中...');
-    let doneFlows, chain;
-    try {
-        doneFlows = await _getMachineDoneFlows(num, machine);
-        chain     = await _getMachineFlowChain(num, machine);
-    } finally {
-        hideLoading();
-    }
-    document.getElementById('inspection_flow_list').innerHTML =
-        _renderFlowStatusList(_priorSteps(chain, 'inspection'), doneFlows, '外観検査開催案内');
-    document.getElementById('inspection_flow_box').style.display = 'block';
+    // 機械名は丸クリックの時点で確定済み（固定表示）のため、ここでは何もしない
 }
 
 async function submitInspection() {
@@ -7599,7 +7522,6 @@ function openShippingMeetingModal() {
     document.getElementById('sm_project_info').style.display  = 'none';
     document.getElementById('sm_machine_group').style.display = 'none';
     document.getElementById('sm_machine_list').innerHTML      = '';
-    document.getElementById('sm_flow_box').style.display      = 'none';
     document.getElementById('sm_recipients_step').style.display = 'none';
     document.getElementById('sm_footer_step1').style.display    = '';
     document.getElementById('sm_footer_step2').style.display    = 'none';
@@ -7618,11 +7540,10 @@ function closeShippingMeetingModal() {
     document.getElementById('shipping_meeting_modal').classList.remove('open');
 }
 
-async function onSmProjectChange() {
+async function onSmProjectChange(lockedMachine = null) {
     const num = currentSmProjectNum;
     document.getElementById('sm_project_info').style.display  = 'none';
     document.getElementById('sm_machine_group').style.display = 'none';
-    document.getElementById('sm_flow_box').style.display      = 'none';
     if (!num) return;
     const p = projectsMap[num] || {};
     document.getElementById('sm_customer_display').textContent = p.customer_name || '—';
@@ -7630,7 +7551,7 @@ async function onSmProjectChange() {
     document.getElementById('sm_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'sm_machine_list', 'onSmMachineChange');
+        await _loadMachineCheckboxes(num, 'sm_machine_list', 'onSmMachineChange', lockedMachine);
         document.getElementById('sm_machine_group').style.display = 'block';
     } finally {
         hideLoading();
@@ -7638,21 +7559,7 @@ async function onSmProjectChange() {
 }
 
 async function onSmMachineChange() {
-    const num      = currentSmProjectNum;
-    const machines = getSelectedMachines('sm_machine_list');
-    if (machines.length === 0) { document.getElementById('sm_flow_box').style.display = 'none'; return; }
-    const machine = machines[0];
-    showLoading('読み込み中...');
-    let doneFlows, chain;
-    try {
-        doneFlows = await _getMachineDoneFlows(num, machine);
-        chain     = await _getMachineFlowChain(num, machine);
-    } finally {
-        hideLoading();
-    }
-    document.getElementById('sm_flow_list').innerHTML =
-        _renderFlowStatusList(_priorSteps(chain, 'shipping_meeting'), doneFlows, '出荷確認会議開催案内');
-    document.getElementById('sm_flow_box').style.display = 'block';
+    // 機械名は丸クリックの時点で確定済み（固定表示）のため、ここでは何もしない
 }
 
 async function submitShippingMeeting() {
