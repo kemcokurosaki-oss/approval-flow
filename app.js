@@ -3775,14 +3775,12 @@ async function openFlowModalPreset(el, overrideFlowType) {
         document.getElementById('sm_project_display').textContent = projectNum;
         await onSmProjectChange(machineName);
     } else if (flowType === 'shipping') {
+        // 出荷確定はステップ表示で機械が確定しているため、他フローと同様に選び直せないようロックする
         openShippingModal();
         currentShippingProjectNum = projectNum;
-        const pSh = projectsMap[projectNum] || {};
-        const lblSh = [pSh.customer_name, pSh.project_details].filter(Boolean).join('　');
         document.getElementById('shipping_project_display').textContent = projectNum;
-        await onShippingProjectChange();
-        const cb = findCb('shipping_machine_list');
-        if (cb) { cb.checked = true; await onShippingMachineChange(); }
+        await onShippingProjectChange(machineName);
+        await onShippingMachineChange();
     }
 }
 
@@ -6994,7 +6992,7 @@ async function _loadMachineCheckboxes(projectNum, listId, onChangeFn, lockedMach
     if (lockedMachine) {
         // ステップ表示から機械が確定した状態で開いているため、選び直しはさせない
         if (toggleBtn) toggleBtn.style.display = 'none';
-        if (label) label.textContent = '機械名 *';
+        if (label) label.textContent = '機械名';
         list.innerHTML = `
             <label>
                 <input type="checkbox" value="${esc(lockedMachine)}" checked disabled style="display:none">
@@ -7004,7 +7002,7 @@ async function _loadMachineCheckboxes(projectNum, listId, onChangeFn, lockedMach
     }
 
     if (toggleBtn) toggleBtn.style.display = '';
-    if (label) label.textContent = '機械名 *（複数選択可）';
+    if (label) label.innerHTML = '機械名 <span class="required-mark">*</span>（複数選択可）';
 
     const { data } = await db.from('tasks')
         .select('machine').eq('project_number', projectNum).eq('text', '機械組立').not('machine', 'is', null);
@@ -7190,10 +7188,17 @@ async function showRecipientsStep(type) {
     const projectNum = projectNumMap[prefix];
     const machines   = getSelectedMachines(`${prefix}_machine_list`);
     const dateVal    = document.getElementById(`${prefix}_date_input`).value;
+    const timeHour   = document.getElementById(`${prefix}_time_hour`).value;
+    const timeMin    = document.getElementById(`${prefix}_time_min`).value;
+    const locationVal = prefix === 'sm'
+        ? document.getElementById('sm_location_input').value
+        : getLocationValue(`${prefix}_location_input`);
 
     if (!projectNum)          { showToast('工事番号を選択してください', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)             { showToast('開催日を入力してください', 'error'); return; }
+    if (!timeHour || !timeMin) { showToast('開始時刻を入力してください', 'error'); return; }
+    if (!locationVal)         { showToast('場所を入力してください', 'error'); return; }
 
     const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection' };
     const recipients = await _fetchFlowRecipients(projectNum, machines, flowTypeMap[prefix] || prefix);
@@ -7480,6 +7485,8 @@ async function submitSimpleInspection() {
     if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('簡易検査日を入力してください', 'error'); return; }
+    if (!timeVal)          { showToast('開始時刻を入力してください', 'error'); return; }
+    if (!location)         { showToast('場所を入力してください', 'error'); return; }
 
     const btn = document.getElementById('si_submit_btn');
     btn.disabled = true;
@@ -7576,6 +7583,8 @@ async function submitInspection() {
     if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('外観検査日を入力してください', 'error'); return; }
+    if (!timeVal)          { showToast('開始時刻を入力してください', 'error'); return; }
+    if (!location)         { showToast('場所を入力してください', 'error'); return; }
 
     const btn = document.getElementById('inspection_submit_btn');
     btn.disabled = true;
@@ -7673,6 +7682,8 @@ async function submitShippingMeeting() {
     if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
     if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
     if (!dateVal)          { showToast('開催日を入力してください', 'error'); return; }
+    if (!timeVal)          { showToast('開始時刻を入力してください', 'error'); return; }
+    if (!location)         { showToast('場所を選択してください', 'error'); return; }
 
     const btn = document.getElementById('sm_submit_btn');
     btn.disabled = true; btn.textContent = '送信中...';
@@ -7729,7 +7740,7 @@ function closeShippingModal() {
     document.getElementById('shipping_modal').classList.remove('open');
 }
 
-async function onShippingProjectChange() {
+async function onShippingProjectChange(lockedMachine = null) {
     const num = currentShippingProjectNum;
     document.getElementById('shipping_project_info').style.display  = 'none';
     document.getElementById('shipping_machine_group').style.display = 'none';
@@ -7743,7 +7754,7 @@ async function onShippingProjectChange() {
     document.getElementById('shipping_project_info').style.display = 'contents';
     showLoading('読み込み中...');
     try {
-        await _loadMachineCheckboxes(num, 'shipping_machine_list', 'onShippingMachineChange');
+        await _loadMachineCheckboxes(num, 'shipping_machine_list', 'onShippingMachineChange', lockedMachine);
         document.getElementById('shipping_machine_group').style.display = 'block';
     } finally {
         hideLoading();
@@ -7795,7 +7806,7 @@ async function onShippingMachineChange() {
     document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
         rows.map(f => doneFlows.has(f.type)
             ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, f.label, '承認済み')
-            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label, '未完了', '#c0392b')
+            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label)
         ).join('') +
         _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷確定申請（今回）') +
         `</div>`;
@@ -7803,9 +7814,8 @@ async function onShippingMachineChange() {
 
     const missing = [...required].filter(t => !doneFlows.has(t));
     if (missing.length > 0) {
-        const labels = missing.map(t => FLOW_LABELS[t] || t).join('・');
         const warnEl = document.getElementById('shipping_missing_warning');
-        warnEl.textContent = `前フローが未完了のため申請できません（${labels}）`;
+        warnEl.textContent = `⚠ 前フローが未完了のため申請できません`;
         warnEl.style.display = 'block';
         document.getElementById('shipping_submit_btn').disabled = true;
     }
