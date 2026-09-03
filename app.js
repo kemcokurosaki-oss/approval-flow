@@ -1010,13 +1010,9 @@ function _renderPrepBlockerWarning(blockers) {
     const btn = document.getElementById('submit_btn');
     if (btn) btn.disabled = blockers.length > 0;
     if (blockers.length === 0) return;
-    const msg = blockers.map(b => b.notApproved
-        ? `${b.label || FLOW_LABELS[b.flowType] || b.flowType}（未確定）`
-        : `${FLOW_LABELS[b.flowType] || b.flowType}（${b.count}件）`
-    ).join('、');
     const listEl = document.getElementById('flow_detect_list');
     if (listEl) {
-        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:14px; margin-top:8px;">⚠ 前フローが未完了のため申請できません: ${msg}</div>`;
+        listEl.innerHTML += `<div style="color:#c0392b; font-weight:bold; font-size:14px; margin-top:8px;">⚠ 前フローが未完了のため申請できません</div>`;
     }
 }
 
@@ -2412,10 +2408,17 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const submittedDate = g.req.created_at ? fmtDate(g.req.created_at) : '—';
 
             // チェックシート/完了報告書へのリンク（承認済みなら報告書、却下されて自分の申請なら編集可能）
+            // 承認済みでもペンディング項目が未完了で残っている場合は、報告書へ直接飛ばさず申請詳細（完了操作可能）を開く
             const isApproved = g.req.status === 'approved';
             const canEditRejected = g.req.status === 'rejected' && g.req.requester_id === currentUser.id;
+            const unresolvedPendingCount = countUnresolvedPendingItems(g.req);
+            const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
             const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${g.req.id}` : `${meta.file}?view=1&id=${g.req.id}`;
-            const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+            const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+                : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+            const sheetLinkOnclick = hasUnresolvedPending
+                ? `viewAssemblyRequestDetail('${g.req.id}', '${esc(projectNum)}')`
+                : `window.open('${sheetUrl}', '_blank')`;
 
             // 自分が承認できる保留中ステップがあれば、その場で承認・却下できるようにする
             // （却下は頻度が低いため理由入力欄は常時表示せず、却下ボタンを押した時だけ別モーダルで入力させる）
@@ -2437,7 +2440,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
-                    <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                    <div class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</div>
                     <div></div>
                 </div>
                 ${approvalHtml}
