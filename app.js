@@ -3172,6 +3172,8 @@ async function openTestRunFlowDetailModal(projectNum) {
     ui.send('OPEN_DETAIL');
     currentTestRunDetailProjectNum = projectNum;
     currentTestRunMachineDetail = null;
+    testRunDetailReturnProjectNum = null;
+    testRunDetailReturnMachine = null;
     await renderTestRunFlowDetailBody(projectNum);
 }
 
