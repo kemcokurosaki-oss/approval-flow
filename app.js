@@ -5196,6 +5196,13 @@ function buildQaFooterInner(req) {
     `;
 }
 
+// 一覧モーダルから個別申請の詳細を開いた場合、closeDetailModal()は実際にはモーダルを閉じず元の一覧に戻る。
+// その場合はボタンラベルを「閉じる」ではなく「戻る」にする
+function detailModalCloseButtonLabel() {
+    return (assemblyDetailReturnProjectNum || assemblyDetailReturnMachine || testRunDetailReturnProjectNum || testRunDetailReturnMachine)
+        ? '戻る' : '閉じる';
+}
+
 function closeDetailModal() {
     // 組立フロー詳細（機械レベル or 工番レベル）から個別申請の詳細を開いた場合は、閉じずに元の一覧に戻る
     if (assemblyDetailReturnMachine) {
