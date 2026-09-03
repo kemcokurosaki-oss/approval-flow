@@ -4768,7 +4768,7 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
 async function openDetailModal(requestId) {
     document.getElementById('detail_modal').classList.add('open');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
-    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+    document.getElementById('detail_footer').innerHTML = `<button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>`;
     ui.send('OPEN_DETAIL');
 
     const { data: req } = await db
