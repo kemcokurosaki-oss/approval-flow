@@ -2619,6 +2619,20 @@ async function viewAssemblyRequestDetail(requestId, projectNum, machine = null) 
     await openDetailModal(requestId);
 }
 
+async function viewTestRunRequestDetail(requestId, projectNum, machine = null) {
+    // 「閉じる」を押したら試運転フロー詳細（工番レベル or 機械レベル）に戻れるようにする
+    currentTestRunDetailProjectNum = null;
+    currentTestRunMachineDetail = null;
+    if (machine) {
+        testRunDetailReturnMachine = { projectNum, machine };
+        testRunDetailReturnProjectNum = null;
+    } else {
+        testRunDetailReturnProjectNum = projectNum;
+        testRunDetailReturnMachine = null;
+    }
+    await openDetailModal(requestId);
+}
+
 async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null) {
     showLoading('処理中...');
     try {
