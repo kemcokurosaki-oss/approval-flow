@@ -1025,6 +1025,12 @@ async function onMachineChange() {
     const machines = getSelectedMachines('submit_machine_list');
     const flowEl   = document.getElementById('flow_detect_group');
 
+    // 試運転は一覧型詳細画面（openTestRunFlowDetailModal）に統一したため、申請モーダル内のフロー連鎖表示は不要
+    if (currentFlowType === 'test_run') {
+        flowEl.style.display = 'none';
+        return;
+    }
+
     if (machines.length === 0) {
         document.getElementById('flow_detect_list').innerHTML =
             '<div style="color:#bbb; font-size:13px; padding:8px 0;">機械を選択してください</div>';
@@ -1422,6 +1428,12 @@ async function loadProgress() {
         (notRequiredRows || []).map(r => `${r.project_number}__${r.machine}__${r.unit || ''}`)
     );
 
+    // 2000番台：電装（electrical）の「申請不要」マーク（組立とは別テーブルで独立管理）
+    const { data: elecNotRequiredRows } = await db.from('electrical_unit_not_required').select('project_number, machine, unit');
+    const electricalNotRequiredSet = new Set(
+        (elecNotRequiredRows || []).map(r => `${r.project_number}__${r.machine}__${r.unit || ''}`)
+    );
+
     // shipping承認済みの承認者名マップを構築
     const shippingApproverIds = [...new Set(
         (allReqs || [])
@@ -1500,13 +1512,23 @@ async function loadProgress() {
 
     // 申請レコードを反映。組立(assembly)は機械・ユニットが工程表と紐づかないため、machine_nameをキーにせず
     // 工番ごとの申請リストとして別管理する（assemblyReqsByProject）。他フローは従来通りmachine_nameをキーにする
+    // 電装(electrical)も2000番台に限りユニット単位申請（assembly_items、machine_nameは確定時のみ設定）のため、
+    // 組立と同じ理由でelectricalReqsByProjectに退避する。2000番以外の電装は従来通りmachine_nameキーのまま
     const assemblyReqsByProject = {};
+    const electricalReqsByProject = {};
     (allReqs || []).forEach(req => {
         if (req.flow_type === 'assembly') {
             const num = req.project_number;
             if (!num) return;
             if (!assemblyReqsByProject[num]) assemblyReqsByProject[num] = [];
             assemblyReqsByProject[num].push(req);
+            return;
+        }
+        if (req.flow_type === 'electrical' && is2000sSeries(req.project_number)) {
+            const num = req.project_number;
+            if (!num) return;
+            if (!electricalReqsByProject[num]) electricalReqsByProject[num] = [];
+            electricalReqsByProject[num].push(req);
             return;
         }
         const num     = req.project_number;
@@ -1546,7 +1568,7 @@ async function loadProgress() {
         return;
     }
 
-    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet };
+    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet };
 
     el.innerHTML = '<div id="progress_cards_wrap"></div>';
     _syncProgressControls();
@@ -1670,7 +1692,7 @@ function renderProgressCards() {
         return;
     }
 
-    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet } = progressCachedData;
+    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
     // 梱包出荷の有無を設定できるのは営業・品証・製管のみ
@@ -1908,13 +1930,16 @@ function renderProgressCards() {
                         : assemblyAggStatus;
 
                     // 電気艤装タスクがある機械は、組立の丸に電装の状況も統合して「組立・電装」として表示する
-                    const electricalReq = machine ? mData.flows['electrical'] : null;
+                    // 2000番台は電装もユニット単位申請のため、組立と同じ集約ロジック（全ユニット承認/不要で'approved'）を使う
+                    const electricalReq = (machine && !isMachineRow) ? mData.flows['electrical'] : null;
                     const hasElectrical = !!(machine && (hasTask(num, machine, '電気艤装') || electricalReq));
-                    const electricalStatus = !electricalReq ? 'empty'
-                        : electricalReq.status === 'approved' ? 'approved'
-                        : electricalReq.status === 'rejected' ? 'rejected'
-                        : electricalReq.status === 'draft'    ? 'draft'
-                        : 'active';
+                    const electricalStatus = isMachineRow
+                        ? (hasElectrical ? computeAssemblyAggStatusForMachine(num, machine, electricalReqsByProject, electricalNotRequiredSet) : 'empty')
+                        : (!electricalReq ? 'empty'
+                            : electricalReq.status === 'approved' ? 'approved'
+                            : electricalReq.status === 'rejected' ? 'rejected'
+                            : electricalReq.status === 'draft'    ? 'draft'
+                            : 'active');
 
                     // 丸の色は組立・電装の両方が承認されて初めて「完了」。片方でも進んでいれば「進行中」表示にする
                     const statusForThisRow = !hasElectrical ? assemblyStatus
@@ -1974,20 +1999,35 @@ function renderProgressCards() {
 
                     // 電装側の日付表示・未申請未承認バッジ（通常のflow-nodeと同じロジック）
                     let electricalDateStr = '';
-                    if (electricalReq && electricalReq.status !== 'draft') {
-                        const dateIso = (electricalReq.status === 'approved' || electricalReq.status === 'rejected') ? electricalReq.updated_at : electricalReq.created_at;
-                        if (dateIso) {
-                            const d = new Date(dateIso);
-                            const prefix = electricalReq.status === 'approved' ? '完了' : electricalReq.status === 'rejected' ? '却下' : '申請';
-                            electricalDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                    let electricalOverdueBadge = '';
+                    if (isMachineRow) {
+                        // 2000番台はユニット単位集約のため、組立と同じく完了/入力中/申請中の日付ラベルのみ表示する（期日超過バッジは出さない）
+                        if (electricalStatus === 'approved') {
+                            const relevantElecReqs = (electricalReqsByProject[num] || []).filter(r =>
+                                r.status === 'approved' && getAssemblyItemsForReq(r).some(it => it && it.machine === machine));
+                            const latestElecDate = relevantElecReqs.map(r => r.updated_at).filter(Boolean).sort().slice(-1)[0];
+                            if (latestElecDate) electricalDateStr = `完了 ${fmtDate(latestElecDate.slice(0, 10))}`;
+                        } else if (electricalStatus === 'draft') {
+                            electricalDateStr = '入力中';
+                        } else if (electricalStatus === 'active') {
+                            electricalDateStr = '申請中';
                         }
-                    } else if (electricalReq && electricalReq.status === 'draft') {
-                        electricalDateStr = '入力中';
+                    } else {
+                        if (electricalReq && electricalReq.status !== 'draft') {
+                            const dateIso = (electricalReq.status === 'approved' || electricalReq.status === 'rejected') ? electricalReq.updated_at : electricalReq.created_at;
+                            if (dateIso) {
+                                const d = new Date(dateIso);
+                                const prefix = electricalReq.status === 'approved' ? '完了' : electricalReq.status === 'rejected' ? '却下' : '申請';
+                                electricalDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
+                            }
+                        } else if (electricalReq && electricalReq.status === 'draft') {
+                            electricalDateStr = '入力中';
+                        }
+                        const electricalOverdue = isFlowOverdue(num, machine, 'electrical', electricalReq);
+                        electricalOverdueBadge = electricalOverdue
+                            ? `<div class="flow-overdue-badge">⚠ ${electricalReq && electricalReq.status !== 'draft' ? '未承認' : '未申請'}</div>`
+                            : '';
                     }
-                    const electricalOverdue = isFlowOverdue(num, machine, 'electrical', electricalReq);
-                    const electricalOverdueBadge = electricalOverdue
-                        ? `<div class="flow-overdue-badge">⚠ ${electricalReq && electricalReq.status !== 'draft' ? '未承認' : '未申請'}</div>`
-                        : '';
 
                     return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
                         data-flow-type="assembly"
@@ -2029,6 +2069,14 @@ function renderProgressCards() {
                 if (f.type === 'test_run' && is2000sSeries(num) && machine) {
                     // 2000番台の試運転は機械単位の申請のため、組立と同様に機械詳細画面（インラインで申請・承認まで完結）を開く
                     clickAttr = `onclick="event.stopPropagation(); openTestRunMachineDetailModal('${esc(num)}', '${esc(machine)}')"`;
+                    const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
+                    clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
+                } else if (f.type === 'test_run') {
+                    // 試運転(2000番以外)は組立と同様、状態に関わらず工番全体の機械一覧モーダルを開く。
+                    // 承認済みならモーダルを経由せず直接完了報告書を開く（組立の2000番以外と同じ挙動）
+                    clickAttr = (req && req.status === 'approved')
+                        ? `onclick="event.stopPropagation(); window.open('${SHEET_FLOW_META.test_run.file}?view=1&id=${req.id}', '_blank')"`
+                        : `onclick="event.stopPropagation(); openTestRunFlowDetailModal('${esc(num)}')"`;
                     const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (!req && canApply && !progressFilterCompleted) {
@@ -2203,6 +2251,7 @@ async function openAssemblyFlowDetailModal(projectNum) {
 // 1つの画面にまとめ、ユニットごとの申請状況・申請操作・「不要にする」操作をここで行う
 async function openAssemblyMachineDetailModal(projectNum, machine) {
     document.getElementById('detail_modal').classList.add('open');
+    document.querySelector('#detail_modal .modal')?.classList.add('wide-machine-detail');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
     document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
     ui.send('OPEN_DETAIL');
@@ -2621,12 +2670,39 @@ function reopenElectricalSheetFromDetail(requestId) {
     window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${requestId}`, '_blank');
 }
 
-async function submitElectricalDraftFromDetail(draftId, projectNum) {
+// 2000番台：機械詳細モーダルの電装ユニット申請（組立のstartNewAssemblySheetFromDetailと同型）。
+// electricalMode: 'fixed'（固定ユニット、機械・ユニットとも変更不可、1件のみ）| 'free'（ユニット自由入力・複数追加可）
+async function startNewElectricalUnitSheetFromDetailCore(projectNum, presetItems, machine, electricalMode) {
+    const insertPayload = {
+        project_number: projectNum,
+        flow_type:      'electrical',
+        status:         'draft',
+        requester_id:   currentUser.id,
+        assembly_items: presetItems,
+        sheet_data:     { meta: { assembly_mode: electricalMode, assembly_locked_machine: machine } }
+    };
+    const { data: newDraft, error } = await db.from('approval_requests').insert(insertPayload).select().single();
+    if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
+    window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${newDraft.id}`, '_blank');
+    await loadMineSide();
+    await renderAssemblyMachineDetailBody(projectNum, machine);
+}
+
+async function startNewElectricalUnitSheetFromDetail(projectNum, machine, unit) {
+    await startNewElectricalUnitSheetFromDetailCore(projectNum, [{ machine, unit: unit || null }], machine, 'fixed');
+}
+
+async function startNewElectricalFreeUnitSheetFromDetail(projectNum, machine) {
+    await startNewElectricalUnitSheetFromDetailCore(projectNum, [{ machine, unit: null }], machine, 'free');
+}
+
+async function submitElectricalDraftFromDetail(draftId, projectNum, machine = null) {
     showLoading('処理中...');
     try {
         const { data: draftReq } = await db.from('approval_requests')
-            .select('machine_name, sheet_data').eq('id', draftId).single();
-        if (!draftReq?.machine_name) {
+            .select('machine_name, unit_name, assembly_items, sheet_data').eq('id', draftId).single();
+        const items = getAssemblyItemsForReq(draftReq || {}).filter(it => it && it.machine);
+        if (items.length === 0) {
             showToast('機械が未設定です。', 'error');
             return;
         }
@@ -2638,7 +2714,8 @@ async function submitElectricalDraftFromDetail(draftId, projectNum) {
         }
 
         const { data: req, error: e1 } = await db.from('approval_requests').update({
-            status: 'submitted'
+            status:       'submitted',
+            machine_name: buildAssemblyMachineNameSummary(items)
         }).eq('id', draftId).select().single();
         if (e1) throw e1;
 
@@ -2655,7 +2732,8 @@ async function submitElectricalDraftFromDetail(draftId, projectNum) {
 
         await refreshAll();
         showToast('電装完了を申請しました。', 'success');
-        await renderAssemblyFlowDetailBody(projectNum);
+        if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+        else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
@@ -2663,7 +2741,7 @@ async function submitElectricalDraftFromDetail(draftId, projectNum) {
     }
 }
 
-async function deleteElectricalDraftFromDetail(draftId, projectNum) {
+async function deleteElectricalDraftFromDetail(draftId, projectNum, machine = null) {
     if (!confirm('この下書きを削除します。よろしいですか？')) return;
     showLoading('削除中...');
     try {
@@ -2671,7 +2749,8 @@ async function deleteElectricalDraftFromDetail(draftId, projectNum) {
         if (error) throw error;
         await refreshAll();
         showToast('下書きを削除しました。', 'success');
-        await renderAssemblyFlowDetailBody(projectNum);
+        if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
+        else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('削除に失敗しました: ' + e.message, 'error');
     } finally {
@@ -2680,128 +2759,179 @@ async function deleteElectricalDraftFromDetail(draftId, projectNum) {
 }
 
 // ===== 2000番台：機械ごとのユニット申請状況一覧 =====
+// 組立・電装共通：機械詳細モーダルの「ユニット別申請状況」1列分のHTML行を生成する。
+// flow種別ごとの差異（テーブル名・関数名・SHEET_FLOW_META）はopts経由で渡し、承認・却下・ステータス判定ロジックは完全共有する
+function buildMachineUnitRowsHtml(opts) {
+    const { projectNum, machine, units, reqs, notRequiredUnits, meta, myRole, canApply, requesterNames,
+            startUnitFnName, submitFnName, deleteFnName, toggleFnName, reopenFnName } = opts;
+
+    if (units.length === 0) return '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>';
+
+    return units.map(unit => {
+        const unitLabel = unit ? unit : machine;
+        const isNotRequired = notRequiredUnits.has(unit || '');
+
+        const matching = (reqs || []).filter(req =>
+            getAssemblyItemsForReq(req).some(it => it && it.machine === machine && (it.unit || '') === (unit || '')));
+        const myDraft = matching.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
+        const activeReq = matching.find(r => r.status !== 'draft');
+
+        let statusLabel, statusCls;
+        if (isNotRequired)     { statusLabel = '不要';   statusCls = 's-gray'; }
+        else if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
+        else if (myDraft)      { statusLabel = '下書き'; statusCls = 's-gray'; }
+        else                   { statusLabel = '未申請'; statusCls = 's-gray'; }
+
+        let toggleHtml = '';
+        if (canApply && !(activeReq && activeReq.status === 'approved')) {
+            toggleHtml = `
+                <label class="unit-toggle" title="不要にする">
+                    <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="${toggleFnName}('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
+                    <span class="unit-toggle-slider"></span>
+                    <span class="unit-toggle-text">${isNotRequired ? 'OFF' : 'ON'}</span>
+                </label>`;
+        }
+
+        let metaHtml = '';
+        let linkHtml = '';
+        let approvalHtml = '';
+        let bottomRightHtml = toggleHtml;
+
+        if (activeReq) {
+            // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
+            const requesterName = requesterNames[activeReq.requester_id] || '—';
+            const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+            metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
+
+            const isApproved = activeReq.status === 'approved';
+            const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
+            const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
+            const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
+
+            const myStep = (activeReq.approval_steps || []).find(s =>
+                s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
+            const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
+            approvalHtml = myStep ? `
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
+                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}', '${esc(machine)}')">承認する</button>
+                </div>` : '';
+        } else if (myDraft) {
+            const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${reopenFnName}('${myDraft.id}')">続きを入力する →</span>`;
+            const submitBtn = hasItem
+                ? `<button class="btn-apply-xs" onclick="${submitFnName}('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
+                : '';
+            bottomRightHtml = `
+                <div style="display:flex;gap:8px;align-items:center;">
+                    ${submitBtn}
+                    <button class="btn-delete-xs" title="削除" onclick="${deleteFnName}('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                    ${toggleHtml}
+                </div>`;
+        } else if (canApply && !isNotRequired) {
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${startUnitFnName}('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+        }
+
+        return `<div class="unit-list-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div class="unit-list-name">${esc(unitLabel)}</div>
+                    ${metaHtml}
+                </div>
+                <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                <div>${linkHtml}</div>
+                <div>${bottomRightHtml}</div>
+            </div>
+            ${approvalHtml}
+        </div>`;
+    }).join('');
+}
+
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
         .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
+    // 電装(electrical)も2000番台はユニット単位申請のため、組立と同じ構成でユニット一覧を右列に表示する
+    const { data: elecReqs } = await db.from('approval_requests')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .eq('project_number', projectNum).eq('flow_type', 'electrical')
+        .order('created_at', { ascending: true });
+
     const { data: notReqRows } = await db.from('assembly_unit_not_required')
         .select('unit').eq('project_number', projectNum).eq('machine', machine);
     const notRequiredUnits = new Set((notReqRows || []).map(r => r.unit || ''));
 
-    const units = getAssemblyUnitListForMachine(machine, reqs || []);
-    const pInfo = projectsMap[projectNum] || {};
-    const meta = SHEET_FLOW_META['assembly'];
-    const myRole = getEffectiveRole();
-    const canApply = canApplyFlow('assembly');
+    // 電装の「不要にする」は組立と別テーブルで独立管理する
+    const { data: elecNotReqRows } = await db.from('electrical_unit_not_required')
+        .select('unit').eq('project_number', projectNum).eq('machine', machine);
+    const elecNotRequiredUnits = new Set((elecNotReqRows || []).map(r => r.unit || ''));
 
-    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const units     = getAssemblyUnitListForMachine(machine, reqs || []);
+    const elecUnits = getAssemblyUnitListForMachine(machine, elecReqs || []);
+    const pInfo = projectsMap[projectNum] || {};
+    const meta     = SHEET_FLOW_META['assembly'];
+    const elecMeta = SHEET_FLOW_META['electrical'];
+    const myRole = getEffectiveRole();
+    const canApply     = canApplyFlow('assembly');
+    const canApplyElec = canApplyFlow('electrical');
+
+    // 申請者名をまとめて取得（組立・電装合算、一覧に申請者・申請日を直接表示するため）
+    const requesterIds = [...new Set([...(reqs || []), ...(elecReqs || [])].map(r => r.requester_id).filter(Boolean))];
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
         (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
     }
 
-    const rowsHtml = units.length === 0
-        ? '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>'
-        : units.map(unit => {
-            const unitLabel = unit ? unit : machine;
-            const isNotRequired = notRequiredUnits.has(unit || '');
-
-            const matching = (reqs || []).filter(req =>
-                getAssemblyItemsForReq(req).some(it => it && it.machine === machine && (it.unit || '') === (unit || '')));
-            const myDraft = matching.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
-            const activeReq = matching.find(r => r.status !== 'draft');
-
-            let statusLabel, statusCls;
-            if (isNotRequired)     { statusLabel = '不要';   statusCls = 's-gray'; }
-            else if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
-            else if (myDraft)      { statusLabel = '下書き'; statusCls = 's-gray'; }
-            else                   { statusLabel = '未申請'; statusCls = 's-gray'; }
-
-            let toggleHtml = '';
-            if (canApply && !(activeReq && activeReq.status === 'approved')) {
-                toggleHtml = `
-                    <label class="unit-toggle" title="不要にする">
-                        <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="toggleAssemblyUnitNotRequired('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
-                        <span class="unit-toggle-slider"></span>
-                        <span class="unit-toggle-text">${isNotRequired ? 'OFF' : 'ON'}</span>
-                    </label>`;
-            }
-
-            let metaHtml = '';
-            let linkHtml = '';
-            let approvalHtml = '';
-            let bottomRightHtml = toggleHtml;
-
-            if (activeReq) {
-                // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
-                const requesterName = requesterNames[activeReq.requester_id] || '—';
-                const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
-                metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
-
-                const isApproved = activeReq.status === 'approved';
-                const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
-                const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
-                const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
-                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
-
-                const myStep = (activeReq.approval_steps || []).find(s =>
-                    s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
-                const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
-                approvalHtml = myStep ? `
-                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                        <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
-                        <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}', '${esc(machine)}')">承認する</button>
-                    </div>` : '';
-            } else if (myDraft) {
-                const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
-                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenAssemblySheetFromDetail('${myDraft.id}')">続きを入力する →</span>`;
-                const submitBtn = hasItem
-                    ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
-                    : '';
-                bottomRightHtml = `
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        ${submitBtn}
-                        <button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                        </button>
-                        ${toggleHtml}
-                    </div>`;
-            } else if (canApply && !isNotRequired) {
-                linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
-            }
-
-            return `<div class="unit-list-row">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
-                        <div class="unit-list-name">${esc(unitLabel)}</div>
-                        ${metaHtml}
-                    </div>
-                    <div class="unit-list-status"><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></div>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
-                    <div>${linkHtml}</div>
-                    <div>${bottomRightHtml}</div>
-                </div>
-                ${approvalHtml}
-            </div>`;
-        }).join('');
+    const rowsHtml = buildMachineUnitRowsHtml({
+        projectNum, machine, units, reqs, notRequiredUnits, meta, myRole, canApply, requesterNames,
+        startUnitFnName: 'startNewAssemblyUnitSheetFromDetail',
+        submitFnName:    'submitAssemblyDraftFromDetail',
+        deleteFnName:    'deleteAssemblyDraftFromDetail',
+        toggleFnName:    'toggleAssemblyUnitNotRequired',
+        reopenFnName:    'reopenAssemblySheetFromDetail'
+    });
+    const elecRowsHtml = buildMachineUnitRowsHtml({
+        projectNum, machine, units: elecUnits, reqs: elecReqs, notRequiredUnits: elecNotRequiredUnits,
+        meta: elecMeta, myRole, canApply: canApplyElec, requesterNames,
+        startUnitFnName: 'startNewElectricalUnitSheetFromDetail',
+        submitFnName:    'submitElectricalDraftFromDetail',
+        deleteFnName:    'deleteElectricalDraftFromDetail',
+        toggleFnName:    'toggleElectricalUnitNotRequired',
+        reopenFnName:    'reopenElectricalSheetFromDetail'
+    });
 
     const addNewUnitHtml = canApply
         ? `<button class="btn-add-new" onclick="startNewAssemblyFreeUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
         : '';
+    const elecAddNewUnitHtml = canApplyElec
+        ? `<button class="btn-add-new" onclick="startNewElectricalFreeUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
+        : '';
 
-    document.getElementById('detail_title').textContent = `組立フロー（${esc(machine)}）`;
+    document.getElementById('detail_title').textContent = `組立・電装フロー（${esc(machine)}）`;
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
-        <div class="section-title">ユニット別 申請状況</div>
-        <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
-        ${addNewUnitHtml}
+        <div class="assembly-elec-split">
+            <div class="detail-col">
+                <div class="section-title">組立 ユニット別 申請状況</div>
+                <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
+                ${addNewUnitHtml}
+            </div>
+            <div class="detail-col">
+                <div class="section-title">電装 ユニット別 申請状況</div>
+                <div class="unit-list-wrap unit-list-wrap-wide">${elecRowsHtml}</div>
+                ${elecAddNewUnitHtml}
+            </div>
+        </div>
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
@@ -2824,6 +2954,29 @@ async function markAssemblyUnitNotRequired(projectNum, machine, unit) {
 
 async function unmarkAssemblyUnitNotRequired(projectNum, machine, unit) {
     const { error } = await db.from('assembly_unit_not_required').delete()
+        .eq('project_number', projectNum).eq('machine', machine).eq('unit', unit || '');
+    if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
+    await refreshAll();
+    await renderAssemblyMachineDetailBody(projectNum, machine);
+}
+
+// 電装の「不要にする」は組立と別テーブル(electrical_unit_not_required)で独立管理する
+async function toggleElectricalUnitNotRequired(projectNum, machine, unit, checked) {
+    if (checked) await markElectricalUnitNotRequired(projectNum, machine, unit);
+    else await unmarkElectricalUnitNotRequired(projectNum, machine, unit);
+}
+
+async function markElectricalUnitNotRequired(projectNum, machine, unit) {
+    const { error } = await db.from('electrical_unit_not_required').upsert({
+        project_number: projectNum, machine, unit: unit || '', marked_by: currentUser.id
+    }, { onConflict: 'project_number,machine,unit' });
+    if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
+    await refreshAll();
+    await renderAssemblyMachineDetailBody(projectNum, machine);
+}
+
+async function unmarkElectricalUnitNotRequired(projectNum, machine, unit) {
+    const { error } = await db.from('electrical_unit_not_required').delete()
         .eq('project_number', projectNum).eq('machine', machine).eq('unit', unit || '');
     if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
     await refreshAll();
@@ -2952,6 +3105,131 @@ async function rejectAssemblyRequestFromList(requestId, stepId, projectNum, comm
     }
 }
 
+// ===== 試運転フロー詳細モーダル（工番レベル、2000番以外）=====
+// 試運転は機械単位1申請・ユニット概念が無いため、組立フロー詳細内の電装セクションと同じ構成の単独モーダルにしている
+async function openTestRunFlowDetailModal(projectNum) {
+    document.getElementById('detail_modal').classList.add('open');
+    document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
+    document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
+    ui.send('OPEN_DETAIL');
+    currentTestRunDetailProjectNum = projectNum;
+    currentTestRunMachineDetail = null;
+    await renderTestRunFlowDetailBody(projectNum);
+}
+
+async function renderTestRunFlowDetailBody(projectNum) {
+    const { data: reqs } = await db.from('approval_requests')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .eq('project_number', projectNum).eq('flow_type', 'test_run')
+        .order('created_at', { ascending: true });
+
+    // 試運転タスクがある機械の一覧（未申請の機械を洗い出すため）
+    const { data: taskRows } = await db.from('tasks')
+        .select('machine').eq('project_number', projectNum).eq('text', '試運転').not('machine', 'is', null);
+    const machines = [...new Set((taskRows || []).map(t => (t.machine || '').trim()).filter(Boolean))];
+
+    const pInfo = projectsMap[projectNum] || {};
+    const meta = SHEET_FLOW_META['test_run'];
+    const myRole = getEffectiveRole();
+    const canApply = canApplyFlow('test_run');
+
+    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
+    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    const requesterNames = {};
+    if (requesterIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
+        (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
+    }
+
+    const appliedMachines = new Set((reqs || []).map(r => r.machine_name).filter(Boolean));
+    const unappliedMachines = machines.filter(m => !appliedMachines.has(m));
+
+    const unappliedRowsHtml = unappliedMachines.map(m => {
+        const linkHtml = canApply
+            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>`
+            : '';
+        return `<div class="unit-list-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div class="unit-list-name">${esc(m)}</div>
+                <div class="unit-list-status"><span class="status-badge s-gray">未申請</span></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                <div>${linkHtml}</div>
+                <div></div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const existingRowsHtml = (reqs || []).map(req => {
+        const cls = STATUS_CLASSES[req.status] || 's-gray';
+        const label = req.status === 'draft' ? '下書き' : statusBadgeLabel(req);
+        const machineLabel = req.machine_name || '（機械未入力）';
+        const isOwnDraft = req.status === 'draft' && req.requester_id === currentUser.id;
+
+        if (isOwnDraft) {
+            return `<div class="unit-list-row">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
+                    <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
+                </div>
+                <div class="unit-list-row-actions" style="justify-content:space-between;">
+                    <span class="unit-list-link" style="cursor:pointer;" onclick="reopenTestRunSheetFromDetail('${req.id}')">続きを入力する →</span>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${req.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">申請する</button>
+                        <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${req.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        const requesterName = requesterNames[req.requester_id] || '—';
+        const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
+        const isApproved = req.status === 'approved';
+        const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${req.id}` : `${meta.file}?view=1&id=${req.id}`;
+        const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+
+        const myStep = (req.approval_steps || []).find(s =>
+            s.approver_role === myRole && s.status === 'pending' && req.status === 'submitted');
+        const approvalHtml = myStep ? `
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
+            </div>` : '';
+
+        return `<div class="unit-list-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div class="unit-list-name">${esc(machineLabel)}</div>
+                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                </div>
+                <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
+                <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                <div></div>
+            </div>
+            ${approvalHtml}
+        </div>`;
+    }).join('');
+
+    const rowsHtml = unappliedRowsHtml + existingRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転の申請はまだありません</div>';
+
+    document.getElementById('detail_title').textContent = '試運転フロー';
+    document.getElementById('detail_body').innerHTML = `
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
+        ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
+        <hr class="section-divider">
+        <div class="section-title">試運転 申請状況</div>
+        <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
+    `;
+    document.getElementById('detail_footer').innerHTML = `
+        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+    `;
+}
+
 // ===== 2000番台：試運転フロー機械詳細モーダル =====
 // 試運転はユニット単位ではなく機械単位の申請のため、組立の機械詳細画面と同じ構成を機械1行だけに単純化して使う
 async function openTestRunMachineDetailModal(projectNum, machine) {
@@ -2959,6 +3237,7 @@ async function openTestRunMachineDetailModal(projectNum, machine) {
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
     document.getElementById('detail_footer').innerHTML = '<button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>';
     ui.send('OPEN_DETAIL');
+    currentTestRunDetailProjectNum = null;
     currentTestRunMachineDetail = { projectNum, machine };
     await renderTestRunMachineDetailBody(projectNum, machine);
 }
@@ -3057,7 +3336,8 @@ async function startNewTestRunSheetFromDetail(projectNum, machine) {
     if (error) { showToast('下書きの作成に失敗しました: ' + error.message, 'error'); return; }
     window.open(`test_run_sheet.html?draft_id=${newDraft.id}`, '_blank');
     await loadMineSide();
-    await renderTestRunMachineDetailBody(projectNum, machine);
+    if (currentTestRunDetailProjectNum) await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
+    else await renderTestRunMachineDetailBody(projectNum, machine);
 }
 
 function reopenTestRunSheetFromDetail(requestId) {
@@ -3111,7 +3391,8 @@ async function submitTestRunDraftFromDetail(draftId, projectNum, machine) {
 
         await refreshAll();
         showToast('試運転完了を申請しました。', 'success');
-        await renderTestRunMachineDetailBody(projectNum, machine);
+        if (currentTestRunDetailProjectNum) await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
+        else await renderTestRunMachineDetailBody(projectNum, machine);
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
@@ -3127,7 +3408,8 @@ async function deleteTestRunDraftFromDetail(draftId, projectNum, machine) {
         if (error) throw error;
         await refreshAll();
         showToast('下書きを削除しました。', 'success');
-        await renderTestRunMachineDetailBody(projectNum, machine);
+        if (currentTestRunDetailProjectNum) await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
+        else await renderTestRunMachineDetailBody(projectNum, machine);
     } catch (e) {
         showToast('削除に失敗しました: ' + e.message, 'error');
     } finally {
@@ -3182,7 +3464,8 @@ async function approveTestRunRequestFromDetail(requestId, stepId, stepOrder, pro
         await refreshAll();
         ui.send('SAVED');
         showToast('全承認が完了しました。関係者に通知が送られます。', 'success');
-        await renderTestRunMachineDetailBody(projectNum, machine);
+        if (currentTestRunDetailProjectNum) await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
+        else await renderTestRunMachineDetailBody(projectNum, machine);
     } catch (e) {
         showToast('承認処理に失敗しました: ' + e.message, 'error');
     } finally {
@@ -3245,7 +3528,8 @@ async function rejectTestRunRequestFromDetail(requestId, stepId, projectNum, com
         await refreshAll();
         ui.send('SAVED');
         showToast('却下しました。申請者に通知されます。', 'success');
-        await renderTestRunMachineDetailBody(projectNum, machine);
+        if (currentTestRunDetailProjectNum) await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
+        else await renderTestRunMachineDetailBody(projectNum, machine);
     } catch (e) {
         showToast('処理に失敗しました: ' + e.message, 'error');
     } finally {
@@ -3483,12 +3767,14 @@ let sheetChecks = {};
 let pendingItems = [];
 let currentDraftId = null;
 let currentUnitName = null; // 2000番台：ユニット単位申請時の選択中ユニット名（null=ユニット区分なし）
+let currentDraftHasAssemblyItems = false; // マイページの汎用申請モーダル用：組立、または2000番台ユニット単位の電装下書きならtrue
 let sheetAutoSaveTimer = null;
 let currentAssemblyDetailProjectNum = null; // 組立フロー詳細モーダル(工番レベル)で開いている工番（sheet.html完了通知の再描画に使う）
 let currentAssemblyMachineDetail = null; // 組立フロー詳細モーダル(機械レベル、2000番台)で開いている{projectNum, machine}
 let assemblyDetailReturnProjectNum = null; // 個別申請の詳細画面(openDetailModal)を工番レベル組立フロー詳細から開いた場合の戻り先工番
 let assemblyDetailReturnMachine = null; // 個別申請の詳細画面(openDetailModal)を機械レベル組立フロー詳細から開いた場合の戻り先{projectNum, machine}
 let currentTestRunMachineDetail = null; // 試運転フロー詳細モーダル(機械レベル、2000番台)で開いている{projectNum, machine}
+let currentTestRunDetailProjectNum = null; // 試運転フロー詳細モーダル(工番レベル、2000番以外)で開いている工番
 
 function selectApprover(role) {
     selectedApproverRole = role;
@@ -3570,12 +3856,15 @@ function _updateSubmitUnitDisplay() {
 async function goToSheetStep() {
     const projectNum = currentProjectNum;
     const isAssembly = currentFlowType === 'assembly';
-    const machineNums = isAssembly ? [] : getSelectedMachines('submit_machine_list');
+    // 2000番台のユニット単位電装下書き（assembly_itemsを持つ）も組立と同じく機械選択欄を使わない
+    const isElectricalUnitFlow = currentFlowType === 'electrical' && currentDraftHasAssemblyItems;
+    const isAssemblyItemsFlow = isAssembly || isElectricalUnitFlow;
+    const machineNums = isAssemblyItemsFlow ? [] : getSelectedMachines('submit_machine_list');
     if (!projectNum)                       { showToast('工事番号を選択してください', 'error'); return; }
-    if (!isAssembly && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (!isAssemblyItemsFlow && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
     const needsSheetFlow = !!SHEET_FLOW_META[currentFlowType];
     if (!needsSheetFlow) { submitRequest(); return; }
-    if (!isAssembly && machineNums.length > 1) {
+    if (!isAssemblyItemsFlow && machineNums.length > 1) {
         showToast('報告書は1台ずつ申請してください', 'error');
         return;
     }
@@ -3585,8 +3874,8 @@ async function goToSheetStep() {
         const note = document.getElementById('submit_note').value.trim();
 
         let existing;
-        if (isAssembly) {
-            // 組立は機械・ユニットを工程表と紐づけないため、工番・申請者単位で下書きを一意に扱う
+        if (isAssemblyItemsFlow) {
+            // 組立・電装ユニット単位は機械・ユニットを工程表と紐づけないため、工番・申請者単位で下書きを一意に扱う
             ({ data: existing } = await db.from('approval_requests')
                 .select('id')
                 .eq('project_number', projectNum)
@@ -3612,6 +3901,10 @@ async function goToSheetStep() {
             await db.from('approval_requests')
                 .update({ note: note || null })
                 .eq('id', existing.id);
+        } else if (isElectricalUnitFlow) {
+            // 電装ユニット単位下書きは常に機械詳細モーダルの「申請する」から作成済みのはずで、ここには来ない想定
+            showToast('下書きが見つかりません。機械詳細画面から開き直してください。', 'error');
+            return;
         } else if (isAssembly) {
             const { data: newDraft, error } = await db.from('approval_requests').insert({
                 project_number: projectNum,
@@ -3763,6 +4056,10 @@ async function openDraftInSubmitModal(draftId) {
         currentFlowType  = draft.flow_type;
         currentProjectNum = draft.project_number;
         currentUnitName   = draft.unit_name || null;
+        // 組立、または2000番台ユニット単位の電装下書き（assembly_itemsを持つ）は機械・ユニットが
+        // チェックシート側で入力済みのため、この汎用モーダルでは機械選択欄を出さない
+        currentDraftHasAssemblyItems = draft.flow_type === 'assembly'
+            || (Array.isArray(draft.assembly_items) && draft.assembly_items.length > 0);
         _updateSubmitUnitDisplay();
 
         const titleMap = { assembly: '組立完了通知 — 申請', electrical: '電装完了通知 — 申請', test_run: '試運転完了通知 — 申請' };
@@ -3777,8 +4074,8 @@ async function openDraftInSubmitModal(draftId) {
         document.getElementById('submit_note').value = draft.note || '';
         document.getElementById('flow_detect_group').style.display = 'none';
 
-        if (draft.flow_type === 'assembly') {
-            // 組立は機械・ユニットを工程表と紐づけないため、機械選択欄は出さない（チェックシート側で入力済み）
+        if (currentDraftHasAssemblyItems) {
+            // 組立・電装ユニット単位申請は機械・ユニットを工程表と紐づけないため、機械選択欄は出さない（チェックシート側で入力済み）
             document.getElementById('submit_machine_group').style.display = 'none';
         } else {
             document.getElementById('submit_machine_group').style.display = 'block';
@@ -3834,14 +4131,16 @@ function setupSheetChannel() {
         if (type !== 'sheet_complete' && type !== 'sheet_suspend') return;
         await loadMineSide();
 
-        // 組立フロー詳細モーダル（機械レベル or 工番レベル）・試運転フロー機械詳細モーダルが開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
+        // 組立フロー詳細モーダル（機械レベル or 工番レベル）・試運転フロー詳細モーダル（機械レベル or 工番レベル）が開いていれば、そちらを再描画する（申請する/修正するボタンの表示を更新）
         // sheet_suspend（一時保存）でも再描画しないと、入力済みの内容が古いまま表示され続ける
         const detailModal = document.getElementById('detail_modal');
-        if (detailModal.classList.contains('open') && (currentAssemblyDetailProjectNum || currentAssemblyMachineDetail || currentTestRunMachineDetail)) {
+        if (detailModal.classList.contains('open') && (currentAssemblyDetailProjectNum || currentAssemblyMachineDetail || currentTestRunMachineDetail || currentTestRunDetailProjectNum)) {
             if (currentAssemblyMachineDetail) {
                 await renderAssemblyMachineDetailBody(currentAssemblyMachineDetail.projectNum, currentAssemblyMachineDetail.machine);
             } else if (currentTestRunMachineDetail) {
                 await renderTestRunMachineDetailBody(currentTestRunMachineDetail.projectNum, currentTestRunMachineDetail.machine);
+            } else if (currentTestRunDetailProjectNum) {
+                await renderTestRunFlowDetailBody(currentTestRunDetailProjectNum);
             } else {
                 await renderAssemblyFlowDetailBody(currentAssemblyDetailProjectNum);
             }
@@ -3967,7 +4266,10 @@ async function submitRequest() {
     if (requireLogin()) return;
     const projectNum = currentProjectNum;
     const isAssembly = currentFlowType === 'assembly';
-    const machineNums = isAssembly ? [] : getSelectedMachines('submit_machine_list');
+    // 2000番台のユニット単位電装下書き（assembly_itemsを持つ）も組立と同じく機械選択欄を使わない
+    const isElectricalUnitFlow = currentFlowType === 'electrical' && currentDraftHasAssemblyItems;
+    const isAssemblyItemsFlow = isAssembly || isElectricalUnitFlow;
+    const machineNums = isAssemblyItemsFlow ? [] : getSelectedMachines('submit_machine_list');
     if (!projectNum)          { showToast('工事番号が設定されていません', 'error'); return; }
     if (currentFlowType === 'shipping_prep') {
         const blockerLists = await Promise.all(machineNums.map(m => _getPrepBlockers(projectNum, m)));
@@ -3976,8 +4278,8 @@ async function submitRequest() {
             return;
         }
     }
-    if (!isAssembly && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
-    if (isAssembly && !currentDraftId) { showToast('チェックシートで機械・ユニットを入力してください', 'error'); return; }
+    if (!isAssemblyItemsFlow && machineNums.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (isAssemblyItemsFlow && !currentDraftId) { showToast('チェックシートで機械・ユニットを入力してください', 'error'); return; }
     if (currentFlowType === 'shipping_prep') {
         if (!confirm(`${machineNums.length}機械の出荷準備完了を申請します。\n承認は不要で、関係者に完了通知がすぐに送信されます。よろしいですか？`)) return;
     }
@@ -4041,6 +4343,41 @@ async function submitRequest() {
                         approvers.map(a => ({ request_id: req.id, recipient_id: a.id, notification_type: 'approval_request' }))
                     );
                 }
+            }
+        } else if (isElectricalUnitFlow) {
+            // 2000番台：電装もユニット単位申請の場合はassembly_itemsにまとめて入力済み（denki_sheet.html側）
+            const { data: draftReq } = await db.from('approval_requests')
+                .select('assembly_items, sheet_data').eq('id', currentDraftId).single();
+            const items = getAssemblyItemsForReq(draftReq || {}).filter(it => it && it.machine);
+            if (items.length === 0) {
+                showToast('機械が未設定です。', 'error');
+                return;
+            }
+            const checkItems = draftReq?.sheet_data?.check_items || {};
+            const missingItems = ELECTRICAL_REQUIRED_ITEM_IDS.filter(id => !checkItems[id]?.result);
+            if (missingItems.length > 0 || !draftReq?.sheet_data?.meta?.completion_date) {
+                showToast('チェックシートの必須項目・完了日が未入力です。チェックシートを開いて入力してください。', 'error');
+                return;
+            }
+            assemblyItemCount = items.length;
+
+            const { data: req, error: e1 } = await db.from('approval_requests').update({
+                status:       'submitted',
+                note:         note || null,
+                machine_name: buildAssemblyMachineNameSummary(items)
+            }).eq('id', currentDraftId).select().single();
+            if (e1) throw e1;
+
+            // 電装: 課長相当のロールが無いため、常に組立部長の単一ステップ
+            firstApproverRole = 'assembly_director';
+            await db.from('approval_steps').insert(
+                [{ request_id: req.id, step_order: 1, approver_role: 'assembly_director', status: 'pending' }]
+            );
+            const { data: approvers } = await db.from('profiles').select('id').eq('role', 'assembly_director');
+            if (approvers?.length > 0) {
+                await db.from('approval_notifications').insert(
+                    approvers.map(a => ({ request_id: req.id, recipient_id: a.id, notification_type: 'approval_request' }))
+                );
             }
         } else {
             // 機械ごとに申請レコードを作成（複数機械対応。assembly以外は現状通り機械単位）
@@ -4128,6 +4465,8 @@ async function submitRequest() {
             const isParallelStaff = submitterRole !== 'assembly_manager';
             const approverLabel = isParallelStaff ? '組立課長・部長' : '組立部長';
             showToast(`組立完了を申請しました（機械${assemblyItemCount}件）。\n${approverLabel}に承認依頼が届きます。`, 'success');
+        } else if (isElectricalUnitFlow) {
+            showToast(`電装完了を申請しました（機械${assemblyItemCount}件）。\n組立部長に承認依頼が届きます。`, 'success');
         } else if (currentFlowType === 'shipping_prep') {
             showToast(`${machineNums.length}機械の出荷準備完了を申請しました。\n関係者に完了通知が届きます。`, 'success');
         } else {
@@ -4842,9 +5181,11 @@ function closeDetailModal() {
     }
     document.getElementById('detail_modal').classList.remove('open');
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
+    document.querySelector('#detail_modal .modal').classList.remove('wide-machine-detail');
     currentAssemblyDetailProjectNum = null;
     currentAssemblyMachineDetail = null;
     currentTestRunMachineDetail = null;
+    currentTestRunDetailProjectNum = null;
     ui.send('CLOSE');
 }
 
@@ -6420,6 +6761,8 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     if (requireLogin()) return;
+    const confirmLabel = currentDetailReq?.machine_name || currentDetailReq?.project_number || 'この申請';
+    if (!confirm(`${confirmLabel}を承認します。よろしいですか？`)) return;
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
 
     // assembly・test_run はいずれも並列承認（どちらかが承認した時点で即完了）
@@ -6517,6 +6860,8 @@ async function rejectStep(requestId, stepId) {
     if (requireLogin()) return;
     const comment = (document.getElementById('approval_comment')?.value || '').trim();
     if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
+    const confirmLabel = currentDetailReq?.machine_name || currentDetailReq?.project_number || 'この申請';
+    if (!confirm(`${confirmLabel}を却下します。よろしいですか？`)) return;
 
     showLoading('処理中...');
     try {
