@@ -3252,8 +3252,14 @@ async function renderTestRunFlowDetailBody(projectNum) {
         const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
         const isApproved = req.status === 'approved';
         const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const unresolvedPendingCount = countUnresolvedPendingItems(req);
+        const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${req.id}` : `${meta.file}?view=1&id=${req.id}`;
-        const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+        const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+            : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+        const sheetLinkOnclick = hasUnresolvedPending
+            ? `viewTestRunRequestDetail('${req.id}', '${esc(projectNum)}')`
+            : `window.open('${sheetUrl}', '_blank')`;
 
         const myStep = (req.approval_steps || []).find(s =>
             s.approver_role === myRole && s.status === 'pending' && req.status === 'submitted');
@@ -3272,7 +3278,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
-                <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                <div class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</div>
                 <div></div>
             </div>
             ${approvalHtml}
