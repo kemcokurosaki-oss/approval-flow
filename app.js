@@ -5200,6 +5200,19 @@ function closeDetailModal() {
         openAssemblyFlowDetailModal(returnNum);
         return;
     }
+    // 試運転フロー詳細（機械レベル or 工番レベル）から個別申請の詳細を開いた場合も同様に、閉じずに元の一覧に戻る
+    if (testRunDetailReturnMachine) {
+        const { projectNum, machine } = testRunDetailReturnMachine;
+        testRunDetailReturnMachine = null;
+        openTestRunMachineDetailModal(projectNum, machine);
+        return;
+    }
+    if (testRunDetailReturnProjectNum) {
+        const returnNum = testRunDetailReturnProjectNum;
+        testRunDetailReturnProjectNum = null;
+        openTestRunFlowDetailModal(returnNum);
+        return;
+    }
     document.getElementById('detail_modal').classList.remove('open');
     document.querySelector('#detail_modal .modal').classList.remove('unit-list-mode');
     document.querySelector('#detail_modal .modal').classList.remove('wide-machine-detail');
