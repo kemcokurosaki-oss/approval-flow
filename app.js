@@ -3814,6 +3814,8 @@ let assemblyDetailReturnProjectNum = null; // 個別申請の詳細画面(openDe
 let assemblyDetailReturnMachine = null; // 個別申請の詳細画面(openDetailModal)を機械レベル組立フロー詳細から開いた場合の戻り先{projectNum, machine}
 let currentTestRunMachineDetail = null; // 試運転フロー詳細モーダル(機械レベル、2000番台)で開いている{projectNum, machine}
 let currentTestRunDetailProjectNum = null; // 試運転フロー詳細モーダル(工番レベル、2000番以外)で開いている工番
+let testRunDetailReturnProjectNum = null; // 個別申請の詳細画面(openDetailModal)を工番レベル試運転フロー詳細から開いた場合の戻り先工番
+let testRunDetailReturnMachine = null; // 個別申請の詳細画面(openDetailModal)を機械レベル試運転フロー詳細から開いた場合の戻り先{projectNum, machine}
 
 function selectApprover(role) {
     selectedApproverRole = role;
