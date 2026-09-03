@@ -2027,7 +2027,10 @@ function renderProgressCards() {
                             const relevantElecReqs = (electricalReqsByProject[num] || []).filter(r =>
                                 r.status === 'approved' && getAssemblyItemsForReq(r).some(it => it && it.machine === machine));
                             const latestElecDate = relevantElecReqs.map(r => r.updated_at).filter(Boolean).sort().slice(-1)[0];
-                            if (latestElecDate) electricalDateStr = `完了 ${fmtDate(latestElecDate.slice(0, 10))}`;
+                            if (latestElecDate) {
+                                const d = new Date(latestElecDate);
+                                electricalDateStr = `完了 ${d.getMonth()+1}/${d.getDate()}`;
+                            }
                         } else if (electricalStatus === 'draft') {
                             electricalDateStr = '入力中';
                         } else if (electricalStatus === 'active') {
