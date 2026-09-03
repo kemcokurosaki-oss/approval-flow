@@ -2051,6 +2051,16 @@ function renderProgressCards() {
                             : '';
                     }
 
+                    // 電装側のペンディング未完了件数（isMachineRow=trueは当該機械分の電装申請のみ、falseは工番の電装申請そのもの）
+                    const relevantElecReqsAllForPending = isMachineRow
+                        ? (hasElectrical ? (electricalReqsByProject[num] || []).filter(r =>
+                            r.status !== 'draft' && getAssemblyItemsForReq(r).some(it => it && it.machine === machine)) : [])
+                        : (electricalReq && electricalReq.status !== 'draft' ? [electricalReq] : []);
+                    const electricalPendingCount = sumUnresolvedPendingItems(relevantElecReqsAllForPending);
+                    const electricalPendingBadge = electricalPendingCount > 0
+                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${electricalPendingCount}件</div>`
+                        : '';
+
                     return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
                         data-flow-type="assembly"
                         data-num="${esc(num)}">
@@ -2060,10 +2070,12 @@ function renderProgressCards() {
                             <div class="flow-dual-col">
                                 <div class="flow-dual-col-label">組立</div>
                                 ${assemblyDateStr ? `<div class="flow-date">${assemblyDateStr}</div>` : ''}
+                                ${assemblyPendingBadge}
                             </div>
                             <div class="flow-dual-col">
                                 <div class="flow-dual-col-label">電装</div>
                                 ${electricalDateStr ? `<div class="flow-date">${electricalDateStr}</div>` : ''}
+                                ${electricalPendingBadge}
                                 ${electricalOverdueBadge}
                             </div>
                         </div>
