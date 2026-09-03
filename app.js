@@ -2614,31 +2614,17 @@ function reopenAssemblySheetFromDetail(requestId) {
 }
 
 async function viewAssemblyRequestDetail(requestId, projectNum, machine = null) {
-    // 「閉じる」を押したら組立フロー詳細（工番レベル or 機械レベル）に戻れるようにする
+    // 「戻る」を押したら組立フロー詳細（工番レベル or 機械レベル）に戻れるようにする（戻り先はopenDetailModal側でセットする）
     currentAssemblyDetailProjectNum = null;
     currentAssemblyMachineDetail = null;
-    if (machine) {
-        assemblyDetailReturnMachine = { projectNum, machine };
-        assemblyDetailReturnProjectNum = null;
-    } else {
-        assemblyDetailReturnProjectNum = projectNum;
-        assemblyDetailReturnMachine = null;
-    }
-    await openDetailModal(requestId);
+    await openDetailModal(requestId, { type: 'assembly', projectNum, machine });
 }
 
 async function viewTestRunRequestDetail(requestId, projectNum, machine = null) {
-    // 「閉じる」を押したら試運転フロー詳細（工番レベル or 機械レベル）に戻れるようにする
+    // 「戻る」を押したら試運転フロー詳細（工番レベル or 機械レベル）に戻れるようにする（戻り先はopenDetailModal側でセットする）
     currentTestRunDetailProjectNum = null;
     currentTestRunMachineDetail = null;
-    if (machine) {
-        testRunDetailReturnMachine = { projectNum, machine };
-        testRunDetailReturnProjectNum = null;
-    } else {
-        testRunDetailReturnProjectNum = projectNum;
-        testRunDetailReturnMachine = null;
-    }
-    await openDetailModal(requestId);
+    await openDetailModal(requestId, { type: 'test_run', projectNum, machine });
 }
 
 async function submitAssemblyDraftFromDetail(draftId, projectNum, machine = null) {
