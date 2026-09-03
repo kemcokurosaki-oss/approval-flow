@@ -1768,9 +1768,10 @@
         .btn-delete-xs:hover { background: #e2e6ec; }
         .btn-delete-xs svg { width: 14px; height: 14px; flex-shrink: 0; }
         .unit-list-wrap-wide .unit-list-row { flex: 1 1 100%; }
-        /* 2000番台 機械詳細モーダル：組立・電装を左右2列で並べる */
-        .assembly-elec-split { display: flex; gap: 20px; align-items: flex-start; }
+        /* 2000番台 機械詳細モーダル：組立・電装を左右2列で並べる（区切り線を一覧の最下部まで届かせるためstretchで高さを揃える） */
+        .assembly-elec-split { display: flex; gap: 20px; align-items: stretch; }
         .assembly-elec-split > .detail-col { flex: 1; min-width: 280px; }
+        .assembly-elec-split > .detail-col + .detail-col { border-left: 1px solid #e2e5ea; padding-left: 20px; }
         .unit-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
         .unit-toggle input { display: none; }
         .unit-toggle-slider {
