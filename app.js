@@ -4773,9 +4773,21 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
 }
 
 // ===== Detail Modal =====
-async function openDetailModal(requestId) {
+async function openDetailModal(requestId, returnTo = null) {
     document.getElementById('detail_modal').classList.add('open');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
+    // 一覧モーダル経由（returnTo指定）以外の通常呼び出しでは、前回の戻り先情報が残らないよう必ずクリアする
+    assemblyDetailReturnProjectNum = null;
+    assemblyDetailReturnMachine = null;
+    testRunDetailReturnProjectNum = null;
+    testRunDetailReturnMachine = null;
+    if (returnTo?.type === 'assembly') {
+        if (returnTo.machine) assemblyDetailReturnMachine = { projectNum: returnTo.projectNum, machine: returnTo.machine };
+        else assemblyDetailReturnProjectNum = returnTo.projectNum;
+    } else if (returnTo?.type === 'test_run') {
+        if (returnTo.machine) testRunDetailReturnMachine = { projectNum: returnTo.projectNum, machine: returnTo.machine };
+        else testRunDetailReturnProjectNum = returnTo.projectNum;
+    }
     document.getElementById('detail_footer').innerHTML = `<button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>`;
     ui.send('OPEN_DETAIL');
 
