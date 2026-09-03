@@ -2502,8 +2502,14 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
         const isApproved = req.status === 'approved';
         const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const unresolvedPendingCount = countUnresolvedPendingItems(req);
+        const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${SHEET_FLOW_META.electrical.file}?draft_id=${req.id}` : `${SHEET_FLOW_META.electrical.file}?view=1&id=${req.id}`;
-        const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+        const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+            : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+        const sheetLinkOnclick = hasUnresolvedPending
+            ? `viewAssemblyRequestDetail('${req.id}', '${esc(projectNum)}')`
+            : `window.open('${sheetUrl}', '_blank')`;
 
         // 承認・却下ボタンは組立と共通の処理（approveAssemblyRequestFromList等）をそのまま流用する。
         // request_id/step_id起点で動く汎用ロジックのため、flow_typeがelectricalでも問題なく動作する
@@ -2524,7 +2530,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;">
-                <div class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</div>
+                <div class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</div>
                 <div></div>
             </div>
             ${approvalHtml}
