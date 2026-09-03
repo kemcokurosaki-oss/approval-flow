@@ -6323,6 +6323,16 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg, opts = {}) {
                 }
             }
         }
+        // 組立・電装（2000番台のユニット単位申請含む）は projectData ではなく
+        // assemblyReqsByProject / electricalReqsByProject で管理されているため、そちらも更新する
+        for (const arr of Object.values(progressCachedData.assemblyReqsByProject || {})) {
+            const hit = arr.find(r => r.id === requestId);
+            if (hit) hit.sheet_data = newSheetData;
+        }
+        for (const arr of Object.values(progressCachedData.electricalReqsByProject || {})) {
+            const hit = arr.find(r => r.id === requestId);
+            if (hit) hit.sheet_data = newSheetData;
+        }
         renderProgressCards();
     }
 
