@@ -176,6 +176,7 @@
         .pending-machine { width: 110px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
         .pending-content { flex: 1; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
         .pending-due     { width: 135px; font-size: 13px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .locked-field    { font-size: 14px; font-weight: 600; padding: 5px 8px; border: 1px solid #e2e5ea; border-radius: 4px; background: #f3f4f6; color: #333; box-sizing: border-box; }
         .btn-danger-xs {
             padding: 4px 10px; font-size: 12px;
             background: #fff; border: 1px solid #e74c3c; color: #e74c3c;
@@ -435,6 +436,14 @@
         </div>
     </div>
 
+    <div class="sheet-group" id="electrical_items_group" style="display:none;">
+        <div class="sheet-group-label">
+            ユニット
+            <button type="button" id="electrical_add_btn" class="btn-add-sm" onclick="addElectricalItem()">＋ ユニットを追加</button>
+        </div>
+        <div id="electrical_items_container"></div>
+    </div>
+
     <div class="sheet-group">
         <div class="sheet-group-label">機器取付<button type="button" class="sheet-bulk-btn" onclick="bulkSetGroupOK(this)">全て○</button></div>
         <div class="sheet-item"><span class="sheet-no">1</span><span class="sheet-text">中継箱、機側操作盤の取り付け状態（位置、架台強度、蓋の開閉など）は良好か。</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('1','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('1','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('1','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_1" placeholder="備考" oninput="scheduleSave()"><span class="sheet-note-print" id="snp_1"></span></span></div>
@@ -498,6 +507,14 @@ let saveTimer = null;
 let isSaving = false;
 let sheetMeta = { author: '', date: '', completion_date: '' };
 
+// 2000番台：機械詳細モーダルからのユニット単位申請時のみ使用（sheet.htmlのassemblyItems/assemblyModeと同じ仕組み）
+//   'fixed' … 固定ユニットリストの行から開始。機械・ユニットとも変更不可、1件のみ
+//   'free'  … 「一覧にないユニットを申請する」から開始。機械は固定、ユニットは自由入力・複数追加可
+//   null    … 従来通り（非2000番、または旧仕様の下書き）。機械単位1件のまま
+let electricalItems = [];
+let electricalMode = null;
+let electricalLockedMachine = '';
+
 const REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17'];
 
 function esc(s) {
@@ -514,6 +531,76 @@ function setSheetInfoHeader(projectNum, machineName) {
     const mn = document.getElementById('sheet_machine_name');
     if (pn) pn.textContent = projectNum;
     if (mn) mn.textContent = machineName;
+}
+
+// assembly_unit_master.js の buildAssemblyMachineNameSummary と同等（denki_sheet.htmlは同スクリプトを読み込んでいないため複製）
+function buildElecMachineLabel(req) {
+    const items = Array.isArray(req.assembly_items) && req.assembly_items.length > 0
+        ? req.assembly_items
+        : (req.machine_name ? [{ machine: req.machine_name, unit: req.unit_name || null }] : []);
+    return items
+        .filter(it => it && it.machine)
+        .map(it => (it.unit && it.unit !== '-') ? `${it.machine}${it.unit}` : it.machine)
+        .join(' / ');
+}
+
+// ===== 2000番台：ユニット単位申請の入力UI（sheet.htmlのassemblyItems相当の簡略版。機械は常に確定済みで開始する） =====
+function addElectricalItem() {
+    electricalItems.push({ machine: electricalLockedMachine, unit: null });
+    renderElectricalItems();
+    scheduleSave();
+}
+
+function removeElectricalItem(i) {
+    electricalItems.splice(i, 1);
+    renderElectricalItems();
+    scheduleSave();
+}
+
+function updateElectricalUnit(i, value) {
+    electricalItems[i].unit = value;
+    scheduleSave();
+}
+
+function renderElectricalItemRow(item, i) {
+    const lbl = (t) => `<span style="display:block;font-size:10px;color:#999;">${t}</span>`;
+    const machineHtml = `<div class="locked-field">${esc(item.machine)}</div>`;
+    let unitHtml;
+    if (electricalMode === 'fixed') {
+        unitHtml = `<div class="locked-field">${item.unit ? esc(item.unit) : '（ユニット選択不要）'}</div>`;
+    } else {
+        unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（自由入力）" value="${esc(item.unit || '')}"
+            oninput="updateElectricalUnit(${i}, this.value)">`;
+    }
+    const deleteCell = (electricalMode === 'fixed')
+        ? ''
+        : `<div style="display:flex;flex-direction:column;flex-shrink:0;">
+               ${lbl(' ')}
+               <button class="btn-danger-xs" onclick="removeElectricalItem(${i})">削除</button>
+           </div>`;
+
+    return `
+    <div class="pending-row">
+        <div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">
+            ${lbl('機械')}
+            ${machineHtml}
+        </div>
+        <div style="display:flex;flex-direction:column;width:220px;flex-shrink:0;">
+            ${lbl('ユニット')}
+            ${unitHtml}
+        </div>
+        ${deleteCell}
+    </div>`;
+}
+
+function renderElectricalItems() {
+    const c = document.getElementById('electrical_items_container');
+    if (!c) return;
+    if (electricalItems.length === 0) {
+        c.innerHTML = '<div class="pending-empty">ユニットが登録されていません</div>';
+        return;
+    }
+    c.innerHTML = electricalItems.map((item, i) => renderElectricalItemRow(item, i)).join('');
 }
 
 function fmtStampDate(iso) {
@@ -582,7 +669,7 @@ async function init() {
         // ===== 閲覧モード =====
         const { data: req, error } = await db
             .from('approval_requests')
-            .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
+            .select('project_number, machine_name, unit_name, assembly_items, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
             .eq('id', viewId)
             .single();
 
@@ -594,7 +681,8 @@ async function init() {
         }
 
         const isApproved = req.status === 'approved';
-        setSheetInfoHeader(req.project_number, req.machine_name);
+        const machineLabel = buildElecMachineLabel(req);
+        setSheetInfoHeader(req.project_number, machineLabel);
         checks       = req.sheet_data.check_items   || {};
         pendingItems = req.sheet_data.pending_items || [];
 
@@ -627,16 +715,16 @@ async function init() {
             document.getElementById('doc_title_top').textContent = '電気艤装完了報告書';
             document.getElementById('doc_date_top').textContent = meta.date || '';
             document.getElementById('doc_date_top').style.display = '';
-            document.title = `電気艤装完了報告書 - ${req.project_number} ${req.machine_name}`;
+            document.title = `電気艤装完了報告書 - ${req.project_number} ${machineLabel}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', approvers));
+                buildReportHeader(req.project_number, machineLabel, authorName, meta.date || '', meta.completion_date || '', approvers));
         } else {
             document.getElementById('doc_title_top').textContent = '電気艤装完了チェックシート';
-            document.title = `電気艤装完了チェックシート - ${req.project_number} ${req.machine_name}`;
+            document.title = `電気艤装完了チェックシート - ${req.project_number} ${machineLabel}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', []));
+                buildReportHeader(req.project_number, machineLabel, authorName, meta.date || '', meta.completion_date || '', []));
         }
 
         restoreChecks();
@@ -656,7 +744,7 @@ async function init() {
 
     const { data: draft, error } = await db
         .from('approval_requests')
-        .select('project_number, machine_name, sheet_data, requester_id, status')
+        .select('project_number, machine_name, unit_name, assembly_items, sheet_data, requester_id, status')
         .eq('id', draftId)
         .single();
 
@@ -667,8 +755,22 @@ async function init() {
         return;
     }
 
-    setSheetInfoHeader(draft.project_number, draft.machine_name);
-    document.title = `電気艤装完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
+    // 2000番台：機械詳細モーダルからのユニット単位申請の場合のみ、ユニット一覧入力UIを表示する
+    electricalItems = Array.isArray(draft.assembly_items) ? draft.assembly_items
+        : (draft.machine_name ? [{ machine: draft.machine_name, unit: draft.unit_name || null }] : []);
+    electricalMode = draft.sheet_data?.meta?.assembly_mode || null;
+    electricalLockedMachine = draft.sheet_data?.meta?.assembly_locked_machine || electricalItems[0]?.machine || '';
+    if (electricalMode) {
+        document.getElementById('electrical_items_group').style.display = '';
+        if (electricalMode === 'fixed') {
+            document.getElementById('electrical_add_btn')?.remove();
+        }
+        renderElectricalItems();
+    }
+
+    const machineLabel = buildElecMachineLabel(draft);
+    setSheetInfoHeader(draft.project_number, machineLabel);
+    document.title = `電気艤装完了チェックシート - ${draft.project_number} ${machineLabel}`;
 
     // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
     // （再申請自体は元の詳細画面の「再申請する」ボタンで行う）
@@ -830,8 +932,10 @@ async function saveNow() {
     });
 
     const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
+    const updatePayload = { sheet_data: sheetData };
+    if (electricalMode) updatePayload.assembly_items = electricalItems;
     const { error } = await db.from('approval_requests')
-        .update({ sheet_data: sheetData })
+        .update(updatePayload)
         .eq('id', draftId);
 
     isSaving = false;
