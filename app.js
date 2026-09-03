@@ -5090,13 +5090,13 @@ async function openDetailModal(requestId) {
 
     if (myStep) {
         footer.innerHTML = `
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-danger"    onclick="rejectStep('${req.id}','${myStep.id}')">却下する</button>
             <button class="btn btn-success"   onclick="approveStep('${req.id}','${myStep.id}',${myStep.step_order})">承認する</button>
         `;
     } else if (isMyRequest && req.status === 'rejected') {
         footer.innerHTML = `
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
@@ -5104,7 +5104,7 @@ async function openDetailModal(requestId) {
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-success"   onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
     } else if (canReschedule) {
@@ -5112,7 +5112,7 @@ async function openDetailModal(requestId) {
     } else if (changeDateFooterLinkHtml) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
-            <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
+            <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
         `;
     }
 }
