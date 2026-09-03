@@ -3305,6 +3305,8 @@ async function openTestRunMachineDetailModal(projectNum, machine) {
     ui.send('OPEN_DETAIL');
     currentTestRunDetailProjectNum = null;
     currentTestRunMachineDetail = { projectNum, machine };
+    testRunDetailReturnProjectNum = null;
+    testRunDetailReturnMachine = null;
     await renderTestRunMachineDetailBody(projectNum, machine);
 }
 
