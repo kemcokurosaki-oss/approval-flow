@@ -2107,8 +2107,10 @@ function renderProgressCards() {
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (f.type === 'test_run') {
                     // 試運転(2000番以外)は組立と同様、状態に関わらず工番全体の機械一覧モーダルを開く。
-                    // 承認済みならモーダルを経由せず直接完了報告書を開く（組立の2000番以外と同じ挙動）
-                    clickAttr = (req && req.status === 'approved')
+                    // 承認済みかつペンディング未完了が無ければモーダルを経由せず直接完了報告書を開く
+                    // （ペンディングが残っている場合は一覧モーダル経由にし、モーダル内で完了操作できるようにする）
+                    const hasUnresolvedTestRunPending = countUnresolvedPendingItems(req) > 0;
+                    clickAttr = (req && req.status === 'approved' && !hasUnresolvedTestRunPending)
                         ? `onclick="event.stopPropagation(); window.open('${SHEET_FLOW_META.test_run.file}?view=1&id=${req.id}', '_blank')"`
                         : `onclick="event.stopPropagation(); openTestRunFlowDetailModal('${esc(num)}')"`;
                     const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
