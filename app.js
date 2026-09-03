@@ -1588,6 +1588,8 @@ function _syncProgressControls() {
     if (overdueCb) overdueCb.checked = progressFilterOverdue;
     const shipAfterCb = document.getElementById('pfilter_ship_after');
     if (shipAfterCb) shipAfterCb.checked = progressFilterShipAfter;
+    const prefixGroup = document.querySelector('.rail-group-prefix');
+    if (prefixGroup) prefixGroup.style.display = (progressTab === 'assembly_report') ? 'none' : '';
 }
 
 function toggleCompletedView(checked) {
