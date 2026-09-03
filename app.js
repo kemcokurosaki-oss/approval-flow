@@ -3749,8 +3749,8 @@ async function openFlowModalPreset(el, overrideFlowType) {
         openSubmitModal(flowType);
         currentProjectNum = projectNum;
         document.getElementById('submit_project_display').textContent = projectNum;
-        // 電装・試運転はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
-        const isMachineLocked = flowType === 'electrical' || flowType === 'test_run';
+        // 電装・試運転・出荷準備はステップ表示で機械が確定しているため、申請画面内では選び直せないようにロックする
+        const isMachineLocked = flowType === 'electrical' || flowType === 'test_run' || flowType === 'shipping_prep';
         await onProjectChange(isMachineLocked ? machineName : null);
         if (isMachineLocked) {
             await onMachineChange();
