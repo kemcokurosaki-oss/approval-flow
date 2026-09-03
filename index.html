@@ -271,7 +271,7 @@
                 <div class="mph-unit" id="submit_unit_display" style="display:none;"></div>
                 <hr class="section-divider">
                 <div class="form-group" id="submit_machine_group" style="display:none;">
-                    <label>機械名 *（複数選択可）</label>
+                    <label>機械名</label>
                     <div class="machine-checkbox-bar">
                         <button type="button" class="btn-xs" id="submit_machine_toggle" onclick="toggleAllMachines('submit_machine_list', this)">全選択</button>
                     </div>
@@ -425,7 +425,7 @@
             </div>
             <hr class="section-divider">
             <div class="form-group" id="inspection_machine_group" style="display:none;">
-                <label>機械名 *（複数選択可）</label>
+                <label>機械名</label>
                 <div class="machine-checkbox-bar">
                     <button type="button" class="btn-xs" onclick="toggleAllMachines('inspection_machine_list', this)">全選択</button>
                 </div>
@@ -434,11 +434,11 @@
             <hr class="section-divider">
             <div class="section-title">開催情報</div>
             <div class="form-group">
-                <label>外観検査日 *</label>
+                <label>外観検査日 <span class="required-mark">*</span></label>
                 <input type="date" id="inspection_date_input">
             </div>
             <div class="form-group">
-                <label>開始時刻</label>
+                <label>開始時刻 <span class="required-mark">*</span></label>
                 <div style="display:flex; gap:6px; align-items:center;">
                     <select id="inspection_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
@@ -462,7 +462,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>場所</label>
+                <label>場所 <span class="required-mark">*</span></label>
                 <div id="inspection_location_input" class="location-checkbox-area"></div>
                 <small style="color:#888; font-size:12px;">複数選択可</small>
             </div>
@@ -515,7 +515,7 @@
             </div>
             <hr class="section-divider">
             <div class="form-group" id="si_machine_group" style="display:none;">
-                <label>機械名 *（複数選択可）</label>
+                <label>機械名</label>
                 <div class="machine-checkbox-bar">
                     <button type="button" class="btn-xs" onclick="toggleAllMachines('si_machine_list', this)">全選択</button>
                 </div>
@@ -524,11 +524,11 @@
             <hr class="section-divider">
             <div class="section-title">開催情報</div>
             <div class="form-group">
-                <label>簡易検査日 *</label>
+                <label>簡易検査日 <span class="required-mark">*</span></label>
                 <input type="date" id="si_date_input">
             </div>
             <div class="form-group">
-                <label>開始時刻</label>
+                <label>開始時刻 <span class="required-mark">*</span></label>
                 <div style="display:flex; gap:6px; align-items:center;">
                     <select id="si_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
@@ -552,7 +552,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>場所</label>
+                <label>場所 <span class="required-mark">*</span></label>
                 <div id="si_location_input" class="location-checkbox-area"></div>
                 <small style="color:#888; font-size:12px;">複数選択可</small>
             </div>
@@ -605,7 +605,7 @@
             </div>
             <hr class="section-divider">
             <div class="form-group" id="sm_machine_group" style="display:none;">
-                <label>機械名 *（複数選択可）</label>
+                <label>機械名</label>
                 <div class="machine-checkbox-bar">
                     <button type="button" class="btn-xs" onclick="toggleAllMachines('sm_machine_list', this)">全選択</button>
                 </div>
@@ -614,11 +614,11 @@
             <hr class="section-divider">
             <div class="section-title">開催情報</div>
             <div class="form-group">
-                <label>開催日 *</label>
+                <label>開催日 <span class="required-mark">*</span></label>
                 <input type="date" id="sm_date_input">
             </div>
             <div class="form-group">
-                <label>開始時刻</label>
+                <label>開始時刻 <span class="required-mark">*</span></label>
                 <div style="display:flex; gap:6px; align-items:center;">
                     <select id="sm_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <option value="">--</option>
@@ -642,7 +642,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>場所（会議室）</label>
+                <label>場所（会議室） <span class="required-mark">*</span></label>
                 <select id="sm_location_input" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px; width:100%;">
                     <option value="">選択してください</option>
                     <option value="第1会議室">第1会議室</option>
@@ -701,7 +701,7 @@
             </div>
             <hr class="section-divider">
             <div class="form-group" id="shipping_machine_group" style="display:none;">
-                <label>機械名 *（複数選択可）</label>
+                <label>機械名</label>
                 <div class="machine-checkbox-bar">
                     <button type="button" class="btn-xs" onclick="toggleAllMachines('shipping_machine_list', this)">全選択</button>
                 </div>
@@ -715,7 +715,7 @@
                 <label>申請・承認状況</label>
                 <div id="shipping_flow_list" class="flow-info-box"></div>
             </div>
-            <div id="shipping_missing_warning" style="display:none;color:#c0392b;font-size:13px;padding:6px 0;"></div>
+            <div id="shipping_missing_warning" style="display:none;color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;"></div>
             <hr class="section-divider">
             <div class="form-group">
                 <div style="font-size:13px; color:#888; padding:6px 0;">確定出荷日は営業担当者が入力後、内容を確認して本申請します。</div>
@@ -741,7 +741,7 @@
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>新しい開催日 *</label>
+                <label>新しい開催日 <span class="required-mark">*</span></label>
                 <input type="date" id="reschedule_date_input">
             </div>
             <div class="form-group">
