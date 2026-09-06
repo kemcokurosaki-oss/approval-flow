@@ -6767,8 +6767,8 @@ async function cancelMeeting(requestId, flowType) {
 }
 
 // フロー承認完了時に全体工程表のタスク完了チェックを自動連動（承認→完了の一方通行のみ）
-// 本番運用開始まではOFF。運用開始の合図があったら true に切り替える。
-const FLOW_TASK_SYNC_ENABLED = false;
+// 2026-09-07 本番運用開始に伴いON
+const FLOW_TASK_SYNC_ENABLED = true;
 const FLOW_APPROVAL_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', shipping: '工場出荷' };
 
 async function syncTaskCompletionOnFlowApproval(req) {
