@@ -602,6 +602,7 @@ async function runQaFinalizeReminders() {
   let count = 0;
   for (const req of requests) {
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (isFlowExcludedFor2000s(req.project_number, req.flow_type)) continue;
     if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
 
     const flow = QA_MEETING_LABELS[req.flow_type] || req.flow_type;
