@@ -37,8 +37,11 @@ const TASK_TO_FLOW = {
   '工場出荷': 'shipping',
 };
 
-// 工番2000番台（2000〜2999）の組立・電装完了申請催促は対象外にする
-function isProjectNumberExcludedFrom2000sReminder(projectNumber) {
+// 工番2000番台（2000〜2999）は組立・電装・試運転フローのみ承認フロー対象のため、
+// それ以外のフロー（出荷準備・工場出荷・簡易検査・外観検査・出荷確認会議）の催促は全て対象外にする
+const FLOW_TYPES_TARGETED_FOR_2000S = new Set(['assembly', 'electrical', 'test_run']);
+function isFlowExcludedFor2000s(projectNumber, flowType) {
+  if (FLOW_TYPES_TARGETED_FOR_2000S.has(flowType)) return false;
   const n = parseInt(String(projectNumber).trim(), 10);
   return n >= 2000 && n <= 2999;
 }
