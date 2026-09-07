@@ -184,6 +184,7 @@ async function runApprovalReminders() {
   let count = 0;
   for (const req of requests) {
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (isFlowExcludedFor2000s(req.project_number, req.flow_type)) continue;
 
     const steps = await supabaseFetch(
       `approval_steps?request_id=eq.${req.id}&status=eq.pending&select=approver_role`
