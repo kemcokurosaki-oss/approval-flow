@@ -314,8 +314,8 @@ async function runSubmissionReminders() {
     for (const task of (tasks || [])) {
       if (task.is_completed) continue;
       if (completedProjectsSet.has(String(task.project_number).trim())) continue;
-      // 組立・電装の完了申請催促のみ、工番2000番台（2000〜2999）を対象外にする
-      if ((flowType === 'assembly' || flowType === 'electrical') && isProjectNumberExcludedFrom2000sReminder(task.project_number)) continue;
+      // 工番2000番台は組立・電装・試運転フローのみ対象。出荷準備・工場出荷の申請催促は2000番台を対象外にする
+      if (isFlowExcludedFor2000s(task.project_number, flowType)) continue;
       // assembly/test_run/electrical はタスクオーナーが必須、shipping は不問
       if (flowType !== 'shipping' && !task.owner) continue;
       // テストモードで工事番号が指定されている場合は絞り込み
