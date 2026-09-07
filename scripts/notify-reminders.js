@@ -528,6 +528,7 @@ async function runInvitationReminders() {
   for (const flow of inviteFlows) {
     for (const target of flow.targets) {
       if (completedProjectsSet.has(String(target.project_number).trim())) continue;
+      if (isFlowExcludedFor2000s(target.project_number, flow.flowType)) continue;
       if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
 
       const taskKey = `${target.project_number}__${target.machine}`;
