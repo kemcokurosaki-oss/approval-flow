@@ -38,10 +38,19 @@ const TASK_TO_FLOW = {
 };
 
 // 工番2000番台（2000〜2999）は組立・電装・試運転フローのみ承認フロー対象のため、
-// それ以外のフロー（出荷準備・工場出荷・簡易検査・外観検査・出荷確認会議）の催促は全て対象外にする
+// それ以外のフロー（出荷準備・工場出荷・簡易検査・外観検査・出荷確認会議）の催促は全て対象外にする。
+// 承認催促・案内催促・ペンディング期日超過催促・完了処理催促の4つで使う（組立・電装専用の除外は追加しない）
 const FLOW_TYPES_TARGETED_FOR_2000S = new Set(['assembly', 'electrical', 'test_run']);
 function isFlowExcludedFor2000s(projectNumber, flowType) {
   if (FLOW_TYPES_TARGETED_FOR_2000S.has(flowType)) return false;
+  const n = parseInt(String(projectNumber).trim(), 10);
+  return n >= 2000 && n <= 2999;
+}
+
+// 申請催促のみ別ルール：組立・電装完了申請催促は工番2000番台を対象外にする（従来からの仕様）。
+// 出荷準備・工場出荷も2000番台では対象外（フロー自体が非対象のため）。試運転のみ2000番台でも通知する
+function isSubmissionReminderExcludedFor2000s(projectNumber, flowType) {
+  if (flowType === 'test_run') return false;
   const n = parseInt(String(projectNumber).trim(), 10);
   return n >= 2000 && n <= 2999;
 }
