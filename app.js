@@ -5009,9 +5009,9 @@ async function openDetailModal(requestId, returnTo = null) {
             ${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}
         </div>
         ${eventInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${eventInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
-        ${attendanceSectionHtml}
         ${shippingInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
         ${req.note ? `<div style="font-size:15px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
+        ${attendanceSectionHtml}
         ${shippingDateMismatches.length ? `
         <div style="background:#fdecea;border:1px solid #f5b5ac;border-radius:4px;padding:9px 12px;font-size:15px;color:#a33a2c;margin-top:8px;">
             <div style="white-space:nowrap;overflow-x:auto;">⚠ 工程表の出荷日とズレがあります（${shippingDateMismatches.join('、')}）。</div>
