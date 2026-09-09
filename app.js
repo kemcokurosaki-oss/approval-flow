@@ -120,6 +120,16 @@ function getLocationValue(id) {
         .map(cb => cb.value).join('・');
 }
 
+function setLocationCheckboxValue(id, valueStr) {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const selected = new Set((valueStr || '').split('・').filter(Boolean));
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = selected.has(cb.value);
+    });
+    updateLocText(id);
+}
+
 function resetLocationSelect(id) {
     const container = document.getElementById(id);
     if (!container) return;
