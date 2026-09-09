@@ -181,33 +181,16 @@ let progressFilterShipAfter = false; // 出荷後対応の未完了ペンディ�
 let completedProjectNums = new Set(); // completed_projectsに登録済みの工番
 let progressCachedData   = null;
 let currentDetailReq     = null;
-let devRole = ''; // 開発用ロール上書き
-let devDept = ''; // 開発用部署上書き
 let currentDetailFlowType = '';
 let currentDetailHasPackingShipping = false;
 let currentDetailShippingTaskCount = 1; // 工程表上の工場出荷タスク件数（分割出荷なら2）
 let qaEditingPendingIdx  = null; // 開催結果セクションで編集中のペンディング項目インデックス
 
-// デモ用ロール→{role, department, flowTypes} マッピング
-// flowTypes: 自分の申請タブで表示するフロー種別（デモ用フィルタ）
-const DEV_ROLE_MAP = {
-    staff_kumitate:      { role: 'staff',               department: '組立', flowTypes: ['assembly'] },
-    staff_denki:         { role: 'staff',               department: '電装', flowTypes: ['electrical'] },
-    staff_shiunten:      { role: 'staff',               department: '操業', flowTypes: ['test_run'] },
-    assembly_manager:    { role: 'assembly_manager',    department: '組立', flowTypes: ['assembly'] },
-    assembly_director:   { role: 'assembly_director',   department: '組立', flowTypes: [] },
-    operations_manager:  { role: 'operations_manager',  department: '操業', flowTypes: ['test_run'] },
-    operations_director: { role: 'operations_director', department: '操業', flowTypes: [] },
-    quality:             { role: 'quality',             department: '品証', flowTypes: ['simple_inspection', 'inspection', 'shipping'] },
-    production_control:  { role: 'production_control',  department: '製管', flowTypes: [] },
-    sales:               { role: 'staff',               department: '営業', flowTypes: ['shipping_prep'] }
-};
-let devFlowTypes    = []; // デモ用: 自分の申請タブのフロー絞り込み
 let userIsApplicant  = false; // 申請権限フラグ
 let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal から参照）
 
-function getEffectiveRole() { return devRole || currentProfile?.role || ''; }
-function getEffectiveDept() { return devDept || currentProfile?.department || ''; }
+function getEffectiveRole() { return currentProfile?.role || ''; }
+function getEffectiveDept() { return currentProfile?.department || ''; }
 
 // 部署 → その部署の上長ロール（課長・部長）一覧。品証・製管は課長/部長ロールがprofilesに存在しないため対象外
 const DEPT_SUPERVISOR_ROLES = {
@@ -243,10 +226,11 @@ function isSupervisorOfOwner(ownerName) {
     if (!ownerProfile) return false;
     const supervisorRoles = DEPT_SUPERVISOR_ROLES[ownerProfile.department];
     if (!supervisorRoles) return false;
-    return supervisorRoles.includes(getEffectiveRole());
+    return supervisorRoles.includes(getEffectiveRole()) || isSuperAdmin();
 }
 
 function canApplyFlow(flowType) {
+    if (isSuperAdmin()) return true;
     const role  = getEffectiveRole();
     const dept  = getEffectiveDept();
     const isQorS = role === 'quality' || role === 'production_control';
@@ -262,19 +246,23 @@ function canApplyFlow(flowType) {
 // 承認者ロール一覧
 const APPROVER_ROLES = ['assembly_manager','assembly_director','operations_manager','operations_director'];
 
-// 設定画面を開けるユーザー（製管2名）。開発用ロール切替バーの表示条件としても使う
+// 設定画面を開けるユーザー（製管2名+常務）
 const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com', 'm2-kusakabe@kusakabe.com'];
+
+// ADMIN_EMAILSの3名は、自分の実際のロールに関わらず全てのロールパターンの操作（承認・申請・完了操作等）を常に行える
+function isSuperAdmin() { return !!currentUser && ADMIN_EMAILS.includes(currentUser.email); }
 
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
-    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || role === 'quality' || role === 'production_control';
-    // 品証、および製管は同一権限（グローバル変数に保存）
-    isQualityOrSeikan = role === 'quality' || role === 'production_control';
+    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || role === 'quality' || role === 'production_control' || isSuperAdmin();
+    // 品証、および製管は同一権限（グローバル変数に保存）。管理者は常に品証・製管相当の操作を可能にする
+    isQualityOrSeikan = role === 'quality' || role === 'production_control' || isSuperAdmin();
     // 組立・操業・電装 staff + 組立課長 + 操業課長 + 営業staff（出荷準備申請）が申請可
     const isApplicant = (role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業' || dept === '電装'))
                       || role === 'assembly_manager'
-                      || role === 'operations_manager';
+                      || role === 'operations_manager'
+                      || isSuperAdmin();
     const isViewOnly  = role === 'staff' && !isApplicant && dept !== '製管';
 
     // 申請権限フラグをモジュール変数に保存
@@ -312,31 +300,6 @@ function applyRoleLayout(role) {
     // 進捗一覧のみモード（申請ボタンをCSS非表示）
     const appEl = document.getElementById('app');
     appEl.classList.toggle('is-view-only', isViewOnly);
-}
-
-async function switchDevRole(value) {
-    const map    = DEV_ROLE_MAP[value];
-    devRole      = map ? map.role       : '';
-    devDept      = map ? map.department : '';
-    devFlowTypes = map ? (map.flowTypes || []) : [];
-
-    const DEMO_LABELS = {
-        staff_kumitate:      '組立担当者',
-        staff_denki:         '電装担当者',
-        staff_shiunten:      '試運転担当者（操業）',
-        assembly_manager:    '組立課長',
-        assembly_director:   '組立部長',
-        operations_manager:  '操業課長',
-        operations_director: '操業部長',
-        quality:             '品質保証課',
-        production_control:  '製管',
-        sales:               '営業担当者'
-    };
-    const label = document.getElementById('dev_role_label');
-    label.textContent = value ? `▶ ${DEMO_LABELS[value] || value} として表示中` : '';
-
-    applyRoleLayout(getEffectiveRole());
-    await refreshAll();
 }
 
 // ===== Constants =====
@@ -656,7 +619,7 @@ function requireLogin() {
     return false;
 }
 
-// ヘッダーの実際の高さ（dev_bar表示の有無やフォント環境で変わる）を測って、
+// ヘッダーの実際の高さ（フォント環境で変わる）を測って、
 // マイページ・設定パネルの位置合わせに使う --header-height に反映する
 function updateHeaderHeightVar() {
     const header = document.querySelector('.header');
@@ -720,10 +683,8 @@ async function bootApp(session) {
         profile.department ? `${profile.name}（${profile.department}）` : profile.name;
     document.getElementById('user_menu_email').textContent   = currentUser.email;
 
-    // 製管2名+常務のみ開発用ロール切替バー・ユーザーメニューの「設定」項目を表示
+    // 製管2名+常務のみユーザーメニューの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
-        document.getElementById('dev_bar').style.display = 'flex';
-        document.getElementById('app').classList.add('has-dev-bar');
         document.getElementById('nav_settings_item').style.display = '';
         // 運用ガイドの「設定画面」の章は管理者のみ閲覧可能にする
         document.getElementById('rail_guide').href = 'guide.html?admin=1';
@@ -759,8 +720,6 @@ async function bootGuest() {
     document.getElementById('user_menu_btn').style.display   = 'none';
     document.getElementById('guest_login_btn').style.display = 'flex';
     document.getElementById('rail_mypage').style.display      = 'none';
-    document.getElementById('dev_bar').style.display          = 'none';
-    document.getElementById('app').classList.remove('has-dev-bar');
     document.getElementById('nav_settings_item').style.display = 'none';
     updateHeaderHeightVar();
 
@@ -1089,13 +1048,13 @@ async function refreshAll() {
     const dept        = getEffectiveDept();
     const isQorS      = role === 'quality' || role === 'production_control';
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
-    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || isQorS;
+    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || isQorS || isSuperAdmin();
     const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業');
 
     const loads = [];
     loads.push(loadProgress());
     if (isApprover) loads.push(loadPendingSide());
-    if (isApplicant || isQorS || role === 'assembly_manager' || role === 'operations_manager') loads.push(loadMineSide());
+    if (isApplicant || isQorS || role === 'assembly_manager' || role === 'operations_manager' || isSuperAdmin()) loads.push(loadMineSide());
 
     await Promise.all(loads);
 }
@@ -1120,19 +1079,20 @@ function matchesMypageFilterMode(num) {
 async function loadPendingSide() {
     const role    = getEffectiveRole();
     const dept    = getEffectiveDept();
-    const isSales = role === 'staff' && dept === '営業';
+    const isSales = (role === 'staff' && dept === '営業') || isSuperAdmin();
     const el      = document.getElementById('side_content_pending');
     if (!el) return;
 
-    // 承認ステップが自分のロールで pending のものを取得
-    const { data: steps, error } = await db
+    // 承認ステップが自分のロールで pending のものを取得（管理者は全ロール分の承認待ちを対象にする）
+    let stepsQuery = db
         .from('approval_steps')
         .select(`
             id, step_order, approver_role, approver_id, status, comment, decided_at,
             approval_requests ( id, flow_type, status, note, created_at, project_number, machine_name, test_run, requester_id )
         `)
-        .eq('approver_role', role)
         .eq('status', 'pending');
+    stepsQuery = isSuperAdmin() ? stepsQuery.in('approver_role', APPROVER_ROLES) : stepsQuery.eq('approver_role', role);
+    const { data: steps, error } = await stepsQuery;
 
     if (error) { el.innerHTML = '<div class="empty"><div class="empty-text">データ取得エラー</div></div>'; return; }
 
@@ -1233,16 +1193,11 @@ async function loadMineSide() {
     const el = document.getElementById('side_content_mine');
     if (!el) return;
 
-    let query = db
+    const query = db
         .from('approval_requests')
         .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, sheet_data, approval_steps(id, step_order, approver_role, status, decided_at)')
         .eq('requester_id', currentUser.id)
         .order('created_at', { ascending: false });
-
-    // デモ用: ロールに対応するフロー種別のみ表示
-    if (devFlowTypes.length > 0) {
-        query = query.in('flow_type', devFlowTypes);
-    }
 
     const { data: rawReqs } = await query;
     // 完了済み工番は非表示（進捗一覧の「完了済み」ボタンからのみ確認可能）
@@ -1253,7 +1208,7 @@ async function loadMineSide() {
     // 自分が申請に関われるフロー種別だけをセクションとして表示する
     // （組立・試運転系と検査・会議系、出荷確定申請はそれぞれ進捗の構成が異なるため、フローごとに区分けする）
     const visibleFlowTypes = Object.keys(FLOW_LABELS)
-        .filter(ft => canApplyFlow(ft) && (devFlowTypes.length === 0 || devFlowTypes.includes(ft)));
+        .filter(ft => canApplyFlow(ft));
 
     if (reqs.length === 0 || visibleFlowTypes.length === 0) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">申請中の案件はありません</div></div>';
@@ -2431,7 +2386,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             // 自分が承認できる保留中ステップがあれば、その場で承認・却下できるようにする
             // （却下は頻度が低いため理由入力欄は常時表示せず、却下ボタンを押した時だけ別モーダルで入力させる）
             const myStep = (g.req.approval_steps || []).find(s =>
-                s.approver_role === myRole && s.status === 'pending' && g.req.status === 'submitted');
+                (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && g.req.status === 'submitted');
 
             const approvalHtml = myStep ? `
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
@@ -2522,7 +2477,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         // 承認・却下ボタンは組立と共通の処理（approveAssemblyRequestFromList等）をそのまま流用する。
         // request_id/step_id起点で動く汎用ロジックのため、flow_typeがelectricalでも問題なく動作する
         const myStep = (req.approval_steps || []).find(s =>
-            s.approver_role === myRole && s.status === 'pending' && req.status === 'submitted');
+            (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && req.status === 'submitted');
         const approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
                 <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
@@ -2868,7 +2823,7 @@ function buildMachineUnitRowsHtml(opts) {
             linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</span>`;
 
             const myStep = (activeReq.approval_steps || []).find(s =>
-                s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
+                (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && activeReq.status === 'submitted');
             const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
             approvalHtml = myStep ? `
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
@@ -3258,7 +3213,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
             : `window.open('${sheetUrl}', '_blank')`;
 
         const myStep = (req.approval_steps || []).find(s =>
-            s.approver_role === myRole && s.status === 'pending' && req.status === 'submitted');
+            (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && req.status === 'submitted');
         const approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
                 <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">却下する</button>
@@ -3353,7 +3308,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</span>`;
 
         const myStep = (activeReq.approval_steps || []).find(s =>
-            s.approver_role === myRole && s.status === 'pending' && activeReq.status === 'submitted');
+            (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && activeReq.status === 'submitted');
         approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
                 <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
@@ -4859,7 +4814,7 @@ async function openDetailModal(requestId, returnTo = null) {
 
     // 自分が担当すべきステップか確認（shipping_prep は承認不要のため対象外）
     const myStep = steps.find(s =>
-        s.approver_role === getEffectiveRole() &&
+        (s.approver_role === getEffectiveRole() || isSuperAdmin()) &&
         s.status        === 'pending' &&
         (
             ((req.flow_type === 'assembly' || req.flow_type === 'test_run') && req.status === 'submitted') ||
@@ -4873,7 +4828,7 @@ async function openDetailModal(requestId, returnTo = null) {
         && req.status === 'submitted';
 
     // 出荷日変更リンク（品証・製管の確認や常務の承認が済んだ後でも、日付を変更できるようにする）
-    const isSales = getEffectiveRole() === 'staff' && getEffectiveDept() === '営業';
+    const isSales = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isSuperAdmin();
     const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
         && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
         && (isSales || isQualityOrSeikan) && !myStep;

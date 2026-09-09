@@ -135,24 +135,6 @@
                 </div>
             </nav>
         <div class="app-main">
-    <!-- 開発用ロール切替バー（黒崎のみ表示） -->
-    <div class="dev-bar" id="dev_bar" style="display:none;">
-            🛠 デモ用ロール切替：
-            <select id="dev_role_select" onchange="switchDevRole(this.value)">
-                <option value="">── 製管スタッフ（黒崎の実際の画面）──</option>
-                <option value="staff_kumitate">組立担当者</option>
-                <option value="staff_denki">電装担当者</option>
-                <option value="staff_shiunten">試運転担当者（操業）</option>
-                <option value="assembly_manager">組立課長</option>
-                <option value="assembly_director">組立部長</option>
-                <option value="operations_manager">操業課長</option>
-                <option value="operations_director">操業部長</option>
-                <option value="quality">品質保証課</option>
-                <option value="production_control">製管</option>
-                <option value="sales">営業担当者</option>
-            </select>
-        <span id="dev_role_label" style="font-weight:bold;"></span>
-    </div>
         <div class="header">
         <div class="header-row1">
             <div class="app-bar-title header-home-link" onclick="closeSettingsModal()" title="承認ステータスに戻る">
