@@ -6581,7 +6581,7 @@ async function finalizeQaMeeting(requestId) {
 // ===== 日程変更（簡易検査・外観検査・出荷確認会議） =====
 let rescheduleModalReqId = null; // 日程変更モーダルが対象としている申請ID
 
-function openRescheduleModal(requestId) {
+async function openRescheduleModal(requestId) {
     const req = currentDetailReq;
     if (!req || req.id !== requestId) return;
 
@@ -6592,10 +6592,68 @@ function openRescheduleModal(requestId) {
     document.getElementById('reschedule_time_hour').value  = req.inspection_time ? req.inspection_time.split(':')[0] : '';
     document.getElementById('reschedule_time_min').value   = req.inspection_time ? req.inspection_time.split(':')[1] : '';
 
+    const locInput  = document.getElementById('reschedule_location_input');
+    const locSelect = document.getElementById('reschedule_location_select');
+    const locHint   = document.getElementById('reschedule_location_hint');
+    if (req.flow_type === 'shipping_meeting') {
+        locInput.style.display  = 'none';
+        locSelect.style.display = '';
+        locHint.style.display   = 'none';
+        locSelect.value = req.inspection_location || '';
+    } else {
+        locInput.style.display  = '';
+        locSelect.style.display = 'none';
+        locHint.style.display   = '';
+        buildLocationCheckboxes('reschedule_location_input');
+        setLocationCheckboxValue('reschedule_location_input', req.inspection_location || '');
+    }
+
+    extraRecipients.reschedule = [];
+    renderExtraList('reschedule');
+    await renderExistingRecipients(requestId);
+
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = false; btn.textContent = '保存して通知';
 
     document.getElementById('reschedule_modal').classList.add('open');
+}
+
+async function renderExistingRecipients(requestId) {
+    const listEl = document.getElementById('reschedule_recipients_list');
+    listEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px;">読み込み中...</div>';
+
+    const { data: notifs } = await db.from('approval_notifications')
+        .select('recipient_id, recipient_email')
+        .eq('request_id', requestId)
+        .not('emailed_at', 'is', null);
+
+    const seen = new Set();
+    const uniqueNotifs = (notifs || []).filter(n => {
+        const key = n.recipient_id || n.recipient_email;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    const profileIds = uniqueNotifs.filter(n => n.recipient_id).map(n => n.recipient_id);
+    let profileMap = {};
+    if (profileIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name, email').in('id', profileIds);
+        if (prs) prs.forEach(p => { profileMap[p.id] = p; });
+    }
+
+    const rows = uniqueNotifs.map(n => {
+        const p = n.recipient_id ? profileMap[n.recipient_id] : null;
+        const name  = p?.name  || n.recipient_email || '—';
+        const email = p?.email || n.recipient_email || '—';
+        return `
+        <div class="recipient-item">
+            <span class="recipient-name">${esc(name)}</span>
+            <span class="recipient-email">${esc(email)}</span>
+        </div>`;
+    }).join('');
+
+    listEl.innerHTML = rows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
 }
 
 function closeRescheduleModal() {
