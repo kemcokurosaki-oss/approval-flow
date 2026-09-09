@@ -756,6 +756,30 @@
                     </select>
                 </div>
             </div>
+            <div class="form-group">
+                <label>場所 <span class="required-mark">*</span></label>
+                <div id="reschedule_location_input" class="location-checkbox-area"></div>
+                <select id="reschedule_location_select" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px; width:100%; display:none;">
+                    <option value="">選択してください</option>
+                    <option value="第1会議室">第1会議室</option>
+                    <option value="第2会議室">第2会議室</option>
+                    <option value="第3会議室">第3会議室</option>
+                    <option value="第4会議室">第4会議室</option>
+                    <option value="第5会議室">第5会議室</option>
+                </select>
+                <small style="color:#888; font-size:12px;" id="reschedule_location_hint">複数選択可</small>
+            </div>
+            <hr class="section-divider">
+            <div class="section-title">現在の送付先</div>
+            <div class="recipient-list" id="reschedule_recipients_list"></div>
+            <hr class="section-divider">
+            <div class="section-title">参加者を追加（任意）</div>
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
+                <input type="text" id="reschedule_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                <input type="text" id="reschedule_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('reschedule')">追加</button>
+            </div>
+            <div id="reschedule_extra_list"></div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeRescheduleModal()">キャンセル</button>
