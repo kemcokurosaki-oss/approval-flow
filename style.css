@@ -2750,8 +2750,10 @@
 
     /* ----- 設定画面内の表形式レイアウトは横スクロールで最低限崩れないようにする ----- */
     .settings-page-body { padding: 14px; }
-    .roster-head, .roster-row,
-    .recip-head, .recip-row,
-    .audit-head, .audit-row { overflow-x: auto; }
+    .settings-flow-group.roster-group,
+    .recip-list, .audit-list { overflow-x: auto; }
+    .roster-head, .roster-row { min-width: 620px; }
+    .recip-head, .recip-row { min-width: 480px; }
+    .audit-head, .audit-row { min-width: 480px; }
     .rm-dept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
