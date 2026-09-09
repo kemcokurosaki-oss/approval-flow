@@ -567,6 +567,59 @@ async function main() {
     icsSequenceMap[reqId] = (prev?.length || 0) + 1;
   }
 
+  // 招待系（開催案内・日程変更・キャンセル）通知のATTENDEE一覧を事前計算
+  // 同じ申請への招待は全員に同一のATTENDEEリストを持つ1つのICSを配布する（Outlookの標準的な会議招待と同じ挙動）
+  const INVITE_FAMILY_BY_FLOW = {
+    simple_inspection: ['simple_inspection_invite', 'simple_inspection_reschedule'],
+    inspection:        ['inspection_invite', 'inspection_reschedule'],
+    shipping_meeting:  ['shipping_meeting_invite', 'shipping_meeting_reschedule'],
+  };
+  const inviteReqIds = [...new Set(
+    notifications
+      .filter(n => INVITE_FAMILY_BY_FLOW[reqMap[n.request_id]?.flow_type])
+      .map(n => n.request_id)
+  )];
+  const roomEmailsSet = new Set(Object.values(ROOM_EMAILS));
+  const attendeesMap = {};
+  for (const reqId of inviteReqIds) {
+    const req    = reqMap[reqId];
+    const family = INVITE_FAMILY_BY_FLOW[req?.flow_type];
+    if (!family) continue;
+
+    const allNotifs = await supabaseFetch(
+      `approval_notifications?request_id=eq.${reqId}&notification_type=in.(${family.join(',')})&select=recipient_id,recipient_email,optional`
+    );
+    const byKey = new Map();
+    (allNotifs || []).forEach(n => {
+      if (n.recipient_email && roomEmailsSet.has(n.recipient_email)) return; // 会議室はATTENDEEに含めない
+      const key = n.recipient_id || n.recipient_email;
+      if (!key) return;
+      byKey.set(key, n);
+    });
+    const entries = [...byKey.values()];
+
+    const profIds = entries.filter(e => e.recipient_id).map(e => e.recipient_id);
+    let profMap = {};
+    if (profIds.length > 0) {
+      const profs = await supabaseFetch(`profiles?id=in.(${profIds.join(',')})&select=id,name,email`);
+      profMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
+    }
+    const emails = entries.map(e => e.recipient_email || profMap[e.recipient_id]?.email).filter(Boolean);
+    let nameByEmail = {};
+    if (emails.length > 0) {
+      const emailListParam = emails.map(e => `"${e}"`).join(',');
+      const recs = await supabaseFetch(`notification_recipients?email=in.(${emailListParam})&select=name,email`);
+      (recs || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
+    }
+
+    attendeesMap[reqId] = entries.map(e => {
+      const p     = e.recipient_id ? profMap[e.recipient_id] : null;
+      const email = e.recipient_email || p?.email || null;
+      const name  = p?.name || (email && nameByEmail[email]) || email;
+      return { email, name, optional: !!e.optional };
+    }).filter(a => a.email);
+  }
+
   // profiles のメールアドレスを一括取得（recipient_idがある場合のみ）
   const recipientIds = [...new Set(
     notifications.map(n => n.recipient_id).filter(Boolean)
