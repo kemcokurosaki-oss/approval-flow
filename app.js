@@ -7723,6 +7723,7 @@ function openShippingMeetingModal() {
     document.getElementById('sm_footer_step1').style.display    = '';
     document.getElementById('sm_footer_step2').style.display    = 'none';
     extraRecipients.sm = [];
+    recipientOptionalKeys.sm.clear();
     document.getElementById('sm_extra_list').innerHTML = '';
     document.getElementById('sm_date_input').value     = '';
     document.getElementById('sm_time_hour').value      = '';
