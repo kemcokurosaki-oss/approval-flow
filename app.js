@@ -6745,7 +6745,8 @@ async function saveReschedule() {
                 extraRecipients.reschedule.map(r => ({
                     request_id:        requestId,
                     recipient_email:   r.email,
-                    notification_type: inviteType
+                    notification_type: inviteType,
+                    optional:          !!r.optional
                 }))
             );
             extraRecipients.reschedule = [];
