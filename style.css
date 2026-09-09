@@ -2658,3 +2658,100 @@
     box-shadow: 0 -1px 4px rgba(20,36,63,.06);
 }
 .rm-footer .rm-footer-save { margin-left: auto; }
+
+/* =========================================================
+   スマホ対応（閲覧を主目的とした段階1対応）
+   ========================================================= */
+
+/* ハンバーガーボタン／オーバーレイはPC幅では非表示 */
+.mobile-nav-toggle {
+    display: none;
+    align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: none; border-radius: 8px; background: transparent; color: #16233a;
+    cursor: pointer; margin-right: 4px;
+}
+.mobile-nav-toggle:hover { background: #eef1f6; }
+.mobile-nav-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(16,24,40,.45);
+    z-index: 259;
+}
+.mobile-nav-overlay.open { display: block; }
+
+@media (max-width: 860px) {
+    /* ----- ハンバーガーメニュー化した左レール ----- */
+    .mobile-nav-toggle { display: inline-flex; }
+    .app-rail {
+        position: fixed; top: 0; left: 0; height: 100vh;
+        width: 264px; max-width: 84vw;
+        z-index: 260;
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        box-shadow: 8px 0 24px rgba(0,0,0,.18);
+    }
+    .app-rail.mobile-open { transform: translateX(0); }
+    .app-main { width: 100%; }
+
+    /* ----- ヘッダー：折り返して縦に積む ----- */
+    .header-row1 { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+    .header-row1 .header-tools {
+        position: static; transform: none;
+        order: 3; width: 100%; margin: 0;
+        flex-wrap: wrap;
+    }
+    .board-search { flex: 1; min-width: 0; }
+    .board-search input { width: 100%; }
+    .psort-group { flex-shrink: 0; }
+    .header-row2 { flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
+
+    /* ----- 進捗カード：日付バッジ等を折り返す ----- */
+    .prog-card { padding: 13px 14px 15px; }
+    .prog-card-header { flex-wrap: wrap; }
+    .prog-card-dates { flex-direction: row; flex-wrap: wrap; align-items: flex-start; width: 100%; }
+    .prog-card-date { width: auto; flex: 1 1 160px; }
+
+    /* ----- マイページ／設定：全画面オーバーレイに変更 ----- */
+    .side-panel, .settings-page {
+        width: 100vw;
+        top: 0; height: 100vh;
+    }
+    .main:has(.side-panel.open, .settings-page.open) .main-content { margin-right: 0; }
+
+    /* ----- マイページ：カンバンを1カラムに ----- */
+    .mine-kanban-row, .pending-flow-list { grid-template-columns: 1fr; }
+    .kanban-arrow { display: none; }
+    .pending-flow-list .side-card { margin: 0; }
+
+    /* ----- 各種モーダル：画面幅に収める ----- */
+    .modal { width: 95vw; }
+    #inspection_modal .modal,
+    #simple_inspection_modal .modal,
+    #shipping_meeting_modal .modal,
+    #shipping_modal .modal,
+    #submit_modal .modal,
+    #detail_modal .modal,
+    #detail_modal .modal.wide-machine-detail {
+        width: 95vw; max-width: 95vw; height: 90vh;
+    }
+    .modal-sheet { width: 95vw; }
+
+    /* ----- 自主点検シート：備考欄を折り返す ----- */
+    .sheet-item { flex-wrap: wrap; }
+    .sheet-note { width: 100%; }
+
+    /* ----- 宛先リスト：長いメールアドレスの折り返し ----- */
+    .recipient-item { flex-wrap: wrap; }
+    .recipient-email { min-width: 0; word-break: break-all; }
+
+    /* ----- ログインダイアログ ----- */
+    #login_dialog, #setpw_dialog { width: 90vw; max-width: 340px; padding: 26px 20px; }
+
+    /* ----- 設定画面内の表形式レイアウトは横スクロールで最低限崩れないようにする ----- */
+    .settings-page-body { padding: 14px; }
+    .roster-head, .roster-row,
+    .recip-head, .recip-row,
+    .audit-head, .audit-row { overflow-x: auto; }
+    .rm-dept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
