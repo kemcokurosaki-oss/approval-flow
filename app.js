@@ -6672,15 +6672,23 @@ async function saveReschedule() {
     if (!newDate) { showToast('開催日を入力してください', 'error'); return; }
     const newTime = (newHour && newMin) ? `${newHour}:${newMin}` : null;
 
+    const isShippingMeeting = currentDetailFlowType === 'shipping_meeting';
+    const newLocation = isShippingMeeting
+        ? document.getElementById('reschedule_location_select').value
+        : getLocationValue('reschedule_location_input');
+    if (!newLocation) { showToast('場所を選択してください', 'error'); return; }
+    const oldLocation = currentDetailReq?.inspection_location || '';
+
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = true; btn.textContent = '保存中...';
     showLoading('処理中...');
 
     try {
         await db.from('approval_requests').update({
-            inspection_date: newDate,
-            inspection_time: newTime,
-            updated_at:      new Date().toISOString()
+            inspection_date:     newDate,
+            inspection_time:     newTime,
+            inspection_location: newLocation,
+            updated_at:          new Date().toISOString()
         }).eq('id', requestId);
 
         // 元の送信済み通知の宛先に変更通知を再送
@@ -6689,7 +6697,7 @@ async function saveReschedule() {
             .eq('request_id', requestId)
             .not('emailed_at', 'is', null);
 
-        const rescheduleType = currentDetailFlowType === 'shipping_meeting'
+        const rescheduleType = isShippingMeeting
             ? 'shipping_meeting_reschedule'
             : currentDetailFlowType === 'inspection'
             ? 'inspection_reschedule'
@@ -6711,6 +6719,35 @@ async function saveReschedule() {
                 }
             }
             if (notifs.length > 0) await db.from('approval_notifications').insert(notifs);
+        }
+
+        // 出荷確認会議で会議室を変更した場合、旧会議室の予約を解除する
+        if (isShippingMeeting && oldLocation !== newLocation) {
+            const oldRoomEmail = ROOM_EMAILS[oldLocation];
+            if (oldRoomEmail) {
+                await db.from('approval_notifications').insert({
+                    request_id:        requestId,
+                    recipient_email:   oldRoomEmail,
+                    notification_type: 'shipping_meeting_room_change_cancel'
+                });
+            }
+        }
+
+        // 新規追加された参加者には招待通知を送る
+        if (extraRecipients.reschedule.length > 0) {
+            const inviteType = isShippingMeeting
+                ? 'shipping_meeting_invite'
+                : currentDetailFlowType === 'inspection'
+                ? 'inspection_invite'
+                : 'simple_inspection_invite';
+            await db.from('approval_notifications').insert(
+                extraRecipients.reschedule.map(r => ({
+                    request_id:        requestId,
+                    recipient_email:   r.email,
+                    notification_type: inviteType
+                }))
+            );
+            extraRecipients.reschedule = [];
         }
 
         closeRescheduleModal();
