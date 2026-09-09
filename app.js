@@ -8158,7 +8158,7 @@ async function changeConfirmedShippingDate(requestId) {
 
 // ===== Notifications =====
 
-async function recordFlowNotifications(requestId, flowType) {
+async function recordFlowNotifications(requestId, flowType, optionalKeys = null) {
     // 工番・機械名・申請者IDを取得
     const { data: req } = await db.from('approval_requests').select('project_number, machine_name, requester_id').eq('id', requestId).single();
     const projectNum = req?.project_number;
