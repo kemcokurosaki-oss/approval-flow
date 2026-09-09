@@ -7613,10 +7613,10 @@ async function submitSimpleInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
-            await recordFlowNotifications(req.id, 'simple_inspection');
+            await recordFlowNotifications(req.id, 'simple_inspection', recipientOptionalKeys.si);
             if (extraRecipients.si.length > 0) {
                 await db.from('approval_notifications').insert(
-                    extraRecipients.si.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'simple_inspection_invite' }))
+                    extraRecipients.si.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'simple_inspection_invite', optional: !!r.optional }))
                 );
             }
         }
