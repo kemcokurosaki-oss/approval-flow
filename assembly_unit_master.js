@@ -16,7 +16,7 @@ const ASSEMBLY_UNIT_MASTER = {
     RT: ['-'],
     DF: ['-'],
     BM: ['-'],
-    PC: ['-', 'DS'],
+    PC: ['-', 'DS', 'MU'],
     TR: ['RV', 'CV', 'AL', 'WK', 'AI'],
     FS: ['EG', 'RS', 'SR', 'TW', 'TH', 'MR', 'UJ', 'DR'],
     WA: ['SQ', 'SG', 'IR', 'BC', 'BW', 'BH', 'CI', 'IC', 'IP', 'HF'],
