@@ -7523,6 +7523,7 @@ function openSimpleInspectionModal() {
     document.getElementById('si_footer_step1').style.display    = '';
     document.getElementById('si_footer_step2').style.display    = 'none';
     extraRecipients.si = [];
+    recipientOptionalKeys.si.clear();
     document.getElementById('si_extra_list').innerHTML = '';
     document.getElementById('si_date_input').value     = '';
     document.getElementById('si_time_hour').value = '';
