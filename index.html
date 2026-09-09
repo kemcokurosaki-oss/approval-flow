@@ -797,6 +797,15 @@
 <script src="assembly_unit_master.js"></script>
 <script src="app.js?v=12"></script>
 <script>
+// スマホ幅：左レール（ハンバーガーメニュー）の開閉
+function toggleMobileNav() {
+    document.querySelector('.app-rail')?.classList.toggle('mobile-open');
+    document.getElementById('mobile_nav_overlay')?.classList.toggle('open');
+}
+function closeMobileNav() {
+    document.querySelector('.app-rail')?.classList.remove('mobile-open');
+    document.getElementById('mobile_nav_overlay')?.classList.remove('open');
+}
 // 案件ボードの簡易検索（工事番号・客先名・工事名の部分一致でカードを絞り込む）
 function applyBoardSearch() {
     const q = (document.getElementById('board_search')?.value || '').trim().toLowerCase();
