@@ -7713,11 +7713,11 @@ async function submitInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
-            await recordFlowNotifications(req.id, 'inspection');
+            await recordFlowNotifications(req.id, 'inspection', recipientOptionalKeys.inspection);
             // 追加宛先を挿入
             if (extraRecipients.inspection.length > 0) {
                 await db.from('approval_notifications').insert(
-                    extraRecipients.inspection.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'inspection_invite' }))
+                    extraRecipients.inspection.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'inspection_invite', optional: !!r.optional }))
                 );
             }
         }
