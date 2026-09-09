@@ -2,6 +2,9 @@
   "name": "approval-notify",
   "version": "1.0.0",
   "dependencies": {
-    "nodemailer": "^6.9.0"
+    "nodemailer": "^6.9.0",
+    "imapflow": "^1.0.161",
+    "mailparser": "^3.6.9",
+    "node-ical": "^0.19.0"
   }
 }
