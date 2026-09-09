@@ -2695,7 +2695,7 @@
     .app-main { width: 100%; }
 
     /* ----- ヘッダー：折り返して縦に積む ----- */
-    .header-row1 { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+    .header-row1 { height: auto; flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
     .header-row1 .header-tools {
         position: static; transform: none;
         order: 3; width: 100%; margin: 0;
