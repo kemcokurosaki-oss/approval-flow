@@ -4978,6 +4978,10 @@ async function openDetailModal(requestId, returnTo = null) {
     }
     if (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_location) eventInfoParts.push(`場所: ${esc(req.inspection_location)}`);
 
+    const attendanceSectionHtml = (QA_MEETING_FLOWS.includes(req.flow_type) && req.inspection_date)
+        ? await buildAttendanceSectionHtml(req)
+        : '';
+
     const shippingInfoParts = [];
     if (req.flow_type === 'shipping' && req.packing_confirmed_shipping_date) {
         shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
