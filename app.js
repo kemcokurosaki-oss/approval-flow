@@ -6587,7 +6587,7 @@ async function openRescheduleModal(requestId) {
 
     rescheduleModalReqId = requestId;
     document.getElementById('reschedule_modal_title').textContent =
-        `日程変更－${QA_DETAIL_TITLE_LABELS[req.flow_type] || ''}`;
+        `日程・会場変更－${QA_DETAIL_TITLE_LABELS[req.flow_type] || ''}`;
     document.getElementById('reschedule_date_input').value = req.inspection_date || '';
     document.getElementById('reschedule_time_hour').value  = req.inspection_time ? req.inspection_time.split(':')[0] : '';
     document.getElementById('reschedule_time_min').value   = req.inspection_time ? req.inspection_time.split(':')[1] : '';
