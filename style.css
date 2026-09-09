@@ -2676,7 +2676,7 @@
     display: none;
     position: fixed; inset: 0;
     background: rgba(16,24,40,.45);
-    z-index: 259;
+    z-index: 310;
 }
 .mobile-nav-overlay.open { display: block; }
 
