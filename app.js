@@ -5165,7 +5165,7 @@ function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
 function buildQaFooterInner(req) {
     return `
         ${qaCanFinalize(req) ? `<button class="btn btn-success" onclick="finalizeQaMeeting('${req.id}')">完了にする</button>` : ''}
-        <button class="btn btn-primary"   onclick="openRescheduleModal('${req.id}')">日程変更</button>
+        <button class="btn btn-primary"   onclick="openRescheduleModal('${req.id}')">日程・会場変更</button>
         <button class="btn btn-danger"    onclick="cancelMeeting('${req.id}', '${req.flow_type}')">キャンセル</button>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
     `;
