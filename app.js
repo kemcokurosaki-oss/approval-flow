@@ -7811,16 +7811,16 @@ async function submitShippingMeeting() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
-            await recordFlowNotifications(req.id, 'shipping_meeting');
+            await recordFlowNotifications(req.id, 'shipping_meeting', recipientOptionalKeys.sm);
             if (extraRecipients.sm.length > 0) {
                 await db.from('approval_notifications').insert(
-                    extraRecipients.sm.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'shipping_meeting_invite' }))
+                    extraRecipients.sm.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'shipping_meeting_invite', optional: !!r.optional }))
                 );
             }
             const roomEmail = ROOM_EMAILS[location];
             if (roomEmail) {
                 await db.from('approval_notifications').insert({
-                    request_id: req.id, recipient_email: roomEmail, notification_type: 'shipping_meeting_invite'
+                    request_id: req.id, recipient_email: roomEmail, notification_type: 'shipping_meeting_invite', optional: false
                 });
             }
         }
