@@ -154,6 +154,13 @@ function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence =
     const rsvp = method === 'CANCEL' ? 'FALSE' : 'TRUE';
     lines.push(`ATTENDEE;CUTYPE=ROOM;ROLE=NON-PARTICIPANT;RSVP=${rsvp};CN=${location}:mailto:${roomEmail}`);
   }
+  const attendeeRsvp = method === 'CANCEL' ? 'FALSE' : 'TRUE';
+  attendees.forEach((a) => {
+    if (!a?.email) return;
+    const role = a.optional ? 'OPT-PARTICIPANT' : 'REQ-PARTICIPANT';
+    const cn   = (a.name || a.email).replace(/[,;:"]/g, '');
+    lines.push(`ATTENDEE;ROLE=${role};RSVP=${attendeeRsvp};CN=${cn}:mailto:${a.email}`);
+  });
   lines.push('END:VEVENT', 'END:VCALENDAR');
   return lines.join('\r\n');
 }
