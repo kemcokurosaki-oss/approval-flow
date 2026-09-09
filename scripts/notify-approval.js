@@ -381,6 +381,15 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
+    case 'shipping_meeting_room_change_cancel':
+      return {
+        from,
+        subject: `【出荷確認会議 会場変更】旧会場の予約を解除しました（${pStr}）`,
+        text:
+          `${pStr} の出荷確認会議は会場が変更されたため、こちらの会場の予約を解除しました。` +
+          `${note}\n\n※このメールは自動送信です。`,
+      };
+
     case 'inspection_cancel':
       return {
         from,
