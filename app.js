@@ -8317,9 +8317,19 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             const { data: memberRows } = await db.from('members')
                 .select('supervisor_email1, supervisor_email_2')
                 .in('name', sekkeiOwners);
+            const supEmails = new Set();
             for (const m of (memberRows || [])) {
-                if (m.supervisor_email1)  { extEmails.add(m.supervisor_email1);  resolved = true; }
-                if (m.supervisor_email_2) { extEmails.add(m.supervisor_email_2); resolved = true; }
+                if (m.supervisor_email1)  { supEmails.add(m.supervisor_email1);  resolved = true; }
+                if (m.supervisor_email_2) { supEmails.add(m.supervisor_email_2); resolved = true; }
+            }
+            if (supEmails.size > 0) {
+                // 上長がprofilesに登録済みならrecipient_id、未登録ならrecipient_emailで保存する
+                const { data: supProfiles } = await db.from('profiles').select('id, email').in('email', [...supEmails]);
+                const matchedEmails = new Set();
+                (supProfiles || []).forEach(p => { profileIds.add(p.id); matchedEmails.add(p.email); });
+                for (const email of supEmails) {
+                    if (!matchedEmails.has(email)) extEmails.add(email);
+                }
             }
         }
         if (!resolved) {
