@@ -6693,7 +6693,7 @@ async function saveReschedule() {
 
         // 元の送信済み通知の宛先に変更通知を再送
         const { data: existingNotifs } = await db.from('approval_notifications')
-            .select('recipient_id, recipient_email')
+            .select('recipient_id, recipient_email, optional')
             .eq('request_id', requestId)
             .not('emailed_at', 'is', null);
 
