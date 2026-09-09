@@ -870,6 +870,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const target = document.getElementById('tab_content_progress');
     if (target) new MutationObserver(() => { applyBoardSearch(); syncAppBar(); }).observe(target, { childList: true, subtree: false });
     document.querySelectorAll('.app-rail .ptab-btn').forEach(b => b.addEventListener('click', () => setTimeout(syncAppBar, 0)));
+    // スマホ幅：レール内のメニュー項目をタップしたらハンバーガーメニューを閉じる
+    document.querySelector('.app-rail .rail-scroll')?.addEventListener('click', (e) => {
+        if (e.target.closest('a, button, .side-tab-row')) closeMobileNav();
+    });
     const nameEl = document.getElementById('user_name_display');
     if (nameEl) new MutationObserver(() => syncAppBar()).observe(nameEl, { childList: true, characterData: true, subtree: true });
     setTimeout(syncAppBar, 300);
