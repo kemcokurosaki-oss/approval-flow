@@ -99,19 +99,17 @@ async function main() {
 
     const lock = await client.getMailboxLock('INBOX');
     try {
-      // Content-Type: text/calendar; method=REPLY を含む未読メールのみ対象
-      const uids = await client.search({
-        header: { 'content-type': 'method=REPLY' },
-      }, { uid: true });
+      // 未読メール全件をスキャンし、text/calendar(method=REPLY)添付を持つものだけを処理する
+      // （ICSのmethod=REPLYはMIMEパート内部のヘッダーのため、IMAP側のヘッダー検索では拾えない）
+      const uids = await client.search({ seen: false }, { uid: true });
 
       if (!uids || uids.length === 0) {
         console.log('対象メールはありません');
         return;
       }
-      console.log(`対象メール: ${uids.length}件`);
+      console.log(`未読メール: ${uids.length}件`);
 
       for (const uid of uids) {
-        processedCount++;
         try {
           const { content } = await client.download(uid, undefined, { uid: true });
           const parsed = await simpleParser(content);
@@ -119,10 +117,10 @@ async function main() {
             (att) => (att.contentType || '').toLowerCase().includes('text/calendar')
           );
           const icsText = icsAttachment ? icsAttachment.content.toString('utf-8') : null;
-          if (!icsText) {
-            console.log(`スキップ: uid=${uid} (ICS添付なし)`);
-            continue;
+          if (!icsText || !/METHOD:REPLY/i.test(icsText)) {
+            continue; // 出欠回答メール以外はスキップ（既読化・移動はしない）
           }
+          processedCount++;
 
           const reply = extractAttendeeResponse(icsText);
           if (!reply) {
