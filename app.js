@@ -5009,6 +5009,7 @@ async function openDetailModal(requestId, returnTo = null) {
             ${req.is_resubmit ? ' <span class="resubmit-badge">再申請</span>' : ''}
         </div>
         ${eventInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${eventInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
+        ${attendanceSectionHtml}
         ${shippingInfoParts.length ? `<div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;">${shippingInfoParts.map(p => `<span style="white-space:nowrap;">${p}</span>`).join('')}</div>` : ''}
         ${req.note ? `<div style="font-size:15px;color:#888;margin-top:2px;">備考: ${esc(req.note)}</div>` : ''}
         ${shippingDateMismatches.length ? `
