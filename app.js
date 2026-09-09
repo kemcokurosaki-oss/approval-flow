@@ -7162,7 +7162,7 @@ async function _getPrepBlockers(projectNum, machine) {
 }
 
 // ===== 宛先確認ステップ（開催案内共通） =====
-const extraRecipients = { inspection: [], sm: [], si: [] };
+const extraRecipients = { inspection: [], sm: [], si: [], reschedule: [] };
 
 async function showRecipientsStep(type) {
     const prefix = type; // 'inspection' | 'sm' | 'si'
