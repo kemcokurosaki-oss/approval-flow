@@ -11,6 +11,14 @@
 | 4 | ペンディング項目期日超過催促 | 全フロー共通（実質は簡易検査・外観検査・出荷確認会議のペンディング項目。出荷準備はペンディング項目自体を持たないため対象外） | 完了予定日（due）を過ぎた翌日から、完了にするまで毎日 | ペンディング項目の担当者（owner） | 品証（田中）・製管（森村・黒崎）を固定CC |
 | 5 | 完了処理催促 | 簡易検査・外観検査・出荷確認会議 | 開催日（inspection_date）を過ぎた翌日から、「完了にする」処理をするまで毎日 | 品証（quality）ロール全員 | 製管（production_control）ロール全員 |
 
+## 出欠状況（RSVP）の記録
+
+簡易検査・外観検査・出荷確認会議の開催案内は、宛先ごとに「必須/任意」を選択して送信できる（宛先プレビュー画面のチェックボックス）。ICSのATTENDEEにはROLE=REQ-PARTICIPANT/OPT-PARTICIPANTとして反映され、Outlook上でも任意出席者として表示される。
+
+Outlook/Teams本体の出欠確認パネルは、予定の主催者（自動送信専用のGmailアカウント）のメールボックスでしか集計されないため使えない。代わりに、参加者がOutlookで承諾/辞退/仮の予定を選ぶと自動送信されるiTIP返信メール（METHOD:REPLY）を、[scripts/check-rsvp.js](../scripts/check-rsvp.js)（GitHub Actions [.github/workflows/check-rsvp.yml](../.github/workflows/check-rsvp.yml)、現状は手動実行のみ）がIMAPで受信・解析し、Supabaseの`invitation_rsvp`テーブルに記録する。承認フローアプリの申請詳細画面に「出欠状況」として一覧表示される。
+
+前提: GMAIL_USERアカウントでIMAPアクセスが有効になっている必要がある（Gmail設定 → メール転送とPOP/IMAP → IMAPを有効にする）。
+
 ## 備考
 
 - 「宛先」は原則としてSupabaseの `profiles` テーブルのロール（role）に基づいて動的に決まる。
