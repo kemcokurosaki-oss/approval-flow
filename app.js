@@ -7268,6 +7268,8 @@ async function _getPrepBlockers(projectNum, machine) {
 
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [], reschedule: [] };
+// 宛先プレビュー画面で「任意」に切り替えられた宛先のキー（profile idまたはemail）
+const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Set() };
 
 async function showRecipientsStep(type) {
     const prefix = type; // 'inspection' | 'sm' | 'si'
