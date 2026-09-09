@@ -134,9 +134,13 @@
                     </div>
                 </div>
             </nav>
+        <div class="mobile-nav-overlay" id="mobile_nav_overlay" onclick="closeMobileNav()"></div>
         <div class="app-main">
         <div class="header">
         <div class="header-row1">
+            <button type="button" class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="メニュー">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+            </button>
             <div class="app-bar-title header-home-link" onclick="closeSettingsModal()" title="承認ステータスに戻る">
                 <span id="page_title">承認ステータス</span>
                 <span id="page_subtitle"></span>
