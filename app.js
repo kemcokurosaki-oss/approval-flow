@@ -7506,6 +7506,78 @@ function toggleRecipientOptional(prefix, key, isOptional) {
     else            recipientOptionalKeys[prefix].delete(key);
 }
 
+// ===== 出欠状況（簡易検査・外観検査・出荷確認会議の開催案内） =====
+const QA_INVITE_NOTIFICATION_TYPES = {
+    simple_inspection: ['simple_inspection_invite', 'simple_inspection_reschedule'],
+    inspection:        ['inspection_invite', 'inspection_reschedule'],
+    shipping_meeting:  ['shipping_meeting_invite', 'shipping_meeting_reschedule'],
+};
+const RSVP_STATUS_LABELS = {
+    accepted:       { label: '承諾',   color: '#1c8f4d', bg: '#eafaf0' },
+    declined:       { label: '辞退',   color: '#c0392b', bg: '#fde8e8' },
+    tentative:      { label: '仮',     color: '#8a6d00', bg: '#fff8e6' },
+    'needs-action': { label: '未回答', color: '#888',    bg: '#f0f0f0' },
+};
+
+async function buildAttendanceSectionHtml(req) {
+    const types = QA_INVITE_NOTIFICATION_TYPES[req.flow_type];
+    if (!types) return '';
+
+    const roomEmails = new Set(Object.values(ROOM_EMAILS));
+
+    const { data: notifs } = await db.from('approval_notifications')
+        .select('recipient_id, recipient_email, optional')
+        .eq('request_id', req.id)
+        .in('notification_type', types)
+        .not('emailed_at', 'is', null);
+
+    // 同一宛先が複数回登録されうる（日程変更の再送など）ため、宛先キーで最後の値に統一する
+    const byKey = new Map();
+    (notifs || []).forEach(n => {
+        if (n.recipient_email && roomEmails.has(n.recipient_email)) return; // 会議室は宛先一覧から除外
+        const key = n.recipient_id || n.recipient_email;
+        if (!key) return;
+        byKey.set(key, { recipientId: n.recipient_id || null, email: n.recipient_email || null, optional: !!n.optional });
+    });
+    const entries = [...byKey.values()];
+    if (entries.length === 0) return '';
+
+    const profileIds = entries.filter(e => e.recipientId).map(e => e.recipientId);
+    let profileMap = {};
+    if (profileIds.length > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name, email').in('id', profileIds);
+        (prs || []).forEach(p => { profileMap[p.id] = p; });
+    }
+    const emails = entries.map(e => e.email || profileMap[e.recipientId]?.email).filter(Boolean);
+    let nameByEmail = {};
+    if (emails.length > 0) {
+        const { data: recs } = await db.from('notification_recipients').select('name, email').in('email', emails);
+        (recs || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
+    }
+
+    const { data: rsvps } = await db.from('invitation_rsvp').select('email, status').eq('request_id', req.id);
+    const statusByEmail = Object.fromEntries((rsvps || []).map(r => [r.email, r.status]));
+
+    const rows = entries.map(e => {
+        const profile = e.recipientId ? profileMap[e.recipientId] : null;
+        const email  = e.email || profile?.email || '';
+        const name   = profile?.name || nameByEmail[email] || email || '—';
+        const status = (email && statusByEmail[email]) || 'needs-action';
+        const st     = RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action'];
+        return `
+        <div class="recipient-item">
+            <span class="recipient-name">${esc(name)}</span>
+            <span class="recipient-tag">${e.optional ? '任意' : '必須'}</span>
+            <span class="recipient-tag" style="background:${st.bg};color:${st.color};">${st.label}</span>
+        </div>`;
+    }).join('');
+
+    return `
+        <hr class="section-divider">
+        <div class="section-title">出欠状況</div>
+        <div>${rows}</div>`;
+}
+
 function addExtraRecipient(prefix) {
     const nameEl  = document.getElementById(`${prefix}_extra_name`);
     const emailEl = document.getElementById(`${prefix}_extra_email`);
