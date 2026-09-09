@@ -7621,6 +7621,7 @@ function openInspectionModal() {
     document.getElementById('inspection_footer_step1').style.display    = '';
     document.getElementById('inspection_footer_step2').style.display    = 'none';
     extraRecipients.inspection = [];
+    recipientOptionalKeys.inspection.clear();
     document.getElementById('inspection_extra_list').innerHTML = '';
     document.getElementById('inspection_date_input').value     = '';
     document.getElementById('inspection_time_hour').value = '';
