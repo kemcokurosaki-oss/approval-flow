@@ -7467,12 +7467,20 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
 function renderRecipientsList(prefix, recipients) {
     const listEl = document.getElementById(`${prefix}_recipients_list`);
     const ROLE_MAP = { assembly_director: '組立部長', assembly_manager: '組立課長', quality: '品保', staff: '' };
+    const optionalKeys = recipientOptionalKeys[prefix];
+
+    const optionalToggle = (key) => `
+        <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
+            <input type="checkbox" ${optionalKeys.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('${prefix}', '${esc(key)}', this.checked)">
+            任意
+        </label>`;
 
     const profileRows = recipients.profiles.map(p => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(p.name || '—')}</span>
             <span class="recipient-email">${esc(p.email || '—')}</span>
             <span class="recipient-tag">${esc(p.department || '')}${ROLE_MAP[p.role] ? '・' + ROLE_MAP[p.role] : ''}</span>
+            ${optionalToggle(p.id)}
         </div>`).join('');
 
     const extRows = recipients.external.map(r => `
@@ -7480,9 +7488,15 @@ function renderRecipientsList(prefix, recipients) {
             <span class="recipient-name">${esc(r.name || '—')}</span>
             <span class="recipient-email" style="color:${r.email ? '#888' : '#e74c3c'};">${esc(r.email || '⚠ メール未登録')}</span>
             <span class="recipient-tag">${esc(r.department || '')}</span>
+            ${r.email ? optionalToggle(r.email) : ''}
         </div>`).join('');
 
     listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
+}
+
+function toggleRecipientOptional(prefix, key, isOptional) {
+    if (isOptional) recipientOptionalKeys[prefix].add(key);
+    else            recipientOptionalKeys[prefix].delete(key);
 }
 
 function addExtraRecipient(prefix) {
