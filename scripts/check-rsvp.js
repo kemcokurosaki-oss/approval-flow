@@ -136,7 +136,7 @@ async function main() {
             continue;
           }
 
-          await supabaseFetch('invitation_rsvp', {
+          await supabaseFetch('invitation_rsvp?on_conflict=request_id,email', {
             method: 'POST',
             headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
             body: JSON.stringify({
