@@ -7506,7 +7506,7 @@ function addExtraRecipient(prefix) {
     const email = emailEl.value.trim();
     if (!email) { showToast('メールアドレスを入力してください', 'error'); return; }
 
-    extraRecipients[prefix].push({ name: name || email, email });
+    extraRecipients[prefix].push({ name: name || email, email, optional: false });
     nameEl.value = ''; emailEl.value = '';
     renderExtraList(prefix);
 }
@@ -7516,12 +7516,20 @@ function removeExtraRecipient(prefix, index) {
     renderExtraList(prefix);
 }
 
+function toggleExtraRecipientOptional(prefix, index, isOptional) {
+    extraRecipients[prefix][index].optional = isOptional;
+}
+
 function renderExtraList(prefix) {
     const el = document.getElementById(`${prefix}_extra_list`);
     el.innerHTML = extraRecipients[prefix].map((r, i) => `
         <div class="extra-recipient-item">
             <span style="font-weight:bold;min-width:80px;font-size:13px;">${esc(r.name)}</span>
             <span style="color:#888;flex:1;font-size:13px;">${esc(r.email)}</span>
+            <label class="recipient-optional-toggle">
+                <input type="checkbox" ${r.optional ? 'checked' : ''} onchange="toggleExtraRecipientOptional('${prefix}', ${i}, this.checked)">
+                任意
+            </label>
             <button onclick="removeExtraRecipient('${prefix}', ${i})">×</button>
         </div>`).join('');
 }
