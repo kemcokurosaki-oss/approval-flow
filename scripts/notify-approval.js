@@ -740,7 +740,10 @@ async function main() {
         const roomEmail    = notif.notification_type === 'shipping_meeting_room_change_cancel'
           ? notif.recipient_email
           : (isSmMeeting ? (ROOM_EMAILS[req.inspection_location] || null) : null);
-        const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq);
+        const attendees    = notif.notification_type === 'shipping_meeting_room_change_cancel'
+          ? []
+          : (attendeesMap[notif.request_id] || []);
+        const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, attendees);
         if (icsContent) {
           attachments.push({
             filename:    icsFilename,
