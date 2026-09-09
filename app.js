@@ -6647,9 +6647,22 @@ async function renderExistingRecipients(requestId) {
         if (prs) prs.forEach(p => { profileMap[p.id] = p; });
     }
 
+    // recipient_idが未設定の宛先は、メールアドレスでprofiles・notification_recipientsを再検索して名前を補完する
+    // （過去に上長メール等がrecipient_idと紐付けられずrecipient_emailのみで保存されたケースの救済）
+    const emailsWithoutId = uniqueNotifs.filter(n => !n.recipient_id && n.recipient_email).map(n => n.recipient_email);
+    let nameByEmail = {};
+    if (emailsWithoutId.length > 0) {
+        const [{ data: recs }, { data: prsByEmail }] = await Promise.all([
+            db.from('notification_recipients').select('name, email').in('email', emailsWithoutId),
+            db.from('profiles').select('name, email').in('email', emailsWithoutId)
+        ]);
+        (recs      || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
+        (prsByEmail || []).forEach(p => { if (p.email) nameByEmail[p.email] = p.name; }); // profilesを優先
+    }
+
     const rows = uniqueNotifs.map(n => {
         const p = n.recipient_id ? profileMap[n.recipient_id] : null;
-        const name  = p?.name  || n.recipient_email || '—';
+        const name  = p?.name || (n.recipient_email && nameByEmail[n.recipient_email]) || n.recipient_email || '—';
         const email = p?.email || n.recipient_email || '—';
         return `
         <div class="recipient-item">
@@ -7551,8 +7564,14 @@ async function buildAttendanceSectionHtml(req) {
     const emails = entries.map(e => e.email || profileMap[e.recipientId]?.email).filter(Boolean);
     let nameByEmail = {};
     if (emails.length > 0) {
-        const { data: recs } = await db.from('notification_recipients').select('name, email').in('email', emails);
-        (recs || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
+        // recipient_idが未設定の宛先向けに、notification_recipientsに加えprofilesもメールアドレスで検索して名前を補完する
+        // （過去に上長メール等がrecipient_idと紐付けられずrecipient_emailのみで保存されたケースの救済）
+        const [{ data: recs }, { data: prsByEmail }] = await Promise.all([
+            db.from('notification_recipients').select('name, email').in('email', emails),
+            db.from('profiles').select('name, email').in('email', emails)
+        ]);
+        (recs      || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
+        (prsByEmail || []).forEach(p => { if (p.email) nameByEmail[p.email] = p.name; }); // profilesを優先
     }
 
     const { data: rsvps } = await db.from('invitation_rsvp').select('email, status').eq('request_id', req.id);
