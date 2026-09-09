@@ -6714,7 +6714,8 @@ async function saveReschedule() {
                         request_id:        requestId,
                         recipient_id:      n.recipient_id    || null,
                         recipient_email:   n.recipient_email || null,
-                        notification_type: rescheduleType
+                        notification_type: rescheduleType,
+                        optional:          !!n.optional
                     });
                 }
             }
