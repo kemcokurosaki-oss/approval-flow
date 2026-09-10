@@ -6735,20 +6735,31 @@ async function saveReschedule() {
         if (existingNotifs?.length > 0) {
             const seen = new Set();
             const notifs = [];
+            const optionalUpdates = [];
             for (const n of existingNotifs) {
                 const key = n.recipient_id || n.recipient_email;
                 if (key && !seen.has(key)) {
                     seen.add(key);
+                    const newOptional = recipientOptionalKeys.reschedule.has(key);
+                    if (newOptional !== !!n.optional) {
+                        optionalUpdates.push({ recipientId: n.recipient_id || null, email: n.recipient_email || null, optional: newOptional });
+                    }
                     notifs.push({
                         request_id:        requestId,
                         recipient_id:      n.recipient_id    || null,
                         recipient_email:   n.recipient_email || null,
                         notification_type: rescheduleType,
-                        optional:          !!n.optional
+                        optional:          newOptional
                     });
                 }
             }
             if (notifs.length > 0) await db.from('approval_notifications').insert(notifs);
+
+            // 必須/任意が変更された宛先は、過去分の通知レコードも一括更新し出欠状況表示等との整合性を保つ
+            for (const u of optionalUpdates) {
+                const q = db.from('approval_notifications').update({ optional: u.optional }).eq('request_id', requestId);
+                await (u.recipientId ? q.eq('recipient_id', u.recipientId) : q.eq('recipient_email', u.email));
+            }
         }
 
         // 出荷確認会議で会議室を変更した場合、旧会議室の予約を解除する
