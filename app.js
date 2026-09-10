@@ -8306,6 +8306,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
 
     const profileIds = new Set();
     const extEmails  = new Set();
+    const requiredIds = new Set(); // optionalKeysに関わらず必須(optional=false)にするID
 
     // profiles から部署/ロールで追加
     const addP = async (filters) => {
