@@ -93,7 +93,9 @@ async function main() {
 
   try {
     // 処理済みメールの退避先フォルダを用意
-    if (!(await client.mailboxExists(PROCESSED_FOLDER))) {
+    const mailboxes = await client.list();
+    const processedFolderExists = mailboxes.some((mb) => mb.path === PROCESSED_FOLDER);
+    if (!processedFolderExists) {
       await client.mailboxCreate(PROCESSED_FOLDER);
     }
 
