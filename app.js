@@ -6667,6 +6667,7 @@ async function renderExistingRecipients(requestId) {
     }
 
     const rows = uniqueNotifs.map(n => {
+        const key = n.recipient_id || n.recipient_email;
         const p = n.recipient_id ? profileMap[n.recipient_id] : null;
         const name  = p?.name || (n.recipient_email && nameByEmail[n.recipient_email]) || n.recipient_email || '—';
         const email = p?.email || n.recipient_email || '—';
@@ -6674,6 +6675,10 @@ async function renderExistingRecipients(requestId) {
         <div class="recipient-item">
             <span class="recipient-name">${esc(name)}</span>
             <span class="recipient-email">${esc(email)}</span>
+            <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
+                <input type="checkbox" ${recipientOptionalKeys.reschedule.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('reschedule', '${esc(key)}', this.checked)">
+                任意
+            </label>
         </div>`;
     }).join('');
 
