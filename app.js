@@ -8468,6 +8468,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         case 'simple_inspection': {
             const dyn = getDynamicRecipientPlan('simple_inspection');
             notifType = 'simple_inspection_invite';
+            profileIds.add(req.requester_id); requiredIds.add(req.requester_id); // 開催者は必須出席者として自分にも案内を送る
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
             if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             if (dyn.sales)    await addOwnerByName(salesOwner);                          // 営業担当者
