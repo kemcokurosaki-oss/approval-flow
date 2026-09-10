@@ -6628,7 +6628,7 @@ async function renderExistingRecipients(requestId) {
     listEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px;">読み込み中...</div>';
 
     const { data: notifs } = await db.from('approval_notifications')
-        .select('recipient_id, recipient_email')
+        .select('recipient_id, recipient_email, optional')
         .eq('request_id', requestId)
         .not('emailed_at', 'is', null);
 
@@ -6638,6 +6638,12 @@ async function renderExistingRecipients(requestId) {
         if (!key || seen.has(key)) return false;
         seen.add(key);
         return true;
+    });
+
+    recipientOptionalKeys.reschedule = new Set();
+    uniqueNotifs.forEach(n => {
+        const key = n.recipient_id || n.recipient_email;
+        if (key && n.optional) recipientOptionalKeys.reschedule.add(key);
     });
 
     const profileIds = uniqueNotifs.filter(n => n.recipient_id).map(n => n.recipient_id);
