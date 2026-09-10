@@ -8448,6 +8448,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         case 'shipping_meeting': {
             const dyn = getDynamicRecipientPlan('shipping_meeting');
             notifType = 'shipping_meeting_invite';
+            profileIds.add(req.requester_id); requiredIds.add(req.requester_id); // 開催者は必須出席者として自分にも案内を送る
             await addFixedRecipients();                                         // 設定画面で個人単位に選択
             if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);   // 組立担当者
             if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);   // 試運転担当者（タスクがあれば）
