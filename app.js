@@ -7437,31 +7437,34 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     };
     // members テーブルから設計担当者の上長を取得（プレビュー用）
     // 担当者不明・未登録の場合は設計全管理職にフォールバック
+    // ※ recordFlowNotifications側と同じ判定（ログインアカウントありならprofiles/id、なければnotification_recipients/email）で
+    //   振り分けないと、「任意」チェックのキーが送信時と食い違い、必須/任意の指定が反映されなくなる
     const addSekkeiSupervisors = async () => {
         let resolved = false;
         if (sekkeiOwnersFallback.length > 0) {
             const { data: memberRows } = await db.from('members')
                 .select('supervisor_email1, supervisor_email_2')
                 .in('name', sekkeiOwnersFallback);
-            const supEmails = [];
+            const supEmails = new Set();
             for (const m of (memberRows || [])) {
-                if (m.supervisor_email1)  supEmails.push(m.supervisor_email1);
-                if (m.supervisor_email_2) supEmails.push(m.supervisor_email_2);
+                if (m.supervisor_email1)  supEmails.add(m.supervisor_email1);
+                if (m.supervisor_email_2) supEmails.add(m.supervisor_email_2);
             }
-            if (supEmails.length > 0) {
+            if (supEmails.size > 0) {
                 resolved = true;
                 const { data: supRecips } = await db.from('notification_recipients')
-                    .select('name, email, department, role').in('email', supEmails).eq('active', true);
+                    .select('name, email, department, role').in('email', [...supEmails]).eq('active', true);
                 const { data: supProfiles } = await db.from('profiles')
-                    .select('name, email, department, role').in('email', supEmails);
-                const supMap = Object.fromEntries([
-                    ...(supRecips   || []).map(r => [r.email, r]),
-                    ...(supProfiles || []).map(p => [p.email, p])
-                ]);
+                    .select('id, name, email, department, role').in('email', [...supEmails]);
+                const profileMap = Object.fromEntries((supProfiles || []).map(p => [p.email, p]));
+                const recipMap   = Object.fromEntries((supRecips   || []).map(r => [r.email, r]));
                 for (const email of supEmails) {
-                    if (!extEmails.has(email)) {
+                    const p = profileMap[email];
+                    if (p) {
+                        if (!profileIds.has(p.id)) { profileIds.add(p.id); profileList.push(p); }
+                    } else if (!extEmails.has(email)) {
                         extEmails.add(email);
-                        extList.push(supMap[email] || { name: email, email, department: '設計', role: '' });
+                        extList.push(recipMap[email] || { name: email, email, department: '設計', role: '' });
                     }
                 }
             }
