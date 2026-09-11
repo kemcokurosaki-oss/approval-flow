@@ -1100,55 +1100,16 @@ function markMissingItems(missingIds) {
     if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ===== 閲覧モード =====
-function setViewMode() {
-    document.body.classList.add('view-mode');
-    const legend = document.querySelector('.sheet-legend');
-    if (legend) legend.textContent = '○: 確認済み　×: NG　―: 対象外';
-    const footerInner = document.querySelector('.sheet-footer-inner');
-    if (footerInner) footerInner.innerHTML =
-        '<button class="b-print" onclick="window.print()">印刷 / PDF保存</button>' +
-        '<button class="btn btn-secondary" onclick="window.close()">閉じる</button>';
-}
-
-function renderPendingItemsView() {
-    const c = document.getElementById('pending_container');
-    if (!c) return;
-    if (!pendingItems.length) {
-        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
-        return;
-    }
-    c.innerHTML = pendingItems.map(item => {
-        const done = !!item.completed;
-        const lineStyle = done ? 'text-decoration:line-through; color:#aaa;' : '';
-        const dateText = done
-            ? `<span style="font-size:12px; color:#27ae60; font-weight:bold;">完了 ${esc(item.completed_date || '')}</span>`
-            : `<span style="font-size:13px; color:#888;">${esc(item.due || '')}</span>`;
-        return `
-        <div class="pending-row" style="${done ? 'opacity:0.6;' : ''}">
-            <span style="width:16px; flex-shrink:0; font-size:13px; color:${done ? '#27ae60' : '#e74c3c'}; padding:5px 4px;">${done ? '✓' : '●'}</span>
-            <span style="width:100px; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.machine || '—')}</span>
-            <span style="flex:1; font-size:13px; color:#444; padding:5px 8px; ${lineStyle}">${esc(item.content || '—')}${item.ship_after ? ' <span style="font-size:11px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</span>
-            <span style="width:110px; font-size:13px; color:#888; padding:5px 8px; ${lineStyle}">${item.owner ? '担当: ' + esc(item.owner) : ''}</span>
-            <span style="width:135px; font-size:13px; padding:5px 8px;">${dateText}</span>
-        </div>`;
-    }).join('');
-}
-
-// 中断: 保存してタブを閉じる（申請画面には通知しない）
+// 中断（プレビュー専用: 実際には保存・タブクローズを行わずプレビュー通知のみ表示）
 function suspendSheet() {
     if (assemblyItems.filter(it => it && it.machine).length === 0) {
         alert(t('alert_no_machine_suspend'));
         return;
     }
-    clearTimeout(saveTimer);
-    saveNow().then(() => {
-        broadcastChannel.postMessage({ type: 'sheet_suspend', draftId });
-        window.close();
-    });
+    alert(t('preview_notice'));
 }
 
-// 完了: 保存 → 申請画面に通知 → タブを閉じる
+// 完了（プレビュー専用: 実際には保存・申請・タブクローズを行わずプレビュー通知のみ表示）
 async function completeSheet() {
     // 機械・ユニットが1件も入力されていない場合は申請させない
     if (assemblyItems.filter(it => it && it.machine).length === 0) {
@@ -1165,18 +1126,7 @@ async function completeSheet() {
         return;
     }
     clearMissingMarks();
-
-    // 発行日を確定（この瞬間の日付で保存）
-    const d = new Date();
-    sheetMeta.date = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-
-    const btn = document.getElementById('btn_complete');
-    btn.disabled = true;
-    btn.textContent = t('save_saving');
-    clearTimeout(saveTimer);
-    await saveNow();
-    broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
-    window.close();
+    alert(t('preview_notice'));
 }
 
 // 日付入力欄はどこをクリックしてもカレンダーを開く
