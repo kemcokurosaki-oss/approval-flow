@@ -2201,6 +2201,17 @@ function computeAssemblyAggStatus(num, assemblyReqsByProject) {
     return 'active';
 }
 
+// unit列でグループ化し、担当者名(owner)をSetにまとめる（1ユニットに複数担当者がいる場合に対応するため）
+function buildOwnerNamesByUnit(rows) {
+    const map = new Map();
+    (rows || []).forEach(t => {
+        const key = t.unit || '';
+        if (!map.has(key)) map.set(key, new Set());
+        if (t.owner) map.get(key).add(t.owner);
+    });
+    return map;
+}
+
 // 2000番台：標準リストの機械コード(CC/PC/TR等)に対応する固定ユニット候補＋自由入力で追加されたユニットの一覧を返す
 // （ユニット選択不要機械(-のみ)は、ユニット無しを表す空文字1件の配列にする）
 function getAssemblyUnitListForMachine(machine, reqsForProject) {
