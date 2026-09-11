@@ -2859,6 +2859,19 @@ function buildMachineUnitRowsHtml(opts) {
             linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${startUnitFnName}('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
         }
 
+        let readinessHtml = '';
+        if (hasTestRunTask) {
+            const ready = !!readinessMap?.get(`${unit || ''}__${readinessKind}`);
+            const ownerName = ownerByUnit?.get(unit || '');
+            const canEditReadiness = isSuperAdmin() || (!!currentProfile?.name && !!ownerName && currentProfile.name === ownerName);
+            readinessHtml = `
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-top:8px; ${canEditReadiness ? 'cursor:pointer;' : 'opacity:.55;'}">
+                <input type="checkbox" ${ready ? 'checked' : ''} ${canEditReadiness ? '' : 'disabled'} style="width:15px;height:15px;"
+                    onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${readinessKind}', this.checked)">
+                試運転準備完了: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '準備完了' : '未完了'}</span>
+            </label>`;
+        }
+
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
                 <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
@@ -2872,6 +2885,7 @@ function buildMachineUnitRowsHtml(opts) {
                 <div>${bottomRightHtml}</div>
             </div>
             ${approvalHtml}
+            ${readinessHtml}
         </div>`;
     }).join('');
 }
