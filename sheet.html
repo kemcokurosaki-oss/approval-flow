@@ -712,6 +712,7 @@ function applyStaticI18n() {
 
 function toggleLang() {
     currentLang = currentLang === 'ja' ? 'en' : 'ja';
+    localStorage.setItem('sheet_checklist_lang', currentLang);
     applyStaticI18n();
     renderAssemblyItems();
     renderPendingItems();
