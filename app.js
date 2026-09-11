@@ -8427,7 +8427,7 @@ async function sendTestRunReadyNotification(projectNum, machine, unit) {
     (mgrProfiles || []).forEach(p => profileIds.add(p.id));
     if (profileIds.size === 0) return;
 
-    const detail = machine ? `${projectNum}【${machine}】` : projectNum;
+    const detail = machine ? `${projectNum}【${machine}${unit || ''}】` : projectNum;
     const inserts = [...profileIds].map(id => ({
         recipient_id: id, notification_type: 'test_run_ready', detail
     }));
