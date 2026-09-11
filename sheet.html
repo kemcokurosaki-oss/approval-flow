@@ -884,9 +884,9 @@ function renderAssemblyItemRow(item, i) {
         }
     } else {
         // 候補が無い場合（工程表に機械組立タスクが無い等）は機械・ユニットともに完全自由入力
-        machineHtml = `<input type="text" class="pending-content" placeholder="機械名" value="${esc(item.machine)}"
+        machineHtml = `<input type="text" class="pending-content" placeholder="${t('placeholder_machine')}" value="${esc(item.machine)}"
             oninput="updateAssemblyMachine(${i}, this.value)">`;
-        unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（任意）" value="${esc(item.unit || '')}"
+        unitHtml = `<input type="text" class="pending-content" placeholder="${t('placeholder_unit_optional')}" value="${esc(item.unit || '')}"
             oninput="updateAssemblyUnit(${i}, this.value)">`;
     }
 
@@ -895,10 +895,10 @@ function renderAssemblyItemRow(item, i) {
         machineHtml = `<div class="locked-field">${esc(item.machine)}</div>`;
     }
     if (unitLocked) {
-        unitHtml = `<div class="locked-field">${item.unit ? esc(item.unit) : '（ユニット選択不要）'}</div>`;
+        unitHtml = `<div class="locked-field">${item.unit ? esc(item.unit) : t('unit_not_needed')}</div>`;
     } else if (assemblyMode === 'free') {
         // 固定リストにあるユニットは既に一覧から申請できるため、この経路では選択肢に出さず自由入力のみにする
-        unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（自由入力）" value="${esc(item.unit || '')}"
+        unitHtml = `<input type="text" class="pending-content" placeholder="${t('placeholder_unit_free')}" value="${esc(item.unit || '')}"
             oninput="updateAssemblyUnit(${i}, this.value)">`;
     }
 
