@@ -2902,8 +2902,8 @@ function buildMachineUnitRowsHtml(opts) {
         let readinessHtml = '';
         if (hasTestRunTask && !isNotRequired) {
             const ready = !!readinessMap?.get(`${unit || ''}__${readinessKind}`);
-            const ownerName = ownerByUnit?.get(unit || '');
-            const canEditReadiness = isSuperAdmin() || (!!currentProfile?.name && !!ownerName && currentProfile.name === ownerName);
+            const ownerNames = ownerByUnit?.get(unit || '');
+            const canEditReadiness = isSuperAdmin() || (!!currentProfile?.name && !!ownerNames && ownerNames.has(currentProfile.name));
             readinessHtml = `
             <label style="display:flex; align-items:center; gap:6px; font-size:14px; font-family:inherit; font-weight:600; color:#3d4a5d; margin-top:8px; ${canEditReadiness ? 'cursor:pointer;' : 'opacity:.55;'}">
                 <input type="checkbox" ${ready ? 'checked' : ''} ${canEditReadiness ? '' : 'disabled'} style="width:15px;height:15px;"
