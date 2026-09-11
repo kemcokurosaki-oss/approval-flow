@@ -902,55 +902,6 @@ function renderAssemblyItemRow(item, i) {
     </div>`;
 }
 
-function fmtStampDate(iso) {
-    const d = new Date(iso);
-    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-}
-
-function fmtCompletionDate(isoStr) {
-    if (!isoStr) return '—';
-    const p = isoStr.split('-');
-    if (p.length !== 3) return isoStr;
-    return `${parseInt(p[0])}年${parseInt(p[1])}月${parseInt(p[2])}日`;
-}
-
-function buildReportHeader(projectNum, machineName, authorName, issueDate, completionDate, approvers) {
-    const approverCells = approvers.length > 0
-        ? approvers.map((a, i) => `
-            <td class="report-stmp-tbl-td">
-                <div class="stamp-inner-name">${esc(a.name)}</div>
-                <div class="stamp-inner-date">${esc(a.date)}</div>
-            </td>`).join('')
-        : `<td class="report-stmp-tbl-td"></td>`;
-    const approverHeaders = approvers.length > 1
-        ? approvers.map((_, i) => `<th>承認者${i+1}</th>`).join('')
-        : `<th>承認者</th>`;
-    return `<div class="report-doc">
-        <div class="report-doc-date">発行日: ${esc(issueDate || '—')}</div>
-        <div class="report-doc-body">
-            <div class="report-doc-left">
-                <div class="report-doc-notice">下記の機械の組立が完了しましたので、報告します。</div>
-                <table class="report-info-tbl">
-                    <tr><th>工事番号</th><td class="td-num">${esc(projectNum)}</td></tr>
-                    <tr><th>機械・ユニット</th><td class="td-mach">${esc(machineName)}</td></tr>
-                    <tr><th>組立完了日</th><td>${esc(fmtCompletionDate(completionDate))}</td></tr>
-                </table>
-            </div>
-            <div class="report-doc-right">
-                <table class="report-stmp-tbl">
-                    <tr>${approverHeaders}</tr>
-                    <tr>${approverCells}</tr>
-                </table>
-                <table class="report-stmp-tbl" style="margin-top:8px;">
-                    <tr><th colspan="2">作業担当者</th></tr>
-                    <tr><th>氏名</th><td style="font-weight:bold;">${esc(authorName || '—')}</td></tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="report-section-heading">確認項目</div>`;
-}
-
 async function init() {
     primeI18nDefaults();
 
