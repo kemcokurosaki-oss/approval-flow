@@ -2980,8 +2980,8 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
 
         const { data: ownerTaskRows } = await db.from('tasks').select('unit, owner, text')
             .eq('project_number', projectNum).eq('machine', machine).in('text', ['機械組立', '電気艤装']);
-        kumitateOwnerByUnit = new Map((ownerTaskRows || []).filter(t => t.text === '機械組立').map(t => [t.unit || '', t.owner]));
-        denkiOwnerByUnit    = new Map((ownerTaskRows || []).filter(t => t.text === '電気艤装').map(t => [t.unit || '', t.owner]));
+        kumitateOwnerByUnit = buildOwnerNamesByUnit((ownerTaskRows || []).filter(t => t.text === '機械組立'));
+        denkiOwnerByUnit    = buildOwnerNamesByUnit((ownerTaskRows || []).filter(t => t.text === '電気艤装'));
     }
 
     const rowsHtml = buildMachineUnitRowsHtml({
