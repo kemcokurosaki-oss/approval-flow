@@ -708,6 +708,8 @@ function applyStaticI18n() {
     }
     const completeBtn = document.getElementById('btn_complete');
     if (completeBtn && completeBtn.dataset.rejectedMode === '1') completeBtn.textContent = t('btn_save_close');
+    const rejectedNotice = document.querySelector('.rejected-notice');
+    if (rejectedNotice) rejectedNotice.textContent = t('rejected_notice');
 }
 
 function toggleLang() {
