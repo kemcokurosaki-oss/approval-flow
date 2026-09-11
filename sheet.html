@@ -846,14 +846,14 @@ function renderAssemblyItemRow(item, i) {
         if (item._machineFree || (item.machine && !machineIsKnown)) {
             machineHtml = `
                 <div style="display:flex;gap:4px;align-items:center;">
-                    <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="機械名（自由入力）" value="${esc(item.machine)}"
+                    <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="${t('placeholder_machine_free')}" value="${esc(item.machine)}"
                         oninput="updateAssemblyMachine(${i}, this.value)">
-                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">候補に戻す</button>
+                    <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyMachineFreeInput(${i})">${t('btn_back_to_candidates')}</button>
                 </div>`;
         } else {
-            const options = ['<option value="">選択してください</option>']
+            const options = [`<option value="">${t('select_please_select')}</option>`]
                 .concat(machineCodes.map(code => `<option value="${code}" ${item.machine === code ? 'selected' : ''}>${code}</option>`))
-                .concat(['<option value="__other__">その他（自由入力）</option>'])
+                .concat([`<option value="__other__">${t('select_other')}</option>`])
                 .join('');
             machineHtml = `<select class="pending-content" onchange="onAssemblyMachineSelect(${i}, this.value)">${options}</select>`;
         }
