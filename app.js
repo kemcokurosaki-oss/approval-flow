@@ -2780,7 +2780,8 @@ async function deleteElectricalDraftFromDetail(draftId, projectNum, machine = nu
 // flow種別ごとの差異（テーブル名・関数名・SHEET_FLOW_META）はopts経由で渡し、承認・却下・ステータス判定ロジックは完全共有する
 function buildMachineUnitRowsHtml(opts) {
     const { projectNum, machine, units, reqs, notRequiredUnits, meta, myRole, canApply, requesterNames,
-            startUnitFnName, submitFnName, deleteFnName, toggleFnName, reopenFnName } = opts;
+            startUnitFnName, submitFnName, deleteFnName, toggleFnName, reopenFnName,
+            hasTestRunTask, readinessKind, readinessMap, ownerByUnit } = opts;
 
     if (units.length === 0) return '<div style="padding:8px 0;color:#999;font-size:14px;">ユニットがありません</div>';
 
