@@ -986,7 +986,8 @@ async function init() {
     draftId = params.get('draft_id');
 
     if (viewMode && viewId) {
-        // ===== 閲覧モード =====
+        // ===== 閲覧モード（承認者確認・完了報告書は常に日本語表示） =====
+        currentLang = 'ja';
         const { data: req, error } = await db
             .from('approval_requests')
             .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
