@@ -1360,7 +1360,7 @@ function markMissingItems(missingIds) {
         item.classList.add('has-missing');
         const warning = document.createElement('div');
         warning.className = 'sheet-item-missing';
-        warning.textContent = '▼ 未入力です';
+        warning.textContent = t('date_missing');
         item.parentNode.insertBefore(warning, item);
     });
     const first = document.querySelector('.sheet-item-missing');
