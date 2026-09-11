@@ -748,6 +748,16 @@ async function runTestRunReadinessReminders() {
       const units = getAssemblyUnitListForMachine(machine, assemblyItemsList);
       if (units.length === 0) continue;
 
+      // 「不要」マーク済みユニットはアプリ側でチェックボックス自体を表示していないため、催促対象からも除外する
+      const notReqRows = await supabaseFetch(
+        `assembly_unit_not_required?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&select=unit`
+      );
+      const elecNotReqRows = await supabaseFetch(
+        `electrical_unit_not_required?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&select=unit`
+      );
+      const notRequiredUnits     = new Set((notReqRows || []).map(r => r.unit || ''));
+      const elecNotRequiredUnits = new Set((elecNotReqRows || []).map(r => r.unit || ''));
+
       const readinessRows = await supabaseFetch(
         `test_run_readiness?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&select=unit,kind,is_ready`
       );
@@ -759,6 +769,8 @@ async function runTestRunReadinessReminders() {
 
       for (const unit of units) {
         for (const kind of requiredKinds) {
+          const notReqSet = kind === 'assembly' ? notRequiredUnits : elecNotRequiredUnits;
+          if (notReqSet.has(unit || '')) continue;
           const row = (readinessRows || []).find(r => (r.unit || '') === (unit || '') && r.kind === kind);
           if (row?.is_ready) continue;
           const ownerName = kind === 'assembly' ? kumitateOwnerByUnit.get(unit || '') : denkiOwnerByUnit.get(unit || '');
