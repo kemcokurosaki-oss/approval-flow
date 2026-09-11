@@ -8387,10 +8387,22 @@ async function notifyTestRunReadyIfComplete(projectNum, machine, unit) {
             .eq('project_number', projectNum).eq('flow_type', 'assembly');
         const units = getAssemblyUnitListForMachine(machine, reqsA || []);
         if (units.length === 0) return;
+
+        // 「不要」マーク済みユニットはチェックボックス自体を表示していないため、判定対象から除外する
+        const { data: notReqRows } = await db.from('assembly_unit_not_required')
+            .select('unit').eq('project_number', projectNum).eq('machine', machine);
+        const { data: elecNotReqRows } = await db.from('electrical_unit_not_required')
+            .select('unit').eq('project_number', projectNum).eq('machine', machine);
+        const notRequiredUnits     = new Set((notReqRows || []).map(r => r.unit || ''));
+        const elecNotRequiredUnits = new Set((elecNotReqRows || []).map(r => r.unit || ''));
+
         const { data: readinessRows } = await db.from('test_run_readiness')
             .select('unit, kind, is_ready').eq('project_number', projectNum).eq('machine', machine);
-        const allReady = units.every(u => requiredKinds.every(k =>
-            (readinessRows || []).some(r => (r.unit || '') === (u || '') && r.kind === k && r.is_ready)));
+        const allReady = units.every(u => requiredKinds.every(k => {
+            const notReqSet = k === 'assembly' ? notRequiredUnits : elecNotRequiredUnits;
+            if (notReqSet.has(u || '')) return true;
+            return (readinessRows || []).some(r => (r.unit || '') === (u || '') && r.kind === k && r.is_ready);
+        }));
         if (!allReady) return;
     } else {
         const { data: readinessRows } = await db.from('test_run_readiness')
