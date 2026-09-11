@@ -3007,12 +3007,12 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         <hr class="section-divider">
         <div class="assembly-elec-split">
             <div class="detail-col">
-                <div class="section-title">組立 ユニット別 申請状況</div>
+                <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS.assembly}">組立</span> ユニット別 申請状況</div>
                 <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
                 ${addNewUnitHtml}
             </div>
             <div class="detail-col">
-                <div class="section-title">電装 ユニット別 申請状況</div>
+                <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS.electrical}">電装</span> ユニット別 申請状況</div>
                 <div class="unit-list-wrap unit-list-wrap-wide">${elecRowsHtml}</div>
                 ${elecAddNewUnitHtml}
             </div>
