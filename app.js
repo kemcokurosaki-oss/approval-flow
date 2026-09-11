@@ -8365,8 +8365,8 @@ async function toggleTestRunReadiness(projectNum, machine, unit, kind, checked) 
 
     if (machine) {
         await renderAssemblyMachineDetailBody(projectNum, machine);
-    } else if (currentDetailReq) {
-        await openDetailModal(currentDetailReq.id);
+    } else {
+        await renderAssemblyFlowDetailBody(projectNum);
     }
 }
 
