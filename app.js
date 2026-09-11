@@ -414,6 +414,12 @@ function getDynamicRecipientPlan(flowType) {
 }
 
 // チェックシートを伴うフロー種別 → シートファイル・表示ラベル（申請モーダル・詳細モーダルで共通利用）
+// 組立=黄色・電装=紫のバッジ配色（試運転準備チェックのラベル、ユニット別申請状況の見出しなどで共通利用）
+const ASSEMBLY_ELEC_BADGE_COLORS = {
+    assembly:   'background:#fff3cd;color:#856404;',
+    electrical: 'background:#e8d9f7;color:#6f2fa8;',
+};
+
 const SHEET_FLOW_META = {
     assembly:   { file: 'sheet.html',          label: '機械組立完了チェックシート',   doneLabel: '機械組立完了報告書' },
     test_run:   { file: 'test_run_sheet.html', label: '社内試運転完了チェックシート', doneLabel: '社内試運転完了報告書' },
