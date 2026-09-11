@@ -8303,6 +8303,94 @@ async function changeConfirmedShippingDate(requestId) {
     }
 }
 
+// ===== 試運転準備完了チェック =====
+// 組立フローに「試運転準備完了」チェックを追加する。電気艤装タスクがある工事番号・機械は
+// 組立・電装それぞれの担当者が個別にチェックし、両方揃って初めて試運転担当者・操業課長/部長へ通知する。
+// 通常工事番号は工事番号ごとに1組（machine=''・unit=''）、2000番台は機械・ユニットごとに1組を保持する。
+function buildTestRunReadinessSectionHtml(projectNum, machine, unit, asmReady, elecReady, hasElecTask, canEditAssembly, canEditElectrical) {
+    const rowHtml = (kind, label, ready, canEdit) => `
+        <label style="display:flex; align-items:center; gap:6px; font-size:15px; ${canEdit ? 'cursor:pointer;' : 'opacity:.55;'}">
+            <input type="checkbox" ${ready ? 'checked' : ''} ${canEdit ? '' : 'disabled'} style="width:16px;height:16px;"
+                onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${kind}', this.checked)">
+            ${label}: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '準備完了' : '未完了'}</span>
+        </label>`;
+    const rows = [rowHtml('assembly', '組立', asmReady, canEditAssembly)];
+    if (hasElecTask) rows.push(rowHtml('electrical', '電装', elecReady, canEditElectrical));
+    return `
+        <hr class="section-divider">
+        <div class="section-title">試運転準備完了</div>
+        <div style="display:flex; gap:24px; flex-wrap:wrap; background:#f8f9fa; border-radius:4px; padding:10px 14px;">${rows.join('')}</div>`;
+}
+
+async function toggleTestRunReadiness(projectNum, machine, unit, kind, checked) {
+    const payload = checked
+        ? { project_number: projectNum, machine, unit, kind, is_ready: true, ready_by: currentUser.id, ready_at: new Date().toISOString() }
+        : { project_number: projectNum, machine, unit, kind, is_ready: false, ready_by: null, ready_at: null };
+    const { error } = await db.from('test_run_readiness').upsert(payload, { onConflict: 'project_number,machine,unit,kind' });
+    if (error) { showToast('更新に失敗しました: ' + error.message, 'error'); return; }
+    if (checked) await notifyTestRunReadyIfComplete(projectNum, machine, unit);
+
+    if (machine) {
+        await renderAssemblyMachineDetailBody(projectNum, machine);
+    } else if (currentDetailReq) {
+        await openDetailModal(currentDetailReq.id);
+    }
+}
+
+// 組立・電装（電気艤装タスクがあれば）双方の準備完了が揃ったら、試運転担当者・操業課長/部長へ通知する
+// 2000番台（machineあり）は機械単位で判定する（試運転タスク自体がユニット単位で管理されていないため）
+async function notifyTestRunReadyIfComplete(projectNum, machine, unit) {
+    let hasElecTask;
+    if (machine) {
+        hasElecTask = !!progressCachedData?.machineTaskSet?.has(`${projectNum}__${machine}__電気艤装`);
+    } else {
+        const { data } = await db.from('tasks').select('id').eq('project_number', projectNum).eq('text', '電気艤装').limit(1);
+        hasElecTask = !!(data && data.length > 0);
+    }
+    const requiredKinds = hasElecTask ? ['assembly', 'electrical'] : ['assembly'];
+
+    if (machine) {
+        const { data: reqsA } = await db.from('approval_requests').select('*')
+            .eq('project_number', projectNum).eq('flow_type', 'assembly');
+        const units = getAssemblyUnitListForMachine(machine, reqsA || []);
+        if (units.length === 0) return;
+        const { data: readinessRows } = await db.from('test_run_readiness')
+            .select('unit, kind, is_ready').eq('project_number', projectNum).eq('machine', machine);
+        const allReady = units.every(u => requiredKinds.every(k =>
+            (readinessRows || []).some(r => (r.unit || '') === (u || '') && r.kind === k && r.is_ready)));
+        if (!allReady) return;
+    } else {
+        const { data: readinessRows } = await db.from('test_run_readiness')
+            .select('kind, is_ready').eq('project_number', projectNum).eq('machine', '').eq('unit', '');
+        const allReady = requiredKinds.every(k => (readinessRows || []).some(r => r.kind === k && r.is_ready));
+        if (!allReady) return;
+    }
+
+    await sendTestRunReadyNotification(projectNum, machine);
+}
+
+async function sendTestRunReadyNotification(projectNum, machine) {
+    let taskQuery = db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '試運転');
+    if (machine) taskQuery = taskQuery.eq('machine', machine);
+    const { data: shiuntenTasks } = await taskQuery;
+    const shiuntenOwnerNames = [...new Set((shiuntenTasks || []).map(t => t.owner).filter(Boolean))];
+
+    const profileIds = new Set();
+    if (shiuntenOwnerNames.length > 0) {
+        const { data: ownerProfiles } = await db.from('profiles').select('id').in('name', shiuntenOwnerNames);
+        (ownerProfiles || []).forEach(p => profileIds.add(p.id));
+    }
+    const { data: mgrProfiles } = await db.from('profiles').select('id').in('role', ['operations_manager', 'operations_director']);
+    (mgrProfiles || []).forEach(p => profileIds.add(p.id));
+    if (profileIds.size === 0) return;
+
+    const detail = machine ? `${projectNum}【${machine}】` : projectNum;
+    const inserts = [...profileIds].map(id => ({
+        recipient_id: id, notification_type: 'test_run_ready', detail
+    }));
+    await db.from('approval_notifications').insert(inserts);
+}
+
 // ===== Notifications =====
 
 async function recordFlowNotifications(requestId, flowType, optionalKeys = null) {
