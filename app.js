@@ -5073,6 +5073,7 @@ async function openDetailModal(requestId, returnTo = null) {
         <button class="btn btn-secondary" style="font-size:15px; padding:7px 18px; margin-top:2px;" onclick="window.open('${sheetUrl}', '_blank')">${linkLabel}</button>
         <div id="pending_detail_section">${buildPendingSectionInner(req, isMyRequest)}</div>`;
         })() : ''}
+        ${testRunReadinessHtml}
         ${QA_MEETING_FLOWS.includes(req.flow_type) && req.status !== 'cancelled'
             ? `<div id="qa_result_section">${buildQaResultSectionInner(req, isMyRequest)}</div>`
             : ''}
