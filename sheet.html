@@ -676,7 +676,7 @@ const I18N = {
 function t(key) {
     const entry = I18N[key];
     if (!entry) return key;
-    return currentLang === 'en' && entry.en ? entry.en : (entry.ja ?? '');
+    return currentLang === 'en' && entry.en ? entry.en : (entry.ja || '');
 }
 // data-i18n付き要素は日本語版HTMLをそのまま初期表示に使うため、ja訳は元テキストから自動採取する
 function primeI18nDefaults() {
