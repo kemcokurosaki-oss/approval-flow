@@ -756,12 +756,6 @@ function esc(s) {
         .replace(/"/g, '&quot;');
 }
 
-function setSheetInfoHeader(projectNum) {
-    const pn = document.getElementById('sheet_project_num');
-    if (pn) pn.textContent = projectNum;
-    isAssembly2000sProject = isAssembly2000sSeries(projectNum);
-}
-
 // ===== 機械・ユニット入力（assemblyItems） =====
 function addAssemblyItem() {
     const machine = (assemblyMode === 'free') ? assemblyLockedMachine : '';
