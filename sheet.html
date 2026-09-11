@@ -870,14 +870,14 @@ function renderAssemblyItemRow(item, i) {
             if (item._unitFree || (item.unit && !unitIsKnown)) {
                 unitHtml = `
                     <div style="display:flex;gap:4px;align-items:center;">
-                        <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="ユニット（自由入力）" value="${esc(item.unit)}"
+                        <input type="text" class="pending-content" style="flex:1;min-width:0;" placeholder="${t('placeholder_unit_free')}" value="${esc(item.unit)}"
                             oninput="updateAssemblyUnit(${i}, this.value)">
-                        <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyUnitFreeInput(${i})">候補に戻す</button>
+                        <button type="button" class="btn-danger-xs" style="flex-shrink:0;white-space:nowrap;" onclick="clearAssemblyUnitFreeInput(${i})">${t('btn_back_to_candidates')}</button>
                     </div>`;
             } else {
-                const uOptions = ['<option value="">選択してください</option>']
+                const uOptions = [`<option value="">${t('select_please_select')}</option>`]
                     .concat(candidates.filter(u => u !== '-').map(u => `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`))
-                    .concat(['<option value="__other__">その他（自由入力）</option>'])
+                    .concat([`<option value="__other__">${t('select_other')}</option>`])
                     .join('');
                 unitHtml = `<select class="pending-content" onchange="onAssemblyUnitSelect(${i}, this.value)">${uOptions}</select>`;
             }
