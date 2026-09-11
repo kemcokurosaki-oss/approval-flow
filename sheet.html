@@ -971,6 +971,8 @@ function buildReportHeader(projectNum, machineName, authorName, issueDate, compl
 }
 
 async function init() {
+    primeI18nDefaults();
+
     // ログインセッションを復元（別タブとして開かれるため、RLSで書き込みが通るように明示的にセットする）
     const accessToken  = localStorage.getItem('ap_access_token');
     const refreshToken = localStorage.getItem('ap_refresh_token');
