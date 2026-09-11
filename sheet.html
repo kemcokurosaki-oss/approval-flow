@@ -1094,7 +1094,7 @@ async function init() {
         document.getElementById('assembly_add_btn')?.remove();
     } else if (assemblyMode === 'free') {
         const addBtn = document.getElementById('assembly_add_btn');
-        if (addBtn) addBtn.textContent = '＋ ユニットを追加';
+        if (addBtn) addBtn.textContent = t('btn_add_unit');
     }
 
     renderAssemblyItems();
@@ -1104,12 +1104,13 @@ async function init() {
     if (draft.status && draft.status !== 'draft') {
         const completeBtn = document.getElementById('btn_complete');
         if (completeBtn) {
-            completeBtn.textContent = '保存して閉じる';
+            completeBtn.dataset.rejectedMode = '1';
+            completeBtn.textContent = t('btn_save_close');
             completeBtn.onclick = () => suspendSheet();
         }
         const legend = document.querySelector('.sheet-legend');
         if (legend) legend.insertAdjacentHTML('afterend',
-            '<div style="font-size:12px; color:#c0392b; margin-bottom:14px;">却下された申請の内容を修正しています。保存後、元の申請画面の「再申請する」ボタンから再申請してください。</div>');
+            `<div class="rejected-notice" style="font-size:12px; color:#c0392b; margin-bottom:14px;">${t('rejected_notice')}</div>`);
     }
 
     // 担当者名を取得（profiles から）
