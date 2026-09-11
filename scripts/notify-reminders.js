@@ -813,6 +813,7 @@ async function main() {
   await runInvitationReminders();
   await runPendingItemReminders();
   await runQaFinalizeReminders();
+  await runTestRunReadinessReminders();
 
   console.log('\n====== 完了 ======');
 }
