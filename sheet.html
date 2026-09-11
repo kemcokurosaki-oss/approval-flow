@@ -828,14 +828,14 @@ function renderAssemblyItems() {
     const c = document.getElementById('assembly_items_container');
     if (!c) return;
     if (assemblyItems.length === 0) {
-        c.innerHTML = '<div class="pending-empty">機械が登録されていません。「＋ 機械を追加」から入力してください</div>';
+        c.innerHTML = `<div class="pending-empty">${t('assembly_empty')}</div>`;
         return;
     }
     c.innerHTML = assemblyItems.map((item, i) => renderAssemblyItemRow(item, i)).join('');
 }
 
 function renderAssemblyItemRow(item, i) {
-    const lbl = (t) => `<span style="display:block;font-size:10px;color:#999;">${t}</span>`;
+    const lbl = (txt) => `<span style="display:block;font-size:10px;color:#999;">${txt}</span>`;
     let machineHtml, unitHtml = '';
     const machineLocked = assemblyMode === 'fixed' || assemblyMode === 'free';
     const unitLocked = assemblyMode === 'fixed';
