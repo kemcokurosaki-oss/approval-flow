@@ -8393,7 +8393,7 @@ async function toggleTestRunReadiness(projectNum, machine, unit, kind, checked) 
 }
 
 // 組立・電装（電気艤装タスクがあれば）双方の準備完了が揃ったら、試運転担当者・操業課長/部長へ通知する
-// 2000番台（machineあり）は機械単位で判定する（試運転タスク自体がユニット単位で管理されていないため）
+// 2000番台（machineあり）はユニット単位で判定する（そのユニットの組立・電装が揃った時点で都度通知）
 async function notifyTestRunReadyIfComplete(projectNum, machine, unit) {
     let hasElecTask;
     if (machine) {
@@ -8404,39 +8404,15 @@ async function notifyTestRunReadyIfComplete(projectNum, machine, unit) {
     }
     const requiredKinds = hasElecTask ? ['assembly', 'electrical'] : ['assembly'];
 
-    if (machine) {
-        const { data: reqsA } = await db.from('approval_requests').select('*')
-            .eq('project_number', projectNum).eq('flow_type', 'assembly');
-        const units = getAssemblyUnitListForMachine(machine, reqsA || []);
-        if (units.length === 0) return;
+    const { data: readinessRows } = await db.from('test_run_readiness')
+        .select('kind, is_ready').eq('project_number', projectNum).eq('machine', machine).eq('unit', unit);
+    const allReady = requiredKinds.every(k => (readinessRows || []).some(r => r.kind === k && r.is_ready));
+    if (!allReady) return;
 
-        // 「不要」マーク済みユニットはチェックボックス自体を表示していないため、判定対象から除外する
-        const { data: notReqRows } = await db.from('assembly_unit_not_required')
-            .select('unit').eq('project_number', projectNum).eq('machine', machine);
-        const { data: elecNotReqRows } = await db.from('electrical_unit_not_required')
-            .select('unit').eq('project_number', projectNum).eq('machine', machine);
-        const notRequiredUnits     = new Set((notReqRows || []).map(r => r.unit || ''));
-        const elecNotRequiredUnits = new Set((elecNotReqRows || []).map(r => r.unit || ''));
-
-        const { data: readinessRows } = await db.from('test_run_readiness')
-            .select('unit, kind, is_ready').eq('project_number', projectNum).eq('machine', machine);
-        const allReady = units.every(u => requiredKinds.every(k => {
-            const notReqSet = k === 'assembly' ? notRequiredUnits : elecNotRequiredUnits;
-            if (notReqSet.has(u || '')) return true;
-            return (readinessRows || []).some(r => (r.unit || '') === (u || '') && r.kind === k && r.is_ready);
-        }));
-        if (!allReady) return;
-    } else {
-        const { data: readinessRows } = await db.from('test_run_readiness')
-            .select('kind, is_ready').eq('project_number', projectNum).eq('machine', '').eq('unit', '');
-        const allReady = requiredKinds.every(k => (readinessRows || []).some(r => r.kind === k && r.is_ready));
-        if (!allReady) return;
-    }
-
-    await sendTestRunReadyNotification(projectNum, machine);
+    await sendTestRunReadyNotification(projectNum, machine, unit);
 }
 
-async function sendTestRunReadyNotification(projectNum, machine) {
+async function sendTestRunReadyNotification(projectNum, machine, unit) {
     let taskQuery = db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '試運転');
     if (machine) taskQuery = taskQuery.eq('machine', machine);
     const { data: shiuntenTasks } = await taskQuery;
