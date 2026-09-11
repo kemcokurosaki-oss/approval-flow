@@ -1060,7 +1060,7 @@ async function init() {
     if (!draftId) {
         document.getElementById('loading').classList.remove('visible');
         document.getElementById('sheet_content').innerHTML =
-            '<div class="error-screen">URLパラメータが不正です。<br>申請画面の「次へ」ボタンから開き直してください。</div>';
+            `<div class="error-screen">${t('err_bad_params')}</div>`;
         return;
     }
 
@@ -1073,7 +1073,7 @@ async function init() {
     if (error || !draft) {
         document.getElementById('loading').classList.remove('visible');
         document.getElementById('sheet_content').innerHTML =
-            '<div class="error-screen">下書きデータが見つかりません。<br>申請画面から開き直してください。</div>';
+            `<div class="error-screen">${t('err_draft_not_found')}</div>`;
         return;
     }
 
@@ -1089,6 +1089,7 @@ async function init() {
 
     assemblyMode = draft.sheet_data?.meta?.assembly_mode || null;
     assemblyLockedMachine = draft.sheet_data?.meta?.assembly_locked_machine || assemblyItems[0]?.machine || '';
+    applyStaticI18n();
     if (assemblyMode === 'fixed') {
         document.getElementById('assembly_add_btn')?.remove();
     } else if (assemblyMode === 'free') {
