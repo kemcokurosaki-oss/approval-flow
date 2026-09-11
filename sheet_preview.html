@@ -1003,34 +1003,13 @@ function setSaveStatus(state) {
     else                     { el.textContent = t('save_error'); el.className = 'save-status error'; }
 }
 
+// プレビュー専用: 実際のDB保存は行わず、保存済み表示だけ更新する
 async function saveNow() {
-    if (isSaving || !draftId) return;
+    if (isSaving) return;
     isSaving = true;
-
-    // 最新の備考値をchecksに反映
-    Object.keys(checks).forEach(itemId => {
-        if (checks[itemId]) {
-            const noteEl = document.getElementById(`sn_${itemId}`);
-            if (noteEl) checks[itemId].note = noteEl.value.trim();
-        }
-    });
-
-    const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
-    // UI状態フラグ（_machineFree/_unitFree）はDBには保存しない
-    const cleanItems = assemblyItems
-        .filter(it => it && it.machine)
-        .map(it => ({ machine: it.machine, unit: it.unit || null }));
-    const { error } = await db.from('approval_requests')
-        .update({
-            sheet_data: sheetData,
-            assembly_items: cleanItems,
-            machine_name: buildAssemblyMachineNameSummary(cleanItems),
-            unit_name: null
-        })
-        .eq('id', draftId);
-
+    await new Promise(resolve => setTimeout(resolve, 200));
     isSaving = false;
-    setSaveStatus(error ? 'error' : 'ok');
+    setSaveStatus('ok');
 }
 
 function addPendingItem() {
