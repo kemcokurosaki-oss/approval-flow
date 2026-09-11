@@ -1000,7 +1000,7 @@ async function init() {
         if (error || !req || !req.sheet_data) {
             document.getElementById('loading').classList.remove('visible');
             document.getElementById('sheet_content').innerHTML =
-                '<div class="error-screen">チェックシートデータが見つかりません。</div>';
+                `<div class="error-screen">${t('err_view_not_found')}</div>`;
             return;
         }
 
