@@ -902,176 +902,22 @@ function renderAssemblyItemRow(item, i) {
     </div>`;
 }
 
-async function init() {
+// ===== プレビュー用初期化（Supabase接続なし・ダミーデータのみ） =====
+function init() {
     primeI18nDefaults();
-
-    // ログインセッションを復元（別タブとして開かれるため、RLSで書き込みが通るように明示的にセットする）
-    const accessToken  = localStorage.getItem('ap_access_token');
-    const refreshToken = localStorage.getItem('ap_refresh_token');
-    if (accessToken && refreshToken) {
-        await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-    }
-
-    const params   = new URLSearchParams(location.search);
-    const viewMode = params.get('view') === '1';
-    const viewId   = params.get('id');
-    draftId = params.get('draft_id');
-
-    if (viewMode && viewId) {
-        // ===== 閲覧モード（承認者確認・完了報告書は常に日本語表示） =====
-        currentLang = 'ja';
-        const { data: req, error } = await db
-            .from('approval_requests')
-            .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
-            .eq('id', viewId)
-            .single();
-
-        if (error || !req || !req.sheet_data) {
-            document.getElementById('loading').classList.remove('visible');
-            document.getElementById('sheet_content').innerHTML =
-                `<div class="error-screen">${t('err_view_not_found')}</div>`;
-            return;
-        }
-
-        const isApproved = req.status === 'approved';
-        setSheetInfoHeader(req.project_number);
-        checks       = req.sheet_data.check_items   || {};
-        pendingItems = req.sheet_data.pending_items || [];
-
-        const meta = req.sheet_data.meta || {};
-        let authorName = meta.author || '';
-        if (!authorName && req.requester_id) {
-            const { data: p } = await db.from('profiles').select('name').eq('id', req.requester_id).single();
-            if (p?.name) authorName = p.name;
-        }
-
-        let approvers = [];
-        if (isApproved && req.approval_steps) {
-            const approvedSteps = (req.approval_steps || [])
-                .filter(s => s.status === 'approved' && s.approver_id)
-                .sort((a, b) => (a.step_order || 0) - (b.step_order || 0));
-            if (approvedSteps.length > 0) {
-                const ids = [...new Set(approvedSteps.map(s => s.approver_id))];
-                const { data: profiles } = await db.from('profiles').select('id, name').in('id', ids);
-                approvers = approvedSteps.map(s => ({
-                    name: (profiles || []).find(p => p.id === s.approver_id)?.name || '—',
-                    date: s.decided_at ? fmtStampDate(s.decided_at) : '—'
-                }));
-            }
-        }
-
-        const metaBox = document.querySelector('.sheet-meta-box');
-        if (metaBox) metaBox.style.display = 'none';
-        const itemsGroup = document.getElementById('assembly_items_group');
-        if (itemsGroup) itemsGroup.style.display = 'none';
-
-        if (isApproved) {
-            document.getElementById('doc_title_top').textContent = '機械組立完了報告書';
-            document.getElementById('doc_date_top').textContent = meta.date || '';
-            document.getElementById('doc_date_top').style.display = '';
-            document.title = `機械組立完了報告書 - ${req.project_number} ${req.machine_name}`;
-            const legend = document.querySelector('.sheet-legend');
-            if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', approvers));
-        } else {
-            document.getElementById('doc_title_top').textContent = '機械組立完了チェックシート';
-            document.title = `機械組立完了チェックシート - ${req.project_number} ${req.machine_name}`;
-            const legend = document.querySelector('.sheet-legend');
-            if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', []));
-        }
-
-        restoreChecks();
-        renderPendingItemsView();
-        setViewMode();
-        document.getElementById('loading').classList.remove('visible');
-        return;
-    }
-
-    // ===== 入力モード =====
-    if (!draftId) {
-        document.getElementById('loading').classList.remove('visible');
-        document.getElementById('sheet_content').innerHTML =
-            `<div class="error-screen">${t('err_bad_params')}</div>`;
-        return;
-    }
-
-    const { data: draft, error } = await db
-        .from('approval_requests')
-        .select('project_number, machine_name, unit_name, assembly_items, sheet_data, requester_id, status')
-        .eq('id', draftId)
-        .single();
-
-    if (error || !draft) {
-        document.getElementById('loading').classList.remove('visible');
-        document.getElementById('sheet_content').innerHTML =
-            `<div class="error-screen">${t('err_draft_not_found')}</div>`;
-        return;
-    }
-
-    setSheetInfoHeader(draft.project_number);
-    document.title = `機械組立完了チェックシート - ${draft.project_number} ${draft.machine_name || ''}`;
-
-    assemblyMachineCandidates = await loadAssemblyMachineCandidates(draft.project_number);
-    useAssemblyCandidateList  = Object.keys(assemblyMachineCandidates).length > 0;
-
-    // assembly_items（新形式）を使う。無ければ旧形式(machine_name/unit_name単一値)からフォールバック
-    assemblyItems = Array.isArray(draft.assembly_items) ? draft.assembly_items
-        : (draft.machine_name ? [{ machine: draft.machine_name, unit: draft.unit_name || null }] : []);
-
-    assemblyMode = draft.sheet_data?.meta?.assembly_mode || null;
-    assemblyLockedMachine = draft.sheet_data?.meta?.assembly_locked_machine || assemblyItems[0]?.machine || '';
     applyStaticI18n();
-    if (assemblyMode === 'fixed') {
-        document.getElementById('assembly_add_btn')?.remove();
-    } else if (assemblyMode === 'free') {
-        const addBtn = document.getElementById('assembly_add_btn');
-        if (addBtn) addBtn.textContent = t('btn_add_unit');
-    }
 
+    document.getElementById('sheet_project_num').textContent = '2001（プレビュー）';
+    document.title = '機械組立完了チェックシート（プレビュー）';
+
+    sheetMeta.author = '山田 太郎（サンプル）';
+    document.getElementById('sheet_author').textContent = sheetMeta.author;
+
+    assemblyMachineCandidates = ASSEMBLY_UNIT_MASTER;
+    useAssemblyCandidateList  = true;
+    assemblyItems = [{ machine: 'CC', unit: null }];
     renderAssemblyItems();
-
-    // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
-    // （再申請自体は元の詳細画面の「再申請する」ボタンで行う）
-    if (draft.status && draft.status !== 'draft') {
-        const completeBtn = document.getElementById('btn_complete');
-        if (completeBtn) {
-            completeBtn.dataset.rejectedMode = '1';
-            completeBtn.textContent = t('btn_save_close');
-            completeBtn.onclick = () => suspendSheet();
-        }
-        const legend = document.querySelector('.sheet-legend');
-        if (legend) legend.insertAdjacentHTML('afterend',
-            `<div class="rejected-notice" style="font-size:12px; color:#c0392b; margin-bottom:14px;">${t('rejected_notice')}</div>`);
-    }
-
-    // 担当者名を取得（profiles から）
-    if (draft.requester_id) {
-        const { data: profile } = await db.from('profiles').select('name').eq('id', draft.requester_id).single();
-        if (profile?.name) {
-            sheetMeta.author = profile.name;
-            document.getElementById('sheet_author').textContent = profile.name;
-        }
-    }
-
-    // 発行日: 常に開いた日の日付を設定（申請時に確定保存）
-    const _d = new Date();
-    sheetMeta.date = `${_d.getFullYear()}年${_d.getMonth()+1}月${_d.getDate()}日`;
-
-    if (draft.sheet_data) {
-        checks       = draft.sheet_data.check_items   || {};
-        pendingItems = draft.sheet_data.pending_items || [];
-        if (draft.sheet_data.meta?.author && !sheetMeta.author) {
-            sheetMeta.author = draft.sheet_data.meta.author;
-            document.getElementById('sheet_author').textContent = sheetMeta.author;
-        }
-        if (draft.sheet_data.meta?.completion_date) {
-            sheetMeta.completion_date = draft.sheet_data.meta.completion_date;
-            document.getElementById('sheet_completion_date').value = sheetMeta.completion_date;
-        }
-        restoreChecks();
-        renderPendingItems();
-    }
+    renderPendingItems();
 
     document.getElementById('loading').classList.remove('visible');
 }
