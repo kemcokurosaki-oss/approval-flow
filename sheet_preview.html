@@ -9,7 +9,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>機械組立完了チェックシート（プレビュー）</title>
-    <script src="assembly_unit_master.js"></script>
+    <script>
+        // assembly_unit_master.js の内容を単一ファイルとして共有できるよう埋め込み
+        const ASSEMBLY_UNIT_MASTER = {
+            CC: ['-'],
+            UC: ['-'],
+            LM: ['-'],
+            SW: ['-'],
+            RV: ['-'],
+            FL: ['-'],
+            LE: ['-'],
+            TC: ['-'],
+            RC: ['-'],
+            LC: ['-'],
+            MC: ['-'],
+            RT: ['-'],
+            DF: ['-'],
+            BM: ['-'],
+            PC: ['-', 'MU', 'DS'],
+            TR: ['RV', 'CV', 'AL', 'WK', 'AI'],
+            FS: ['EG', 'RS', 'SR', 'TW', 'TH', 'MR', 'UJ', 'DR'],
+            WA: ['SQ', 'SG', 'IR', 'BC', 'BW', 'BH', 'CI', 'IC', 'IP', 'HF'],
+        };
+    </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @media screen {
