@@ -922,28 +922,6 @@ function init() {
     document.getElementById('loading').classList.remove('visible');
 }
 
-// 既存データを画面に反映
-function restoreChecks() {
-    const valToClass = {
-        '○': 'maru', '×': 'batu', '―': 'dash',
-        '添付済': 'wide1', '未添付': 'wide2'
-    };
-    Object.entries(checks).forEach(([itemId, data]) => {
-        if (!data || !data.result) return;
-        const cls = valToClass[data.result];
-        if (!cls) return;
-
-        document.querySelectorAll(`.sheet-btn[onclick*="'${itemId}',"]`).forEach(btn => {
-            if (btn.getAttribute('onclick').includes(`'${data.result}'`)) {
-                btn.classList.add(`active-${cls}`);
-            }
-        });
-
-        const noteEl = document.getElementById(`sn_${itemId}`);
-        if (noteEl && data.note) noteEl.value = data.note;
-    });
-}
-
 function setCheck(itemId, val, btn, cls) {
     const already = checks[itemId]?.result === val;
 
