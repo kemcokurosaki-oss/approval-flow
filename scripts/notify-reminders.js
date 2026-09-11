@@ -686,6 +686,116 @@ async function runQaFinalizeReminders() {
   console.log(`完了処理催促: ${count}件送信`);
 }
 
+// ===== 試運転準備完了 催促 =====
+// 試運転タスクの開始予定日の3日前を過ぎても「試運転準備完了」チェック（組立／電気艤装タスクがあれば電装も）が
+// 入っていない場合、未完了側の担当者へ毎日通知する（工事番号は2000番台・それ以外いずれも対象）
+async function runTestRunReadinessReminders() {
+  console.log('\n--- 試運転準備完了 催促チェック ---');
+
+  const in3DaysStr = inNDaysJSTStr(3);
+  const sentThisRun = new Set();
+  let count = 0;
+
+  const shiuntenTasks = await supabaseFetch(
+    `tasks?text=eq.試運転&start_date=lte.${in3DaysStr}&select=project_number,machine,start_date,is_completed`
+  );
+
+  const sendReminder = async (profile, projectNum, label, kindLabel) => {
+    if (!profile.email) return;
+    const dedupKey = `${projectNum}__${label}__${kindLabel}__${profile.id}`;
+    if (sentThisRun.has(dedupKey)) return;
+    const subject = `【試運転準備完了 催促】${projectNum}${label ? `【${label}】` : ''}`;
+    const text =
+      `${profile.name} 様\n\n` +
+      `${projectNum}${label ? `【${label}】` : ''} は試運転の開始予定日が近づいていますが、\n` +
+      `「試運転準備完了（${kindLabel}）」がまだチェックされていません。\n` +
+      `承認フロー管理システムにログインし、準備ができていればチェックをお願いします。\n\n` +
+      `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+    try {
+      await sendEmail(profile.email, profile.name, subject, text);
+      sentThisRun.add(dedupKey);
+      count++;
+    } catch (e) {
+      console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+    }
+  };
+
+  for (const task of (shiuntenTasks || [])) {
+    if (task.is_completed) continue;
+    if (completedProjectsSet.has(String(task.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(task.project_number) !== TEST_PROJECT) continue;
+
+    const projectNum = task.project_number;
+    const machine = task.machine || '';
+    const is2000s = isAssembly2000sSeries(projectNum);
+
+    const elecTasks = machine
+      ? await supabaseFetch(`tasks?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&text=eq.電気艤装&select=unit,owner`)
+      : await supabaseFetch(`tasks?project_number=eq.${encodeURIComponent(projectNum)}&text=eq.電気艤装&select=unit,owner`);
+    const hasElecTask = (elecTasks || []).length > 0;
+    const requiredKinds = hasElecTask ? ['assembly', 'electrical'] : ['assembly'];
+
+    if (is2000s && machine) {
+      // 2000番台：機械・ユニット単位で判定
+      const assemblyReqs = await supabaseFetch(
+        `approval_requests?project_number=eq.${encodeURIComponent(projectNum)}&flow_type=eq.assembly&select=assembly_items,machine_name`
+      );
+      const assemblyItemsList = (assemblyReqs || []).map(r => (Array.isArray(r.assembly_items) && r.assembly_items.length > 0)
+        ? r.assembly_items : (r.machine_name ? [{ machine: r.machine_name }] : []));
+      const units = getAssemblyUnitListForMachine(machine, assemblyItemsList);
+      if (units.length === 0) continue;
+
+      const readinessRows = await supabaseFetch(
+        `test_run_readiness?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&select=unit,kind,is_ready`
+      );
+      const kumitateTasks = await supabaseFetch(
+        `tasks?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&text=eq.機械組立&select=unit,owner`
+      );
+      const kumitateOwnerByUnit = new Map((kumitateTasks || []).map(t => [t.unit || '', t.owner]));
+      const denkiOwnerByUnit    = new Map((elecTasks || []).map(t => [t.unit || '', t.owner]));
+
+      for (const unit of units) {
+        for (const kind of requiredKinds) {
+          const row = (readinessRows || []).find(r => (r.unit || '') === (unit || '') && r.kind === kind);
+          if (row?.is_ready) continue;
+          const ownerName = kind === 'assembly' ? kumitateOwnerByUnit.get(unit || '') : denkiOwnerByUnit.get(unit || '');
+          if (!ownerName) continue;
+          const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+          const unitLabel = unit ? `${machine}${unit}` : machine;
+          const kindLabel = kind === 'assembly' ? '組立' : '電装';
+          for (const profile of (recipients || [])) {
+            await sendReminder(profile, projectNum, unitLabel, kindLabel);
+          }
+        }
+      }
+    } else {
+      // 通常工事番号：工事番号ごとに1組（machine=''・unit=''）
+      const readinessRows = await supabaseFetch(
+        `test_run_readiness?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.&unit=eq.&select=kind,is_ready`
+      );
+      const kumitateTasks = await supabaseFetch(
+        `tasks?project_number=eq.${encodeURIComponent(projectNum)}&text=eq.機械組立&select=owner`
+      );
+      const kumitateOwnerNames = [...new Set((kumitateTasks || []).map(t => t.owner).filter(Boolean))];
+      const denkiOwnerNames    = [...new Set((elecTasks || []).map(t => t.owner).filter(Boolean))];
+
+      for (const kind of requiredKinds) {
+        const row = (readinessRows || []).find(r => r.kind === kind);
+        if (row?.is_ready) continue;
+        const ownerNames = kind === 'assembly' ? kumitateOwnerNames : denkiOwnerNames;
+        const kindLabel = kind === 'assembly' ? '組立' : '電装';
+        for (const ownerName of ownerNames) {
+          const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+          for (const profile of (recipients || [])) {
+            await sendReminder(profile, projectNum, '', kindLabel);
+          }
+        }
+      }
+    }
+  }
+  console.log(`試運転準備完了 催促: ${count}件送信`);
+}
+
 async function main() {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
