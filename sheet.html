@@ -1244,9 +1244,9 @@ window.addEventListener('beforeprint', syncNotePrint);
 function setSaveStatus(state) {
     const el = document.getElementById('save_status');
     if (!el) return;
-    if (state === 'saving') { el.textContent = '保存中...';  el.className = 'save-status saving'; }
-    else if (state === 'ok') { el.textContent = '保存済み ✓'; el.className = 'save-status'; }
-    else                     { el.textContent = '保存エラー ✕'; el.className = 'save-status error'; }
+    if (state === 'saving') { el.textContent = t('save_saving');  el.className = 'save-status saving'; }
+    else if (state === 'ok') { el.textContent = t('save_ok'); el.className = 'save-status'; }
+    else                     { el.textContent = t('save_error'); el.className = 'save-status error'; }
 }
 
 async function saveNow() {
