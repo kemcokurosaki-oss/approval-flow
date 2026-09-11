@@ -1419,7 +1419,7 @@ function suspendSheet() {
 async function completeSheet() {
     // 機械・ユニットが1件も入力されていない場合は申請させない
     if (assemblyItems.filter(it => it && it.machine).length === 0) {
-        alert('機械を1件以上入力してください');
+        alert(t('alert_no_machine_complete'));
         return;
     }
 
