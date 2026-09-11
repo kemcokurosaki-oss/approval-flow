@@ -1870,7 +1870,7 @@ function renderProgressCards() {
             // 文言に「未定」を使わず、色も警告色ではないニュートラルな prog-card-date のままにする
             // （工程表の梱包出荷タスクには触れず、承認フロー側の表示のみ切り替える）
             packingDateLabel = effectivePackingDate
-                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">梱包出荷日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
+                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${packingDateConfirmed ? '梱包出荷日' : '梱包出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : `<span class="prog-card-date"><span class="prog-card-date-label">梱包出荷</span> <span class="prog-card-date-value">あり（未入力）</span></span>`;
         } else if (packingState === 'unknown') {
             // 梱包出荷「未定」表示・あり／なし選択は4000番台・4C番の工番のみが対象（getPackingDisplayState内で判定）
