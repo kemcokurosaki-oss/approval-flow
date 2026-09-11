@@ -700,17 +700,18 @@ async function runTestRunReadinessReminders() {
   let count = 0;
 
   const shiuntenTasks = await supabaseFetch(
-    `tasks?text=eq.試運転&start_date=lte.${in3DaysStr}&select=project_number,machine,start_date,is_completed`
+    `tasks?text=eq.試運転&start_date=lte.${in3DaysStr}&select=project_number,machine,unit,start_date,is_completed`
   );
 
-  const sendReminder = async (profile, projectNum, label, kindLabel) => {
+  // testRunLabel: どの試運転タスク（機械・ユニット）の開始日が近づいているかを示す表示名（例:「2810【FSBT1】」）
+  const sendReminder = async (profile, projectNum, testRunLabel, ownerUnitLabel, kindLabel) => {
     if (!profile.email) return;
-    const dedupKey = `${projectNum}__${label}__${kindLabel}__${profile.id}`;
+    const dedupKey = `${projectNum}__${testRunLabel}__${ownerUnitLabel}__${kindLabel}__${profile.id}`;
     if (sentThisRun.has(dedupKey)) return;
-    const subject = `【試運転準備完了 催促】${projectNum}${label ? `【${label}】` : ''}`;
+    const subject = `【試運転準備完了 催促】${testRunLabel}`;
     const text =
       `${profile.name} 様\n\n` +
-      `${projectNum}${label ? `【${label}】` : ''} は試運転の開始予定日が近づいていますが、\n` +
+      `${testRunLabel}の試運転開始日が近づいていますが、\n` +
       `「試運転準備完了（${kindLabel}）」がまだチェックされていません。\n` +
       `承認フロー管理システムにログインし、準備ができていればチェックをお願いします。\n\n` +
       `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
@@ -731,6 +732,8 @@ async function runTestRunReadinessReminders() {
     const projectNum = task.project_number;
     const machine = task.machine || '';
     const is2000s = isAssembly2000sSeries(projectNum);
+    // この試運転タスク（機械・ユニット）の表示名。例: 通常工事番号「2810」/ 2000番台「2810【FSBT1】」
+    const testRunLabel = machine ? `${projectNum}【${machine}${task.unit || ''}】` : String(projectNum);
 
     const elecTasks = machine
       ? await supabaseFetch(`tasks?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&text=eq.電気艤装&select=unit,owner`)
