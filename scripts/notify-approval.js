@@ -459,6 +459,18 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
+    case 'test_run_ready':
+      // 組立フローの承認申請とは独立した通知のため、reqを使わずdetail（工事番号・機械名）だけで組み立てる
+      return {
+        from,
+        subject: `【試運転準備完了】${extra?.detail || ''}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${extra?.detail || ''} の試運転準備が完了しました。\n` +
+          `承認フロー管理システムでご確認ください。` +
+          `\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'fix_card_sent': {
       const items = (req?.sheet_data?.pending_items || []).filter(it => it.content);
       const flowLabelShort = FLOW_SHORT_LABEL[req?.flow_type] || '検査';
