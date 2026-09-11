@@ -2928,13 +2928,30 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         (prs || []).forEach(p => { requesterNames[p.id] = p.name; });
     }
 
+    // 試運転準備完了チェック（試運転タスクがある機械のみ表示。ユニット単位でチェック、機械単位で通知判定する）
+    const hasTestRunTask = !!progressCachedData?.machineTaskSet?.has(`${projectNum}__${machine}__試運転`);
+    let readinessMap = new Map();
+    let kumitateOwnerByUnit = new Map();
+    let denkiOwnerByUnit = new Map();
+    if (hasTestRunTask) {
+        const { data: readinessRows } = await db.from('test_run_readiness')
+            .select('unit, kind, is_ready').eq('project_number', projectNum).eq('machine', machine);
+        readinessMap = new Map((readinessRows || []).map(r => [`${r.unit || ''}__${r.kind}`, r.is_ready]));
+
+        const { data: ownerTaskRows } = await db.from('tasks').select('unit, owner, text')
+            .eq('project_number', projectNum).eq('machine', machine).in('text', ['機械組立', '電気艤装']);
+        kumitateOwnerByUnit = new Map((ownerTaskRows || []).filter(t => t.text === '機械組立').map(t => [t.unit || '', t.owner]));
+        denkiOwnerByUnit    = new Map((ownerTaskRows || []).filter(t => t.text === '電気艤装').map(t => [t.unit || '', t.owner]));
+    }
+
     const rowsHtml = buildMachineUnitRowsHtml({
         projectNum, machine, units, reqs, notRequiredUnits, meta, myRole, canApply, requesterNames,
         startUnitFnName: 'startNewAssemblyUnitSheetFromDetail',
         submitFnName:    'submitAssemblyDraftFromDetail',
         deleteFnName:    'deleteAssemblyDraftFromDetail',
         toggleFnName:    'toggleAssemblyUnitNotRequired',
-        reopenFnName:    'reopenAssemblySheetFromDetail'
+        reopenFnName:    'reopenAssemblySheetFromDetail',
+        hasTestRunTask, readinessKind: 'assembly', readinessMap, ownerByUnit: kumitateOwnerByUnit
     });
     const elecRowsHtml = buildMachineUnitRowsHtml({
         projectNum, machine, units: elecUnits, reqs: elecReqs, notRequiredUnits: elecNotRequiredUnits,
@@ -2943,7 +2960,8 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         submitFnName:    'submitElectricalDraftFromDetail',
         deleteFnName:    'deleteElectricalDraftFromDetail',
         toggleFnName:    'toggleElectricalUnitNotRequired',
-        reopenFnName:    'reopenElectricalSheetFromDetail'
+        reopenFnName:    'reopenElectricalSheetFromDetail',
+        hasTestRunTask, readinessKind: 'electrical', readinessMap, ownerByUnit: denkiOwnerByUnit
     });
 
     const addNewUnitHtml = canApply
