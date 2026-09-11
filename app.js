@@ -385,7 +385,7 @@ function getFixedRecipientPlan(flowType) {
 // フロー種別ごとに、工番の担当者から自動で宛先に加わるグループ（担当者本人／上長を分けてON/OFF可能）
 // assemblyのkumitateは組立担当者自身が申請するフローのため上長（組立課長）は含まない
 const DYNAMIC_RECIPIENT_GROUPS = {
-    assembly:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager', 'denki_owner'],
+    assembly:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'denki_owner'],
     test_run:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
     shipping_meeting:  ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
     simple_inspection: ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager'],
