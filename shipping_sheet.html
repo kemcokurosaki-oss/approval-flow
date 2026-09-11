@@ -212,12 +212,16 @@ async function init() {
         { lbl: '常務',     key: 'director' },
     ];
 
+    // 工事番号3000番台・4000番台は「社内製作仕様書」、それ以外は「製造指図書」と表記する
+    const specDocN = parseInt(String(pNum).trim(), 10);
+    const specDocLbl = (specDocN >= 3000 && specDocN <= 4999) ? '社内製作仕様書' : '製造指図書';
+
     // 行定義（active[i]=1 の列にスタンプ表示）
     const ROWS = [
         { lbl: '本体確認',       active: [1,1,1,1,1,1,0,0] },
         { lbl: '出荷品リスト',   active: [1,1,1,1,0,1,1,0] },
         { lbl: '出荷荷姿',       active: [1,1,1,1,0,1,0,0] },
-        { lbl: '社内製作仕様書', active: [0,0,0,0,0,1,0,1] },
+        { lbl: specDocLbl,       active: [0,0,0,0,0,1,0,1] },
     ];
 
     const thRow = COLS.map(c => `<th>${esc(c.lbl)}</th>`).join('');
