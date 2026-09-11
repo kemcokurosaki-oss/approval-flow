@@ -189,6 +189,12 @@ function tomorrowJSTStr() {
   return new Date(y, m - 1, d + 1).toLocaleDateString('en-CA');
 }
 
+// JST N日後の日付文字列（YYYY-MM-DD）
+function inNDaysJSTStr(n) {
+  const [y, m, d] = tokyoDateStr().split('-').map(Number);
+  return new Date(y, m - 1, d + n).toLocaleDateString('en-CA');
+}
+
 // JST当日0:00のISO文字列（前日中の申請をすべて対象にするcutoff用）
 function todayMidnightJST() {
   const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
