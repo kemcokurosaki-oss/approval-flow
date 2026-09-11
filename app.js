@@ -8341,11 +8341,15 @@ async function changeConfirmedShippingDate(requestId) {
 // 組立・電装それぞれの担当者が個別にチェックし、両方揃って初めて試運転担当者・操業課長/部長へ通知する。
 // 通常工事番号は工事番号ごとに1組（machine=''・unit=''）、2000番台は機械・ユニットごとに1組を保持する。
 function buildTestRunReadinessSectionHtml(projectNum, machine, unit, asmReady, elecReady, hasElecTask, canEditAssembly, canEditElectrical) {
+    const BADGE_COLORS = {
+        assembly:   'background:#fff3cd;color:#856404;',   // 組立: 黄色
+        electrical: 'background:#e8d9f7;color:#6f2fa8;',   // 電装: 紫
+    };
     const rowHtml = (kind, label, ready, canEdit) => `
         <label style="display:flex; align-items:center; gap:8px; font-size:15px; font-family:inherit; ${canEdit ? 'cursor:pointer;' : 'opacity:.55;'}">
             <input type="checkbox" ${ready ? 'checked' : ''} ${canEdit ? '' : 'disabled'} style="width:16px;height:16px;"
                 onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${kind}', this.checked)">
-            <span class="status-badge s-gray" style="font-size:13px;padding:3px 10px;">${label}</span>
+            <span class="status-badge" style="font-size:13px;padding:3px 10px;${BADGE_COLORS[kind]}">${label}</span>
             試運転準備: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '完了' : '未完了'}</span>
         </label>`;
     const rows = [rowHtml('assembly', '組立', asmReady, canEditAssembly)];
