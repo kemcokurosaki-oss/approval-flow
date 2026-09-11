@@ -4854,28 +4854,6 @@ async function openDetailModal(requestId, returnTo = null) {
     }
     currentDetailHasPackingShipping = hasPackingShipping;
 
-    // 試運転準備完了チェック（組立フロー、試運転タスクがある工事番号のみ・工事番号ごとに1組）
-    // 電気艤装タスクがあれば組立・電装で別々にチェックし、両方揃って初めて試運転担当者へ通知する
-    let testRunReadinessHtml = '';
-    if (req.flow_type === 'assembly' && testRunProjectNums.has(pNum)) {
-        const { data: ownerTasks } = await db.from('tasks').select('text, owner')
-            .eq('project_number', pNum).in('text', ['機械組立', '電気艤装']);
-        const kumitateOwnerNames = [...new Set((ownerTasks || []).filter(t => t.text === '機械組立').map(t => t.owner).filter(Boolean))];
-        const denkiTasks         = (ownerTasks || []).filter(t => t.text === '電気艤装');
-        const hasElecTask        = denkiTasks.length > 0;
-        const denkiOwnerNames    = [...new Set(denkiTasks.map(t => t.owner).filter(Boolean))];
-
-        const { data: readinessRows } = await db.from('test_run_readiness')
-            .select('kind, is_ready').eq('project_number', pNum).eq('machine', '').eq('unit', '');
-        const asmReady  = !!(readinessRows || []).find(r => r.kind === 'assembly')?.is_ready;
-        const elecReady = !!(readinessRows || []).find(r => r.kind === 'electrical')?.is_ready;
-
-        const canEditAssembly   = isSuperAdmin() || (!!currentProfile?.name && kumitateOwnerNames.includes(currentProfile.name));
-        const canEditElectrical = isSuperAdmin() || (!!currentProfile?.name && denkiOwnerNames.includes(currentProfile.name));
-
-        testRunReadinessHtml = buildTestRunReadinessSectionHtml(pNum, '', '', asmReady, elecReady, hasElecTask, canEditAssembly, canEditElectrical);
-    }
-
     const slbl   = statusBadgeLabel(req);
 
     // 自分が担当すべきステップか確認（shipping_prep は承認不要のため対象外）
