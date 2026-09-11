@@ -1852,7 +1852,7 @@ function renderProgressCards() {
         } else if (machines.length === 1 && hasSplitShippingInProject) {
             // 機械1台の分割出荷は右上にまとめて①②を並べて表示する（prog-card-datesが縦積みにする）
             shippingDateLabel = getShippingEntriesForMachine(num, machines[0]).filter(e => e.date).map(e => {
-                const baseLabel = hasAnyPacking ? '工場出荷日' : (e.isConfirmed ? '確定出荷日' : '出荷予定日');
+                const baseLabel = hasAnyPacking ? (e.isConfirmed ? '工場出荷日' : '工場出荷予定日') : (e.isConfirmed ? '確定出荷日' : '出荷予定日');
                 const labelText = e.seq ? `${e.seq === 1 ? '①' : '②'}${baseLabel}` : baseLabel;
                 return buildShipDateSpan(labelText, e.date, e.isConfirmed);
             }).join('');
