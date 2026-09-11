@@ -1858,7 +1858,7 @@ function renderProgressCards() {
             }).join('');
         } else {
             const { date: effectiveShippingDate, isConfirmed: shippingDateConfirmed } = getEffectiveShippingDate(num);
-            const baseLabel = hasAnyPacking ? '工場出荷日' : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日');
+            const baseLabel = hasAnyPacking ? (shippingDateConfirmed ? '工場出荷日' : '工場出荷予定日') : (shippingDateConfirmed ? '確定出荷日' : '出荷予定日');
             shippingDateLabel = effectiveShippingDate ? buildShipDateSpan(baseLabel, effectiveShippingDate, shippingDateConfirmed) : '';
         }
 
