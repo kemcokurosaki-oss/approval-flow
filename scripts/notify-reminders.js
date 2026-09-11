@@ -817,7 +817,7 @@ async function runTestRunReadinessReminders() {
         for (const ownerName of ownerNames) {
           const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
           for (const profile of (recipients || [])) {
-            await sendReminder(profile, projectNum, '', kindLabel);
+            await sendReminder(profile, projectNum, testRunLabel, '', kindLabel);
           }
         }
       }
