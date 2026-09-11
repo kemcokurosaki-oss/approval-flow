@@ -2888,7 +2888,7 @@ function buildMachineUnitRowsHtml(opts) {
             const ownerName = ownerByUnit?.get(unit || '');
             const canEditReadiness = isSuperAdmin() || (!!currentProfile?.name && !!ownerName && currentProfile.name === ownerName);
             readinessHtml = `
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-family:inherit; margin-top:8px; ${canEditReadiness ? 'cursor:pointer;' : 'opacity:.55;'}">
+            <label style="display:flex; align-items:center; gap:6px; font-size:14px; font-family:inherit; font-weight:600; color:#3d4a5d; margin-top:8px; ${canEditReadiness ? 'cursor:pointer;' : 'opacity:.55;'}">
                 <input type="checkbox" ${ready ? 'checked' : ''} ${canEditReadiness ? '' : 'disabled'} style="width:15px;height:15px;"
                     onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${readinessKind}', this.checked)">
                 試運転準備: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '完了' : '未完了'}</span>
