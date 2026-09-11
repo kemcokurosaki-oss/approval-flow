@@ -2518,6 +2518,28 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <div class="unit-list-wrap unit-list-wrap-wide">${elecRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">電装の申請はまだありません</div>'}</div>
     ` : '';
 
+    // 試運転準備チェック（試運転タスクがある工事番号のみ・工事番号ごとに1組）
+    // 電気艤装タスクがあれば組立・電装で別々にチェックし、両方揃って初めて試運転担当者へ通知する
+    let testRunReadinessHtml = '';
+    if (testRunProjectNums.has(projectNum)) {
+        const { data: ownerTasks } = await db.from('tasks').select('text, owner')
+            .eq('project_number', projectNum).in('text', ['機械組立', '電気艤装']);
+        const kumitateOwnerNames = [...new Set((ownerTasks || []).filter(t => t.text === '機械組立').map(t => t.owner).filter(Boolean))];
+        const denkiTasks         = (ownerTasks || []).filter(t => t.text === '電気艤装');
+        const hasElecTask        = denkiTasks.length > 0;
+        const denkiOwnerNames    = [...new Set(denkiTasks.map(t => t.owner).filter(Boolean))];
+
+        const { data: readinessRows } = await db.from('test_run_readiness')
+            .select('kind, is_ready').eq('project_number', projectNum).eq('machine', '').eq('unit', '');
+        const asmReady  = !!(readinessRows || []).find(r => r.kind === 'assembly')?.is_ready;
+        const elecReady = !!(readinessRows || []).find(r => r.kind === 'electrical')?.is_ready;
+
+        const canEditAssembly   = isSuperAdmin() || (!!currentProfile?.name && kumitateOwnerNames.includes(currentProfile.name));
+        const canEditElectrical = isSuperAdmin() || (!!currentProfile?.name && denkiOwnerNames.includes(currentProfile.name));
+
+        testRunReadinessHtml = buildTestRunReadinessSectionHtml(projectNum, '', '', asmReady, elecReady, hasElecTask, canEditAssembly, canEditElectrical);
+    }
+
     document.getElementById('detail_title').textContent = '組立フロー';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
@@ -2527,6 +2549,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
         ${actionHtml}
         ${elecSectionHtml}
+        ${testRunReadinessHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
