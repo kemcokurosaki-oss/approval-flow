@@ -764,8 +764,18 @@ async function runTestRunReadinessReminders() {
       const kumitateTasks = await supabaseFetch(
         `tasks?project_number=eq.${encodeURIComponent(projectNum)}&machine=eq.${encodeURIComponent(machine)}&text=eq.機械組立&select=unit,owner`
       );
-      const kumitateOwnerByUnit = new Map((kumitateTasks || []).map(t => [t.unit || '', t.owner]));
-      const denkiOwnerByUnit    = new Map((elecTasks || []).map(t => [t.unit || '', t.owner]));
+      // 1ユニットに複数の担当者がいる場合に対応するため、unit -> 担当者名Setで持つ
+      const buildOwnerNamesByUnit = (rows) => {
+        const map = new Map();
+        (rows || []).forEach(t => {
+          const key = t.unit || '';
+          if (!map.has(key)) map.set(key, new Set());
+          if (t.owner) map.get(key).add(t.owner);
+        });
+        return map;
+      };
+      const kumitateOwnerByUnit = buildOwnerNamesByUnit(kumitateTasks);
+      const denkiOwnerByUnit    = buildOwnerNamesByUnit(elecTasks);
 
       for (const unit of units) {
         for (const kind of requiredKinds) {
@@ -773,13 +783,15 @@ async function runTestRunReadinessReminders() {
           if (notReqSet.has(unit || '')) continue;
           const row = (readinessRows || []).find(r => (r.unit || '') === (unit || '') && r.kind === kind);
           if (row?.is_ready) continue;
-          const ownerName = kind === 'assembly' ? kumitateOwnerByUnit.get(unit || '') : denkiOwnerByUnit.get(unit || '');
-          if (!ownerName) continue;
-          const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+          const ownerNames = kind === 'assembly' ? kumitateOwnerByUnit.get(unit || '') : denkiOwnerByUnit.get(unit || '');
+          if (!ownerNames || ownerNames.size === 0) continue;
           const unitLabel = unit ? `${machine}${unit}` : machine;
           const kindLabel = kind === 'assembly' ? '組立' : '電装';
-          for (const profile of (recipients || [])) {
-            await sendReminder(profile, projectNum, unitLabel, kindLabel);
+          for (const ownerName of ownerNames) {
+            const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(ownerName)}&select=id,name,email`);
+            for (const profile of (recipients || [])) {
+              await sendReminder(profile, projectNum, unitLabel, kindLabel);
+            }
           }
         }
       }
