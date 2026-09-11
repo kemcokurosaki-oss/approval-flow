@@ -8392,12 +8392,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             await addFixedRecipients();
             // 工番担当者（profiles）: 組立（複数人対応、ON/OFF切替可）
             if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);
-            // 試運転タスクがある場合のみ試運転担当者も追加（本人・上長を別々にON/OFF切替可）
-            if (dyn.shiunten_owner) for (const o of shiuntenOwners) await addPbyName(o);
-            if (dyn.shiunten_manager && shiuntenOwners.length > 0) {
-                await addP({ role: 'operations_manager' });  // 操業課長（試運転あり）
-                await addP({ role: 'operations_director' }); // 操業部長（試運転あり）
-            }
+            // 操業部（試運転担当者・操業課長/部長）は組立完了通知の対象外
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
             if (dyn.sales) await addOwnerByName(salesOwner);
             if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);
