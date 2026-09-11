@@ -906,7 +906,7 @@ function renderAssemblyItemRow(item, i) {
         ? ''
         : `<div style="display:flex;flex-direction:column;flex-shrink:0;">
                ${lbl(' ')}
-               <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">削除</button>
+               <button class="btn-danger-xs" onclick="removeAssemblyItem(${i})">${t('btn_delete')}</button>
            </div>`;
 
     return `
