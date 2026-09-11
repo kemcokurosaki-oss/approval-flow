@@ -861,10 +861,10 @@ function renderAssemblyItemRow(item, i) {
         const candidates = machineIsKnown ? assemblyMachineCandidates[item.machine] : null;
         const noUnitNeeded = candidates && candidates.length === 1 && candidates[0] === '-';
         if (!machineIsKnown) {
-            unitHtml = `<input type="text" class="pending-content" placeholder="ユニット（任意）" value="${esc(item.unit || '')}"
+            unitHtml = `<input type="text" class="pending-content" placeholder="${t('placeholder_unit_optional')}" value="${esc(item.unit || '')}"
                 oninput="updateAssemblyUnit(${i}, this.value)">`;
         } else if (noUnitNeeded) {
-            unitHtml = `<span style="font-size:12px;color:#aaa;padding:6px 0;display:block;">（ユニット選択不要）</span>`;
+            unitHtml = `<span style="font-size:12px;color:#aaa;padding:6px 0;display:block;">${t('unit_not_needed')}</span>`;
         } else {
             const unitIsKnown = candidates.includes(item.unit);
             if (item._unitFree || (item.unit && !unitIsKnown)) {
