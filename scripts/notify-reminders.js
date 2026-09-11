@@ -69,6 +69,36 @@ let REMINDER_CC_EMAILS = {
   pending_item_reminder:                 [], // ペンディング項目期日超過催促のCC
 };
 
+// 2000番台：組立申請ユニット単位標準リスト（assembly_unit_master.js と同じ内容。
+// このファイルはNode.js側の独立スクリプトのためrequireできず複製している。更新時は両方直すこと）
+const ASSEMBLY_UNIT_MASTER = {
+  CC: ['-'], UC: ['-'], LM: ['-'], SW: ['-'], RV: ['-'], FL: ['-'], LE: ['-'],
+  TC: ['-'], RC: ['-'], LC: ['-'], MC: ['-'], RT: ['-'], DF: ['-'], BM: ['-'],
+  PC: ['-', 'MU', 'DS'],
+  TR: ['RV', 'CV', 'AL', 'WK', 'AI'],
+  FS: ['EG', 'RS', 'SR', 'TW', 'TH', 'MR', 'UJ', 'DR'],
+  WA: ['SQ', 'SG', 'IR', 'BC', 'BW', 'BH', 'CI', 'IC', 'IP', 'HF'],
+};
+// 2000番台：機械コードの固定ユニット候補＋自由入力で追加されたユニットの一覧を返す（app.jsのgetAssemblyUnitListForMachineと同じロジック）
+function getAssemblyUnitListForMachine(machine, assemblyItemsList) {
+  const fixed = ASSEMBLY_UNIT_MASTER[machine] || ['-'];
+  const base = (fixed.length === 1 && fixed[0] === '-') ? [''] : fixed.filter(u => u !== '-');
+  const extra = new Set();
+  (assemblyItemsList || []).forEach(items => {
+    (items || []).forEach(it => {
+      if (it && it.machine === machine) {
+        const u = (it.unit || '').trim();
+        if (u && u !== '-' && !base.includes(u)) extra.add(u);
+      }
+    });
+  });
+  return [...base, ...extra];
+}
+function isAssembly2000sSeries(projectNumber) {
+  const n = parseInt(String(projectNumber).trim(), 10);
+  return n >= 2000 && n <= 2999;
+}
+
 async function loadReminderCcSettings() {
   const rows = await supabaseFetch(`reminder_settings?key=eq.reminder_cc_recipients&select=value`);
   const plan = (rows && rows[0]?.value) || {};
