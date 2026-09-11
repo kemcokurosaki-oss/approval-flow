@@ -1295,40 +1295,40 @@ function renderPendingItems() {
     const c = document.getElementById('pending_container');
     if (!c) return;
     if (pendingItems.length === 0) {
-        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        c.innerHTML = `<div class="pending-empty">${t('pending_empty')}</div>`;
         return;
     }
-    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
+    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">${t('lbl_due_date')}</span>`;
     c.innerHTML = pendingItems.map((item, i) => `
         <div class="pending-row">
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
                 ${lbl}
-                <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                <input type="text" class="pending-machine" placeholder="${t('placeholder_equipment_name')}" value="${esc(item.machine)}"
                        oninput="pendingItems[${i}].machine=this.value; scheduleSave()">
             </div>
             <div style="display:flex;flex-direction:column;flex:1;">
                 ${lbl}
-                <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                <input type="text" class="pending-content" placeholder="${t('placeholder_content')}" value="${esc(item.content)}"
                        oninput="pendingItems[${i}].content=this.value; scheduleSave()">
             </div>
             <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
-                <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">${t('lbl_owner_optional')}</span>
+                <input type="text" class="pending-content" placeholder="${t('placeholder_owner_name')}" value="${esc(item.owner || '')}"
                        oninput="pendingItems[${i}].owner=this.value; scheduleSave()">
             </div>
             <div style="display:flex;flex-direction:column;width:135px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">完了予定日</span>
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">${t('lbl_due_date')}</span>
                 <input type="date" class="pending-due" value="${esc(item.due)}"
                        onchange="pendingItems[${i}].due=this.value; scheduleSave()">
             </div>
             <label style="display:flex;flex-direction:column;flex-shrink:0;align-items:center;gap:2px;">
-                <span style="font-size:10px;color:#999;">出荷後対応</span>
+                <span style="font-size:10px;color:#999;">${t('lbl_ship_after')}</span>
                 <input type="checkbox" ${item.ship_after ? 'checked' : ''}
                        onchange="pendingItems[${i}].ship_after=this.checked; scheduleSave()">
             </label>
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
                 ${lbl}
-                <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+                <button class="btn-danger-xs" onclick="removePendingItem(${i})">${t('btn_delete')}</button>
             </div>
         </div>
     `).join('');
