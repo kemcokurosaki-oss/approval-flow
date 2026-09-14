@@ -955,6 +955,7 @@ async function main() {
   await runPendingItemReminders();
   await runQaFinalizeReminders();
   await runTestRunReadinessReminders();
+  await runSalesShippingDateReminders();
 
   console.log('\n====== 完了 ======');
 }
