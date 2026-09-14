@@ -74,6 +74,7 @@ const QA_MEETING_FLOWS = Object.keys(QA_MEETING_LABELS);
 let REMINDER_CC_EMAILS = {
   approval_reminder_operations_director: [], // 承認催促（操業部長宛て）のCC
   pending_item_reminder:                 [], // ペンディング項目期日超過催促のCC
+  shipping_list_reminder:                [], // 出荷品リスト作成催促のCC
 };
 
 // 2000番台：組立申請ユニット単位標準リスト（assembly_unit_master.js と同じ内容。
