@@ -7445,10 +7445,57 @@ function _renderFlowStatusList(steps, doneFlows, currentLabel) {
         `</div>`;
 }
 
-// 出荷確定申請の前提として完了しているべきフロー一覧（機械ごとの動的判定、工程順を保持）
+// 品証の確定出荷申請（常務への回付）の前提として完了しているべきフロー一覧（出荷準備を含む全前フロー。機械ごとの動的判定、工程順を保持）
 async function _getRequiredFlows(projectNum, machine) {
     const chain = await _getMachineFlowChain(projectNum, machine);
     return new Set(chain.filter(t => t !== 'shipping'));
+}
+
+// 出荷フロー「起票」の前提として完了しているべきフロー一覧（外観検査or簡易検査＋あれば出荷確認会議のみ。
+// 出荷準備・試運転等の完了は問わない。出荷準備を含む全前フロー完了は品証の確定出荷申請時に別途チェックする）
+async function _getShippingIssueRequiredFlows(projectNum, machine) {
+    const middle = await _getMiddleFlowChain(projectNum, machine);
+    return new Set(middle.filter(t => QA_MEETING_FLOWS.includes(t)));
+}
+
+// 外観検査/簡易検査（＋あれば出荷確認会議）が完了したら出荷フローを自動起票し、営業へ確定出荷日入力を依頼する
+// （出荷準備フローの完了は待たない）。既に起票済みの場合は何もしない
+async function _autoIssueShippingIfReady(projectNum, machine) {
+    const required = await _getShippingIssueRequiredFlows(projectNum, machine);
+    if (required.size === 0) return;
+
+    const doneFlows = await _getMachineDoneFlows(projectNum, machine);
+    if (![...required].every(t => doneFlows.has(t))) return;
+
+    const { data: existing } = await db.from('approval_requests')
+        .select('id').eq('project_number', projectNum).eq('machine_name', machine).eq('flow_type', 'shipping').limit(1);
+    if (existing?.length > 0) return;
+
+    const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
+    const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[projectNum] || null;
+
+    const { data: req, error } = await db.from('approval_requests').insert({
+        project_number: projectNum, machine_name: machine, flow_type: 'shipping',
+        status: 'awaiting_shipping_date', requester_id: currentUser.id, note: null,
+        confirmed_shipping_date: null
+    }).select().single();
+    if (error) throw error;
+
+    if (salesOwner) {
+        const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
+        if (pRows?.length > 0) {
+            await db.from('approval_notifications').insert(
+                pRows.map(p => ({ request_id: req.id, recipient_id: p.id, notification_type: 'shipping_date_request' }))
+            );
+        } else {
+            const { data: nRows } = await db.from('notification_recipients').select('email').eq('name', salesOwner).eq('active', true);
+            if (nRows?.length > 0) {
+                await db.from('approval_notifications').insert(
+                    nRows.map(n => ({ request_id: req.id, recipient_email: n.email, notification_type: 'shipping_date_request' }))
+                );
+            }
+        }
+    }
 }
 
 // 出荷準備より前の全フローについて、未完了かつ「出荷後対応」でないペンディング項目が残っていないか調べる
