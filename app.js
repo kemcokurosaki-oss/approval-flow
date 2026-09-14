@@ -8316,11 +8316,11 @@ async function submitShipping() {
     showLoading('処理中...');
 
     try {
-        // 前フロー完了の再チェック（画面表示が古い場合の防御）
+        // 前フロー完了の再チェック（画面表示が古い場合の防御。出荷準備の完了は問わない）
         for (const machine of machines) {
             const [doneFlows, required] = await Promise.all([
                 _getMachineDoneFlows(num, machine),
-                _getRequiredFlows(num, machine)
+                _getShippingIssueRequiredFlows(num, machine)
             ]);
             const missing = [...required].filter(t => !doneFlows.has(t));
             if (missing.length > 0) {
