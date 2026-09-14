@@ -166,7 +166,7 @@ async function loadReminderCcSettings() {
     }
     REMINDER_CC_EMAILS[key] = emails;
   }
-  console.log(`CC設定ロード: 承認催促(操業部長)=${REMINDER_CC_EMAILS.approval_reminder_operations_director.length}件, ペンディング期日超過=${REMINDER_CC_EMAILS.pending_item_reminder.length}件`);
+  console.log(`CC設定ロード: 承認催促(操業部長)=${REMINDER_CC_EMAILS.approval_reminder_operations_director.length}件, ペンディング期日超過=${REMINDER_CC_EMAILS.pending_item_reminder.length}件, 出荷品リスト作成=${REMINDER_CC_EMAILS.shipping_list_reminder.length}件`);
 }
 
 function requireEnv(name, v) {
