@@ -1159,16 +1159,22 @@ async function loadPendingSide() {
         statusText: '🔴 要承認',
     }));
 
-    // 営業: 確定出荷日の入力待ちになっている申請を取得（マイページには自分が担当する工番のみ表示。
+    // 営業: 確定出荷日の入力待ちになっている申請を取得（マイページには自分が担当する工番、
+    // および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示。
     // 入力操作自体は出荷フローマークからの詳細画面で誰でも可能なため、担当者以外の入力権限は制限しない）
     let salesItems = [];
     if (isSales) {
         const { data: salesReqs } = await db.from('approval_requests')
             .select('id, project_number, machine_name, created_at')
             .eq('flow_type', 'shipping').eq('status', 'awaiting_shipping_date');
+        const myName = currentProfile?.name;
         const mySalesReqs = isSuperAdmin()
             ? (salesReqs || [])
-            : (salesReqs || []).filter(r => projectMatchesMine(r.project_number || '—'));
+            : (salesReqs || []).filter(r => {
+                const pNum  = r.project_number || '—';
+                const owner = projectsMap[pNum]?.salesOwner;
+                return computeShippingEscalationRecipients(pNum, owner, r.created_at).has(myName);
+            });
         salesItems = mySalesReqs.map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
