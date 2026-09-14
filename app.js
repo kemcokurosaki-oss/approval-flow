@@ -8428,6 +8428,21 @@ async function submitSalesShippingDate(requestId) {
 async function confirmAndSubmitShipping(requestId) {
     showLoading('処理中...');
     try {
+        // 出荷準備を含む前フローが全て完了しているか確認する（出荷フローは出荷準備の完了を待たずに起票され得るため、ここで担保する）
+        const { data: checkReq } = await db.from('approval_requests')
+            .select('project_number, machine_name').eq('id', requestId).single();
+        if (checkReq?.project_number && checkReq?.machine_name) {
+            const [doneFlows, required] = await Promise.all([
+                _getMachineDoneFlows(checkReq.project_number, checkReq.machine_name),
+                _getRequiredFlows(checkReq.project_number, checkReq.machine_name)
+            ]);
+            const missing = [...required].filter(t => !doneFlows.has(t));
+            if (missing.length > 0) {
+                showToast(`前フロー（${missing.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません`, 'error');
+                return;
+            }
+        }
+
         const { data: req, error } = await db.from('approval_requests')
             .update({ status: 'submitted', updated_at: new Date().toISOString() })
             .eq('id', requestId).eq('status', 'awaiting_shipping_confirm')
