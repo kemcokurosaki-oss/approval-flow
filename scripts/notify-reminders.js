@@ -666,6 +666,142 @@ async function runInvitationReminders() {
   console.log(`案内催促: ${count}件送信`);
 }
 
+// ===== 出荷品リスト作成催促 =====
+// 簡易検査・外観検査・出荷確認会議の案内催促と同じタイミング・同じ停止条件（開催案内の申請が
+// 提出されるまで毎日）で、該当工事番号の設計担当者へ出荷品リストの作成を通知する。
+// 出荷確認会議がある工事番号では、外観検査のタイミングでは送らない（1工事番号で二重送信しないため）
+async function runShippingListReminders() {
+  console.log('\n--- 出荷品リスト作成催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+  const [y, m, d] = todayStr.split('-').map(Number);
+  const threeDaysLater = new Date(y, m - 1, d + 3).toLocaleDateString('en-CA');
+
+  // 申請済みの (工番__機械__フロー種別) セット（rejected以外）＝ 案内催促と同じ停止条件
+  const submitted = await supabaseFetch(
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=neq.rejected` +
+    `&select=project_number,machine_name,flow_type`
+  );
+  const submittedSet = new Set(
+    (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
+  );
+
+  // 簡易検査・外観検査：機械組立終了日の3日前を基準（案内催促と同じ）
+  const assemblyTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,end_date,is_completed`
+  );
+  const assemblyTargets = (assemblyTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine }));
+
+  // 出荷確認会議：自身の開始日の3日前を基準（案内催促と同じ）
+  const shippingMeetingTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('出荷確認会議')}&start_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,start_date,is_completed`
+  );
+  const shippingMeetingTargets = (shippingMeetingTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine }));
+
+  // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築（案内催促と同じ）
+  const hasInspectionTask = new Set();
+  const hasSimpleInspectionTask = new Set();
+  const hasShippingMeetingTask = new Set();
+  const [inspRows, siRows, smRows] = await Promise.all([
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('簡易検査')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷確認会議')}&select=project_number,machine`),
+  ]);
+  for (const r of (inspRows || [])) hasInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
+
+  // 出荷確認会議タスクがある工事番号（外観検査タイミングでの二重通知を避けるため、工事番号単位で判定）
+  const projectsWithShippingMeeting = new Set(
+    [...hasShippingMeetingTask].map(key => key.split('__')[0])
+  );
+
+  const meetingFlows = [
+    { flowType: 'simple_inspection', label: '簡易検査',     hasTask: key => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
+    { flowType: 'inspection',        label: '外観検査',     hasTask: key => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'shipping_meeting',  label: '出荷確認会議', hasTask: key => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
+  ];
+
+  const sentThisRun = new Set();
+  const sekkeiOwnersCache = {};
+  let count = 0;
+
+  for (const flow of meetingFlows) {
+    for (const target of flow.targets) {
+      const projectStr = String(target.project_number).trim();
+      if (completedProjectsSet.has(projectStr)) continue;
+      if (isFlowExcludedFor2000s(target.project_number, flow.flowType)) continue;
+      if (TEST_MODE && TEST_PROJECT && String(target.project_number) !== TEST_PROJECT) continue;
+
+      const taskKey = `${target.project_number}__${target.machine}`;
+      if (!flow.hasTask(taskKey)) continue;
+
+      // 出荷確認会議がある工事番号では、外観検査のタイミングでの通知は不要（二重通知防止）
+      if (flow.flowType === 'inspection' && projectsWithShippingMeeting.has(projectStr)) continue;
+
+      const submitKey = `${taskKey}__${flow.flowType}`;
+      if (submittedSet.has(submitKey)) continue;
+
+      // 工事番号単位の設計担当者（tasks: 出図 / 設計）。同一工事番号内で使い回してクエリ数を抑える
+      if (!(projectStr in sekkeiOwnersCache)) {
+        const sekkeiTasks = await supabaseFetch(
+          `tasks?project_number=eq.${encodeURIComponent(target.project_number)}&text=eq.${encodeURIComponent('出図')}` +
+          `&major_item=eq.${encodeURIComponent('設計')}&select=owner`
+        );
+        sekkeiOwnersCache[projectStr] = [...new Set((sekkeiTasks || []).map(t => t.owner).filter(Boolean))];
+      }
+      const sekkeiOwnerNames = sekkeiOwnersCache[projectStr];
+      if (sekkeiOwnerNames.length === 0) continue;
+
+      const pStr    = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
+      const subject = `【出荷品リスト作成催促】${pStr}`;
+      const bodyCore =
+        `${pStr}\n` +
+        `${flow.label}を開催します。\n` +
+        `出荷品リストを作成してください。`;
+
+      const recipients = [];
+      const seen = new Set();
+      for (const ownerName of sekkeiOwnerNames) {
+        const owners = await resolveOwnerRecipients(ownerName);
+        for (const owner of owners) {
+          const key = owner.id || owner.email;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          recipients.push(owner);
+        }
+      }
+
+      for (const recipient of recipients) {
+        const dedupKey = `${submitKey}__${recipient.id || recipient.email}`;
+        if (sentThisRun.has(dedupKey)) continue;
+
+        const text =
+          `${recipient.name} 様\n\n` +
+          `${bodyCore}\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        const ccEmails = REMINDER_CC_EMAILS.shipping_list_reminder.filter(email => email !== recipient.email);
+
+        try {
+          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
+          sentThisRun.add(dedupKey);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`出荷品リスト作成催促: ${count}件送信`);
+}
+
 // ===== 完了処理催促（簡易検査・外観検査・出荷確認会議） =====
 async function runQaFinalizeReminders() {
   console.log('\n--- 完了処理催促チェック ---');
