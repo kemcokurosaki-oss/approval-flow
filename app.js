@@ -407,7 +407,8 @@ async function logSettingsChange(category, summary) {
 // ロールでは決まらず個人単位で固定しているもの
 const REMINDER_CC_ITEMS = [
     { key: 'approval_reminder_operations_director', label: '承認催促（操業部長宛て）のCC' },
-    { key: 'pending_item_reminder',                 label: 'ペンディング項目期日超過催促のCC' }
+    { key: 'pending_item_reminder',                 label: 'ペンディング項目期日超過催促のCC' },
+    { key: 'shipping_list_reminder',                label: '出荷品リスト作成催促のCC' }
 ];
 let reminderCcRecipients = {};
 async function loadReminderCcSettings() {
