@@ -6696,9 +6696,17 @@ async function finalizeQaMeeting(requestId) {
 
     showLoading('処理中...');
     try {
+        const { data: reqRow } = await db.from('approval_requests')
+            .select('project_number, machine_name').eq('id', requestId).single();
+
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
+
+        // 外観検査or簡易検査＋（あれば）出荷確認会議が揃って完了したら、出荷フローを自動起票する
+        if (reqRow?.project_number && reqRow?.machine_name) {
+            await _autoIssueShippingIfReady(reqRow.project_number, reqRow.machine_name);
+        }
 
         closeDetailModal();
         await refreshAll();
