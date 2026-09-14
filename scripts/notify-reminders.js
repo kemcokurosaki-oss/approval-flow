@@ -1100,6 +1100,7 @@ async function main() {
   await runApprovalReminders();
   await runSubmissionReminders();
   await runInvitationReminders();
+  await runShippingListReminders();
   await runPendingItemReminders();
   await runQaFinalizeReminders();
   await runTestRunReadinessReminders();
