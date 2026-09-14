@@ -7095,6 +7095,9 @@ async function approveStep(requestId, stepId, stepOrder) {
 
         if (nextStatus === 'approved') {
             await syncTaskCompletionOnFlowApproval(currentDetailReq);
+            if (currentDetailFlowType === 'shipping') {
+                await lockShippingDateOnApproval(currentDetailReq);
+            }
             await recordNotifications(requestId);
             // 承認者本人にも完了通知を送る（すでに宛先に含まれている場合はスキップ）
             const { data: existing } = await db.from('approval_notifications')
