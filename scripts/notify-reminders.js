@@ -102,6 +102,42 @@ function isAssembly2000sSeries(projectNumber) {
   return n >= 2000 && n <= 2999;
 }
 
+// 確定出荷日 未入力エスカレーション: 工事番号の頭文字による営業課長の振り分け（app.js の
+// resolveSalesManagerNames / computeShippingEscalationRecipients と同じロジック。両ファイルとも
+// 独立して保守する。3系→麻生、4系→銭、D番→両方、それ以外は対象外）
+const SALES_DIRECTOR_NAME = '専務';
+function resolveSalesManagerNames(projectNumber) {
+  const n = String(projectNumber || '').trim();
+  if (/^D/i.test(n)) return ['銭', '麻生'];
+  if (/^3/.test(n)) return ['麻生'];
+  if (/^4/.test(n)) return ['銭'];
+  return [];
+}
+// JST日付ベースでの経過日数（当日を0日目とする）
+function elapsedDaysSinceJST(isoStr) {
+  const createdStr = new Date(isoStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  const [cy, cm, cd] = createdStr.split('-').map(Number);
+  const [ty, tm, td] = tokyoDateStr().split('-').map(Number);
+  const c = Date.UTC(cy, cm - 1, cd);
+  const t = Date.UTC(ty, tm - 1, td);
+  return Math.round((t - c) / 86400000);
+}
+// 確定出荷日が未入力のまま経過した日数に応じて通知先を追加していく（担当者本人が営業課長の
+// 場合は課長段階を飛ばし、3日経過で直接部長（専務）へ追加する）
+function computeShippingEscalationRecipientNames(projectNumber, salesOwner, createdAt) {
+  const elapsedDays = elapsedDaysSinceJST(createdAt);
+  const managers = resolveSalesManagerNames(projectNumber);
+  const ownerIsManager = managers.includes(salesOwner);
+  const names = new Set();
+  if (salesOwner) names.add(salesOwner);
+  if (elapsedDays >= 3) {
+    if (ownerIsManager) names.add(SALES_DIRECTOR_NAME);
+    else managers.forEach(m => names.add(m));
+  }
+  if (elapsedDays >= 8 && !ownerIsManager) names.add(SALES_DIRECTOR_NAME);
+  return { names, elapsedDays };
+}
+
 async function loadReminderCcSettings() {
   const rows = await supabaseFetch(`reminder_settings?key=eq.reminder_cc_recipients&select=value`);
   const plan = (rows && rows[0]?.value) || {};
