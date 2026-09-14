@@ -7133,6 +7133,7 @@ async function approveStep(requestId, stepId, stepOrder) {
             await syncTaskCompletionOnFlowApproval(currentDetailReq);
             if (currentDetailFlowType === 'shipping') {
                 await lockShippingDateOnApproval(currentDetailReq);
+                await markShippingOverlayConfirmed(currentDetailReq);
             }
             await recordNotifications(requestId);
             // 承認者本人にも完了通知を送る（すでに宛先に含まれている場合はスキップ）
