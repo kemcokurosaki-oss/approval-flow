@@ -166,6 +166,32 @@ const is5or7Series = num => /^[57]/.test(num);
 // D番工事の工番判定
 const isDSeries = num => /^D/i.test(num);
 
+// ===== 確定出荷日 未入力エスカレーション =====
+// 工事番号の頭文字による営業課長の振り分け（3系→麻生、4系→銭、D番→両方。それ以外は対象外）
+const SALES_DIRECTOR_NAME = '専務';
+function resolveSalesManagerNames(pNum) {
+    const n = (pNum || '').toString().trim();
+    if (/^D/i.test(n)) return ['銭', '麻生'];
+    if (/^3/.test(n)) return ['麻生'];
+    if (/^4/.test(n)) return ['銭'];
+    return [];
+}
+// 確定出荷日が未入力のまま経過した日数に応じて表示対象者を追加していく（上位者にも追加表示、担当者からは消さない）。
+// 担当者本人が営業課長の場合は課長段階を飛ばし、3日経過で直接部長（専務）へ追加する
+function computeShippingEscalationRecipients(pNum, salesOwner, awaitingSince) {
+    const elapsedDays = Math.floor((Date.now() - new Date(awaitingSince).getTime()) / 86400000);
+    const managers = resolveSalesManagerNames(pNum);
+    const ownerIsManager = managers.includes(salesOwner);
+    const recipients = new Set();
+    if (salesOwner) recipients.add(salesOwner);
+    if (elapsedDays >= 3) {
+        if (ownerIsManager) recipients.add(SALES_DIRECTOR_NAME);
+        else managers.forEach(m => recipients.add(m));
+    }
+    if (elapsedDays >= 8 && !ownerIsManager) recipients.add(SALES_DIRECTOR_NAME);
+    return recipients;
+}
+
 // ===== UI State（XStateの代わりにシンプルな状態管理） =====
 const ui = {
     state: 'loading',
