@@ -6977,8 +6977,9 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
     if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
     if (!req?.project_number) return;
     try {
-        // 承認フロー自身による変更は常に許可するため、ここで一旦ロックを解除する
-        // （常務が改めて承認完了した時点で lockShippingDateOnApproval が再度ロックする）
+        // ロック(shipping_date_locked)はここでは一切触れない。承認フロー自身は常に書き込めるため
+        // ロックの有無に関係なく変更でき、かつ「一度承認された出荷日は次の承認完了までロックされ続ける」
+        // 挙動（未承認のうちはfalseのまま、承認済みの再申請中はtrueのまま）を維持できる。
         if (factoryDate && req.machine_name) {
             // 分割出荷（同一機械に工場出荷タスクが2件）の場合は、end_date昇順で①②それぞれのタスク行を個別に更新する
             if (factoryDate2) {
@@ -6989,13 +6990,13 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
                     .eq('text', '工場出荷')
                     .order('end_date', { ascending: true });
                 if (factoryTasks?.[0]) {
-                    await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate, shipping_date_locked: false }).eq('id', factoryTasks[0].id);
+                    await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate }).eq('id', factoryTasks[0].id);
                 }
                 if (factoryTasks?.[1]) {
-                    await db.from('tasks').update({ start_date: factoryDate2, end_date: factoryDate2, shipping_date_locked: false }).eq('id', factoryTasks[1].id);
+                    await db.from('tasks').update({ start_date: factoryDate2, end_date: factoryDate2 }).eq('id', factoryTasks[1].id);
                 }
             } else {
-                await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate, shipping_date_locked: false })
+                await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate })
                     .eq('project_number', req.project_number)
                     .eq('machine', req.machine_name)
                     .eq('text', '工場出荷');
@@ -7003,7 +7004,7 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
         }
         if (packingDate) {
             // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
-            await db.from('tasks').update({ start_date: packingDate, end_date: packingDate, shipping_date_locked: false })
+            await db.from('tasks').update({ start_date: packingDate, end_date: packingDate })
                 .eq('project_number', req.project_number)
                 .eq('text', '梱包出荷');
         }
