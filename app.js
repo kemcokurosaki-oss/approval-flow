@@ -7028,6 +7028,41 @@ async function lockShippingDateOnApproval(req) {
     }
 }
 
+// 出荷フローが常務承認で完了した時点で、入出荷予定一覧表(task_shipment_overlays)の
+// 状態列を「確定」にする。既存overlay行の他項目（時間帯・製管担当・品名・備考）は保持したまま status だけ更新する
+async function markShippingOverlayConfirmed(req) {
+    if (!req?.project_number) return;
+    try {
+        let q = db.from('tasks').select('id')
+            .eq('project_number', req.project_number)
+            .in('text', ['工場出荷', '梱包出荷']);
+        if (req.machine_name) q = q.eq('machine', req.machine_name);
+        const { data: taskRows } = await q;
+        if (!taskRows?.length) return;
+        const taskIds = taskRows.map(t => t.id);
+
+        const { data: existingOverlays } = await db.from('task_shipment_overlays')
+            .select('task_id, time_slot, mfg_rep, product_name, note')
+            .in('task_id', taskIds);
+        const existingMap = new Map((existingOverlays || []).map(o => [o.task_id, o]));
+
+        const payload = taskIds.map(id => {
+            const ex = existingMap.get(id) || {};
+            return {
+                task_id: id,
+                time_slot: ex.time_slot ?? null,
+                status: '確定',
+                mfg_rep: ex.mfg_rep ?? null,
+                product_name: ex.product_name ?? null,
+                note: ex.note ?? null,
+            };
+        });
+        await db.from('task_shipment_overlays').upsert(payload, { onConflict: 'task_id' });
+    } catch (e) {
+        console.warn('入出荷予定一覧表への状態(確定)反映に失敗:', e);
+    }
+}
+
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     if (requireLogin()) return;
