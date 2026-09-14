@@ -8276,9 +8276,9 @@ async function onShippingMachineChange() {
     ).join('');
     document.getElementById('shipping_approver_box').style.display = 'block';
 
-    // フロー状況（この機械に必要な前フローを動的判定し、未完了があれば申請不可にする）
+    // フロー状況（外観検査or簡易検査＋あれば出荷確認会議を動的判定し、未完了があれば申請不可にする。出荷準備の完了は問わない）
     const doneFlows = await _getMachineDoneFlows(num, machine);
-    const required  = await _getRequiredFlows(num, machine);
+    const required  = await _getShippingIssueRequiredFlows(num, machine);
     const rows = [...required].map(t => ({ type: t, label: FLOW_LABELS[t] || t }));
     document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
         rows.map(f => doneFlows.has(f.type)
