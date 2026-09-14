@@ -862,6 +862,81 @@ async function runTestRunReadinessReminders() {
   console.log(`試運転準備完了 催促: ${count}件送信`);
 }
 
+// ===== 確定出荷日 未入力エスカレーション催促 =====
+// 出荷確定申請が「営業担当者による確定出荷日入力待ち」のまま経過した日数に応じて、
+// 担当者→（3日後）営業課長→（8日後）営業部長（専務）へ通知先を追加しながら毎日通知する
+async function runSalesShippingDateReminders() {
+  console.log('\n--- 確定出荷日 未入力催促チェック ---');
+
+  const todayStr = tokyoDateStr();
+
+  const requests = await supabaseFetch(
+    `approval_requests?flow_type=eq.shipping&status=eq.awaiting_shipping_date` +
+    `&select=id,project_number,machine_name,created_at`
+  );
+  if (!requests || requests.length === 0) {
+    console.log('確定出荷日 未入力催促: 対象なし');
+    return;
+  }
+
+  const salesMapRows  = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
+  const salesPersonMap = salesMapRows?.[0]?.value ? JSON.parse(salesMapRows[0].value) : {};
+
+  // 今日すでに送ったリマインダーのセット
+  const sentToday = await supabaseFetch(
+    `approval_notifications?notification_type=eq.sales_shipping_date_reminder` +
+    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id`
+  );
+  const sentSet = new Set((sentToday || []).map(n => `${n.request_id}__${n.recipient_id}`));
+
+  let count = 0;
+  for (const req of requests) {
+    if (completedProjectsSet.has(String(req.project_number).trim())) continue;
+    if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+
+    const salesOwner = salesPersonMap[String(req.project_number).trim()];
+    const { names, elapsedDays } = computeShippingEscalationRecipientNames(req.project_number, salesOwner, req.created_at);
+    if (names.size === 0) continue;
+
+    const pStr    = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+    const subject = `【確定出荷日 未入力】${pStr}`;
+
+    for (const name of names) {
+      const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(name)}&select=id,name,email`);
+      for (const profile of (recipients || [])) {
+        if (!profile.email) continue;
+        const key = `${req.id}__${profile.id}`;
+        if (sentSet.has(key)) continue;
+
+        const isOwner = name === salesOwner;
+        const bodyDetail = isOwner
+          ? `確定出荷日がまだ入力されていません（申請から${elapsedDays}日経過）。`
+          : `担当者（${salesOwner || '未設定'}）による確定出荷日の入力が、申請から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
+        const text =
+          `${profile.name} 様\n\n` +
+          `${pStr} の「出荷確定申請」について、${bodyDetail}\n` +
+          `承認フロー管理システムにログインしてご確認ください。\n\n` +
+          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+
+        try {
+          await sendEmail(profile.email, profile.name, subject, text);
+          await supabaseInsert('approval_notifications', {
+            request_id:        req.id,
+            recipient_id:      profile.id,
+            notification_type: 'sales_shipping_date_reminder',
+            emailed_at:        new Date().toISOString(),
+          });
+          sentSet.add(key);
+          count++;
+        } catch (e) {
+          console.error(`✗ 送信エラー: ${profile.email}`, e.message);
+        }
+      }
+    }
+  }
+  console.log(`確定出荷日 未入力催促: ${count}件送信`);
+}
+
 async function main() {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
