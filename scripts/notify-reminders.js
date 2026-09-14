@@ -113,19 +113,26 @@ function resolveSalesManagerNames(projectNumber) {
   if (/^4/.test(n)) return ['銭'];
   return [];
 }
-// JST日付ベースでの経過日数（当日を0日目とする）
-function elapsedDaysSinceJST(isoStr) {
-  const createdStr = new Date(isoStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
-  const [cy, cm, cd] = createdStr.split('-').map(Number);
+// 起票日（JST）を0日目とし、土日を除いた平日のみをカウントした経過営業日数を返す
+function businessDaysElapsedSinceJST(isoStr) {
+  const startStr = new Date(isoStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  const [sy, sm, sd] = startStr.split('-').map(Number);
   const [ty, tm, td] = tokyoDateStr().split('-').map(Number);
-  const c = Date.UTC(cy, cm - 1, cd);
-  const t = Date.UTC(ty, tm - 1, td);
-  return Math.round((t - c) / 86400000);
+  let cursor = Date.UTC(sy, sm - 1, sd);
+  const end  = Date.UTC(ty, tm - 1, td);
+  let days = 0;
+  while (cursor < end) {
+    cursor += 86400000;
+    const dow = new Date(cursor).getUTCDay(); // 0=日, 6=土
+    if (dow !== 0 && dow !== 6) days++;
+  }
+  return days;
 }
-// 確定出荷日が未入力のまま経過した日数に応じて通知先を追加していく（担当者本人が営業課長の
-// 場合は課長段階を飛ばし、3日経過で直接部長（専務）へ追加する）
+// 確定出荷日が未入力のまま経過した営業日数に応じて通知先を追加していく。3営業日後の朝から課長、
+// 5営業日後の朝から部長（専務）を追加。担当者本人が営業課長の場合は課長段階を飛ばし、
+// 3営業日後に直接部長へ追加する
 function computeShippingEscalationRecipientNames(projectNumber, salesOwner, createdAt) {
-  const elapsedDays = elapsedDaysSinceJST(createdAt);
+  const elapsedDays = businessDaysElapsedSinceJST(createdAt);
   const managers = resolveSalesManagerNames(projectNumber);
   const ownerIsManager = managers.includes(salesOwner);
   const names = new Set();
@@ -134,7 +141,7 @@ function computeShippingEscalationRecipientNames(projectNumber, salesOwner, crea
     if (ownerIsManager) names.add(SALES_DIRECTOR_NAME);
     else managers.forEach(m => names.add(m));
   }
-  if (elapsedDays >= 8 && !ownerIsManager) names.add(SALES_DIRECTOR_NAME);
+  if (elapsedDays >= 5 && !ownerIsManager) names.add(SALES_DIRECTOR_NAME);
   return { names, elapsedDays };
 }
 
