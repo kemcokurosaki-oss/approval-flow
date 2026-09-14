@@ -763,8 +763,8 @@ async function runShippingListReminders() {
       const subject = `【出荷品リスト作成催促】${pStr}`;
       const bodyCore =
         `${pStr}\n` +
-        `${flow.label}を開催します。\n` +
-        `出荷品リストを作成してください。`;
+        `${flow.label}の開催が近づいています。\n` +
+        `出荷品リストを作成し、${flow.label}の前までに組立担当者と品質保証へ送付してください。`;
 
       const recipients = [];
       const seen = new Set();
