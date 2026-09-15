@@ -3345,7 +3345,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
         const unresolvedPendingCount = countUnresolvedPendingItems(req);
         const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${req.id}` : `${meta.file}?view=1&id=${req.id}`;
-        const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+        const sheetLinkLabel = hasUnresolvedPending ? `⚠ 申し送り事項あり(${unresolvedPendingCount}件) →`
             : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
         const sheetLinkOnclick = hasUnresolvedPending
             ? `viewTestRunRequestDetail('${req.id}', '${esc(projectNum)}')`
