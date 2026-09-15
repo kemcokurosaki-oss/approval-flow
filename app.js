@@ -1349,6 +1349,8 @@ async function loadMineSide() {
     const buildAssemblyLikeColumns = (list, flowType) => {
         // shipping_prep は承認ステップを持たないため「申請＝完了」。列見出しもそれに合わせる
         const isNoApprovalFlow = flowType === 'shipping_prep';
+        // 試運転フローは「ペンディング」ではなく「申し送り事項」と呼ぶ
+        const pendingLabel = flowType === 'test_run' ? '申し送り事項' : 'ペンディング';
         const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
         list.forEach(req => {
             const unresolvedPending = (req.sheet_data?.pending_items || [])
