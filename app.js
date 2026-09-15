@@ -8824,6 +8824,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
+            // 電気艤装タスクがある場合のみ電装担当者も追加
+            if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
             break;
         }
 
@@ -8839,6 +8841,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             if (dyn.kumitate_manager && kumitateOwners.length > 0) {
                 await addP({ role: 'assembly_manager' });           // 組立課長（機械組立あり）
             }
+            // 電気艤装タスクがある場合のみ電装担当者も追加
+            if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
             break;
         }
 
@@ -8859,6 +8863,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
                 await addP({ role: 'operations_manager' });         // 操業課長（試運転あり）
                 await addP({ role: 'operations_director' });        // 操業部長（試運転あり）
             }
+            // 電気艤装タスクがある場合のみ電装担当者も追加
+            if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
             break;
         }
 
