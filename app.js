@@ -2271,13 +2271,19 @@ function computeAssemblyAggStatus(num, assemblyReqsByProject) {
     return 'active';
 }
 
+// tasks.ownerはカンマ・読点区切りで複数担当者が1セルにまとめて入力される場合があるため、
+// owner文字列を扱う箇所は必ずこの関数を通して個々の担当者名に分解する
+function splitOwnerNames(ownerStr) {
+    return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
+}
+
 // unit列でグループ化し、担当者名(owner)をSetにまとめる（1ユニットに複数担当者がいる場合に対応するため）
 function buildOwnerNamesByUnit(rows) {
     const map = new Map();
     (rows || []).forEach(t => {
         const key = t.unit || '';
         if (!map.has(key)) map.set(key, new Set());
-        if (t.owner) map.get(key).add(t.owner);
+        splitOwnerNames(t.owner).forEach(name => map.get(key).add(name));
     });
     return map;
 }
