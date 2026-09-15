@@ -3434,9 +3434,9 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
     const activeReq = (reqs || []).find(r => r.status !== 'draft');
 
     let statusLabel, statusCls;
-    if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
-    else if (myDraft) { statusLabel = '下書き'; statusCls = 's-gray'; }
-    else              { statusLabel = '未申請'; statusCls = 's-gray'; }
+    if (activeReq)              { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
+    else if (isSavedDraft(myDraft)) { statusLabel = '下書き'; statusCls = 's-gray'; }
+    else                        { statusLabel = '未申請'; statusCls = 's-gray'; }
 
     let metaHtml = '', linkHtml = '', approvalHtml = '', bottomRightHtml = '';
 
