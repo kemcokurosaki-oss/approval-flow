@@ -2956,7 +2956,8 @@ function buildMachineUnitRowsHtml(opts) {
                 </div>` : '';
         } else if (myDraft) {
             const hasItem = getAssemblyItemsForReq(myDraft).some(it => it && it.machine === machine && (it.unit || '') === (unit || ''));
-            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${reopenFnName}('${myDraft.id}')">続きを入力する →</span>`;
+            const reopenLinkLabel = isSavedDraft(myDraft) ? '続きを入力する →' : '申請する →';
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${reopenFnName}('${myDraft.id}')">${reopenLinkLabel}</span>`;
             const submitBtn = hasItem
                 ? `<button class="btn-apply-xs" onclick="${submitFnName}('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
                 : '';
