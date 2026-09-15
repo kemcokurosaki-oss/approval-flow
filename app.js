@@ -7890,14 +7890,13 @@ async function buildAttendanceSectionHtml(req) {
         const email  = e.email || profile?.email || '';
         const name   = profile?.name || nameByEmail[email] || email || '—';
         const status = (email && statusByEmail[email]) || 'needs-action';
-        const st     = RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action'];
         const isFollow = !!(email && followByEmail[email]);
+        const st     = isFollow ? RSVP_FOLLOW_BADGE : (RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action']);
         return `
         <div class="recipient-item">
             <span class="recipient-name">${esc(name)}</span>
             <span class="recipient-tag">${e.optional ? '任意' : '必須'}</span>
             <span class="recipient-tag" style="background:${st.bg};color:${st.color};">${st.label}</span>
-            ${isFollow ? `<span class="recipient-tag" style="background:${RSVP_FOLLOW_BADGE.bg};color:${RSVP_FOLLOW_BADGE.color};">${RSVP_FOLLOW_BADGE.label}</span>` : ''}
         </div>`;
     }).join('');
 
