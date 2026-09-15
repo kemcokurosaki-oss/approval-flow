@@ -999,8 +999,8 @@ async function runTestRunReadinessReminders() {
       const kumitateTasks = await supabaseFetch(
         `tasks?project_number=eq.${encodeURIComponent(projectNum)}&text=eq.機械組立&select=owner`
       );
-      const kumitateOwnerNames = [...new Set((kumitateTasks || []).map(t => t.owner).filter(Boolean))];
-      const denkiOwnerNames    = [...new Set((elecTasks || []).map(t => t.owner).filter(Boolean))];
+      const kumitateOwnerNames = [...new Set((kumitateTasks || []).flatMap(t => splitOwnerNames(t.owner)))];
+      const denkiOwnerNames    = [...new Set((elecTasks || []).flatMap(t => splitOwnerNames(t.owner)))];
 
       for (const kind of requiredKinds) {
         const row = (readinessRows || []).find(r => r.kind === kind);
