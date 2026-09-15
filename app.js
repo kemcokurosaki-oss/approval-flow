@@ -7780,7 +7780,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
         for (let i = 1; i < machineNames.length; i++) {
             const { data: mt } = await db.from('tasks')
                 .select('owner').eq('project_number', projectNum).eq('text', '機械組立').eq('machine', machineNames[i]);
-            const owners = [...new Set((mt || []).map(t => t.owner).filter(Boolean))];
+            const owners = [...new Set((mt || []).flatMap(t => splitOwnerNames(t.owner)))];
             for (const o of owners) await addPbyName(o);
         }
     }
