@@ -1265,15 +1265,17 @@ async function loadMineSide() {
 
     const query = db
         .from('approval_requests')
-        .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, sheet_data, approval_steps(id, step_order, approver_role, status, decided_at)')
+        .select('id, flow_type, status, note, created_at, updated_at, project_number, machine_name, is_resubmit, sheet_data, sheet_saved_at, approval_steps(id, step_order, approver_role, status, decided_at)')
         .eq('requester_id', currentUser.id)
         .order('created_at', { ascending: false });
 
     const { data: rawReqs } = await query;
     // 完了済み工番は非表示（進捗一覧の「完了済み」ボタンからのみ確認可能）
+    // 一時保存されていないdraft（sheet_saved_atがNULL）は「未申請」扱いのため一覧から除外する
     const reqs = (rawReqs || [])
         .filter(r => projectsMap[r.project_number] !== undefined && !completedProjectNums.has(r.project_number))
-        .filter(r => matchesMypageFilterMode(r.project_number));
+        .filter(r => matchesMypageFilterMode(r.project_number))
+        .filter(r => !isUnsavedDraft(r));
 
     // 自分が申請に関われるフロー種別だけをセクションとして表示する
     // （組立・試運転系と検査・会議系、出荷確定申請はそれぞれ進捗の構成が異なるため、フローごとに区分けする）
