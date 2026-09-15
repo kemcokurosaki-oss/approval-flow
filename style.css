@@ -1930,7 +1930,6 @@
         .pfilter-label:hover { border-color: #cdd8e8; color: #16233a; }
         .pfilter-label input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 6px; height: 6px; border-radius: 50%; background: #98a3b4; margin: 0; flex-shrink: 0; }
         #pfilter_mine:not(:checked)       { background: #2f6fb0; }
-        #pfilter_completed:not(:checked)  { background: #2ba55d; }
         #pfilter_overdue:not(:checked)    { background: #e5484d; }
         #pfilter_ship_after:not(:checked) { background: #8e44ad; }
         .pfilter-label:has(input:checked) { background: #2f6fb0; border-color: #2f6fb0; color: #fff; font-weight: 700; }
