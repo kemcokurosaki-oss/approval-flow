@@ -7810,9 +7810,9 @@ function renderRecipientsList(prefix, recipients) {
     listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
 }
 
-function toggleRecipientOptional(prefix, key, isOptional) {
-    if (isOptional) recipientOptionalKeys[prefix].add(key);
-    else            recipientOptionalKeys[prefix].delete(key);
+function toggleRecipientOptional(prefix, key, checked) {
+    if (checked) recipientOptionalKeys[prefix].add(key);
+    else         recipientOptionalKeys[prefix].delete(key);
 }
 
 // ===== 出欠状況（簡易検査・外観検査・出荷確認会議の開催案内） =====
