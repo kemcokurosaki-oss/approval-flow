@@ -61,6 +61,12 @@ function isSubmissionReminderExcludedFor2000s(projectNumber, flowType) {
   const n = parseInt(String(projectNumber).trim(), 10);
   return n >= 2000 && n <= 2999;
 }
+// tasks.ownerはカンマ・読点区切りで複数担当者が1セルにまとめて入力される場合があるため、
+// owner文字列を扱う箇所は必ずこの関数を通して個々の担当者名に分解する（app.js側のsplitOwnerNamesと同じロジック）
+function splitOwnerNames(ownerStr) {
+  return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
+}
+
 const QA_MEETING_LABELS = {
   simple_inspection: '簡易検査',
   inspection:        '外観検査',
