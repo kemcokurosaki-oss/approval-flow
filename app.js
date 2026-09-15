@@ -1175,7 +1175,7 @@ async function loadPendingSide() {
         flowLabel:  FLOW_LABELS[s.approval_requests.flow_type] || s.approval_requests.flow_type,
         date:       s.approval_requests.created_at,
         statusText: '🔴 要承認',
-    }));
+    })).filter((item, idx, arr) => arr.findIndex(other => other.id === item.id) === idx); // 管理者は全ロール分を取得するため、並列承認中の申請は同一IDが複数回ヒットしうる（申請ID単位で重複排除）
 
     // 営業: 確定出荷日の入力待ちになっている申請を取得（マイページには自分が担当する工番、
     // および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示。
