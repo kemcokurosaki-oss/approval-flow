@@ -1268,7 +1268,8 @@ async function saveNow() {
             sheet_data: sheetData,
             assembly_items: cleanItems,
             machine_name: buildAssemblyMachineNameSummary(cleanItems),
-            unit_name: null
+            unit_name: null,
+            sheet_saved_at: new Date().toISOString()
         })
         .eq('id', draftId);
 
