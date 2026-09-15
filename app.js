@@ -7908,19 +7908,20 @@ function removeExtraRecipient(prefix, index) {
     renderExtraList(prefix);
 }
 
-function toggleExtraRecipientOptional(prefix, index, isOptional) {
-    extraRecipients[prefix][index].optional = isOptional;
+function toggleExtraRecipientOptional(prefix, index, isRequired) {
+    extraRecipients[prefix][index].optional = !isRequired;
 }
 
 function renderExtraList(prefix) {
     const el = document.getElementById(`${prefix}_extra_list`);
+    // デフォルト「任意」・チェックで「必須」に切り替える仕様（他の宛先一覧と統一）
     el.innerHTML = extraRecipients[prefix].map((r, i) => `
         <div class="extra-recipient-item">
             <span style="font-weight:bold;min-width:80px;font-size:13px;">${esc(r.name)}</span>
             <span style="color:#888;flex:1;font-size:13px;">${esc(r.email)}</span>
             <label class="recipient-optional-toggle">
-                <input type="checkbox" ${r.optional ? 'checked' : ''} onchange="toggleExtraRecipientOptional('${prefix}', ${i}, this.checked)">
-                任意
+                <input type="checkbox" ${r.optional ? '' : 'checked'} onchange="toggleExtraRecipientOptional('${prefix}', ${i}, this.checked)">
+                必須
             </label>
             <button onclick="removeExtraRecipient('${prefix}', ${i})">×</button>
         </div>`).join('');
