@@ -1419,7 +1419,6 @@ async function completeSheet() {
     const btn = document.getElementById('btn_complete');
     btn.disabled = true;
     btn.textContent = t('save_saving');
-    clearTimeout(saveTimer);
     await saveNow();
     broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
     window.close();
