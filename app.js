@@ -2436,7 +2436,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const existingRowsHtml = groups.length === 0
         ? ''
         : groups.map(g => {
-            const cls = isSavedDraft(g.req) ? (STATUS_CLASSES['draft'] || 's-gray') : (STATUS_CLASSES[g.req.status] || 's-gray');
+            const cls = STATUS_CLASSES[g.req.status] || 's-gray';
             const label = isSavedDraft(g.req) ? '下書き' : (g.req.status === 'draft' ? '未申請' : statusBadgeLabel(g.req));
             const machineLabel = g.items.length > 0
                 ? g.items.map(it => (it.unit && it.unit !== '-') ? `${it.machine}${it.unit}` : it.machine).join('、')
