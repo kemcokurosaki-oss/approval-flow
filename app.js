@@ -7638,7 +7638,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
 
     const findOwners = (taskName, majorItem) => {
         const matched = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem));
-        return [...new Set(matched.map(t => t.owner).filter(Boolean))];
+        return [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))];
     };
 
     const kumitateOwners = findOwners('機械組立');
@@ -7648,9 +7648,9 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
 
     // 試運転・出図が見つからない場合は工番全体から再検索
     const shiuntenOwnersFallback = shiuntenOwners.length > 0 ? shiuntenOwners :
-        ((await db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '試運転').not('owner', 'is', null)).data || []).map(t => t.owner).filter(Boolean);
+        [...new Set(((await db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '試運転').not('owner', 'is', null)).data || []).flatMap(t => splitOwnerNames(t.owner)))];
     const sekkeiOwnersFallback = sekkeiOwners.length > 0 ? sekkeiOwners :
-        ((await db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '出図').not('owner', 'is', null)).data || []).map(t => t.owner).filter(Boolean);
+        [...new Set(((await db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '出図').not('owner', 'is', null)).data || []).flatMap(t => splitOwnerNames(t.owner)))];
 
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
     const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[projectNum] || null;
