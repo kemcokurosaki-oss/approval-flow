@@ -548,18 +548,15 @@ function buildElecMachineLabel(req) {
 function addElectricalItem() {
     electricalItems.push({ machine: electricalLockedMachine, unit: null });
     renderElectricalItems();
-    scheduleSave();
 }
 
 function removeElectricalItem(i) {
     electricalItems.splice(i, 1);
     renderElectricalItems();
-    scheduleSave();
 }
 
 function updateElectricalUnit(i, value) {
     electricalItems[i].unit = value;
-    scheduleSave();
 }
 
 function renderElectricalItemRow(item, i) {
