@@ -658,6 +658,9 @@ async function init() {
         renderPendingItems();
     }
 
+    // 一時保存済みの下書きを開いた場合のみ「保存済み」を表示する（未保存のまま開いた直後は何も表示しない）
+    if (draft.sheet_saved_at) setSaveStatus('ok');
+
     document.getElementById('loading').classList.remove('visible');
 }
 
