@@ -736,8 +736,9 @@ async function main() {
 
     try {
       const extra = {
-        approverName: shippingApproverNameMap[notif.request_id],
-        detail:       notif.detail,
+        approverName:  shippingApproverNameMap[notif.request_id],
+        requesterName: req?.requester_id ? (profileMap[req.requester_id]?.name || null) : null,
+        detail:        notif.detail,
       };
       const mail = buildEmail(notif.notification_type, req, toName, extra);
 
