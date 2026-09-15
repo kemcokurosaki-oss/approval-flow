@@ -2771,6 +2771,7 @@
         top: 0; height: 100vh;
     }
     .main:has(.side-panel.open, .settings-page.open) .main-content { margin-right: 0; }
+    .panel-resizer { display: none !important; }
 
     /* ----- マイページ：カンバンを1カラムに ----- */
     .mine-kanban-row, .pending-flow-list { grid-template-columns: 1fr; }
