@@ -3902,6 +3902,48 @@ async function openFlowModalPreset(el, overrideFlowType) {
     }
 }
 
+// ===== マイページ（サイドパネル）とステップ表示の境界線：幅をドラッグ調整 =====
+const SIDEPANEL_WIDTH_KEY = 'sidepanelWidth';
+const SIDEPANEL_WIDTH_MIN = 480;
+const SIDEPANEL_WIDTH_MAX = 1200;
+// メイン（進捗一覧）側も最低限の幅を確保する
+const SIDEPANEL_MAIN_MIN = 420;
+
+function applySidepanelWidth(px) {
+    document.documentElement.style.setProperty('--sidepanel-width', `${px}px`);
+}
+
+(function restoreSidepanelWidth() {
+    const saved = parseInt(localStorage.getItem(SIDEPANEL_WIDTH_KEY), 10);
+    if (saved) applySidepanelWidth(Math.min(SIDEPANEL_WIDTH_MAX, Math.max(SIDEPANEL_WIDTH_MIN, saved)));
+})();
+
+function startPanelResize(e) {
+    if (window.innerWidth <= 860) return; // モバイルはマイページを全画面表示するためリサイズ対象外
+    e.preventDefault();
+    const startX = e.clientX;
+    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidepanel-width'));
+    const startWidth = current || 740;
+    const maxWidth = Math.min(SIDEPANEL_WIDTH_MAX, window.innerWidth - SIDEPANEL_MAIN_MIN);
+
+    document.body.classList.add('is-resizing-panel');
+
+    function onMove(ev) {
+        const dx = startX - ev.clientX; // 左へドラッグ＝マイページを広げる
+        const width = Math.min(maxWidth, Math.max(SIDEPANEL_WIDTH_MIN, startWidth + dx));
+        applySidepanelWidth(width);
+    }
+    function onUp() {
+        document.body.classList.remove('is-resizing-panel');
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        const finalWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidepanel-width'));
+        if (finalWidth) localStorage.setItem(SIDEPANEL_WIDTH_KEY, Math.round(finalWidth));
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+}
+
 // ===== Side Panel =====
 function openSidePanelTo(section) {
     closeSettingsModal(); // 設定画面と同じ側面に表示されるため、開いていれば閉じておく
