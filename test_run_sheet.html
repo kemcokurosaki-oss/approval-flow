@@ -720,7 +720,7 @@ async function saveNow() {
     isSaving = true;
     const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
     const { error } = await db.from('approval_requests')
-        .update({ sheet_data: sheetData }).eq('id', draftId);
+        .update({ sheet_data: sheetData, sheet_saved_at: new Date().toISOString() }).eq('id', draftId);
     isSaving = false;
     setSaveStatus(error ? 'error' : 'ok');
 }
