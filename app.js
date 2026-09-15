@@ -63,9 +63,9 @@ const db = supabase.createClient(S_URL, S_KEY, {
 });
 
 const LOCATION_GROUPS = [
-    { label: 'A',  items: ['A0','A1','A2','A3','A4','A5','A6','A7'] },
-    { label: 'B',  items: ['B0','B1','B2','B3','B4','B5','B6','B7'] },
-    { label: 'C',  items: ['C0','C1','C2','C3','C4','C5','C6','C7'] },
+    { label: 'A',  items: ['A1','A2','A3','A4','A5','A6','A7'] },
+    { label: 'B',  items: ['B1','B2','B3','B4','B5','B6','B7'] },
+    { label: 'C',  items: ['C1','C2','C3','C4','C5','C6','C7'] },
     { label: 'D',  items: ['D0','D1','D2','D3','D4','D5','D6','D7'] },
     { label: 'E1', items: ['E1-0','E1-1','E1-2','E1-3','E1-4','E1-5','E1-6','E1-7'] },
     { label: 'E2', items: ['E2-0','E2-1','E2-2','E2-3','E2-4','E2-5','E2-6','E2-7'] },
