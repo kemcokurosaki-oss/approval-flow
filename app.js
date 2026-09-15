@@ -2543,13 +2543,14 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         const isOwnDraft = req.status === 'draft' && req.requester_id === currentUser.id;
 
         if (isOwnDraft) {
+            const reopenLinkLabel = isSavedDraft(req) ? '続きを入力する →' : '申請する →';
             return `<div class="unit-list-row">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
                     <div class="unit-list-name">${esc(machineLabel)}</div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
                 <div class="unit-list-row-actions" style="justify-content:space-between;">
-                    <span class="unit-list-link" style="cursor:pointer;" onclick="reopenElectricalSheetFromDetail('${req.id}')">続きを入力する →</span>
+                    <span class="unit-list-link" style="cursor:pointer;" onclick="reopenElectricalSheetFromDetail('${req.id}')">${reopenLinkLabel}</span>
                     <div style="display:flex;gap:8px;align-items:center;">
                         <button class="btn-apply-xs" onclick="submitElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">申請する</button>
                         <button class="btn-delete-xs" title="削除" onclick="deleteElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">
