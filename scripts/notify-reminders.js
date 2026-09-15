@@ -432,9 +432,12 @@ async function runSubmissionReminders() {
       if (flowType === 'shipping') {
         recipients = await getShippingRecipients();
       } else {
-        recipients = await supabaseFetch(
-          `profiles?name=eq.${encodeURIComponent(task.owner)}&select=id,name,email`
-        );
+        const ownerNames = splitOwnerNames(task.owner);
+        recipients = ownerNames.length > 0
+          ? await supabaseFetch(
+              `profiles?name=in.(${ownerNames.map(n => encodeURIComponent(n)).join(',')})&select=id,name,email`
+            )
+          : [];
         ccProfiles = await getSuperiors(flowType);
       }
 
