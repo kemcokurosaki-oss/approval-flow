@@ -2537,7 +2537,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const elecExistingRowsHtml = (elecReqs || []).map(req => {
         const cls = STATUS_CLASSES[req.status] || 's-gray';
-        const label = req.status === 'draft' ? '下書き' : statusBadgeLabel(req);
+        const label = isSavedDraft(req) ? '下書き' : (req.status === 'draft' ? '未申請' : statusBadgeLabel(req));
         const machineLabel = req.machine_name || '（機械未入力）';
         const isOwnDraft = req.status === 'draft' && req.requester_id === currentUser.id;
 
@@ -3331,7 +3331,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
 
     const existingRowsHtml = (reqs || []).map(req => {
         const cls = STATUS_CLASSES[req.status] || 's-gray';
-        const label = req.status === 'draft' ? '下書き' : statusBadgeLabel(req);
+        const label = isSavedDraft(req) ? '下書き' : (req.status === 'draft' ? '未申請' : statusBadgeLabel(req));
         const machineLabel = req.machine_name || '（機械未入力）';
         const isOwnDraft = req.status === 'draft' && req.requester_id === currentUser.id;
 
