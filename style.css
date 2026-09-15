@@ -222,7 +222,7 @@
             position: fixed;
             top: var(--header-height, 80px);
             right: 0;
-            width: 740px;
+            width: var(--sidepanel-width, 740px);
             height: calc(100vh - var(--header-height, 80px));
             background: #fff;
             box-shadow: -4px 0 20px rgba(0,0,0,0.18);
@@ -235,6 +235,35 @@
         }
         .side-panel.open { transform: translateX(0); }
         .main:has(.side-panel.open, .settings-page.open) .main-content { margin-right: calc(740px - 130px); }
+
+        /* マイページとステップ表示（進捗一覧）の境界線：ドラッグで幅調整 */
+        .panel-resizer {
+            display: none;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: var(--sidepanel-width, 740px);
+            width: 8px;
+            margin-right: -4px;
+            cursor: col-resize;
+            z-index: 210;
+            touch-action: none;
+        }
+        .panel-resizer::after {
+            content: '';
+            position: absolute;
+            left: 3px; top: 0; bottom: 0;
+            width: 2px;
+            background: transparent;
+            border-radius: 2px;
+        }
+        .panel-resizer:hover::after,
+        body.is-resizing-panel .panel-resizer::after {
+            background: #4f9ddb;
+        }
+        .main:has(.side-panel.open) .panel-resizer { display: block; }
+        body.is-resizing-panel { cursor: col-resize; user-select: none; }
+        body.is-resizing-panel .side-panel { transition: none; }
 
         .side-panel-header {
             height: 38px;
