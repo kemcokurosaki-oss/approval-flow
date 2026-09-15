@@ -645,9 +645,9 @@ async function main() {
     }).filter(a => a.email);
   }
 
-  // profiles のメールアドレスを一括取得（recipient_idがある場合のみ）
+  // profiles のメールアドレスを一括取得（recipient_idがある場合のみ。申請者名解決のためrequester_idも含める）
   const recipientIds = [...new Set(
-    notifications.map(n => n.recipient_id).filter(Boolean)
+    [...notifications.map(n => n.recipient_id), ...requests.map(r => r.requester_id)].filter(Boolean)
   )];
   let profileMap = {};
   if (recipientIds.length > 0) {
