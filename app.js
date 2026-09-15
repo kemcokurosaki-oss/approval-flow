@@ -1982,7 +1982,8 @@ function renderProgressCards() {
                         : (!electricalReq ? 'empty'
                             : electricalReq.status === 'approved' ? 'approved'
                             : electricalReq.status === 'rejected' ? 'rejected'
-                            : electricalReq.status === 'draft'    ? 'draft'
+                            : isSavedDraft(electricalReq)         ? 'draft'
+                            : electricalReq.status === 'draft'    ? 'empty'
                             : 'active');
 
                     // 丸の色は組立・電装の両方が承認されて初めて「完了」。片方でも進んでいれば「進行中」表示にする
