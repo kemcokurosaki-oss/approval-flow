@@ -3473,7 +3473,8 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
                 <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machine)}')">承認する</button>
             </div>` : '';
     } else if (myDraft) {
-        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenTestRunSheetFromDetail('${myDraft.id}')">続きを入力する →</span>`;
+        const reopenLinkLabel = isSavedDraft(myDraft) ? '続きを入力する →' : '申請する →';
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenTestRunSheetFromDetail('${myDraft.id}')">${reopenLinkLabel}</span>`;
         bottomRightHtml = `
             <div style="display:flex;gap:8px;align-items:center;">
                 <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>
