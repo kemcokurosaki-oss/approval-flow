@@ -741,7 +741,7 @@ function renderPendingItems() {
     const c = document.getElementById('pending_container');
     if (!c) return;
     if (pendingItems.length === 0) {
-        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        c.innerHTML = '<div class="pending-empty">申し送り事項はありません</div>';
         return;
     }
     const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">完了予定日</span>`;
@@ -784,7 +784,7 @@ function renderPendingItemsView() {
     const c = document.getElementById('pending_container');
     if (!c) return;
     if (!pendingItems.length) {
-        c.innerHTML = '<div class="pending-empty">ペンディング項目はありません</div>';
+        c.innerHTML = '<div class="pending-empty">申し送り事項はありません</div>';
         return;
     }
     c.innerHTML = pendingItems.map(item => {
