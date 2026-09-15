@@ -4737,7 +4737,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     ${itemCanComplete ? (item.completed
                         ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
-                        : `<button class="btn-primary-xs" onclick="completePendingItem('${req.id}', ${idx}, {isQaFlow: ${isQaFlow}})">完了にする</button>`) : ''}
+                        : `<button class="btn-primary-xs" onclick="completePendingItem('${req.id}', ${idx}, {isQaFlow: ${isQaFlow}, isTestRun: ${req.flow_type === 'test_run'}})">完了にする</button>`) : ''}
                     ${canManage && !item.completed ? `
                         <button class="btn-icon-xs" title="編集" onclick="startEditQaPendingItem(${idx})">✎</button>
                         <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>
