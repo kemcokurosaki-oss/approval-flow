@@ -5030,7 +5030,7 @@ async function openDetailModal(requestId, returnTo = null) {
         const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[pNum] || null;
         const findO = (text, major) => [...new Set((sTasks || [])
             .filter(t => t.text === text && (!major || (t.major_item || '').trim() === major))
-            .map(t => t.owner).filter(Boolean))].join('・') || 'なし';
+            .flatMap(t => splitOwnerNames(t.owner)))].join('・') || 'なし';
         shippingOwners = {
             sekkei:   findO('出図', '設計'),
             kumitatе: findO('機械組立'),
