@@ -7898,7 +7898,7 @@ function addExtraRecipient(prefix) {
     const email = emailEl.value.trim();
     if (!email) { showToast('メールアドレスを入力してください', 'error'); return; }
 
-    extraRecipients[prefix].push({ name: name || email, email, optional: false });
+    extraRecipients[prefix].push({ name: name || email, email, optional: true });
     nameEl.value = ''; emailEl.value = '';
     renderExtraList(prefix);
 }
