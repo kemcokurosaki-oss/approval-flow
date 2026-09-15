@@ -1940,7 +1940,7 @@
         .pcs-btn { border-radius: 7px; padding: 6px 14px; font-size: 13px; }
         .pcs-btn:hover { background: rgba(255,255,255,.6); }
         .pcs-btn.active { box-shadow: 0 1px 3px rgba(20,36,63,.12); }
-        #pfilter_completed_on.active { background: #2ba55d; box-shadow: none; }
+        #pfilter_completed_on.active { background: #16233a; box-shadow: none; }
 
         /* ----- 左サイドレール ----- */
         .prefix-panel,
