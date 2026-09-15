@@ -2262,7 +2262,7 @@ function computeAssemblyAggStatus(num, assemblyReqsByProject) {
     if (reqs.length === 0) return 'empty';
     if (reqs.some(r => r.status === 'approved')) return 'approved';
     if (reqs.some(r => r.status === 'rejected')) return 'rejected';
-    if (reqs.every(r => r.status === 'draft')) return 'draft';
+    if (reqs.every(r => r.status === 'draft')) return reqs.some(isSavedDraft) ? 'draft' : 'empty';
     return 'active';
 }
 
