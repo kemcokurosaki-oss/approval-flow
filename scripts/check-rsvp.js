@@ -64,7 +64,10 @@ function extractAttendeeResponse(icsText) {
     const params = a.params || {};
     const partstat = (params.PARTSTAT || 'NEEDS-ACTION').toUpperCase();
     const name = params.CN || null;
-    return { uid: ev.uid, email, name, status: PARTSTAT_TO_STATUS[partstat] || 'needs-action' };
+    // Outlookの「出欠せずフォロー」は PARTSTAT=NEEDS-ACTION のまま X-MICROSOFT-ATTENDANCE:FOLLOW で意思表示される
+    // （node-icalはX-プレフィックスを外した "MICROSOFT-ATTENDANCE" というキーで格納する）
+    const isFollow = String(ev['MICROSOFT-ATTENDANCE'] || '').toUpperCase() === 'FOLLOW';
+    return { uid: ev.uid, email, name, status: PARTSTAT_TO_STATUS[partstat] || 'needs-action', isFollow };
   }
   return null;
 }
