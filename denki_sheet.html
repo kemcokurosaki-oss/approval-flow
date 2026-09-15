@@ -933,13 +933,11 @@ async function saveNow() {
 function addPendingItem() {
     pendingItems.push({ machine: '', content: '', owner: '', due: '', ship_after: false });
     renderPendingItems();
-    scheduleSave();
 }
 
 function removePendingItem(idx) {
     pendingItems.splice(idx, 1);
     renderPendingItems();
-    scheduleSave();
 }
 
 function renderPendingItems() {
