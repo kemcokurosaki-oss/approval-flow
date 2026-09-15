@@ -8300,7 +8300,7 @@ async function onShippingMachineChange() {
     const findOwners = (taskText, majorItem) =>
         [...new Set((taskRows || [])
             .filter(t => t.text === taskText && (!majorItem || (t.major_item || '').trim() === majorItem))
-            .map(t => t.owner).filter(Boolean))].join('・') || 'なし';
+            .flatMap(t => splitOwnerNames(t.owner)))].join('・') || 'なし';
 
     const kumitateOwner = findOwners('機械組立');
     const shiuntenOwner = findOwners('試運転');
