@@ -7881,8 +7881,9 @@ async function buildAttendanceSectionHtml(req) {
         (prsByEmail || []).forEach(p => { if (p.email) nameByEmail[p.email] = p.name; }); // profilesを優先
     }
 
-    const { data: rsvps } = await db.from('invitation_rsvp').select('email, status').eq('request_id', req.id);
+    const { data: rsvps } = await db.from('invitation_rsvp').select('email, status, is_follow').eq('request_id', req.id);
     const statusByEmail = Object.fromEntries((rsvps || []).map(r => [r.email, r.status]));
+    const followByEmail = Object.fromEntries((rsvps || []).map(r => [r.email, !!r.is_follow]));
 
     const rows = entries.map(e => {
         const profile = e.recipientId ? profileMap[e.recipientId] : null;
@@ -7890,11 +7891,13 @@ async function buildAttendanceSectionHtml(req) {
         const name   = profile?.name || nameByEmail[email] || email || '—';
         const status = (email && statusByEmail[email]) || 'needs-action';
         const st     = RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action'];
+        const isFollow = !!(email && followByEmail[email]);
         return `
         <div class="recipient-item">
             <span class="recipient-name">${esc(name)}</span>
             <span class="recipient-tag">${e.optional ? '任意' : '必須'}</span>
             <span class="recipient-tag" style="background:${st.bg};color:${st.color};">${st.label}</span>
+            ${isFollow ? `<span class="recipient-tag" style="background:${RSVP_FOLLOW_BADGE.bg};color:${RSVP_FOLLOW_BADGE.color};">${RSVP_FOLLOW_BADGE.label}</span>` : ''}
         </div>`;
     }).join('');
 
