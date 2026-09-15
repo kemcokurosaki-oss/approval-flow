@@ -1050,10 +1050,13 @@ function renderPendingItemsView() {
     }).join('');
 }
 
-// 中断: 保存してタブを閉じる（申請画面には通知しない）
+// 中断: 保存 → 申請画面に通知 → タブを閉じる
 function suspendSheet() {
     setSaveStatus('saving');
-    saveNow().then(() => window.close());
+    saveNow().then(() => {
+        broadcastChannel.postMessage({ type: 'sheet_suspend', draftId });
+        window.close();
+    });
 }
 
 // 完了: 保存 → 申請画面に通知 → タブを閉じる
