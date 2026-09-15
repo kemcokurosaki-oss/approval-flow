@@ -185,17 +185,20 @@ function buildEmail(type, req, recipientName, extra = {}) {
     : '';
 
   switch (type) {
-    case 'approval_request':
+    case 'approval_request': {
+      const requesterLine = extra?.requesterName ? `\n申請者: ${extra.requesterName}` : '';
       return {
         from,
         subject: `【承認依頼】${pStr}　${flowReq}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の「${flowReq}」について承認依頼が届いています。\n` +
-          `承認フロー管理システムにログインして承認をお願いします。` +
+          `${pStr} の「${flowReq}」について承認依頼が届いています。` +
+          requesterLine +
+          `\n承認フロー管理システムにログインして承認をお願いします。` +
           parallelNote +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
+    }
 
     case 'resubmit':
       return {
