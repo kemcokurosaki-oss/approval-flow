@@ -1076,7 +1076,6 @@ async function completeSheet() {
     const btn = document.getElementById('btn_complete');
     btn.disabled = true;
     btn.textContent = '保存中...';
-    clearTimeout(saveTimer);
     await saveNow();
     broadcastChannel.postMessage({ type: 'sheet_complete', draftId });
     window.close();
