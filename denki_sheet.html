@@ -886,13 +886,6 @@ function onCompletionDateChange(val) {
         document.getElementById('sheet_completion_date')?.classList.remove('missing');
         document.getElementById('date_missing_warning')?.classList.remove('show');
     }
-    scheduleSave();
-}
-
-function scheduleSave() {
-    setSaveStatus('saving');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNow, 1200);
 }
 
 // 印刷時：一行入力欄では折り返せないため、隣接するテキストに複製して表示する
