@@ -763,7 +763,7 @@ async function runShippingListReminders() {
           `tasks?project_number=eq.${encodeURIComponent(target.project_number)}&text=eq.${encodeURIComponent('出図')}` +
           `&major_item=eq.${encodeURIComponent('設計')}&select=owner`
         );
-        sekkeiOwnersCache[projectStr] = [...new Set((sekkeiTasks || []).map(t => t.owner).filter(Boolean))];
+        sekkeiOwnersCache[projectStr] = [...new Set((sekkeiTasks || []).flatMap(t => splitOwnerNames(t.owner)))];
       }
       const sekkeiOwnerNames = sekkeiOwnersCache[projectStr];
       if (sekkeiOwnerNames.length === 0) continue;
