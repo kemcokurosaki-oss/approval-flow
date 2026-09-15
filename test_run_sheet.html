@@ -836,7 +836,7 @@ function setViewMode() {
 }
 
 function suspendSheet() {
-    clearTimeout(saveTimer);
+    setSaveStatus('saving');
     saveNow().then(() => {
         broadcastChannel.postMessage({ type: 'sheet_suspend', draftId });
         window.close();
