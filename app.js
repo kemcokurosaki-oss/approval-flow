@@ -8891,7 +8891,13 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
     }
 
-    const isOptional = (key) => !requiredIds.has(key) && !!(optionalKeys && optionalKeys.has(key));
+    // si/inspection/shipping_meetingの宛先確認画面ではデフォルト「任意」・チェックで「必須」指定する仕様のため、
+    // optionalKeysには「必須指定された宛先」が入る（未指定=任意がデフォルト）。それ以外のフローはoptionalKeysを渡さないため従来通り全員必須のまま。
+    const isOptional = (key) => {
+        if (requiredIds.has(key)) return false;
+        if (!optionalKeys) return false;
+        return !optionalKeys.has(key);
+    };
     const inserts = [
         ...[...profileIds].map(id    => ({ request_id: requestId, recipient_id:    id,    notification_type: notifType, optional: isOptional(id) })),
         ...[...extEmails ].map(email => ({ request_id: requestId, recipient_email: email, notification_type: notifType, optional: isOptional(email) }))
