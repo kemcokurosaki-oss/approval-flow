@@ -667,7 +667,7 @@ function restoreChecks() {
         if (!val) return;
         const btn = document.querySelector(`.sheet-btn[onclick*="setCheck('${itemId}','${val}',"]`);
         if (!btn) return;
-        const m = btn.getAttribute('onclick').match(/,'([a-e])'\)$/);
+        const m = btn.getAttribute('onclick').match(/,'([a-f])'\)$/);
         if (m) btn.classList.add(`active-${m[1]}`);
     });
 }
