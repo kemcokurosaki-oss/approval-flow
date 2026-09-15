@@ -856,8 +856,6 @@ function setCheck(itemId, val, btn, cls) {
             if (prev?.classList.contains('sheet-item-missing')) prev.remove();
         }
     }
-
-    scheduleSave();
 }
 
 // グループ内が全て○済みなら一括解除、そうでなければ未入力項目だけを一括で○にする（×・―が付いた項目は上書きしない）
