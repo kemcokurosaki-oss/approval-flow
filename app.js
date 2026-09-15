@@ -4662,9 +4662,11 @@ function buildPendingSectionInner(req, isMyRequest) {
         .filter(({ item }) => (item.content || item.machine));
     if (!items.length) return '';
     const editLbl = `<span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>`;
+    // 試運転フローは「ペンディング項目」ではなく「申し送り事項」と呼ぶ
+    const sectionLabel = isQaFlow ? 'タスクリスト' : (req.flow_type === 'test_run' ? '申し送り事項' : 'ペンディング項目');
     return `
         <hr class="section-divider">
-        <div class="section-title">${isQaFlow ? 'タスクリスト' : 'ペンディング項目'}</div>
+        <div class="section-title">${sectionLabel}</div>
         ${items.map(({ item, idx }, pos) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             // QAフローのタスクリストはさらに、担当者の上長（組立課長/部長・操業課長/部長）も完了操作できる
