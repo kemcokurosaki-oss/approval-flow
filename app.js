@@ -6868,6 +6868,7 @@ async function saveReschedule() {
         : getLocationValue('reschedule_location_input');
     if (!newLocation) { showToast('場所を選択してください', 'error'); return; }
     const oldLocation = currentDetailReq?.inspection_location || '';
+    const newNote = document.getElementById('reschedule_note_input').value.trim() || null;
 
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = true; btn.textContent = '保存中...';
@@ -6878,6 +6879,7 @@ async function saveReschedule() {
             inspection_date:     newDate,
             inspection_time:     newTime,
             inspection_location: newLocation,
+            note:                newNote,
             updated_at:          new Date().toISOString()
         }).eq('id', requestId);
 
