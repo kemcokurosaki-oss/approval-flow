@@ -147,13 +147,14 @@ async function main() {
               email:        reply.email,
               name:         reply.name,
               status:       reply.status,
+              is_follow:    reply.isFollow,
               responded_at: new Date().toISOString(),
               updated_at:   new Date().toISOString(),
             }),
           });
 
           matchedCount++;
-          console.log(`✓ 記録: ${reply.email} → ${reply.status} (request_id=${requestId})`);
+          console.log(`✓ 記録: ${reply.email} → ${reply.status}${reply.isFollow ? '（フォロー）' : ''} (request_id=${requestId})`);
 
           await client.messageMove(uid, PROCESSED_FOLDER, { uid: true });
         } catch (err) {
