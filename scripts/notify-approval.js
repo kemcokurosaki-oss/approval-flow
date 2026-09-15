@@ -200,17 +200,20 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
-    case 'resubmit':
+    case 'resubmit': {
+      const requesterLine = extra?.requesterName ? `\n申請者: ${extra.requesterName}` : '';
       return {
         from,
         subject: `【再申請】${pStr}　${flowReq}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の「${flowReq}」が修正のうえ再申請されました。\n` +
-          `承認フロー管理システムにログインして内容をご確認のうえ承認をお願いします。` +
+          `${pStr} の「${flowReq}」が修正のうえ再申請されました。` +
+          requesterLine +
+          `\n承認フロー管理システムにログインして内容をご確認のうえ承認をお願いします。` +
           parallelNote +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
+    }
 
     case 'approved':
     case 'completed': {
