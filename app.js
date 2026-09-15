@@ -2303,7 +2303,8 @@ function computeAssemblyUnitStatus(projectNum, machine, unit, reqsForProject, no
     if (matching.some(r => r.status === 'approved')) return 'done';
     if (matching.some(r => r.status === 'submitted' || r.status === 'in_review')) return 'active';
     if (matching.some(r => r.status === 'rejected')) return 'rejected';
-    return 'draft';
+    if (matching.some(isSavedDraft)) return 'draft';
+    return 'empty';
 }
 
 // 2000番台：その機械の全ユニット（固定＋追加分）が「承認済み or 不要マーク済み」なら機械全体を完了扱いにする
