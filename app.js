@@ -6319,7 +6319,7 @@ async function renderAuditLogRows() {
 }
 
 async function completePendingItem(requestId, idx, opts = {}) {
-    const itemLabel = opts.isQaFlow ? 'タスク' : 'ペンディング項目';
+    const itemLabel = opts.isQaFlow ? 'タスク' : (opts.isTestRun ? '申し送り事項' : 'ペンディング項目');
     if (!confirm(`この${itemLabel}を完了にします。よろしいですか？`)) return;
     showLoading('更新中...');
     try {
