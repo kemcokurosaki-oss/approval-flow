@@ -6843,8 +6843,8 @@ async function renderExistingRecipients(requestId) {
             <span class="recipient-name">${esc(name)}</span>
             <span class="recipient-email">${esc(email)}</span>
             <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
-                <input type="checkbox" ${recipientOptionalKeys.reschedule.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('reschedule', '${esc(key)}', this.checked)">
-                任意
+                <input type="checkbox" ${recipientOptionalKeys.reschedule.has(key) ? '' : 'checked'} onchange="toggleRecipientOptional('reschedule', '${esc(key)}', !this.checked)">
+                必須
             </label>
         </div>`;
     }).join('');
