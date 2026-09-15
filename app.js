@@ -7836,6 +7836,8 @@ const RSVP_STATUS_LABELS = {
     tentative:      { label: '仮',     color: '#8a6d00', bg: '#fff8e6' },
     'needs-action': { label: '未回答', color: '#888',    bg: '#f0f0f0' },
 };
+// Outlookの「出欠せずフォロー」応答（案内メールへの回答の一種、出欠は未回答のまま関心のみ表明）
+const RSVP_FOLLOW_BADGE = { label: 'フォロー', color: '#0969da', bg: '#e8f2ff' };
 
 async function buildAttendanceSectionHtml(req) {
     const types = QA_INVITE_NOTIFICATION_TYPES[req.flow_type];
