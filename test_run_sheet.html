@@ -675,7 +675,7 @@ function restoreChecks() {
 function setCheck(itemId, val, btn, cls) {
     const already = checks[itemId] === val;
     btn.parentElement.querySelectorAll('.sheet-btn').forEach(b => {
-        b.className = b.className.replace(/\bactive-[a-e]\b/g, '').trim();
+        b.className = b.className.replace(/\bactive-[a-f]\b/g, '').trim();
     });
     if (already) {
         checks[itemId] = null;
