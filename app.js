@@ -1699,6 +1699,15 @@ function getAssemblyItemsForReq(req) {
     return [];
 }
 
+// チェックシート右下の「一時保存」ボタンを一度も押していないdraftはsheet_saved_atがNULLのまま。
+// 一時保存するまでは何も入力していないのと同じ扱いにするため、フロー丸・バッジ等の表示では「未申請」扱いにする
+function isSavedDraft(req) {
+    return !!req && req.status === 'draft' && !!req.sheet_saved_at;
+}
+function isUnsavedDraft(req) {
+    return !!req && req.status === 'draft' && !req.sheet_saved_at;
+}
+
 // sheet_data.pending_items のうち内容が入力済み(content or machine)かつ未完了(!completed)の件数を数える
 function countUnresolvedPendingItems(req) {
     const items = (req?.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
