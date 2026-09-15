@@ -760,18 +760,15 @@ function addAssemblyItem() {
     const machine = (assemblyMode === 'free') ? assemblyLockedMachine : '';
     assemblyItems.push({ machine, unit: null });
     renderAssemblyItems();
-    scheduleSave();
 }
 
 function removeAssemblyItem(i) {
     assemblyItems.splice(i, 1);
     renderAssemblyItems();
-    scheduleSave();
 }
 
 function updateAssemblyMachine(i, value) {
     assemblyItems[i].machine = value;
-    scheduleSave();
 }
 
 function onAssemblyMachineSelect(i, value) {
@@ -785,7 +782,6 @@ function onAssemblyMachineSelect(i, value) {
     assemblyItems[i].unit = null;
     assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
-    scheduleSave();
 }
 
 function clearAssemblyMachineFreeInput(i) {
@@ -794,12 +790,10 @@ function clearAssemblyMachineFreeInput(i) {
     assemblyItems[i].unit = null;
     assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
-    scheduleSave();
 }
 
 function updateAssemblyUnit(i, value) {
     assemblyItems[i].unit = value;
-    scheduleSave();
 }
 
 function onAssemblyUnitSelect(i, value) {
@@ -810,7 +804,6 @@ function onAssemblyUnitSelect(i, value) {
     } else {
         assemblyItems[i].unit = value || null;
         assemblyItems[i]._unitFree = false;
-        scheduleSave();
     }
 }
 
@@ -818,7 +811,6 @@ function clearAssemblyUnitFreeInput(i) {
     assemblyItems[i].unit = null;
     assemblyItems[i]._unitFree = false;
     renderAssemblyItems();
-    scheduleSave();
 }
 
 function renderAssemblyItems() {
