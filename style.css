@@ -2191,7 +2191,8 @@
         .board-search input:focus { border-color: #2f6fb0; background: #fff; box-shadow: 0 0 0 3px rgba(47,111,176,.12); }
 
         /* サイドパネルを開いたときの本文の逃がし幅（サイドタブ列を廃止した分を補正） */
-        .main:has(.side-panel.open, .settings-page.open) .main-content { margin-right: 740px; }
+        .main:has(.settings-page.open) .main-content { margin-right: 740px; }
+        .main:has(.side-panel.open) .main-content { margin-right: var(--sidepanel-width, 740px); }
 
         @media (max-width: 1400px) {
             .board-search input { width: 200px; }
