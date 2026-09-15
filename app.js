@@ -2620,10 +2620,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     if (testRunProjectNums.has(projectNum)) {
         const { data: ownerTasks } = await db.from('tasks').select('text, owner')
             .eq('project_number', projectNum).in('text', ['機械組立', '電気艤装']);
-        const kumitateOwnerNames = [...new Set((ownerTasks || []).filter(t => t.text === '機械組立').map(t => t.owner).filter(Boolean))];
+        const kumitateOwnerNames = [...new Set((ownerTasks || []).filter(t => t.text === '機械組立').flatMap(t => splitOwnerNames(t.owner)))];
         const denkiTasks         = (ownerTasks || []).filter(t => t.text === '電気艤装');
         const hasElecTask        = denkiTasks.length > 0;
-        const denkiOwnerNames    = [...new Set(denkiTasks.map(t => t.owner).filter(Boolean))];
+        const denkiOwnerNames    = [...new Set(denkiTasks.flatMap(t => splitOwnerNames(t.owner)))];
 
         const { data: readinessRows } = await db.from('test_run_readiness')
             .select('kind, is_ready').eq('project_number', projectNum).eq('machine', '').eq('unit', '');
