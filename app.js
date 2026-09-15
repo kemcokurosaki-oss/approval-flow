@@ -2186,7 +2186,7 @@ function renderProgressCards() {
                             flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
                         }
                     }
-                } else if (req && req.status === 'draft') {
+                } else if (isSavedDraft(req)) {
                     flowDateStr = '入力中';
                 }
 
