@@ -1611,8 +1611,8 @@ function _syncProgressControls() {
     document.querySelectorAll('.prefix-btn').forEach(btn => {
         btn.classList.toggle('active', (btn.getAttribute('data-prefix') ?? '') === progressFilterPrefix);
     });
-    const completedCb = document.getElementById('pfilter_completed');
-    if (completedCb) completedCb.checked = progressFilterCompleted;
+    document.getElementById('pfilter_completed_off')?.classList.toggle('active', !progressFilterCompleted);
+    document.getElementById('pfilter_completed_on')?.classList.toggle('active', progressFilterCompleted);
     const overdueCb = document.getElementById('pfilter_overdue');
     if (overdueCb) overdueCb.checked = progressFilterOverdue;
     const shipAfterCb = document.getElementById('pfilter_ship_after');
