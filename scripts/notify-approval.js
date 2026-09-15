@@ -232,6 +232,18 @@ function buildEmail(type, req, recipientName, extra = {}) {
         : isShipping
         ? `${pStr} の出荷日が確定しました。`
         : `${pStr} の「${flow}」が承認されました。`;
+      // 試運転完了時の申し送り事項は、通知を見た人がその場で内容を把握できるよう本文にそのまま記載する
+      const testRunPendingItems = req?.flow_type === 'test_run'
+        ? (req?.sheet_data?.pending_items || []).filter(p => p.content || p.machine)
+        : [];
+      const testRunPendingNote = testRunPendingItems.length > 0
+        ? '\n\n【申し送り事項】\n' + testRunPendingItems.map((p, i) => {
+            let line = `${i + 1}. ${p.machine ? p.machine + '：' : ''}${p.content || ''}`;
+            if (p.owner) line += `（担当: ${p.owner}）`;
+            if (p.due)   line += `（完了予定日: ${p.due}）`;
+            return line;
+          }).join('\n')
+        : '';
       return {
         from,
         subject: completedSubject,
@@ -240,6 +252,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           completedBody +
           shippingDate +
           approverLine +
+          testRunPendingNote +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
