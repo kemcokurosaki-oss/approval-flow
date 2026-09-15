@@ -2906,10 +2906,10 @@ function buildMachineUnitRowsHtml(opts) {
         const activeReq = matching.find(r => r.status !== 'draft');
 
         let statusLabel, statusCls;
-        if (isNotRequired)     { statusLabel = '不要';   statusCls = 's-gray'; }
-        else if (activeReq)    { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
-        else if (myDraft)      { statusLabel = '下書き'; statusCls = 's-gray'; }
-        else                   { statusLabel = '未申請'; statusCls = 's-gray'; }
+        if (isNotRequired)         { statusLabel = '不要';   statusCls = 's-gray'; }
+        else if (activeReq)        { statusLabel = statusBadgeLabel(activeReq); statusCls = STATUS_CLASSES[activeReq.status] || 's-gray'; }
+        else if (isSavedDraft(myDraft)) { statusLabel = '下書き'; statusCls = 's-gray'; }
+        else                       { statusLabel = '未申請'; statusCls = 's-gray'; }
 
         let toggleHtml = '';
         if (canApply && !(activeReq && activeReq.status === 'approved')) {
