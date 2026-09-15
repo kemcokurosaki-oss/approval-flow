@@ -157,23 +157,25 @@
             </div>
         </div>
         <div class="header-row2">
-            <span class="pfilter-group-label">絞り込み</span>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
-                <span>自分の担当</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_completed" onchange="toggleCompletedView(this.checked)">
-                <span>完了済み</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_overdue" onchange="setProgressFilterOverdue(this.checked)">
-                <span>未申請・未承認</span>
-            </label>
-            <label class="pfilter-label">
-                <input type="checkbox" id="pfilter_ship_after" onchange="setProgressFilterShipAfter(this.checked)">
-                <span>出荷後対応</span>
-            </label>
+            <div class="pfilter-group">
+                <span class="pfilter-group-label">絞り込み</span>
+                <label class="pfilter-label">
+                    <input type="checkbox" id="pfilter_mine" onchange="setProgressFilter(this.checked)">
+                    <span>自分の担当</span>
+                </label>
+                <label class="pfilter-label">
+                    <input type="checkbox" id="pfilter_overdue" onchange="setProgressFilterOverdue(this.checked)">
+                    <span>未申請・未承認</span>
+                </label>
+                <label class="pfilter-label">
+                    <input type="checkbox" id="pfilter_ship_after" onchange="setProgressFilterShipAfter(this.checked)">
+                    <span>出荷後対応</span>
+                </label>
+            </div>
+            <div class="pcompleted-switch" role="group" aria-label="完了済み表示の切り替え">
+                <button type="button" id="pfilter_completed_off" class="pcs-btn active" onclick="toggleCompletedView(false)">未完了</button>
+                <button type="button" id="pfilter_completed_on"  class="pcs-btn"        onclick="toggleCompletedView(true)">完了済み</button>
+            </div>
         </div>
     </div>
 
