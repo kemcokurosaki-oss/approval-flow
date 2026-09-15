@@ -932,7 +932,7 @@ async function saveNow() {
     });
 
     const sheetData = { check_items: checks, pending_items: pendingItems, meta: sheetMeta };
-    const updatePayload = { sheet_data: sheetData };
+    const updatePayload = { sheet_data: sheetData, sheet_saved_at: new Date().toISOString() };
     if (electricalMode) updatePayload.assembly_items = electricalItems;
     const { error } = await db.from('approval_requests')
         .update(updatePayload)
