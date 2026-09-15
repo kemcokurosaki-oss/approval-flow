@@ -1935,9 +1935,13 @@
         #pfilter_ship_after:not(:checked) { background: #8e44ad; }
         .pfilter-label:has(input:checked) { background: #2f6fb0; border-color: #2f6fb0; color: #fff; font-weight: 700; }
         .pfilter-label:has(input:checked) input[type="checkbox"] { background: rgba(255,255,255,.9); }
-        .pfilter-label:has(#pfilter_completed:checked)  { background: #2ba55d; border-color: #2ba55d; }
         .pfilter-label:has(#pfilter_overdue:checked)    { background: #e5484d; border-color: #e5484d; }
         .pfilter-label:has(#pfilter_ship_after:checked) { background: #8e44ad; border-color: #8e44ad; }
+        .pcompleted-switch { background: #f1f4f9; border-radius: 9px; padding: 3px; }
+        .pcs-btn { border-radius: 7px; padding: 6px 14px; font-size: 13px; }
+        .pcs-btn:hover { background: rgba(255,255,255,.6); }
+        .pcs-btn.active { box-shadow: 0 1px 3px rgba(20,36,63,.12); }
+        #pfilter_completed_on.active { background: #2ba55d; box-shadow: none; }
 
         /* ----- 左サイドレール ----- */
         .prefix-panel,
