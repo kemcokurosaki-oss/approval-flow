@@ -853,7 +853,7 @@ async function loadProjects() {
         // タスクオーナーを収集（自分の工番フィルタ用）
         if (t.owner) {
             if (!projectsMap[num].owners) projectsMap[num].owners = new Set();
-            projectsMap[num].owners.add(t.owner);
+            splitOwnerNames(t.owner).forEach(name => projectsMap[num].owners.add(name));
         }
     });
 
