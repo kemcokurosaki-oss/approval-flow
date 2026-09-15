@@ -3439,7 +3439,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         const unresolvedPendingCount = countUnresolvedPendingItems(activeReq);
         const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
-        const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
+        const sheetLinkLabel = hasUnresolvedPending ? `⚠ 申し送り事項あり(${unresolvedPendingCount}件) →`
             : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
         const sheetLinkOnclick = hasUnresolvedPending
             ? `viewTestRunRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')`
