@@ -6883,6 +6883,9 @@ async function saveReschedule() {
             updated_at:          new Date().toISOString()
         }).eq('id', requestId);
 
+        // 日程変更に伴い、これまでの出欠回答をリセットする（新しい日程で再度回答してもらうため）
+        await db.from('invitation_rsvp').delete().eq('request_id', requestId);
+
         // 元の送信済み通知の宛先に変更通知を再送
         const { data: existingNotifs } = await db.from('approval_notifications')
             .select('recipient_id, recipient_email, optional')
