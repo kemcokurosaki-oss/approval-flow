@@ -2133,8 +2133,10 @@ function renderProgressCards() {
                     fcClass = 'fc-done'; icon = '✓';
                 } else if (req.status === 'rejected') {
                     fcClass = 'fc-rejected'; icon = '<span class="fc-x-icon">×</span>';
-                } else if (req.status === 'draft') {
+                } else if (isSavedDraft(req)) {
                     fcClass = 'fc-draft'; icon = '✏';
+                } else if (req.status === 'draft') {
+                    fcClass = 'fc-empty'; icon = '○';
                 } else {
                     fcClass = 'fc-active'; icon = '<span class="fc-play-icon">▶</span>';
                 }
