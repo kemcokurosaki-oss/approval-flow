@@ -6756,6 +6756,7 @@ async function openRescheduleModal(requestId) {
     document.getElementById('reschedule_date_input').value = req.inspection_date || '';
     document.getElementById('reschedule_time_hour').value  = req.inspection_time ? req.inspection_time.split(':')[0] : '';
     document.getElementById('reschedule_time_min').value   = req.inspection_time ? req.inspection_time.split(':')[1] : '';
+    document.getElementById('reschedule_note_input').value = req.note || '';
 
     const locInput  = document.getElementById('reschedule_location_input');
     const locSelect = document.getElementById('reschedule_location_select');
