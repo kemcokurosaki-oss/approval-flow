@@ -8634,7 +8634,7 @@ async function sendTestRunReadyNotification(projectNum, machine, unit) {
     let taskQuery = db.from('tasks').select('owner').eq('project_number', projectNum).eq('text', '試運転');
     if (machine) taskQuery = taskQuery.eq('machine', machine);
     const { data: shiuntenTasks } = await taskQuery;
-    const shiuntenOwnerNames = [...new Set((shiuntenTasks || []).map(t => t.owner).filter(Boolean))];
+    const shiuntenOwnerNames = [...new Set((shiuntenTasks || []).flatMap(t => splitOwnerNames(t.owner)))];
 
     const profileIds = new Set();
     if (shiuntenOwnerNames.length > 0) {
