@@ -7782,10 +7782,11 @@ function renderRecipientsList(prefix, recipients) {
     const ROLE_MAP = { assembly_director: '組立部長', assembly_manager: '組立課長', quality: '品保', staff: '' };
     const optionalKeys = recipientOptionalKeys[prefix];
 
+    // このプレビュー画面はデフォルト「任意」・チェックで「必須」に切り替える仕様（recipientOptionalKeysは「必須指定された宛先」を保持する）
     const optionalToggle = (key) => `
         <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
             <input type="checkbox" ${optionalKeys.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('${prefix}', '${esc(key)}', this.checked)">
-            任意
+            必須
         </label>`;
 
     const profileRows = recipients.profiles.map(p => `
