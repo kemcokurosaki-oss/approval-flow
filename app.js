@@ -8668,7 +8668,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
     const { data: tasks } = await taskQuery;
     const findOwners = (taskName, majorItem) => {
         const matched = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem));
-        return [...new Set(matched.map(t => t.owner).filter(Boolean))];
+        return [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))];
     };
 
     const kumitateOwners = findOwners('機械組立');
