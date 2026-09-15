@@ -2083,7 +2083,7 @@ function renderProgressCards() {
                                 const prefix = electricalReq.status === 'approved' ? '完了' : electricalReq.status === 'rejected' ? '却下' : '申請';
                                 electricalDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
                             }
-                        } else if (electricalReq && electricalReq.status === 'draft') {
+                        } else if (isSavedDraft(electricalReq)) {
                             electricalDateStr = '入力中';
                         }
                         const electricalOverdue = isFlowOverdue(num, machine, 'electrical', electricalReq);
