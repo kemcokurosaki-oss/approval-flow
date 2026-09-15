@@ -1370,7 +1370,7 @@ async function loadMineSide() {
         return [
             ['入力中', groups.inprogress, false],
             [isNoApprovalFlow ? '完了待ち' : '承認待ち', groups.waiting, false],
-            ['ペンディング', groups.pending, true],
+            [pendingLabel, groups.pending, true],
             [isNoApprovalFlow ? '完了' : '承認済み', groups.approved, false],
         ];
     };
