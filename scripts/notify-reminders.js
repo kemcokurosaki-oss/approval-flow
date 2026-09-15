@@ -966,7 +966,7 @@ async function runTestRunReadinessReminders() {
         (rows || []).forEach(t => {
           const key = t.unit || '';
           if (!map.has(key)) map.set(key, new Set());
-          if (t.owner) map.get(key).add(t.owner);
+          splitOwnerNames(t.owner).forEach(name => map.get(key).add(name));
         });
         return map;
       };
