@@ -3264,6 +3264,7 @@ async function approveAssemblyRequestFromList(requestId, stepId, stepOrder, proj
         else await renderAssemblyFlowDetailBody(projectNum);
     } catch (e) {
         showToast('承認処理に失敗しました: ' + e.message, 'error');
+        if (btn) btn.disabled = false;
     } finally {
         hideLoading();
     }
