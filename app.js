@@ -7929,10 +7929,15 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     return { profiles: profileList, external: extList };
 }
 
-function renderRecipientsList(prefix, recipients) {
+async function renderRecipientsList(prefix, recipients) {
     const listEl = document.getElementById(`${prefix}_recipients_list`);
     const ROLE_MAP = { assembly_director: '組立部長', assembly_manager: '組立課長', quality: '品保', staff: '' };
     const optionalKeys = recipientOptionalKeys[prefix];
+
+    existingRecipientEmails[prefix] = new Set([
+        ...recipients.profiles.map(p => (p.email || '').toLowerCase()).filter(Boolean),
+        ...recipients.external.map(r => (r.email || '').toLowerCase()).filter(Boolean)
+    ]);
 
     // このプレビュー画面はデフォルト「任意」・チェックで「必須」に切り替える仕様（recipientOptionalKeysは「必須指定された宛先」を保持する）
     const optionalToggle = (key) => `
