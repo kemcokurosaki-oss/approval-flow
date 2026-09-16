@@ -7710,7 +7710,8 @@ async function renderExtraProfileSelect(prefix) {
     const profiles = await getProfilesForRecipientSelect();
     const excluded = new Set([
         ...existingRecipientEmails[prefix],
-        ...extraRecipients[prefix].map(r => (r.email || '').toLowerCase())
+        ...extraRecipients[prefix].map(r => (r.email || '').toLowerCase()),
+        (currentUser?.email || '').toLowerCase() // 申請者本人は候補から除外
     ]);
 
     const groups = {};
