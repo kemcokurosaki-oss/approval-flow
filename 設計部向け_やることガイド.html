@@ -46,12 +46,20 @@
     .slide.is-active { display: flex; }
 
     .slide-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: .5em;
         font-size: 1.05em;
         font-weight: 800;
         letter-spacing: .1em;
         color: #2f6fb0;
         text-transform: uppercase;
         margin-bottom: .3em;
+    }
+    .eyebrow-icon {
+        width: 1.7em; height: 1.7em; border-radius: .35em; flex-shrink: 0;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        display: flex; align-items: center; justify-content: center;
     }
     .slide h1 { font-size: 2.55em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .28em; }
     .slide h2 { font-size: 1.9em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .3em; }
