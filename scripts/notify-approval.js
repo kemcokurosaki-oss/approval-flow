@@ -598,6 +598,8 @@ async function main() {
     icsSequenceMap[reqId] = (prev?.length || 0) + 1;
   }
 
+  const roomEmailsSet = new Set(Object.values(ROOM_EMAILS));
+
   // profiles のメールアドレスを一括取得（recipient_idがある場合のみ。申請者名解決のためrequester_idも含める）
   const recipientIds = [...new Set(
     [...notifications.map(n => n.recipient_id), ...requests.map(r => r.requester_id)].filter(Boolean)
