@@ -2278,6 +2278,52 @@ function splitOwnerNames(ownerStr) {
     return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
 }
 
+// 全体工程表「出張予定シート」に表示されるタスクかどうかの判定（../全体工程表/gantt-app.js の
+// _isBusinessTripTaskRow / _isTripTaskExpired と同じ条件をこちらでも再現する）
+function isBusinessTripTaskRow(t) {
+    const val = t?.is_business_trip;
+    if (val === true || val === 'true' || val === 'TRUE') return true;
+    return String(t?.task_type || '').trim().toLowerCase() === 'field_trip';
+}
+
+// start_date/end_dateから終了日(inclusive)を求め、durationのフォールバックに使う
+function tripTaskDurationDays(t) {
+    let dur = Number(t?.duration);
+    if (!Number.isFinite(dur) || dur < 1) dur = 1;
+    const sM = t?.start_date ? String(t.start_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+    const eM = t?.end_date   ? String(t.end_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)   : null;
+    if (sM && eM) {
+        const s = new Date(+sM[1], +sM[2] - 1, +sM[3]);
+        const e = new Date(+eM[1], +eM[2] - 1, +eM[3]);
+        const days = Math.floor((e - s) / 86400000) + 1;
+        if (days >= 1 && days <= 5000) dur = days;
+    }
+    return dur;
+}
+
+// 出張タスクが終了日+7日を過ぎて全体工程表側で自動非表示になる期限切れかどうか
+function isTripTaskExpired(t) {
+    if (!t?.start_date) return false;
+    const m = String(t.start_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return false;
+    const s = new Date(+m[1], +m[2] - 1, +m[3]);
+    const expiry = new Date(s);
+    expiry.setDate(expiry.getDate() + tripTaskDurationDays(t) - 1 + 7);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return today > expiry;
+}
+
+// 工事番号に対応する「出張予定シート」表示中タスクの担当者名一覧（タスク名は問わない）
+async function getBusinessTripOwnerNames(projectNum) {
+    if (!projectNum) return [];
+    const { data: tripTasks } = await db.from('tasks')
+        .select('owner, is_business_trip, task_type, start_date, end_date, duration')
+        .eq('project_number', projectNum);
+    const rows = (tripTasks || []).filter(t => isBusinessTripTaskRow(t) && !isTripTaskExpired(t));
+    return [...new Set(rows.flatMap(t => splitOwnerNames(t.owner)))];
+}
+
 // unit列でグループ化し、担当者名(owner)をSetにまとめる（1ユニットに複数担当者がいる場合に対応するため）
 function buildOwnerNamesByUnit(rows) {
     const map = new Map();
