@@ -7719,8 +7719,8 @@ async function getProfilesForRecipientSelect() {
 }
 
 async function renderExtraProfileSelect(prefix) {
-    const selectEl = document.getElementById(`${prefix}_extra_profile_select`);
-    if (!selectEl) return;
+    const panelEl = document.getElementById(`${prefix}_extra_profile_panel`);
+    if (!panelEl) return;
     const profiles = await getProfilesForRecipientSelect();
     const excluded = new Set([
         ...existingRecipientEmails[prefix],
@@ -7736,21 +7736,46 @@ async function renderExtraProfileSelect(prefix) {
             (groups[dept] = groups[dept] || []).push(p);
         });
 
-    const optgroups = Object.keys(groups).sort().map(dept => `
-        <optgroup label="${esc(dept)}">
-            ${groups[dept].map(p => `<option value="${esc(p.email)}" data-name="${esc(p.name || '')}">${esc(p.name || p.email)}（${esc(p.email)}）</option>`).join('')}
-        </optgroup>`).join('');
+    const deptKeys = Object.keys(groups).sort();
+    if (deptKeys.length === 0) {
+        panelEl.innerHTML = '<div class="profile-picker-empty">候補がありません</div>';
+        return;
+    }
 
-    selectEl.innerHTML = `<option value="">名簿から選択...</option>${optgroups}`;
+    // 名前とメールアドレスの先頭位置を揃えるため、テーブルではなくflexレイアウトの行として描画する
+    panelEl.innerHTML = deptKeys.map(dept => `
+        <div class="profile-picker-group-label" style="${departmentBadgeStyle(dept)}">${esc(dept)}</div>
+        ${groups[dept].map(p => `
+            <div class="profile-picker-option" data-email="${esc(p.email)}" data-name="${esc(p.name || '')}">
+                <span class="profile-picker-option-name">${esc(p.name || p.email)}</span>
+                <span class="profile-picker-option-email">${esc(p.email)}</span>
+            </div>`).join('')}
+    `).join('');
+
+    panelEl.querySelectorAll('.profile-picker-option').forEach(el => {
+        el.addEventListener('click', () => selectExtraRecipientProfile(prefix, el.dataset.email, el.dataset.name));
+    });
 }
 
-function fillExtraRecipientFromProfileSelect(prefix) {
-    const selectEl = document.getElementById(`${prefix}_extra_profile_select`);
-    const option = selectEl.options[selectEl.selectedIndex];
-    if (!option || !option.value) return;
-    document.getElementById(`${prefix}_extra_name`).value  = option.dataset.name || '';
-    document.getElementById(`${prefix}_extra_email`).value = option.value;
-    selectEl.value = '';
+function toggleProfilePickerPanel(prefix) {
+    const panelEl = document.getElementById(`${prefix}_extra_profile_panel`);
+    if (!panelEl) return;
+    const willOpen = !panelEl.classList.contains('open');
+    document.querySelectorAll('.profile-picker-panel.open').forEach(el => el.classList.remove('open'));
+    if (willOpen) panelEl.classList.add('open');
+}
+
+// 名簿プルダウン以外をクリックしたら開いているパネルを閉じる
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.profile-picker')) {
+        document.querySelectorAll('.profile-picker-panel.open').forEach(el => el.classList.remove('open'));
+    }
+});
+
+function selectExtraRecipientProfile(prefix, email, name) {
+    document.getElementById(`${prefix}_extra_name`).value  = name || '';
+    document.getElementById(`${prefix}_extra_email`).value = email || '';
+    document.getElementById(`${prefix}_extra_profile_panel`)?.classList.remove('open');
 }
 
 async function showRecipientsStep(type) {
