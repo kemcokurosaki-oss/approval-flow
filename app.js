@@ -7355,6 +7355,7 @@ async function approveStep(requestId, stepId, stepOrder) {
         showToast(msg, 'success');
     } catch (e) {
         showToast('承認処理に失敗しました: ' + e.message, 'error');
+        if (btn) btn.disabled = false;
     } finally {
         hideLoading();
     }
