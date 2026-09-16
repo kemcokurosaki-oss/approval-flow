@@ -721,7 +721,12 @@ async function main() {
         const roomEmail    = notif.notification_type === 'shipping_meeting_room_change_cancel'
           ? notif.recipient_email
           : (isSmMeeting ? (ROOM_EMAILS[req.inspection_location] || null) : null);
-        const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq);
+        // 受信者本人のみをATTENDEEに含める（Outlookが出欠の返信メールを送るにはATTENDEE登録が必要なため。
+        // 会議室宛の通知はCUTYPE=ROOMの方で扱うのでATTENDEEには含めない）
+        const attendees    = (notif.notification_type === 'shipping_meeting_room_change_cancel' || roomEmailsSet.has(actualEmail))
+          ? []
+          : [{ email: actualEmail, name: toName, optional: !!notif.optional }];
+        const icsContent   = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, attendees);
         if (icsContent) {
           attachments.push({
             filename:    icsFilename,
