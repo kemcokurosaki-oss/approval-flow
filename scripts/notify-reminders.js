@@ -945,6 +945,7 @@ async function runTestRunReadinessReminders() {
 
   for (const task of (shiuntenTasks || [])) {
     if (task.is_completed) continue;
+    if (is5or7Series(task.project_number)) continue;
     if (completedProjectsSet.has(String(task.project_number).trim())) continue;
     if (TEST_MODE && TEST_PROJECT && String(task.project_number) !== TEST_PROJECT) continue;
 
