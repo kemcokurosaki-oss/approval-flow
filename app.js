@@ -1132,6 +1132,7 @@ function setMypageFilterMode(mode) {
 
 // mypageFilterModeに応じた工事番号の絞り込み判定
 function matchesMypageFilterMode(num) {
+    if (is5or7Series(num)) return false; // 5番台・7番台は承認フローアプリで一切管理しない
     if (mypageFilterMode === 'assembly') return is2000sSeries(num);
     if (mypageFilterMode === 'main')     return !is2000sSeries(num);
     return true;
