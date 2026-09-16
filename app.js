@@ -7979,7 +7979,7 @@ async function renderRecipientsList(prefix, recipients) {
         <div class="recipient-item">
             <span class="recipient-name">${esc(r.name || '—')}</span>
             <span class="recipient-email" style="color:${r.email ? '#888' : '#e74c3c'};">${esc(r.email || '⚠ メール未登録')}</span>
-            <span class="recipient-tag">${esc(r.department || '')}</span>
+            <span class="recipient-tag" style="${departmentBadgeStyle(r.department)}">${esc(r.department || '')}</span>
             ${r.email ? optionalToggle(r.email) : ''}
         </div>`).join('');
 
