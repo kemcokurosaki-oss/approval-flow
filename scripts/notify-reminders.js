@@ -695,6 +695,15 @@ async function runShippingListReminders() {
     (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
   );
 
+  // 送信済み（過去分すべて）の (submitKey__宛先) セット＝毎日ではなく1回だけ送るための重複防止
+  const sentBefore = await supabaseFetch(
+    `approval_notifications?notification_type=eq.shipping_list_reminder` +
+    `&select=recipient_id,recipient_email,detail`
+  );
+  const sentBeforeSet = new Set(
+    (sentBefore || []).map(n => `${n.detail}__${n.recipient_id || n.recipient_email}`)
+  );
+
   // 簡易検査・外観検査：機械組立終了日の3日前を基準（案内催促と同じ）
   const assemblyTasks = await supabaseFetch(
     `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
