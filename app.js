@@ -7963,6 +7963,7 @@ async function renderRecipientsList(prefix, recipients) {
         </div>`).join('');
 
     listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
+    await renderExtraProfileSelect(prefix);
 }
 
 function toggleRecipientOptional(prefix, key, checked) {
