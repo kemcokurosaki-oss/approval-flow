@@ -7,312 +7,302 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f9ddb'/><stop offset='1' stop-color='%232f6fb0'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M6 25V16M13 25V9M20 25V18M26 25V12' stroke='white' stroke-width='3.4' stroke-linecap='round'/></svg>">
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html, body { height: 100%; }
     body {
         font-family: "メイリオ", Meiryo, sans-serif;
-        background: #edf1f7;
         color: #263142;
-        font-size: 15px;
-        line-height: 1.7;
+        overflow: hidden;
     }
-    a { color: #2f6fb0; }
 
-    /* ---------- レイアウト ---------- */
-    .layout { display: flex; min-height: 100vh; }
-    .toc {
-        width: 240px;
-        flex-shrink: 0;
-        background: #14243f;
-        color: #cdd8ea;
-        position: sticky;
-        top: 0;
+    /* ---------- 会場の背景（スライドが浮かぶ舞台） ---------- */
+    .stage {
         height: 100vh;
-        overflow-y: auto;
-        padding: 20px 0 90px;
+        width: 100vw;
+        background: radial-gradient(ellipse at 50% -10%, #24406b 0%, #142136 55%, #0b131f 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        position: relative;
     }
-    .toc-brand { display: flex; align-items: center; gap: 10px; padding: 0 18px 20px; }
-    .toc-brand-mark {
-        width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
-        display: flex; align-items: center; justify-content: center;
-    }
-    .toc-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-    .toc-brand-name { color: #fff; font-size: 13px; font-weight: 700; }
-    .toc-brand-sub  { color: #7d93b8; font-size: 10.5px; letter-spacing: .06em; }
-    .toc-label { padding: 14px 18px 6px; color: #5f759b; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
-    .toc a {
-        display: block;
-        padding: 8px 18px;
-        color: #a9bbd6;
-        text-decoration: none;
-        font-size: 13.5px;
-        border-left: 3px solid transparent;
-        transition: background .12s, color .12s;
-    }
-    .toc a:hover { background: #1d3054; color: #fff; }
-    .toc a.active { background: #1d3054; color: #fff; border-left-color: #4f9ddb; font-weight: 700; }
-    .toc-sub { font-size: 12px; padding-left: 30px; color: #8ea0bf; }
 
-    .main { flex: 1; min-width: 0; height: 100vh; overflow: hidden; position: relative; }
-    section {
+    /* ---------- スライド本体（16:9） ---------- */
+    .slide-frame {
+        position: relative;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 30px 70px rgba(0,0,0,.45);
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+    }
+    .slide {
+        position: absolute; inset: 0;
         display: none;
-        height: 100vh;
-        overflow-y: auto;
-        padding: 70px 64px;
+        flex-direction: column;
+        padding: 4.4% 6%;
+        overflow: hidden;
     }
-    section.is-active { display: block; }
+    .slide.is-active { display: flex; }
 
-    .section-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .12em; color: #2f6fb0; text-transform: uppercase; }
-    h2 { font-size: 25px; font-weight: 800; color: #14243f; margin: 8px 0 22px; }
-    h3 { font-size: 17px; font-weight: 700; color: #1e3a5f; margin: 26px 0 10px; }
-    p { margin: 0 0 12px; max-width: 820px; }
-    ul, ol { margin: 0 0 16px; padding-left: 22px; max-width: 820px; }
-    li { margin-bottom: 6px; }
-    .note {
-        max-width: 820px;
-        background: #eef4fb;
-        border-left: 4px solid #4f9ddb;
-        padding: 12px 16px;
-        border-radius: 6px;
-        font-size: 13.5px;
-        color: #29435f;
-        margin: 14px 0 20px;
+    .slide-eyebrow {
+        font-size: 1.05em;
+        font-weight: 800;
+        letter-spacing: .1em;
+        color: #2f6fb0;
+        text-transform: uppercase;
+        margin-bottom: .3em;
     }
-    .note.warn { background: #fdf1ed; border-left-color: #d9714a; color: #7a3a22; }
-    .note.action { background: #eefaf1; border-left-color: #2ba55d; color: #1e5c37; }
-    .note.muted { background: #f5f6f9; border-left-color: #b6c1d2; color: #5b6b80; }
+    .slide h1 { font-size: 2.55em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .28em; }
+    .slide h2 { font-size: 1.9em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .3em; }
+    .slide h3 { font-size: 1.15em; font-weight: 700; color: #1e3a5f; margin: 0 0 .4em; }
+    .slide p  { font-size: 1.05em; color: #3d4a5d; line-height: 1.6; margin-bottom: .5em; max-width: 96%; }
+    .slide .lead { font-size: 1.2em; font-weight: 700; color: #16233a; margin-bottom: .6em; max-width: 96%; }
 
-    /* ---------- 表紙：やること2つの大きなサマリー ---------- */
+    .slide-pageno {
+        position: absolute; right: 5%; bottom: 3.5%;
+        font-size: 1em; font-weight: 700; color: #b6c1d2;
+    }
+    .slide-brand {
+        position: absolute; left: 5%; bottom: 3.5%;
+        font-size: .85em; font-weight: 700; color: #c7cfdc;
+        letter-spacing: .08em;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .slide-brand-dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, #4f9ddb, #2f6fb0); }
+
+    /* ---------- 表紙：やること2つ ---------- */
     .cover-badge {
         display: inline-block;
         background: #16233a;
         color: #cfe0f5;
-        font-size: 12.5px;
+        font-size: .85em;
         font-weight: 700;
         letter-spacing: .06em;
-        padding: 6px 14px;
+        padding: .35em 1em;
         border-radius: 20px;
-        margin-bottom: 16px;
+        margin-bottom: .7em;
     }
-    .cover-lead { font-size: 17px; font-weight: 700; color: #16233a; max-width: 820px; margin-bottom: 22px; }
-    .todo-grid { display: flex; gap: 18px; max-width: 900px; margin: 6px 0 26px; flex-wrap: wrap; }
+    .todo-grid { display: flex; gap: 3%; margin: 1.2em 0 .8em; flex: 1; min-height: 0; }
     .todo-card {
-        flex: 1 1 320px;
+        flex: 1;
         background: #fff;
-        border: 2px solid #2ba55d;
-        border-radius: 14px;
-        padding: 22px 24px;
-        box-shadow: 0 6px 18px rgba(43,165,93,.12);
+        border: 3px solid #2ba55d;
+        border-radius: 16px;
+        padding: 5% 5%;
+        box-shadow: 0 10px 26px rgba(43,165,93,.16);
+        display: flex; flex-direction: column; justify-content: center;
     }
     .todo-card .todo-num {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 34px; height: 34px; border-radius: 50%;
-        background: #2ba55d; color: #fff; font-size: 16px; font-weight: 800;
-        margin-bottom: 10px;
+        width: 1.9em; height: 1.9em; border-radius: 50%;
+        background: #2ba55d; color: #fff; font-size: 1.15em; font-weight: 800;
+        margin-bottom: .45em;
     }
-    .todo-card h4 { font-size: 16.5px; font-weight: 800; color: #16233a; margin-bottom: 6px; }
-    .todo-card p { font-size: 13.5px; color: #4a5768; margin-bottom: 0; }
+    .todo-card h4 { font-size: 1.35em; font-weight: 800; color: #16233a; margin-bottom: .35em; line-height: 1.35; }
+    .todo-card p { font-size: 1em; color: #4a5768; margin-bottom: 0; }
     .todo-none {
-        max-width: 900px; margin: 0 0 20px;
+        margin-top: auto;
         background: #f5f6f9; border: 1px dashed #c7cfdc; border-radius: 10px;
-        padding: 12px 16px; font-size: 13px; color: #6a7890;
+        padding: .7em 1em; font-size: .82em; color: #6a7890;
     }
 
-    /* ---------- 手順ステップ ---------- */
-    .steps { max-width: 820px; margin: 14px 0 22px; counter-reset: stepnum; }
-    .step-item {
-        display: flex; gap: 14px; align-items: flex-start;
-        padding: 14px 0; border-bottom: 1px solid #e5e9f1;
-    }
-    .step-item:last-child { border-bottom: none; }
-    .step-num {
-        flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
-        background: #2f6fb0; color: #fff; font-size: 14px; font-weight: 800;
+    /* ---------- コンパクトな手順（横並び4ステップ） ---------- */
+    .step-compact-row { display: flex; gap: 2.6%; margin: .6em 0 .3em; }
+    .step-compact { flex: 1; background: #f6f8fb; border: 1px solid #e5e9f1; border-radius: 12px; padding: 5%; position: relative; }
+    .step-compact .num {
+        position: absolute; top: -14px; left: 14px;
+        width: 30px; height: 30px; border-radius: 50%;
+        background: #2f6fb0; color: #fff; font-size: .95em; font-weight: 800;
         display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 3px 8px rgba(47,111,176,.35);
     }
-    .step-body b { display: block; font-size: 14.5px; color: #16233a; margin-bottom: 3px; }
-    .step-body span { font-size: 13.5px; color: #5b6b80; }
+    .step-compact b { display: block; font-size: 1em; color: #16233a; margin: .5em 0 .3em; line-height: 1.3; }
+    .step-compact span { font-size: .82em; color: #5b6b80; line-height: 1.45; }
+
+    .note {
+        background: #eef4fb;
+        border-left: 4px solid #4f9ddb;
+        padding: .6em .9em;
+        border-radius: 6px;
+        font-size: .82em;
+        color: #29435f;
+        margin: .5em 0;
+    }
+    .note.warn   { background: #fdf1ed; border-left-color: #d9714a; color: #7a3a22; }
+    .note.action { background: #eefaf1; border-left-color: #2ba55d; color: #1e5c37; font-size: .92em; font-weight: 700; }
+    .note.muted  { background: #f5f6f9; border-left-color: #b6c1d2; color: #5b6b80; }
+
+    /* ---------- 2カラム（手順＋メール例） ---------- */
+    .two-col { display: flex; gap: 4%; flex: 1; min-height: 0; }
+    .two-col .col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .deadline-box {
+        background: linear-gradient(135deg, #fdf3e5, #fdecec);
+        border: 2px solid #d9714a;
+        border-radius: 12px;
+        padding: .7em 1em;
+        margin-bottom: .6em;
+    }
+    .deadline-box b { display: block; font-size: 1.15em; color: #a8391f; }
+    .deadline-box span { font-size: .8em; color: #8a5334; }
+    .mini-list { list-style: none; padding: 0; margin: 0 0 .5em; }
+    .mini-list li { font-size: .85em; color: #3d4a5d; padding: .3em 0 .3em 1.4em; position: relative; border-bottom: 1px solid #f0f2f6; }
+    .mini-list li::before { content: '▸'; position: absolute; left: 0; color: #2f6fb0; font-weight: 800; }
 
     /* ---------- 通知メールのイラスト ---------- */
     .mockup {
-        position: relative;
-        max-width: 640px;
-        margin: 18px 0 26px;
         border: 1px solid #d7dee9;
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 8px 24px rgba(20,36,63,.10);
+        box-shadow: 0 6px 16px rgba(20,36,63,.10);
         background: #fff;
-        font-size: 14px;
+        font-size: .78em;
     }
-    .mockup-caption { font-size: 12.5px; color: #6a7890; padding: 8px 14px; border-top: 1px solid #eef1f6; background: #f8fafc; }
-    .mail-meta { background: #f6f8fb; border-bottom: 1px solid #e5e9f1; padding: 14px 20px; }
-    .mail-row { display: flex; gap: 10px; font-size: 13px; padding: 2px 0; color: #333; }
-    .mail-label { flex-shrink: 0; width: 56px; color: #8a94a6; font-weight: 700; }
-    .mail-subject { font-weight: 700; color: #16233a; font-size: 14.5px; }
-    .mail-body { padding: 20px 24px; white-space: pre-line; font-size: 14px; color: #333; line-height: 1.85; }
+    .mockup-caption { font-size: .82em; color: #6a7890; padding: .5em .9em; border-top: 1px solid #eef1f6; background: #f8fafc; }
+    .mail-meta { background: #f6f8fb; border-bottom: 1px solid #e5e9f1; padding: .7em 1em; }
+    .mail-row { display: flex; gap: .6em; font-size: .95em; padding: .1em 0; color: #333; }
+    .mail-label { flex-shrink: 0; width: 3.6em; color: #8a94a6; font-weight: 700; }
+    .mail-subject { font-weight: 700; color: #16233a; font-size: 1.05em; }
+    .mail-body { padding: .9em 1.1em; white-space: pre-line; font-size: .95em; color: #333; line-height: 1.7; }
     .mail-link { color: #2f6fb0; text-decoration: underline; word-break: break-all; }
 
     /* ---------- フロー図（補足） ---------- */
-    .flowline { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0; max-width: 900px; margin: 20px 0 8px; }
-    .flow-step { display: flex; flex-direction: column; align-items: center; width: 108px; position: relative; z-index: 1; }
+    .flowline { display: flex; align-items: flex-start; flex-wrap: nowrap; margin: .6em 0 .2em; }
+    .flow-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 1; }
     .flow-dot {
-        width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-size: 15px; font-weight: 700; color: #fff;
+        width: 2.2em; height: 2.2em; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: .95em; font-weight: 700; color: #fff;
         background: linear-gradient(135deg, #7ec1ea, #4f9ddb);
-        box-shadow: 0 3px 10px rgba(47,111,176,.3);
+        box-shadow: 0 3px 8px rgba(47,111,176,.3);
         flex-shrink: 0;
     }
     .flow-dot.hl { background: linear-gradient(135deg, #f0a020, #d9714a); box-shadow: 0 3px 10px rgba(217,113,74,.4); }
-    .flow-step span.label { margin-top: 8px; font-size: 12.5px; font-weight: 700; color: #1e3a5f; text-align: center; }
-    .flow-step span.sub { font-size: 11px; color: #8a94a6; text-align: center; }
-    .flow-arrow { flex: 1; min-width: 12px; height: 2px; background: #b9c6da; margin: 18px -12px 0; position: relative; }
+    .flow-step span.label { margin-top: .4em; font-size: .78em; font-weight: 700; color: #1e3a5f; text-align: center; }
+    .flow-step span.sub { font-size: .68em; color: #8a94a6; text-align: center; }
+    .flow-arrow { flex: .5; min-width: 8px; height: 2px; background: #b9c6da; margin-top: 1.1em; position: relative; }
     .flow-arrow::after {
         content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
         width: 0; height: 0; border-style: solid; border-width: 4px 0 4px 6px;
         border-color: transparent transparent transparent #b9c6da;
     }
 
-    table.spec { border-collapse: collapse; max-width: 900px; margin: 10px 0 24px; font-size: 13.5px; width: 100%; }
-    table.spec th, table.spec td { border: 1px solid #dde3ee; padding: 8px 12px; text-align: left; vertical-align: top; }
+    table.spec { border-collapse: collapse; width: 100%; margin: .5em 0; font-size: .78em; }
+    table.spec th, table.spec td { border: 1px solid #dde3ee; padding: .4em .7em; text-align: left; vertical-align: top; }
     table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
 
-    .role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-width: 900px; margin: 14px 0 24px; }
-    .role-card { background: #fff; border: 1px solid #e5e9f1; border-radius: 10px; padding: 14px 16px; }
-    .role-card b { display: block; font-size: 13.5px; color: #16233a; margin-bottom: 4px; }
-    .role-card span { font-size: 12.5px; color: #6a7890; }
+    .footer-list { list-style: none; padding: 0; margin: 0 0 .6em; }
+    .footer-list li { font-size: 1em; color: #3d4a5d; padding: .4em 0 .4em 1.6em; position: relative; }
+    .footer-list li::before { content: '●'; position: absolute; left: 0; top: .5em; color: #2f6fb0; font-size: .5em; }
 
-    /* ---------- ページ送りボタン ---------- */
-    .pagerbar { position: fixed; right: 26px; bottom: 24px; display: flex; gap: 8px; z-index: 50; }
-    .pagerbar button {
-        width: 42px; height: 42px; border-radius: 50%; border: none;
-        background: #14243f; color: #fff; font-size: 16px; cursor: pointer;
-        box-shadow: 0 6px 18px rgba(20,36,63,.3);
-        display: flex; align-items: center; justify-content: center;
+    /* ---------- 進行ドット & 操作ボタン ---------- */
+    .dots { display: flex; gap: 10px; }
+    .dots button {
+        width: 10px; height: 10px; border-radius: 50%; border: none;
+        background: rgba(255,255,255,.28); cursor: pointer; padding: 0;
     }
-    .pagerbar button:hover { background: #2f6fb0; }
+    .dots button.active { background: #4f9ddb; box-shadow: 0 0 0 4px rgba(79,157,219,.25); }
+
+    .ctrlbar { position: fixed; right: 26px; bottom: 24px; display: flex; gap: 8px; z-index: 50; }
+    .ctrlbar button {
+        width: 42px; height: 42px; border-radius: 50%; border: none;
+        background: rgba(255,255,255,.12); color: #fff; font-size: 16px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0,0,0,.3);
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .ctrlbar button:hover { background: #2f6fb0; }
 
     @media print {
-        .toc, .pagerbar { display: none; }
-        .main { width: 100%; height: auto; overflow: visible; }
-        section { display: block !important; height: auto; overflow: visible; break-inside: avoid; padding: 24px 6px; border-bottom: 1px solid #ccc; }
+        body { overflow: visible; }
+        .stage { height: auto; background: #fff; display: block; }
+        .ctrlbar, .dots { display: none; }
+        .slide-frame { aspect-ratio: auto; box-shadow: none; border-radius: 0; }
+        .slide { display: flex !important; position: static; height: 100vh; break-after: page; }
     }
 </style>
 </head>
 <body>
 
-<div class="layout">
-    <nav class="toc" id="toc">
-        <div class="toc-brand">
-            <div class="toc-brand-mark"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-            <div class="toc-brand-text"><span class="toc-brand-name">KUSAKABE</span><span class="toc-brand-sub">設計部 やることガイド</span></div>
-        </div>
-        <div class="toc-label">目次</div>
-        <a href="#s1">1. 設計部がすることは2つ</a>
-        <a href="#s2">2. やること①　出欠回答</a>
-        <a href="#s3">3. やること②　出荷品リスト</a>
-        <a href="#s4">4. （補足）アプリの全体像</a>
-        <a href="#s5">5. 困ったときは</a>
-    </nav>
+<div class="stage">
+    <div class="slide-frame" id="slideFrame">
 
-    <main class="main">
-
-        <section id="s1">
-            <div class="section-eyebrow">1 / 5</div>
-            <div class="cover-badge">承認フローアプリ　設計部 やることガイド</div>
-            <h2>設計部がすることは、この2つだけです</h2>
-            <p class="cover-lead">承認フローアプリの中で、設計部の皆さんに実際に対応をお願いしているのは次の2つです。それ以外の通知は、内容を確認するだけで操作は不要です。</p>
+        <section class="slide is-active" id="s1">
+            <div class="slide-eyebrow">承認フローアプリ　説明会 ・ 設計部</div>
+            <div class="cover-badge">設計部 やることガイド</div>
+            <h1>設計部がすることは、<br>この2つだけです</h1>
+            <p class="lead">承認フローアプリの中で、設計部の皆さんに実際に対応をお願いしているのは次の2つです。それ以外の通知は、内容を確認するだけで操作は不要です。</p>
             <div class="todo-grid">
                 <div class="todo-card">
                     <div class="todo-num">1</div>
-                    <h4>✅ 開催案内が届いたら、出欠を回答する</h4>
+                    <h4>✅ 開催案内が届いたら、<br>出欠を回答する</h4>
                     <p>外観検査・簡易検査・出荷確認会議の案内メールが届いたら、添付のカレンダーから出欠を回答してください。</p>
                 </div>
                 <div class="todo-card">
                     <div class="todo-num">2</div>
-                    <h4>📋 検査・会議の前までに、出荷品リストを作成・送付する</h4>
+                    <h4>📋 検査・会議の前までに、<br>出荷品リストを作成・送付する</h4>
                     <p>担当する工事番号の出荷品リストを作成し、開催前までに組立担当者と品質保証へ送付してください。</p>
                 </div>
             </div>
-            <div class="todo-none">
-                <b>それ以外（操作不要）：</b> 組立完了・電気艤装完了・試運転完了・出荷確定が承認されるたびに「承認完了」のメールが届きますが、これは進捗の連絡なので確認のみで構いません。設計部が申請や承認そのものを行う工程はありません。
-            </div>
-            <p>次のページから、①②それぞれについて「いつ・何を・どうやって」を具体的に説明します。</p>
+            <div class="todo-none"><b>それ以外（操作不要）：</b> 組立完了・電気艤装完了・試運転完了・出荷確定の承認完了メールは、進捗の連絡なので確認のみでOKです。設計部が申請や承認そのものを行う工程はありません。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">1 / 5</div>
         </section>
 
-        <section id="s2">
-            <div class="section-eyebrow">2 / 5</div>
-            <h2>やること① 開催案内への出欠回答</h2>
+        <section class="slide" id="s2">
+            <div class="slide-eyebrow">やること ①</div>
+            <h2>開催案内が届いたら、出欠を回答する</h2>
             <p>外観検査・簡易検査・出荷確認会議が開催されるとき、品証（不在時は製管）から関係者へ開催案内メールが届きます。設計部にも届きますので、必ず出欠を回答してください。</p>
-            <div class="steps">
-                <div class="step-item">
-                    <div class="step-num">1</div>
-                    <div class="step-body"><b>開催案内メールを確認する</b><span>件名に工事番号と「外観検査」「簡易検査」「出荷確認会議」のいずれかが入ったメールが届きます。カレンダー（ICS形式）が添付されています。</span></div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <div class="step-body"><b>添付のカレンダーをOutlookで開く</b><span>日時・場所を確認します。</span></div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">3</div>
-                    <div class="step-body"><b>「承諾／辞退／仮の予定」のいずれかで回答する</b><span>Outlook上で通常の会議出欠と同じように回答するだけで構いません。</span></div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">4</div>
-                    <div class="step-body"><b>回答内容は自動で記録される</b><span>回答すると自動送信される返信メールを承認フローアプリ側が読み取り、その申請の詳細画面に出欠状況として反映されます。アプリを開いて操作する必要はありません。</span></div>
-                </div>
+            <div class="step-compact-row">
+                <div class="step-compact"><div class="num">1</div><b>案内メールを確認</b><span>工事番号と「外観検査／簡易検査／出荷確認会議」入りの件名。カレンダー（ICS）添付。</span></div>
+                <div class="step-compact"><div class="num">2</div><b>Outlookで開く</b><span>添付のカレンダーを開いて日時・場所を確認する。</span></div>
+                <div class="step-compact"><div class="num">3</div><b>出欠を回答</b><span>「承諾／辞退／仮の予定」を選んで返信するだけ。通常の会議出欠と同じ。</span></div>
+                <div class="step-compact"><div class="num">4</div><b>自動で記録される</b><span>回答内容がアプリの申請詳細画面に反映される。アプリ操作は不要。</span></div>
             </div>
-            <div class="note">出荷確認会議を開催しない案件では、外観検査（3C／4C／D番では簡易検査）の案内が出荷に関する確認も兼ねます。開催案内は基本的に品証が送り、品証が不在のときは製管が代わりに送ります。</div>
-            <div class="note muted">現状、出欠回答そのものが遅れても専用の催促メールは送られません（催促があるのは②の出荷品リストのみ）。とはいえ開催準備のため、案内が届いたら早めに回答をお願いします。</div>
+            <div class="note">出荷確認会議を開催しない案件では、外観検査（3C／4C／D番では簡易検査）の案内が出荷に関する確認も兼ねます。</div>
+            <div class="note muted">出欠回答が遅れても専用の催促メールはありません（催促があるのは②の出荷品リストのみ）。開催準備のため早めの回答をお願いします。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">2 / 5</div>
         </section>
 
-        <section id="s3">
-            <div class="section-eyebrow">3 / 5</div>
-            <h2>やること② 出荷品リストの作成・送付</h2>
-            <p>担当する工事番号について、外観検査・簡易検査・出荷確認会議の<b>開催前まで</b>に出荷品リストを作成し、<b>組立担当者と品質保証</b>へ送付してください。作成・送付はこれまでどおりExcel等で行い、アプリ上の操作ではありません。</p>
-            <div class="steps">
-                <div class="step-item">
-                    <div class="step-num">1</div>
-                    <div class="step-body"><b>対象を確認する</b><span>担当する工事番号で外観検査・簡易検査・出荷確認会議が近づいたら対象です。出荷確認会議がある案件では、外観検査のタイミングではなく出荷確認会議のタイミングでのみ必要です（二重に作る必要はありません）。</span></div>
+        <section class="slide" id="s3">
+            <div class="slide-eyebrow">やること ②</div>
+            <h2>出荷品リストの作成・送付</h2>
+            <p>担当する工事番号について、開催前までに出荷品リストを作成し、<b>組立担当者と品質保証</b>へ送付してください（作成・送付はこれまでどおりExcel等で行います）。</p>
+            <div class="two-col">
+                <div class="col">
+                    <div class="deadline-box"><b>⏰ 期限：開催予定日の3日前まで</b><span>過ぎても開催案内が未提出だと催促メールの対象に</span></div>
+                    <ul class="mini-list">
+                        <li>対象：担当工事番号の外観検査・簡易検査・出荷確認会議</li>
+                        <li>出荷確認会議がある案件は、外観検査時ではなく出荷確認会議のタイミングのみ（二重不要）</li>
+                        <li>送付先：組立担当者・品質保証（メール送付）</li>
+                    </ul>
+                    <div class="note warn">催促が届いたら、まず送付済みか確認。送付済みなら品証・製管へ一声かけると止まります。</div>
                 </div>
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <div class="step-body"><b>期限：開催予定日の3日前まで</b><span>この期限を過ぎても開催案内がまだ提出されていない場合、催促メールの対象になります。</span></div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">3</div>
-                    <div class="step-body"><b>出荷品リストを作成する</b><span>これまでどおりの様式・方法で作成します。</span></div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">4</div>
-                    <div class="step-body"><b>組立担当者・品質保証へ送付する</b><span>メールで送付してください。</span></div>
-                </div>
-            </div>
-            <h3>期限を過ぎるとどうなるか</h3>
-            <p>開催予定日の3日前を過ぎても開催案内が提出されていない場合、設計担当者本人に「出荷品リスト作成催促」メールが<b>毎日</b>届きます（品証・製管をCC）。これは送付が完了するまで止まりません。</p>
-            <div class="mockup">
-                <div class="mail-meta">
-                    <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【出荷品リスト作成催促】3181 MC</span></div>
-                    <div class="mail-row"><span class="mail-label">差出人</span><span>工事工程 通知 &lt;notify@kusakabe.com&gt;</span></div>
-                    <div class="mail-row"><span class="mail-label">宛先</span><span>設計担当者 様（CC：品証・製管）</span></div>
-                </div>
-                <div class="mail-body">3181 MC
+                <div class="col">
+                    <h3 style="font-size:.9em; color:#7c8798;">催促メールの例（期限超過・毎日届く）</h3>
+                    <div class="mockup">
+                        <div class="mail-meta">
+                            <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【出荷品リスト作成催促】3181 MC</span></div>
+                            <div class="mail-row"><span class="mail-label">宛先</span><span>設計担当者 様（CC：品証・製管）</span></div>
+                        </div>
+                        <div class="mail-body">3181 MC
 外観検査の開催が近づいています。
 出荷品リストを作成し、外観検査の前までに組立担当者と品質保証へ送付してください。
 
 ▼ 承認フローを開く
-<span class="mail-link">https://kemcokurosaki-oss.github.io/approval-flow/</span>
-
-※このメールは自動送信です。</div>
-                <div class="mockup-caption">出荷品リスト作成催促メールの例。放置すると毎日届き続けるので、届いたらすぐに対応してください</div>
+<span class="mail-link">https://kemcokurosaki-oss.github.io/approval-flow/</span></div>
+                        <div class="mockup-caption">送付が完了するまで毎日届き続けます</div>
+                    </div>
+                </div>
             </div>
-            <div class="note warn">このメールが届いたら、まず該当工事番号の出荷品リストが作成・送付済みかどうかをご確認ください。送付済みであれば品証・製管へ一声かけていただくとスムーズです。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">3 / 5</div>
         </section>
 
-        <section id="s4">
-            <div class="section-eyebrow">4 / 5 ・ 補足</div>
-            <h2>（補足）アプリの全体像</h2>
-            <p>①②がどのタイミングで発生するかの位置づけとして、アプリ全体の流れを簡単に紹介します。1つの工事番号は、機械ごとに以下の工程を順番に進みます。</p>
+        <section class="slide" id="s4">
+            <div class="slide-eyebrow">補足</div>
+            <h2>①②が発生するタイミング（アプリ全体の流れ）</h2>
+            <p>1つの工事番号は、機械ごとに以下の工程を順番に進みます。①②はオレンジ色の工程で発生します。</p>
             <div class="flowline">
                 <div class="flow-step"><div class="flow-dot">1</div><span class="label">組立</span><span class="sub">完了申請・承認</span></div>
                 <div class="flow-arrow"></div>
@@ -326,82 +316,83 @@
                 <div class="flow-arrow"></div>
                 <div class="flow-step"><div class="flow-dot">6</div><span class="label">出荷</span><span class="sub">出荷確定申請</span></div>
             </div>
-            <p style="font-size:12.5px; color:#8a94a6; margin-top:-6px;">（3C番／4C番／D番では、外観検査・出荷確認会議が「簡易検査」1つにまとまります。①②は簡易検査のタイミングで発生します。）</p>
-            <h3>設計部に届くその他の通知（確認のみでOK）</h3>
+            <p style="font-size:.75em; color:#8a94a6; margin-top:-.2em;">（3C番／4C番／D番では外観検査・出荷確認会議が「簡易検査」1つにまとまり、①②はそのタイミングで発生します）</p>
+            <h3 style="margin-top:.8em;">設計部に届くその他の通知（確認のみでOK）</h3>
             <table class="spec">
                 <tr><th>工程</th><th>通知が届くタイミング</th></tr>
-                <tr><td>①組立完了</td><td>組立課長・部長のどちらか一方が承認したとき</td></tr>
-                <tr><td>⚡電気艤装完了</td><td>組立部長が承認したとき（組立と並行して発生する機械のみ）</td></tr>
+                <tr><td>①組立完了 / ⚡電気艤装完了</td><td>組立課長・部長のどちらか一方（電装は組立部長）が承認したとき</td></tr>
                 <tr><td>③試運転完了</td><td>操業課長・部長のどちらか一方が承認したとき</td></tr>
                 <tr><td>⑥出荷確定</td><td>常務が承認したとき（確定出荷日つき）</td></tr>
             </table>
-            <div class="role-grid">
-                <div class="role-card"><b>他部署の役割（参考）</b><span>組立・操業の担当者が完了申請、課長・部長のどちらかが承認。品証（不在時は製管）が検査・会議の案内送付と完了処理。出荷確定は品証・製管が起票、営業が確定出荷日入力、常務が承認。</span></div>
-                <div class="role-card"><b>承認ステータス画面</b><span>工事番号ごとに進捗が一覧表示される画面。設計部は閲覧のみで、担当工事番号の状況確認に使えます。</span></div>
-            </div>
-            <div class="note">アプリの操作方法や画面の詳しい見方は、別資料「設計部向け説明資料」またはアプリ内の「運用ガイド」を参照してください。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">4 / 5</div>
         </section>
 
-        <section id="s5">
-            <div class="section-eyebrow">5 / 5</div>
+        <section class="slide" id="s5">
+            <div class="slide-eyebrow">困ったときは</div>
             <h2>困ったときは</h2>
-            <ul>
+            <ul class="footer-list">
                 <li>出欠回答が反映されているか分からない場合や、出荷品リストの送付先が不明な場合は、品証・製管までご確認ください</li>
                 <li>アプリの不具合・表示がおかしい場合や、担当者の変更が必要な場合は製造管理課の森村・黒崎までご連絡ください</li>
                 <li>アプリ全体の操作方法は、アプリ内の「運用ガイド」からいつでも見返せます</li>
             </ul>
             <div class="note action">最後にもう一度：設計部がすることは「①開催案内が届いたら出欠を回答する」「②検査・会議の前までに出荷品リストを作成し、組立担当者・品証へ送付する」の2つです。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">5 / 5</div>
         </section>
 
-    </main>
+    </div>
+
+    <div class="dots" id="dots"></div>
 </div>
 
-<div class="pagerbar">
-    <button id="btn_prev" title="前のセクション（↑ / PageUp）">▲</button>
-    <button id="btn_next" title="次のセクション（↓ / PageDown / Space）">▼</button>
+<div class="ctrlbar">
+    <button id="btn_prev" title="前のスライド（← / PageUp）">◀</button>
+    <button id="btn_next" title="次のスライド（→ / Space / PageDown）">▶</button>
+    <button id="btn_full" title="フルスクリーン">⛶</button>
 </div>
 
 <script>
-    var sectionEls = Array.prototype.slice.call(document.querySelectorAll('main.main > section'));
-    var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var dotsWrap = document.getElementById('dots');
+    var frame = document.getElementById('slideFrame');
     var currentIdx = 0;
 
-    function indexFromHash() {
-        var hash = window.location.hash.replace('#', '');
-        var idx = -1;
-        sectionEls.forEach(function (sec, i) { if (sec.id === hash) idx = i; });
-        return idx >= 0 ? idx : 0;
-    }
+    slides.forEach(function (_, i) {
+        var b = document.createElement('button');
+        b.addEventListener('click', function () { showSlide(i); });
+        dotsWrap.appendChild(b);
+    });
+    var dotEls = Array.prototype.slice.call(dotsWrap.querySelectorAll('button'));
 
-    function showSection(idx, skipHash) {
-        idx = Math.max(0, Math.min(sectionEls.length - 1, idx));
+    function showSlide(idx) {
+        idx = Math.max(0, Math.min(slides.length - 1, idx));
         currentIdx = idx;
-        sectionEls.forEach(function (sec, i) {
-            sec.classList.toggle('is-active', i === idx);
-            if (i === idx) sec.scrollTop = 0;
-        });
-        tocLinks.forEach(function (l, i) { l.classList.toggle('active', i === idx); });
-        if (!skipHash) { history.replaceState(null, '', '#' + sectionEls[idx].id); }
+        slides.forEach(function (sec, i) { sec.classList.toggle('is-active', i === idx); });
+        dotEls.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
     }
 
-    tocLinks.forEach(function (link, i) {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            showSection(i);
-        });
+    document.getElementById('btn_prev').addEventListener('click', function () { showSlide(currentIdx - 1); });
+    document.getElementById('btn_next').addEventListener('click', function () { showSlide(currentIdx + 1); });
+    document.getElementById('btn_full').addEventListener('click', function () {
+        if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+        else { document.exitFullscreen(); }
     });
-
-    document.getElementById('btn_prev').addEventListener('click', function () { showSection(currentIdx - 1); });
-    document.getElementById('btn_next').addEventListener('click', function () { showSection(currentIdx + 1); });
     window.addEventListener('keydown', function (e) {
-        var tag = (e.target && e.target.tagName) || '';
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); showSection(currentIdx + 1); }
-        if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); showSection(currentIdx - 1); }
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); showSlide(currentIdx + 1); }
+        if (e.key === 'ArrowLeft'  || e.key === 'PageUp') { e.preventDefault(); showSlide(currentIdx - 1); }
     });
-    window.addEventListener('hashchange', function () { showSection(indexFromHash(), true); });
 
-    showSection(indexFromHash(), true);
+    // 16:9を保ったまま、画面に収まる最大サイズへスライド枠をリサイズする
+    function resizeFrame() {
+        var maxW = window.innerWidth * 0.92;
+        var maxH = window.innerHeight * 0.86;
+        var w = Math.min(maxW, maxH * 16 / 9);
+        frame.style.width = w + 'px';
+    }
+    window.addEventListener('resize', resizeFrame);
+    resizeFrame();
+    showSlide(0);
 </script>
 </body>
 </html>
