@@ -3718,6 +3718,7 @@ async function approveTestRunRequestFromDetail(requestId, stepId, stepOrder, pro
         else await renderTestRunMachineDetailBody(projectNum, machine);
     } catch (e) {
         showToast('承認処理に失敗しました: ' + e.message, 'error');
+        if (btn) btn.disabled = false;
     } finally {
         hideLoading();
     }
