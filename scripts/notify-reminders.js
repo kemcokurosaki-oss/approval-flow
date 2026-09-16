@@ -419,7 +419,17 @@ async function runSubmissionReminders() {
       `&select=project_number,machine,owner,end_date,is_completed`
     );
 
+    // 同一工事番号・同一機械のタスクが複数ある場合は、終了日が最も遅いものだけを対象にする
+    const dedupedTasks = new Map();
     for (const task of (tasks || [])) {
+      const dedupKey = `${task.project_number}__${task.machine || ''}`;
+      const existing = dedupedTasks.get(dedupKey);
+      if (!existing || task.end_date > existing.end_date) {
+        dedupedTasks.set(dedupKey, task);
+      }
+    }
+
+    for (const task of dedupedTasks.values()) {
       if (task.is_completed) continue;
       if (completedProjectsSet.has(String(task.project_number).trim())) continue;
       // 組立・電装・出荷準備・工場出荷の申請催促は工番2000番台を対象外にする（試運転のみ2000番台も通知）
