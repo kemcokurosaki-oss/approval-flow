@@ -7943,7 +7943,10 @@ const DEPARTMENT_BADGE_COLORS = {
     '設計': { bg: '#e0f7fa', color: '#006064' },
     '組立': { bg: '#fff9c4', color: '#8a6d00' },
     '操業': { bg: '#fde8e8', color: '#c0392b' },
-    '営業': { bg: '#ffe8cc', color: '#b35c00' }
+    '営業': { bg: '#ffe8cc', color: '#b35c00' },
+    '電装': { bg: '#f3e5f5', color: '#6a1b9a' },
+    '技戦': { bg: '#f1f8e9', color: '#558b2f' },
+    '物流': { bg: '#efebe9', color: '#6d4c41' }
 };
 function departmentBadgeStyle(dept) {
     const c = DEPARTMENT_BADGE_COLORS[dept];
