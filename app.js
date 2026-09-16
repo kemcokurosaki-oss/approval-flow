@@ -7750,7 +7750,7 @@ async function showRecipientsStep(type) {
 
     const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection' };
     const recipients = await _fetchFlowRecipients(projectNum, machines, flowTypeMap[prefix] || prefix);
-    renderRecipientsList(prefix, recipients);
+    await renderRecipientsList(prefix, recipients);
 
     // ステップ切替
     document.getElementById(`${prefix}_recipients_step`).style.display = 'block';
