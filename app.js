@@ -6939,6 +6939,14 @@ async function renderExistingRecipients(requestId) {
     }).join('');
 
     listEl.innerHTML = rows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
+
+    existingRecipientEmails.reschedule = new Set(
+        uniqueNotifs.map(n => {
+            const p = n.recipient_id ? profileMap[n.recipient_id] : null;
+            return (p?.email || n.recipient_email || '').toLowerCase();
+        }).filter(Boolean)
+    );
+    await renderExtraProfileSelect('reschedule');
 }
 
 function closeRescheduleModal() {
