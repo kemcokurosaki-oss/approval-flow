@@ -7938,6 +7938,18 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     return { profiles: profileList, external: extList };
 }
 
+// 部署バッジの色分け（未指定の部署はCSSデフォルトの配色を使う）
+const DEPARTMENT_BADGE_COLORS = {
+    '設計': { bg: '#e0f7fa', color: '#006064' },
+    '組立': { bg: '#fff9c4', color: '#8a6d00' },
+    '操業': { bg: '#fde8e8', color: '#c0392b' },
+    '営業': { bg: '#ffe8cc', color: '#b35c00' }
+};
+function departmentBadgeStyle(dept) {
+    const c = DEPARTMENT_BADGE_COLORS[dept];
+    return c ? `background:${c.bg};color:${c.color};` : '';
+}
+
 async function renderRecipientsList(prefix, recipients) {
     const listEl = document.getElementById(`${prefix}_recipients_list`);
     const ROLE_MAP = { assembly_director: '組立部長', assembly_manager: '組立課長', quality: '品保', staff: '' };
