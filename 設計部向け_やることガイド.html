@@ -144,18 +144,13 @@
     /* ---------- 2カラム（手順＋メール例） ---------- */
     .two-col { display: flex; gap: 4%; flex: 1; min-height: 0; }
     .two-col .col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .deadline-box {
-        background: linear-gradient(135deg, #fdf3e5, #fdecec);
-        border: 2px solid #d9714a;
-        border-radius: 12px;
-        padding: .7em 1em;
-        margin-bottom: .6em;
-    }
-    .deadline-box b { display: block; font-size: 1.15em; color: #a8391f; }
-    .deadline-box span { font-size: .8em; color: #8a5334; }
-    .mini-list { list-style: none; padding: 0; margin: 0 0 .5em; }
-    .mini-list li { font-size: .85em; color: #3d4a5d; padding: .3em 0 .3em 1.4em; position: relative; border-bottom: 1px solid #f0f2f6; }
-    .mini-list li::before { content: '▸'; position: absolute; left: 0; color: #2f6fb0; font-weight: 800; }
+    .two-col .col.col-center { justify-content: center; }
+    .mini-list { list-style: none; padding: 0; margin: 0; }
+    .mini-list li { font-size: 1.05em; color: #3d4a5d; padding: .8em 0 .8em 1.6em; position: relative; border-bottom: 1px solid #f0f2f6; line-height: 1.5; }
+    .mini-list li:first-child { padding-top: 0; }
+    .mini-list li:last-child { border-bottom: none; }
+    .mini-list li::before { content: '▸'; position: absolute; left: 0; top: .8em; color: #2f6fb0; font-weight: 800; }
+    .mini-list li:first-child::before { top: 0; }
 
     /* ---------- 通知メールのイラスト ---------- */
     .mockup {
