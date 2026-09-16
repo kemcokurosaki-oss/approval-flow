@@ -3666,7 +3666,10 @@ async function deleteTestRunDraftFromDetail(draftId, projectNum, machine) {
 
 async function approveTestRunRequestFromDetail(requestId, stepId, stepOrder, projectNum, machine) {
     if (requireLogin()) return;
-    if (!confirm(`${machine}を承認します。よろしいですか？`)) return;
+    // 二重クリックで承認処理・通知が重複しないようボタンを即座に無効化する
+    const btn = (typeof event !== 'undefined' && event?.currentTarget) || null;
+    if (btn) { if (btn.disabled) return; btn.disabled = true; }
+    if (!confirm(`${machine}を承認します。よろしいですか？`)) { if (btn) btn.disabled = false; return; }
 
     showLoading('処理中...');
     try {
