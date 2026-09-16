@@ -7259,8 +7259,11 @@ async function markShippingOverlayConfirmed(req) {
 // ===== Approve =====
 async function approveStep(requestId, stepId, stepOrder) {
     if (requireLogin()) return;
+    // 二重クリックで承認処理・通知が重複しないようボタンを即座に無効化する
+    const btn = (typeof event !== 'undefined' && event?.currentTarget) || null;
+    if (btn) { if (btn.disabled) return; btn.disabled = true; }
     const confirmLabel = currentDetailReq?.machine_name || currentDetailReq?.project_number || 'この申請';
-    if (!confirm(`${confirmLabel}を承認します。よろしいですか？`)) return;
+    if (!confirm(`${confirmLabel}を承認します。よろしいですか？`)) { if (btn) btn.disabled = false; return; }
     const comment  = (document.getElementById('approval_comment')?.value || '').trim();
 
     // assembly・test_run はいずれも並列承認（どちらかが承認した時点で即完了）
