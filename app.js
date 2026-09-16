@@ -1845,13 +1845,14 @@ function renderProgressCards() {
         nums = nums.filter(num => projectHasOverdueFlow(num));
     }
 
-    // 並び替え
+    // 並び替え（完了済み表示時は出荷日の降順＝出荷日が今日に近い順にする）
     if (progressSort === 'shipping') {
+        const dir = progressFilterCompleted ? -1 : 1;
         nums.sort((a, b) => {
             const da = getEffectiveShippingDate(a).date || '9999-12-31';
             const db2 = getEffectiveShippingDate(b).date || '9999-12-31';
-            if (da < db2) return -1;
-            if (da > db2) return 1;
+            if (da < db2) return -1 * dir;
+            if (da > db2) return 1 * dir;
             return a < b ? -1 : a > b ? 1 : 0;
         });
     }
