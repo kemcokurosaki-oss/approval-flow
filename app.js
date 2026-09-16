@@ -8071,11 +8071,13 @@ function addExtraRecipient(prefix) {
     extraRecipients[prefix].push({ name: name || email, email, optional: true });
     nameEl.value = ''; emailEl.value = '';
     renderExtraList(prefix);
+    renderExtraProfileSelect(prefix);
 }
 
 function removeExtraRecipient(prefix, index) {
     extraRecipients[prefix].splice(index, 1);
     renderExtraList(prefix);
+    renderExtraProfileSelect(prefix);
 }
 
 function toggleExtraRecipientOptional(prefix, index, isRequired) {
