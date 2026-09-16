@@ -7681,6 +7681,55 @@ const extraRecipients = { inspection: [], sm: [], si: [], reschedule: [] };
 // rescheduleは既存の送信済み通知の「任意」フラグを反映（＝このSetに入っているキーが任意）と意味が異なるので注意。
 const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
 
+// ===== 宛先追加：名簿（profiles）からのプルダウン選択 =====
+// 既にリストに表示されている宛先（送付先一覧＋追加済み）のメールアドレス。プルダウンの候補から除外する
+const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
+let allProfilesForRecipientSelect = null;
+
+async function getProfilesForRecipientSelect() {
+    if (!allProfilesForRecipientSelect) {
+        const { data } = await db.from('profiles')
+            .select('id, name, email, department')
+            .order('department').order('name');
+        allProfilesForRecipientSelect = data || [];
+    }
+    return allProfilesForRecipientSelect;
+}
+
+async function renderExtraProfileSelect(prefix) {
+    const selectEl = document.getElementById(`${prefix}_extra_profile_select`);
+    if (!selectEl) return;
+    const profiles = await getProfilesForRecipientSelect();
+    const excluded = new Set([
+        ...existingRecipientEmails[prefix],
+        ...extraRecipients[prefix].map(r => (r.email || '').toLowerCase())
+    ]);
+
+    const groups = {};
+    profiles
+        .filter(p => p.email && !excluded.has(p.email.toLowerCase()))
+        .forEach(p => {
+            const dept = p.department || 'その他';
+            (groups[dept] = groups[dept] || []).push(p);
+        });
+
+    const optgroups = Object.keys(groups).sort().map(dept => `
+        <optgroup label="${esc(dept)}">
+            ${groups[dept].map(p => `<option value="${esc(p.email)}" data-name="${esc(p.name || '')}">${esc(p.name || p.email)}（${esc(p.email)}）</option>`).join('')}
+        </optgroup>`).join('');
+
+    selectEl.innerHTML = `<option value="">名簿から選択...</option>${optgroups}`;
+}
+
+function fillExtraRecipientFromProfileSelect(prefix) {
+    const selectEl = document.getElementById(`${prefix}_extra_profile_select`);
+    const option = selectEl.options[selectEl.selectedIndex];
+    if (!option || !option.value) return;
+    document.getElementById(`${prefix}_extra_name`).value  = option.dataset.name || '';
+    document.getElementById(`${prefix}_extra_email`).value = option.value;
+    selectEl.value = '';
+}
+
 async function showRecipientsStep(type) {
     const prefix = type; // 'inspection' | 'sm' | 'si'
     const projectNumMap = { si: currentSiProjectNum, inspection: currentInspectionProjectNum, sm: currentSmProjectNum };
