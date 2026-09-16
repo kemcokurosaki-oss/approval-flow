@@ -7971,7 +7971,7 @@ async function renderRecipientsList(prefix, recipients) {
         <div class="recipient-item">
             <span class="recipient-name">${esc(p.name || '—')}</span>
             <span class="recipient-email">${esc(p.email || '—')}</span>
-            <span class="recipient-tag">${esc(p.department || '')}${ROLE_MAP[p.role] ? '・' + ROLE_MAP[p.role] : ''}</span>
+            <span class="recipient-tag" style="${departmentBadgeStyle(p.department)}">${esc(p.department || '')}${ROLE_MAP[p.role] ? '・' + ROLE_MAP[p.role] : ''}</span>
             ${optionalToggle(p.id)}
         </div>`).join('');
 
