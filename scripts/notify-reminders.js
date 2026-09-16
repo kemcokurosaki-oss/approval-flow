@@ -799,6 +799,7 @@ async function runShippingListReminders() {
       for (const recipient of recipients) {
         const dedupKey = `${submitKey}__${recipient.id || recipient.email}`;
         if (sentThisRun.has(dedupKey)) continue;
+        if (sentBeforeSet.has(dedupKey)) continue;
 
         const text =
           `${recipient.name} 様\n\n` +
@@ -809,7 +810,16 @@ async function runShippingListReminders() {
 
         try {
           await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
+          await supabaseInsert('approval_notifications', {
+            request_id:         null,
+            recipient_id:       recipient.id || null,
+            recipient_email:    recipient.id ? null : recipient.email,
+            notification_type:  'shipping_list_reminder',
+            detail:             submitKey,
+            emailed_at:         new Date().toISOString(),
+          });
           sentThisRun.add(dedupKey);
+          sentBeforeSet.add(dedupKey);
           count++;
         } catch (e) {
           console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
