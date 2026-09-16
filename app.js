@@ -8971,6 +8971,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             }
             // 電気艤装タスクがある場合のみ電装担当者も追加
             if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+            // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
+            for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
             break;
         }
 
