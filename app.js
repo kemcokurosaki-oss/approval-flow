@@ -824,6 +824,7 @@ async function loadProjects() {
     tasks.forEach(t => {
         const num = (t.project_number || '').toString().trim();
         if (!num) return;
+        if (is5or7Series(num)) return; // 5番台・7番台は承認フローアプリで一切管理しないため読み込まない
         if (!projectsMap[num]) {
             projectsMap[num] = { customer_name: '', project_details: '' };
         }
