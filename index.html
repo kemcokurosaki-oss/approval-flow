@@ -791,6 +791,9 @@
             <div class="recipient-list" id="reschedule_recipients_list"></div>
             <hr class="section-divider">
             <div class="section-title">参加者を追加（任意）</div>
+            <select id="reschedule_extra_profile_select" onchange="fillExtraRecipientFromProfileSelect('reschedule')" style="width:100%; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px; margin-bottom:6px;">
+                <option value="">名簿から選択...</option>
+            </select>
             <div style="display:flex; gap:6px; margin-bottom:6px;">
                 <input type="text" id="reschedule_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
                 <input type="text" id="reschedule_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
