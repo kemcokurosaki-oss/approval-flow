@@ -9112,9 +9112,18 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         if (!optionalKeys) return false;
         return !optionalKeys.has(key);
     };
+
+    // 同一申請・同一通知種別への重複挿入防止（二重クリックや多重呼び出しへの保険）
+    const { data: existingRows } = await db.from('approval_notifications')
+        .select('recipient_id, recipient_email')
+        .eq('request_id', requestId)
+        .eq('notification_type', notifType);
+    const existingIds    = new Set((existingRows || []).map(r => r.recipient_id).filter(Boolean));
+    const existingEmails = new Set((existingRows || []).map(r => r.recipient_email).filter(Boolean));
+
     const inserts = [
-        ...[...profileIds].map(id    => ({ request_id: requestId, recipient_id:    id,    notification_type: notifType, optional: isOptional(id) })),
-        ...[...extEmails ].map(email => ({ request_id: requestId, recipient_email: email, notification_type: notifType, optional: isOptional(email) }))
+        ...[...profileIds].filter(id    => !existingIds.has(id)).map(id       => ({ request_id: requestId, recipient_id:    id,    notification_type: notifType, optional: isOptional(id) })),
+        ...[...extEmails ].filter(email => !existingEmails.has(email)).map(email => ({ request_id: requestId, recipient_email: email, notification_type: notifType, optional: isOptional(email) }))
     ];
     if (inserts.length > 0) await db.from('approval_notifications').insert(inserts);
 }
