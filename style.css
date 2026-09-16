@@ -1301,6 +1301,19 @@
         .recipient-optional-toggle { display: flex; align-items: center; gap: 3px; font-size: 12px; color: #888; white-space: nowrap; cursor: pointer; user-select: none; }
         .recipient-optional-toggle input[type="checkbox"] { cursor: pointer; accent-color: #1e3a5f; }
 
+        /* ===== 宛先を追加：名簿プルダウン ===== */
+        .profile-picker { position: relative; margin-bottom: 6px; }
+        .profile-picker-trigger { width: 100%; text-align: left; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; background: #fff; color: #888; cursor: pointer; }
+        .profile-picker-trigger:hover { border-color: #999; }
+        .profile-picker-panel { display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 50; margin-top: 2px; max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .profile-picker-panel.open { display: block; }
+        .profile-picker-group-label { display: inline-block; margin: 6px 8px 4px; padding: 1px 8px; border-radius: 8px; font-size: 12px; font-weight: bold; background: #e8f0fe; color: #1e3a5f; }
+        .profile-picker-option { display: flex; align-items: baseline; gap: 10px; padding: 5px 10px; cursor: pointer; font-size: 13px; }
+        .profile-picker-option:hover { background: #f0f4ff; }
+        .profile-picker-option-name { min-width: 90px; flex-shrink: 0; font-weight: bold; }
+        .profile-picker-option-email { color: #888; }
+        .profile-picker-empty { padding: 10px; color: #aaa; font-size: 13px; }
+
         /* ===== 設定画面 ===== */
         .settings-section  { margin-bottom: 10px; }
         .settings-note     { font-size: 13px; color: #999; margin-bottom: 10px; }
