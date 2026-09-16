@@ -7874,6 +7874,9 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
         }
     }
 
+    // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
+    for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
+
     return { profiles: profileList, external: extList };
 }
 
