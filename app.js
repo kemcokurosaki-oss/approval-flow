@@ -7894,9 +7894,13 @@ document.addEventListener('click', function(e) {
 });
 
 function selectExtraRecipientProfile(prefix, email, name) {
-    document.getElementById(`${prefix}_extra_name`).value  = name || '';
-    document.getElementById(`${prefix}_extra_email`).value = email || '';
+    // 名簿から選んだ時点で確定扱いとし、直接リストへ追加する（別途「追加」ボタンの押し忘れで
+    // 通知が送られないままになるのを防ぐため、入力欄に詰めるだけの中継はしない）
     document.getElementById(`${prefix}_extra_profile_panel`)?.classList.remove('open');
+    if (!email) return;
+    extraRecipients[prefix].push({ name: name || email, email, optional: true });
+    renderExtraList(prefix);
+    renderExtraProfileSelect(prefix);
 }
 
 async function showRecipientsStep(type) {
