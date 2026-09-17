@@ -1537,8 +1537,9 @@ async function loadProgress() {
     // projectNum → machine → { flows, ... }
     const projectData = {};
 
-    // タスクから機械一覧を構築（未申請機械も含む）
-    (machineTasks || []).filter(t => t.text === '機械組立').forEach(t => {
+    // タスクから機械一覧を構築（未申請機械も含む）。出荷品確認検査は機械組立が無い工番向けのフローのため、
+    // 機械組立が無くても出荷品確認検査タスクがあれば機械一覧に載せる
+    (machineTasks || []).filter(t => t.text === '機械組立' || t.text === '出荷品確認検査').forEach(t => {
         const num = (t.project_number || '').toString().trim();
         if (!num || !t.machine) return;
         if (!projectData[num]) projectData[num] = {};
