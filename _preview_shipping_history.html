@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>プレビュー: 確定出荷日 変更履歴</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { padding: 24px; background:#f4f6f8; }
+  .mock-wrap { max-width: 640px; margin: 0 auto 40px; background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.08); padding:24px; }
+  .mock-label { font-size:13px; color:#999; margin-bottom:8px; font-weight:bold; }
+  .mail-mock { max-width: 640px; margin: 0 auto 40px; background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.08); padding:24px; font-family: "Meiryo", sans-serif; white-space:pre-wrap; line-height:1.7; font-size:14px; }
+  .mail-subject { font-weight:bold; font-size:16px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee; }
+</style>
+</head>
+<body>
+
+  <div class="mock-wrap">
+    <div class="mock-label">① 詳細画面（出荷情報の直下に表示）</div>
+
+    <div style="display:grid; grid-template-columns:max-content 1fr; column-gap:10px; align-items:baseline;">
+        <div style="font-size:18px;font-weight:bold;color:#1e3a5f;white-space:nowrap;">1234【機械A】</div>
+        <div style="font-size:19px;font-weight:bold;color:#1e3a5f;">〇〇株式会社</div>
+    </div>
+
+    <div style="margin:10px 0 8px;">
+        <span class="status-badge s-pending">品証確認待ち</span>
+        <span class="resubmit-badge">再申請</span>
+    </div>
+
+    <div style="font-size:15px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;column-gap:16px;row-gap:2px;"><span style="white-space:nowrap;">確定出荷日: 2026/9/28</span></div>
+
+    <details style="margin-top:4px;" open>
+        <summary style="cursor:pointer;font-size:14px;color:#888;">確定出荷日の変更履歴（2件）</summary>
+        <div style="font-size:13px;color:#666;margin-top:4px;padding-left:12px;border-left:2px solid #eee;">
+            <div style="margin-bottom:4px;">2026/9/15　田中(孝) が変更<br>確定出荷日: 2026/9/25 → 2026/9/28</div>
+            <div style="margin-bottom:4px;">2026/9/10　黒崎 が変更<br>確定出荷日: 2026/9/20 → 2026/9/25</div>
+        </div>
+    </details>
+  </div>
+
+  <div class="mail-mock">
+    <div class="mock-label" style="color:#999;">② 通知メール本文（品証・製管宛。件名・本文とも「変更」表記に切替）</div>
+    <div class="mail-subject">【確定出荷日変更】1234 機械A</div>
+田中(孝) 様
+
+1234 機械A の確定出荷日が変更されました。
+確定出荷日: 2026/9/25 → 2026/9/28
+
+内容を確認し、常務への本申請をお願いします。
+
+▼ 承認フローを開く
+https://kemcokurosaki-oss.github.io/approval-flow/
+
+※このメールは自動送信です。
+  </div>
+
+</body>
+</html>
