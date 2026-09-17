@@ -454,6 +454,8 @@ let isSaving     = false;
 let sheetMeta    = { author: '', date: '', completion_date: '' };
 
 const REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7a','7b','8','9'];
+// 申し送り事項の宛先部署の選択肢（app.jsのRECIPIENT_PICKER_DEPARTMENT_ORDERと同じ並び）
+const DEPT_OPTIONS = ['営業','設計','組立','電装','物流','操業','技戦','品証','製管'];
 
 function esc(s) {
     if (s == null) return '';
