@@ -8742,9 +8742,18 @@ async function confirmAndSubmitShipping(requestId) {
         if (!req) { showToast('既に処理済みです', 'error'); return; }
 
         // 承認ステップ: 常務（assembly_director）の1ステップ
-        await db.from('approval_steps').insert({
-            request_id: requestId, step_order: 1, approver_role: 'assembly_director', status: 'pending'
-        });
+        // 出荷日変更による再申請の場合は既存ステップが残っているため、新規作成ではなくリセットする
+        const { data: existingSteps } = await db.from('approval_steps')
+            .select('id').eq('request_id', requestId).eq('step_order', 1);
+        if (existingSteps?.length > 0) {
+            await db.from('approval_steps').update({
+                status: 'pending', approver_id: null, comment: null, decided_at: null
+            }).eq('request_id', requestId).eq('step_order', 1);
+        } else {
+            await db.from('approval_steps').insert({
+                request_id: requestId, step_order: 1, approver_role: 'assembly_director', status: 'pending'
+            });
+        }
 
         // 常務に承認依頼通知
         const { data: directors } = await db.from('profiles').select('id').eq('role', 'assembly_director');
