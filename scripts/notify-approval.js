@@ -296,16 +296,20 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
-    case 'shipping_date_input_done':
+    case 'shipping_date_input_done': {
+      const isDateChange = extra?.detail === 'changed';
       return {
         from,
-        subject: `【確定出荷日入力済み】${pStr}`,
+        subject: isDateChange ? `【確定出荷日変更】${pStr}` : `【確定出荷日入力済み】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の確定出荷日が営業担当者より入力されました。\n` +
+          (isDateChange
+            ? `${pStr} の確定出荷日が変更されました。\n`
+            : `${pStr} の確定出荷日が営業担当者より入力されました。\n`) +
           `内容を確認し、常務への本申請をお願いします。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
+    }
 
     case 'pending_item_assigned':
       return {
