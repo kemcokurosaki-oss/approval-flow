@@ -1486,7 +1486,7 @@ async function loadProgress() {
     // 機械ごとのフロー状態チェック用セット（project__machine__taskText）
     const { data: machineTasks } = await db.from('tasks')
         .select('project_number, machine, unit, text, end_date, is_completed')
-        .in('text', ['機械組立', '電気艤装', '外観検査', '試運転', '出荷確認会議', '出荷準備', '工場出荷', '梱包出荷'])
+        .in('text', ['機械組立', '電気艤装', '外観検査', '出荷品確認検査', '試運転', '出荷確認会議', '出荷準備', '工場出荷', '梱包出荷'])
         .not('machine', 'is', null);
 
     const machineTaskSet = new Set(
