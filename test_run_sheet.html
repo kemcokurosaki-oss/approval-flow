@@ -784,7 +784,7 @@ function closeDeptModalOnOutsideClick(e) {
 function openDeptModal(idx, anchorEl) {
     document.getElementById('dept_modal')?.remove();
     const item = pendingItems[idx];
-    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 0, top: 0, right: 200 };
+    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 0, top: 0, right: 200, left: 200 };
     const popup = document.createElement('div');
     popup.id = 'dept_modal';
     popup.style.cssText = `position:fixed; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:6px;
@@ -792,13 +792,23 @@ function openDeptModal(idx, anchorEl) {
     popup.innerHTML = deptCheckboxesHtml(idx, item.depts);
     document.body.appendChild(popup);
 
+    const popupWidth  = popup.offsetWidth;
     const popupHeight = popup.offsetHeight;
+
+    // 縦位置: 枠のすぐ下。画面下端をはみ出すなら枠の上側に表示する
     const spaceBelow = window.innerHeight - rect.bottom;
     const top = spaceBelow >= popupHeight + 8
         ? rect.bottom + 4
         : Math.max(4, rect.top - popupHeight - 4);
+
+    // 横位置: 枠のすぐ右。画面右端をはみ出すなら画面内に収まる位置まで左にずらす
+    const spaceRight = window.innerWidth - rect.right;
+    const left = spaceRight >= popupWidth + 4
+        ? rect.right + 4
+        : Math.max(4, window.innerWidth - popupWidth - 4);
+
     popup.style.top = `${top}px`;
-    popup.style.left = `${Math.max(4, Math.min(rect.right - 130, window.innerWidth - 138))}px`;
+    popup.style.left = `${left}px`;
     popup.style.visibility = 'visible';
 
     setTimeout(() => document.addEventListener('click', closeDeptModalOnOutsideClick), 0);
