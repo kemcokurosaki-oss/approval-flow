@@ -8031,23 +8031,35 @@ async function renderRecipientsList(prefix, recipients) {
             必須
         </label>`;
 
-    const profileRows = sortRecipientsByDepartment(recipients.profiles, p => p.department).map(p => `
+    // profiles（社内アカウント）とexternal（notification_recipients由来、技戦部門など）は別テーブルから来るため、
+    // 個別に並べ替えて連結すると常にprofilesが先に来てしまう。部署順で混在させるため一旦統合してから並べ替える
+    const combinedRecipients = [
+        ...recipients.profiles.map(p => ({ type: 'profile', data: p })),
+        ...recipients.external.map(r => ({ type: 'external', data: r }))
+    ];
+
+    const rows = sortRecipientsByDepartment(combinedRecipients, item => item.data.department).map(item => {
+        if (item.type === 'profile') {
+            const p = item.data;
+            return `
         <div class="recipient-item">
             <span class="recipient-name">${esc(p.name || '—')}</span>
             <span class="recipient-email">${esc(p.email || '—')}</span>
             <span class="recipient-tag" style="${departmentBadgeStyle(p.department)}">${esc(p.department || '')}</span>
             ${optionalToggle(p.id)}
-        </div>`).join('');
-
-    const extRows = sortRecipientsByDepartment(recipients.external, r => r.department).map(r => `
+        </div>`;
+        }
+        const r = item.data;
+        return `
         <div class="recipient-item">
             <span class="recipient-name">${esc(r.name || '—')}</span>
             <span class="recipient-email" style="color:${r.email ? '#888' : '#e74c3c'};">${esc(r.email || '⚠ メール未登録')}</span>
             <span class="recipient-tag" style="${departmentBadgeStyle(r.department)}">${esc(r.department || '')}</span>
             ${r.email ? optionalToggle(r.email) : ''}
-        </div>`).join('');
+        </div>`;
+    }).join('');
 
-    listEl.innerHTML = profileRows + extRows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
+    listEl.innerHTML = rows || '<div style="color:#aaa;font-size:13px;padding:8px;">宛先なし</div>';
     await renderExtraProfileSelect(prefix);
 }
 
