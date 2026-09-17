@@ -290,7 +290,7 @@ function canApplyFlow(flowType) {
     if (flowType === 'assembly')         return (role === 'staff' && dept === '組立') || role === 'assembly_manager';
     if (flowType === 'electrical')       return role === 'staff' && dept === '電装';
     if (flowType === 'test_run')         return (role === 'staff' && dept === '操業') || role === 'operations_manager';
-    if (flowType === 'shipping_prep')    return dept === '組立' || dept === '営業';
+    if (flowType === 'shipping_prep')    return dept === '組立' || dept === '営業' || dept === '物流';
     if (flowType === 'simple_inspection' || flowType === 'inspection' ||
         flowType === 'shipping_meeting'  || flowType === 'shipping')  return isQorS;
     return false;
