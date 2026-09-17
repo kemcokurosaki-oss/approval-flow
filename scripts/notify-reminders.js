@@ -721,7 +721,7 @@ async function runShippingListReminders() {
 
   // 申請済みの (工番__機械__フロー種別) セット（rejected以外）＝ 案内催促と同じ停止条件
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=neq.rejected` +
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_check_inspection,shipping_meeting)&status=neq.rejected` +
     `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
