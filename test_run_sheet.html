@@ -779,17 +779,27 @@ function closeDeptModalOnOutsideClick(e) {
 }
 
 // 宛先部署ボタンをダブルクリックすると、その枠の右下に小さくチェックボックス一覧を表示する
+// （画面下端・右端をはみ出す場合は、収まる向きに自動で調整する）
 function openDeptModal(idx, anchorEl) {
     document.getElementById('dept_modal')?.remove();
     const item = pendingItems[idx];
-    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 0, right: 200 };
+    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 0, top: 0, right: 200 };
     const popup = document.createElement('div');
     popup.id = 'dept_modal';
-    popup.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${Math.max(4, rect.right - 130)}px;
-        z-index:9999; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px 10px;
-        box-shadow:0 4px 16px rgba(0,0,0,.18); width:130px;`;
+    popup.style.cssText = `position:fixed; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:6px;
+        padding:8px 10px; box-shadow:0 4px 16px rgba(0,0,0,.18); width:130px; visibility:hidden;`;
     popup.innerHTML = deptCheckboxesHtml(idx, item.depts);
     document.body.appendChild(popup);
+
+    const popupHeight = popup.offsetHeight;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow >= popupHeight + 8
+        ? rect.bottom + 4
+        : Math.max(4, rect.top - popupHeight - 4);
+    popup.style.top = `${top}px`;
+    popup.style.left = `${Math.max(4, Math.min(rect.right - 130, window.innerWidth - 138))}px`;
+    popup.style.visibility = 'visible';
+
     setTimeout(() => document.addEventListener('click', closeDeptModalOnOutsideClick), 0);
 }
 
