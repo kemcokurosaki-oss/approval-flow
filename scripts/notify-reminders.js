@@ -592,7 +592,7 @@ async function runInvitationReminders() {
 
   // 申請済みの (工番__機械__フロー種別) セット（rejected以外）
   const submitted = await supabaseFetch(
-    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=neq.rejected` +
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_check_inspection,shipping_meeting)&status=neq.rejected` +
     `&select=project_number,machine_name,flow_type`
   );
   const submittedSet = new Set(
@@ -627,23 +627,36 @@ async function runInvitationReminders() {
     .filter(t => !t.is_completed)
     .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '出荷確認会議', refEndDate: t.start_date }));
 
+  // 出荷品確認検査（機械組立が無い工番向け）：機械組立が無いため、タスク自身の終了日の3日前を基準にする
+  const shippingCheckInspectionTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('出荷品確認検査')}&end_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,end_date,is_completed`
+  );
+  const shippingCheckInspectionTargets = (shippingCheckInspectionTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine, refTaskName: '出荷品確認検査', refEndDate: t.end_date }));
+
   // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築
   const hasInspectionTask = new Set();
   const hasSimpleInspectionTask = new Set();
   const hasShippingMeetingTask = new Set();
-  const [inspRows, siRows, smRows] = await Promise.all([
+  const hasShippingCheckInspectionTask = new Set();
+  const [inspRows, siRows, smRows, sciRows] = await Promise.all([
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine`),
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('簡易検査')}&select=project_number,machine`),
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷確認会議')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷品確認検査')}&select=project_number,machine`),
   ]);
   for (const r of (inspRows || [])) hasInspectionTask.add(`${r.project_number}__${r.machine}`);
   for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
   for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (sciRows  || [])) hasShippingCheckInspectionTask.add(`${r.project_number}__${r.machine}`);
 
   // 案内催促の対象フロー定義
   const inviteFlows = [
     { flowType: 'simple_inspection', label: '簡易検査開催案内',   hasTask: (key) => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
     { flowType: 'inspection',        label: '外観検査開催案内',   hasTask: (key) => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'shipping_check_inspection', label: '出荷品確認検査開催案内', hasTask: (key) => hasShippingCheckInspectionTask.has(key), targets: shippingCheckInspectionTargets },
     { flowType: 'shipping_meeting',  label: '出荷確認会議開催案内', hasTask: (key) => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
   ];
 
