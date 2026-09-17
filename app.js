@@ -7768,7 +7768,7 @@ const extraRecipients = { inspection: [], sm: [], si: [], sci: [], reschedule: [
 // 宛先プレビュー画面でチェックが入れられた宛先のキー（profile idまたはemail）。
 // inspection/sm/siはデフォルト「任意」・チェックで「必須」指定（＝このSetに入っているキーが必須指定）、
 // rescheduleは既存の送信済み通知の「任意」フラグを反映（＝このSetに入っているキーが任意）と意味が異なるので注意。
-const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
+const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Set(), sci: new Set(), reschedule: new Set() };
 
 // ===== 宛先追加：名簿（profiles）からのプルダウン選択 =====
 // 既にリストに表示されている宛先（送付先一覧＋追加済み）のメールアドレス。プルダウンの候補から除外する
