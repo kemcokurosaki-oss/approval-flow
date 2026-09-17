@@ -356,8 +356,8 @@ function applyRoleLayout(role) {
 }
 
 // ===== Constants =====
-// 承認ステップを持たず、開催案内送信のみで進行する3フロー（開催後に品証がペンディングを確認して完了させる）
-const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
+// 承認ステップを持たず、開催案内送信のみで進行する4フロー（開催後に品証がペンディングを確認して完了させる）
+const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting', 'shipping_check_inspection'];
 
 // ===== 設定画面（flow_settings） =====
 // フロー種別ごとに設定画面で個人単位に選べる固定宛先の候補グループ（担当者ベースの動的な宛先は対象外）
