@@ -747,7 +747,7 @@ function deptSummaryText(depts) {
     return (depts && depts.length > 0) ? depts.join('・') : '該当なし';
 }
 
-// 宛先部署のトグル: 「該当なし」を押すと他の部署の選択を解除する
+// 宛先部署のトグル: 「該当なし」をチェックすると他の部署の選択を解除する
 function toggleDept(idx, dept) {
     const item = pendingItems[idx];
     if (!item.depts) item.depts = [];
@@ -759,41 +759,44 @@ function toggleDept(idx, dept) {
         else item.depts.push(dept);
     }
     renderPendingItems();
-    // 部署選択モーダルを開いたままトグルした場合は、モーダル側の表示も選択状態に合わせて更新する
-    if (document.getElementById('dept_modal')) openDeptModal(idx);
+    // 部署選択ポップオーバーを開いたままトグルした場合は、中身だけ選択状態に合わせて更新する
+    const modal = document.getElementById('dept_modal');
+    if (modal) modal.innerHTML = deptCheckboxesHtml(idx, item.depts);
 }
 
-function deptButtonsHtml(idx, selectedDepts) {
+function deptCheckboxesHtml(idx, selectedDepts) {
     const selected = selectedDepts && selectedDepts.length > 0 ? selectedDepts : [];
-    const noneBtn = `<button type="button" class="dept-btn${selected.length === 0 ? ' active' : ''}" onclick="toggleDept(${idx}, '')">該当なし</button>`;
-    const deptBtns = DEPT_OPTIONS.map(d =>
-        `<button type="button" class="dept-btn${selected.includes(d) ? ' active' : ''}" onclick="toggleDept(${idx}, '${esc(d)}')">${esc(d)}</button>`
+    const noneRow = `<label class="dept-check-row"><input type="checkbox" ${selected.length === 0 ? 'checked' : ''} onchange="toggleDept(${idx}, '')"> 該当なし</label>`;
+    const deptRows = DEPT_OPTIONS.map(d =>
+        `<label class="dept-check-row"><input type="checkbox" ${selected.includes(d) ? 'checked' : ''} onchange="toggleDept(${idx}, '${esc(d)}')"> ${esc(d)}</label>`
     ).join('');
-    return noneBtn + deptBtns;
+    return noneRow + deptRows;
 }
 
-// 宛先部署ボタンをダブルクリックすると開く選択モーダル
-function openDeptModal(idx) {
+function closeDeptModalOnOutsideClick(e) {
+    const modal = document.getElementById('dept_modal');
+    if (modal && !modal.contains(e.target)) closeDeptModal();
+}
+
+// 宛先部署ボタンをダブルクリックすると、その枠の右下に小さくチェックボックス一覧を表示する
+function openDeptModal(idx, anchorEl) {
     document.getElementById('dept_modal')?.remove();
     const item = pendingItems[idx];
-    const overlay = document.createElement('div');
-    overlay.id = 'dept_modal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,30,50,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-        <div style="background:#fff;border-radius:10px;padding:20px;width:320px;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.25);">
-            <div style="font-size:15px;font-weight:bold;margin-bottom:12px;color:#1e3a5f;">宛先部署を選択</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                ${deptButtonsHtml(idx, item.depts)}
-            </div>
-            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-                <button class="btn btn-secondary" onclick="closeDeptModal()">閉じる</button>
-            </div>
-        </div>`;
-    document.body.appendChild(overlay);
+    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 0, right: 200 };
+    const popup = document.createElement('div');
+    popup.id = 'dept_modal';
+    popup.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${Math.max(4, rect.right - 130)}px;
+        z-index:9999; background:#fff; border:1px solid #ccc; border-radius:6px; padding:8px 10px;
+        box-shadow:0 4px 16px rgba(0,0,0,.18); width:130px;`;
+    popup.innerHTML = deptCheckboxesHtml(idx, item.depts);
+    document.body.appendChild(popup);
+    setTimeout(() => document.addEventListener('click', closeDeptModalOnOutsideClick), 0);
 }
 
 function closeDeptModal() {
     document.getElementById('dept_modal')?.remove();
+    document.removeEventListener('click', closeDeptModalOnOutsideClick);
+    renderPendingItems();
 }
 
 function renderPendingItems() {
@@ -814,8 +817,8 @@ function renderPendingItems() {
                        oninput="pendingItems[${i}].content=this.value">
             </div>
             <div style="display:flex;flex-direction:column;width:150px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">宛先部署（ダブルクリックで選択）</span>
-                <button type="button" class="dept-summary-btn" ondblclick="openDeptModal(${i})" title="ダブルクリックで宛先部署を選択">${esc(deptSummaryText(item.depts))}</button>
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">宛先部署</span>
+                <button type="button" class="dept-summary-btn" ondblclick="openDeptModal(${i}, this)" title="ダブルクリックで宛先部署を選択">${esc(deptSummaryText(item.depts))}</button>
             </div>
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
                 <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
