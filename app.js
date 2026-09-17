@@ -7747,7 +7747,7 @@ async function renderExtraProfileSelect(prefix) {
             (groups[dept] = groups[dept] || []).push(p);
         });
 
-    const deptKeys = Object.keys(groups).sort();
+    const deptKeys = sortRecipientPickerDepartments(Object.keys(groups));
     if (deptKeys.length === 0) {
         panelEl.innerHTML = '<div class="profile-picker-empty">候補がありません</div>';
         return;
