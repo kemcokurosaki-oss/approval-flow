@@ -8160,7 +8160,7 @@ async function renderRecipientsList(prefix, recipients) {
             <span class="recipient-name">${esc(p.name || '—')}</span>
             <span class="recipient-email">${esc(p.email || '—')}</span>
             <span class="recipient-tag" style="${departmentBadgeStyle(p.department)}">${esc(p.department || '')}</span>
-            ${p.isRequester ? requesterFixedLabel : optionalToggle(p.id)}
+            ${optionalToggle(p.id)}
         </div>`;
         }
         const r = item.data;
