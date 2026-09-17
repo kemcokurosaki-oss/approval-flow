@@ -7200,6 +7200,8 @@ async function cancelMeeting(requestId, flowType) {
             ? 'shipping_meeting_cancel'
             : flowType === 'inspection'
             ? 'inspection_cancel'
+            : flowType === 'shipping_check_inspection'
+            ? 'shipping_check_inspection_cancel'
             : 'simple_inspection_cancel';
 
         if (existingNotifs?.length > 0) {
