@@ -3890,6 +3890,7 @@ function renderShipAfterPendingList(wrap) {
 // ペンディング項目を「完了にする」操作ができるか（buildPendingSectionInnerのitemCanComplete判定と同じ基準）
 function _canCompletePendingItem(req, item) {
     if (!req) return false;
+    if (req.flow_type === 'test_run') return false; // 試運転は完了操作自体を廃止
     const isQaFlow = QA_MEETING_FLOWS.includes(req.flow_type);
     const statusOk = isQaFlow
         ? ['submitted', 'approved'].includes(req.status)
