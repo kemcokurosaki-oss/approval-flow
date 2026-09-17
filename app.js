@@ -4786,8 +4786,8 @@ function buildPendingSectionInner(req, isMyRequest) {
     const canComplete = (isQaFlow || isTestRun)
         ? null // QAフローは項目ごとに判定する（下記itemCanComplete）。試運転は完了操作自体が無い
         : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan || isFlowSupervisor || isFlowDeptMember));
-    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能、試運転は承認前まで）
-    const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : (isTestRun ? ['submitted', 'in_review'].includes(req.status) : statusOkForNonQa));
+    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能）。試運転は編集・削除自体を廃止（閲覧専用）
+    const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : (isTestRun ? false : statusOkForNonQa));
     const allItems = req.sheet_data?.pending_items || [];
     const items = allItems
         .map((item, idx) => ({ item, idx }))
