@@ -8790,7 +8790,7 @@ async function changeConfirmedShippingDate(requestId) {
     showLoading('処理中...');
     try {
         const { data: current, error: fetchErr } = await db.from('approval_requests')
-            .select('status').eq('id', requestId).single();
+            .select('status, confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date').eq('id', requestId).single();
         if (fetchErr) throw fetchErr;
         if (!current) { showToast('データが見つかりません', 'error'); return; }
 
@@ -8810,6 +8810,31 @@ async function changeConfirmedShippingDate(requestId) {
         if (error) throw error;
 
         if (needsReapproval) {
+            // 変更前後の日付を履歴として記録する（詳細画面・出荷確認書で参照）
+            const dateLabel = packingInputEl ? '工場出荷日（確定）' : '確定出荷日';
+            const changeLines = [];
+            if (current.confirmed_shipping_date !== dateVal) {
+                changeLines.push(`${isSplitShipping ? '①' : ''}${dateLabel}: ${current.confirmed_shipping_date || '未定'} → ${dateVal}`);
+            }
+            if (isSplitShipping && current.confirmed_shipping_date_2 !== dateVal2) {
+                changeLines.push(`②${dateLabel}: ${current.confirmed_shipping_date_2 || '未定'} → ${dateVal2}`);
+            }
+            if (packingInputEl && current.packing_confirmed_shipping_date !== packingDateVal) {
+                changeLines.push(`梱包出荷日（確定）: ${current.packing_confirmed_shipping_date || '未定'} → ${packingDateVal}`);
+            }
+            const changeSummary = changeLines.join('\n');
+
+            await db.from('shipping_date_change_log').insert({
+                request_id: requestId,
+                old_confirmed_shipping_date: current.confirmed_shipping_date,
+                new_confirmed_shipping_date: dateVal,
+                old_confirmed_shipping_date_2: current.confirmed_shipping_date_2,
+                new_confirmed_shipping_date_2: dateVal2,
+                old_packing_confirmed_shipping_date: current.packing_confirmed_shipping_date,
+                new_packing_confirmed_shipping_date: packingDateVal,
+                changed_by: currentUser.id
+            });
+
             // 申請者（品証）＋品証・製管全体へ確認依頼を通知
             const notifIds = new Set();
             if (req.requester_id) notifIds.add(req.requester_id);
@@ -8819,7 +8844,7 @@ async function changeConfirmedShippingDate(requestId) {
             (sRows || []).forEach(p => notifIds.add(p.id));
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: 'changed' }))
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: changeSummary || 'changed' }))
                 );
             }
         }
