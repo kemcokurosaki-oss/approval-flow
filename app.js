@@ -3541,7 +3541,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
 
         const isApproved = activeReq.status === 'approved';
-        const canEditRejected = activeReq.status === 'rejected' && activeReq.requester_id === currentUser.id;
+        const canEditRejected = activeReq.status === 'rejected' && (activeReq.requester_id === currentUser.id || canApply);
         const unresolvedPendingCount = countUnresolvedPendingItems(activeReq);
         const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
