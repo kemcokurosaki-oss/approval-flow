@@ -825,10 +825,11 @@ async function runShippingListReminders() {
 
       const pStr    = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
       const subject = `【出荷品リスト作成催促】${pStr}`;
+      const sendToLabel = flow.noAssembly ? '品質保証' : '組立担当者と品質保証';
       const bodyCore =
         `${pStr}\n` +
         `${flow.label}の開催が近づいています。\n` +
-        `出荷品リストを作成し、${flow.label}の前までに組立担当者と品質保証へ送付してください。`;
+        `出荷品リストを作成し、${flow.label}の前までに${sendToLabel}へ送付してください。`;
 
       const recipients = [];
       const seen = new Set();
