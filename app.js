@@ -378,6 +378,8 @@ const FIXED_RECIPIENT_GROUPS = {
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
                          { key: 'quality',            label: '品証', kind: 'role',       role: 'quality' },
                          { key: 'gijutsu',            label: '技戦部門', kind: 'department', department: '技戦' }],
+    shipping_check_inspection: [{ key: 'production_control', label: '製管', kind: 'role', role: 'production_control' },
+                         { key: 'quality',            label: '品証', kind: 'role',       role: 'quality' }],
     shipping_prep:     [{ key: 'quality',            label: '品証', kind: 'role',       role: 'quality' }],
     shipping:          [{ key: 'assembly_director',  label: '常務', kind: 'role',       role: 'assembly_director' },
                          { key: 'production_control', label: '製管', kind: 'role',       role: 'production_control' },
