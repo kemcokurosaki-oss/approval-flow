@@ -3832,7 +3832,8 @@ function renderShipAfterPendingList(wrap) {
             for (const req of Object.values(flows)) {
                 const items = req?.sheet_data?.pending_items || [];
                 items.forEach((item, idx) => {
-                    if (item.ship_after && !item.completed && (item.content || item.machine)) {
+                    // 試運転は出荷後対応チェックボックス自体を廃止したため、過去データが残っていても対象外にする
+                    if (req.flow_type !== 'test_run' && item.ship_after && !item.completed && (item.content || item.machine)) {
                         (grouped[num] || (grouped[num] = [])).push({ machine, req, item, idx });
                     }
                 });
