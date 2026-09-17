@@ -7037,11 +7037,14 @@ async function saveReschedule() {
     if (!newLocation) { showToast('場所を選択してください', 'error'); return; }
     const oldLocation = currentDetailReq?.inspection_location || '';
     const newNote = document.getElementById('reschedule_note_input').value.trim() || null;
+    const oldNote = currentDetailReq?.note || null;
 
     // 日時が実際に変わったかどうか（参加者追加や場所・備考のみの変更ではリセットしないための判定）
     const oldDate = currentDetailReq?.inspection_date || '';
     const oldTime = currentDetailReq?.inspection_time ? currentDetailReq.inspection_time.slice(0, 5) : null;
     const dateTimeChanged = newDate !== oldDate || newTime !== oldTime;
+    // 日時・場所・備考のいずれかが変わったか（参加者追加だけの保存では既存参加者へ再通知しないための判定）
+    const contentChanged = dateTimeChanged || newLocation !== oldLocation || newNote !== oldNote;
 
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = true; btn.textContent = '保存中...';
