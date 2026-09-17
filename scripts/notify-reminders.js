@@ -860,7 +860,7 @@ async function runQaFinalizeReminders() {
 
   // 開催日の翌日以降になっても「完了にする」が押されていない開催案内
   const requests = await supabaseFetch(
-    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&status=eq.submitted` +
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_check_inspection,shipping_meeting)&status=eq.submitted` +
     `&inspection_date=lt.${todayStr}&select=id,project_number,machine_name,flow_type,inspection_date`
   );
 
