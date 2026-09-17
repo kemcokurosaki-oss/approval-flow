@@ -7021,6 +7021,11 @@ async function saveReschedule() {
     const oldLocation = currentDetailReq?.inspection_location || '';
     const newNote = document.getElementById('reschedule_note_input').value.trim() || null;
 
+    // 日時が実際に変わったかどうか（参加者追加や場所・備考のみの変更ではリセットしないための判定）
+    const oldDate = currentDetailReq?.inspection_date || '';
+    const oldTime = currentDetailReq?.inspection_time ? currentDetailReq.inspection_time.slice(0, 5) : null;
+    const dateTimeChanged = newDate !== oldDate || newTime !== oldTime;
+
     const btn = document.getElementById('btn_save_reschedule');
     btn.disabled = true; btn.textContent = '保存中...';
     showLoading('処理中...');
