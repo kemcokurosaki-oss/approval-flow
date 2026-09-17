@@ -6757,7 +6757,7 @@ async function saveEditQaPendingItem(requestId, idx) {
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data').eq('id', requestId).single();
+            .select('sheet_data, flow_type').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
         if (!items[idx]) return;
         const prevOwner   = items[idx].owner || '';
