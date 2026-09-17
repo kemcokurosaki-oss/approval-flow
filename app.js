@@ -7727,6 +7727,8 @@ async function _getPrepBlockers(projectNum, machine) {
             blockers.push({ flowType, notApproved: true });
             continue;
         }
+        // 試運転は完了操作・完了予定日を廃止したため、申し送り事項の有無で出荷準備をブロックしない
+        if (flowType === 'test_run') continue;
         const items = (req.sheet_data?.pending_items || [])
             .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
         if (items.length > 0) blockers.push({ flowType, count: items.length });
