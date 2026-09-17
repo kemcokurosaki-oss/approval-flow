@@ -801,11 +801,9 @@ function openDeptModal(idx, anchorEl) {
         ? rect.bottom + 4
         : Math.max(4, rect.top - popupHeight - 4);
 
-    // 横位置: 枠のすぐ右。画面右端をはみ出すなら画面内に収まる位置まで左にずらす
-    const spaceRight = window.innerWidth - rect.right;
-    const left = spaceRight >= popupWidth + 4
-        ? rect.right + 4
-        : Math.max(4, window.innerWidth - popupWidth - 4);
+    // 横位置: 常に枠のすぐ右（他のボタンに重なってもよい）。画面外に完全にはみ出す場合だけ収まる位置まで調整する
+    let left = rect.right + 4;
+    if (left + popupWidth > window.innerWidth) left = Math.max(4, window.innerWidth - popupWidth - 4);
 
     popup.style.top = `${top}px`;
     popup.style.left = `${left}px`;
