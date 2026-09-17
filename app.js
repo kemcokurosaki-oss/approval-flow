@@ -7886,7 +7886,7 @@ async function showRecipientsStep(type) {
     if (!timeHour || !timeMin) { showToast('開始時刻を入力してください', 'error'); return; }
     if (!locationVal)         { showToast('場所を入力してください', 'error'); return; }
 
-    const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection' };
+    const flowTypeMap = { inspection: 'inspection', sm: 'shipping_meeting', si: 'simple_inspection', sci: 'shipping_check_inspection' };
     const recipients = await _fetchFlowRecipients(projectNum, machines, flowTypeMap[prefix] || prefix);
     await renderRecipientsList(prefix, recipients);
 
