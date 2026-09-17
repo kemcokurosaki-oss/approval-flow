@@ -23,19 +23,21 @@ const FLOW_LABELS = {
   test_run:           '試運転',
   simple_inspection:  '簡易検査',
   inspection:         '外観検査',
+  shipping_check_inspection: '出荷品確認検査',
   shipping_meeting:   '出荷確認会議',
   shipping_prep:      '出荷準備',
   shipping:           '出荷確定',
 };
 
-// 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
-const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting'];
+// 簡易検査・外観検査・出荷品確認検査・出荷確認会議（このフローの「ペンディング」は画面上「タスク」表記に統一）
+const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting', 'shipping_check_inspection'];
 
 // ===== タスクリスト送信（fix_card_sent）用ヘルパー =====
 const PHOTO_BUCKET = 'pending-item-photos';
 const FLOW_SHORT_LABEL = {
   inspection:        '外観検査',
   simple_inspection: '簡易検査',
+  shipping_check_inspection: '出荷品確認検査',
   shipping_meeting:  '出荷確認会議',
 };
 
