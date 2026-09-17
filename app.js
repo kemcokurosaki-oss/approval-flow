@@ -1714,7 +1714,9 @@ function isUnsavedDraft(req) {
 }
 
 // sheet_data.pending_items のうち内容が入力済み(content or machine)かつ未完了(!completed)の件数を数える
+// 試運転は完了操作自体を廃止したため「未解決」という概念が無く、常に0件（承認済みならそのまま完了扱い）
 function countUnresolvedPendingItems(req) {
+    if (req?.flow_type === 'test_run') return 0;
     const items = (req?.sheet_data?.pending_items || []).filter(p => p.content || p.machine);
     return items.filter(p => !p.completed).length;
 }
