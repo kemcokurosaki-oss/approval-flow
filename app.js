@@ -3346,11 +3346,14 @@ async function rejectAssemblyRequestFromList(requestId, stepId, projectNum, comm
             });
         }
 
-        await refreshAll();
-        ui.send('SAVED');
-        showToast('却下しました。申請者に通知されます。', 'success');
+        // DB更新はここまでで完了しているので、モーダル表示は必ず最新化する。
+        // refreshAll()（一覧・サイドパネルの再読み込み）が失敗しても却下自体は成功しているため、
+        // モーダルの再描画を巻き込んで止めないよう先に実行し、refreshAllは失敗を握りつぶして後追いで流す。
         if (machine) await renderAssemblyMachineDetailBody(projectNum, machine);
         else await renderAssemblyFlowDetailBody(projectNum);
+        ui.send('SAVED');
+        showToast('却下しました。申請者に通知されます。', 'success');
+        refreshAll().catch(e => console.error('refreshAll failed after reject:', e));
     } catch (e) {
         showToast('処理に失敗しました: ' + e.message, 'error');
     } finally {
