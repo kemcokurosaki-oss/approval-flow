@@ -246,7 +246,6 @@ function buildEmail(type, req, recipientName, extra = {}) {
         ? '\n\n【申し送り事項】\n' + testRunPendingItems.map((p, i) => {
             let line = `${i + 1}. ${p.machine ? p.machine + '：' : ''}${p.content || ''}`;
             if (p.owner) line += `（担当: ${p.owner}）`;
-            if (p.due)   line += `（完了予定日: ${p.due}）`;
             return line;
           }).join('\n')
         : '';
