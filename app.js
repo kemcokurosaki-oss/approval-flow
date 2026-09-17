@@ -8460,6 +8460,104 @@ async function submitInspection() {
     }
 }
 
+// ===== 出荷品確認検査開催案内（機械組立が無い工番向け） =====
+function openShippingCheckInspectionModal() {
+    currentSciProjectNum = '';
+    document.getElementById('sci_project_display').textContent = '';
+    document.getElementById('sci_project_info').style.display  = 'none';
+    document.getElementById('sci_machine_group').style.display = 'none';
+    document.getElementById('sci_machine_list').innerHTML      = '';
+    document.getElementById('sci_recipients_step').style.display = 'none';
+    document.getElementById('sci_footer_step1').style.display    = '';
+    document.getElementById('sci_footer_step2').style.display    = 'none';
+    extraRecipients.sci = [];
+    recipientOptionalKeys.sci.clear();
+    document.getElementById('sci_extra_list').innerHTML = '';
+    document.getElementById('sci_date_input').value     = '';
+    document.getElementById('sci_time_hour').value = '';
+    document.getElementById('sci_time_min').value  = '';
+    buildLocationCheckboxes('sci_location_input');
+    document.getElementById('sci_note_input').value = '';
+
+    document.getElementById('shipping_check_inspection_modal').classList.add('open');
+}
+
+function closeShippingCheckInspectionModal() {
+    document.getElementById('shipping_check_inspection_modal').classList.remove('open');
+}
+
+async function onSciProjectChange(lockedMachine = null) {
+    const num = currentSciProjectNum;
+    document.getElementById('sci_project_info').style.display  = 'none';
+    document.getElementById('sci_machine_group').style.display = 'none';
+    if (!num) return;
+
+    const p = projectsMap[num] || {};
+    document.getElementById('sci_customer_display').textContent = p.customer_name || '—';
+    document.getElementById('sci_project_name_display').textContent = p.project_details || '—';
+    document.getElementById('sci_project_info').style.display = 'contents';
+    showLoading('読み込み中...');
+    try {
+        await _loadMachineCheckboxes(num, 'sci_machine_list', 'onSciMachineChange', lockedMachine);
+        document.getElementById('sci_machine_group').style.display = 'block';
+    } finally {
+        hideLoading();
+    }
+}
+
+async function onSciMachineChange() {
+    // 機械名は丸クリックの時点で確定済み（固定表示）のため、ここでは何もしない
+}
+
+async function submitShippingCheckInspection() {
+    if (requireLogin()) return;
+    const num      = currentSciProjectNum;
+    const machines = getSelectedMachines('sci_machine_list');
+    const dateVal  = document.getElementById('sci_date_input').value;
+    const _th = document.getElementById('sci_time_hour').value;
+    const _tm = document.getElementById('sci_time_min').value;
+    const timeVal  = (_th && _tm) ? `${_th}:${_tm}` : null;
+    const location = getLocationValue('sci_location_input');
+    const note     = document.getElementById('sci_note_input').value.trim();
+
+    if (!num)              { showToast('工事番号が設定されていません', 'error'); return; }
+    if (machines.length === 0) { showToast('機械を選択してください', 'error'); return; }
+    if (!dateVal)          { showToast('出荷品確認検査日を入力してください', 'error'); return; }
+    if (!timeVal)          { showToast('開始時刻を入力してください', 'error'); return; }
+    if (!location)         { showToast('場所を入力してください', 'error'); return; }
+
+    const btn = document.getElementById('sci_submit_btn');
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    showLoading('処理中...');
+
+    try {
+        for (const machine of machines) {
+            const { data: req, error } = await db.from('approval_requests').insert({
+                project_number: num, machine_name: machine, flow_type: 'shipping_check_inspection',
+                status: 'submitted', requester_id: currentUser.id, note: note || null,
+                inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
+            }).select().single();
+            if (error) throw error;
+            await recordFlowNotifications(req.id, 'shipping_check_inspection', recipientOptionalKeys.sci);
+            if (extraRecipients.sci.length > 0) {
+                await db.from('approval_notifications').insert(
+                    extraRecipients.sci.map(r => ({ request_id: req.id, recipient_email: r.email, notification_type: 'shipping_check_inspection_invite', optional: !!r.optional }))
+                );
+            }
+        }
+        closeShippingCheckInspectionModal();
+        await refreshAll();
+        showToast(`出荷品確認検査開催案内を送信しました。（${machines.length}機械）`, 'success');
+    } catch (e) {
+        showToast('送信に失敗しました: ' + e.message, 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = '案内を送信';
+        hideLoading();
+    }
+}
+
 // ===== フロー5: 出荷確認会議開催案内 =====
 function openShippingMeetingModal() {
     currentSmProjectNum = '';
