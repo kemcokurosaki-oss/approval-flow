@@ -732,24 +732,27 @@ function removePendingItem(idx) {
     renderPendingItems();
 }
 
-// 宛先部署のselect(multiple)変更時: 「該当なし」を選んだら他の部署の選択を解除する
-function onDeptsChange(idx, selectEl) {
-    const values = Array.from(selectEl.selectedOptions).map(o => o.value);
-    if (values.includes('')) {
-        Array.from(selectEl.options).forEach(o => { o.selected = (o.value === ''); });
-        pendingItems[idx].depts = [];
+// 宛先部署のトグル: 「該当なし」を押すと他の部署の選択を解除する
+function toggleDept(idx, dept) {
+    const item = pendingItems[idx];
+    if (!item.depts) item.depts = [];
+    if (dept === '') {
+        item.depts = [];
     } else {
-        pendingItems[idx].depts = values;
+        const pos = item.depts.indexOf(dept);
+        if (pos >= 0) item.depts.splice(pos, 1);
+        else item.depts.push(dept);
     }
+    renderPendingItems();
 }
 
-function deptOptionsHtml(selectedDepts) {
+function deptButtonsHtml(idx, selectedDepts) {
     const selected = selectedDepts && selectedDepts.length > 0 ? selectedDepts : [];
-    const noneOption = `<option value="" ${selected.length === 0 ? 'selected' : ''}>該当なし</option>`;
-    const deptOptions = DEPT_OPTIONS.map(d =>
-        `<option value="${esc(d)}" ${selected.includes(d) ? 'selected' : ''}>${esc(d)}</option>`
+    const noneBtn = `<button type="button" class="dept-btn${selected.length === 0 ? ' active' : ''}" onclick="toggleDept(${idx}, '')">該当なし</button>`;
+    const deptBtns = DEPT_OPTIONS.map(d =>
+        `<button type="button" class="dept-btn${selected.includes(d) ? ' active' : ''}" onclick="toggleDept(${idx}, '${esc(d)}')">${esc(d)}</button>`
     ).join('');
-    return noneOption + deptOptions;
+    return noneBtn + deptBtns;
 }
 
 function renderPendingItems() {
@@ -760,28 +763,30 @@ function renderPendingItems() {
         return;
     }
     c.innerHTML = pendingItems.map((item, i) => `
-        <div class="pending-row">
-            <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
-                       oninput="pendingItems[${i}].machine=this.value">
+        <div class="pending-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+            <div style="display:flex; gap:8px;">
+                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                    <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                           oninput="pendingItems[${i}].machine=this.value">
+                </div>
+                <div style="display:flex;flex-direction:column;flex:1;">
+                    <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                           oninput="pendingItems[${i}].content=this.value">
+                </div>
+                <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
+                    <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
+                    <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
+                           oninput="pendingItems[${i}].owner=this.value">
+                </div>
+                <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                    <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+                </div>
             </div>
-            <div style="display:flex;flex-direction:column;flex:1;">
-                <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
-                       oninput="pendingItems[${i}].content=this.value">
-            </div>
-            <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
-                <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
-                       oninput="pendingItems[${i}].owner=this.value">
-            </div>
-            <div style="display:flex;flex-direction:column;width:120px;flex-shrink:0;">
-                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">宛先部署（複数可）</span>
-                <select multiple size="4" class="pending-depts" onchange="onDeptsChange(${i}, this)">
-                    ${deptOptionsHtml(item.depts)}
-                </select>
-            </div>
-            <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:10px;color:#999;">宛先部署（複数可）</span>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                    ${deptButtonsHtml(i, item.depts)}
+                </div>
             </div>
         </div>
     `).join('');
