@@ -8164,6 +8164,7 @@ function toggleRecipientOptional(prefix, key, checked) {
 const QA_INVITE_NOTIFICATION_TYPES = {
     simple_inspection: ['simple_inspection_invite', 'simple_inspection_reschedule'],
     inspection:        ['inspection_invite', 'inspection_reschedule'],
+    shipping_check_inspection: ['shipping_check_inspection_invite', 'shipping_check_inspection_reschedule'],
     shipping_meeting:  ['shipping_meeting_invite', 'shipping_meeting_reschedule'],
 };
 const RSVP_STATUS_LABELS = {
