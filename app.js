@@ -7708,7 +7708,7 @@ const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Se
 const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
 let allProfilesForRecipientSelect = null;
 // プルダウン内の部署グループの並び順（未指定の部署は末尾に五十音順で表示）
-const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '操業', '物流'];
+const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '電装', '物流', '操業', '技戦', '製管'];
 function sortRecipientPickerDepartments(keys) {
     return keys.sort((a, b) => {
         const ia = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(a);
