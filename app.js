@@ -9063,18 +9063,24 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
     };
 
-    // members テーブルから設計担当者の上長を取得
-    // 担当者不明・未登録の場合は設計全管理職にフォールバック
+    // members テーブルから設計担当者ごとの上長（supervisor_email1/2）を取得
+    // 担当者単位でmembers未登録・上長未設定の場合のみ、その担当者分は設計全管理職にフォールバック
     const addSekkeiSupervisors = async () => {
-        let resolved = false;
+        let hasUnresolvedOwner = sekkeiOwners.length === 0;
         if (sekkeiOwners.length > 0) {
             const { data: memberRows } = await db.from('members')
-                .select('supervisor_email1, supervisor_email_2')
+                .select('name, supervisor_email1, supervisor_email_2')
                 .in('name', sekkeiOwners);
+            const memberMap = Object.fromEntries((memberRows || []).map(m => [m.name, m]));
             const supEmails = new Set();
-            for (const m of (memberRows || [])) {
-                if (m.supervisor_email1)  { supEmails.add(m.supervisor_email1);  resolved = true; }
-                if (m.supervisor_email_2) { supEmails.add(m.supervisor_email_2); resolved = true; }
+            for (const name of sekkeiOwners) {
+                const m = memberMap[name];
+                const emails = m ? [m.supervisor_email1, m.supervisor_email_2].filter(Boolean) : [];
+                if (emails.length > 0) {
+                    emails.forEach(e => supEmails.add(e));
+                } else {
+                    hasUnresolvedOwner = true;
+                }
             }
             if (supEmails.size > 0) {
                 // 上長がprofilesに登録済みならrecipient_id、未登録ならrecipient_emailで保存する
@@ -9086,7 +9092,7 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
                 }
             }
         }
-        if (!resolved) {
+        if (hasUnresolvedOwner) {
             await addP({ department: '設計', role: 'design_manager' });
             await addP({ department: '設計', role: 'design_director' });
         }
