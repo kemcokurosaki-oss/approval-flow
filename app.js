@@ -3959,6 +3959,12 @@ async function openFlowModalPreset(el, overrideFlowType) {
         currentInspectionProjectNum = projectNum;
         document.getElementById('inspection_project_display').textContent = projectNum;
         await onInspectionProjectChange(machineName);
+    } else if (flowType === 'shipping_check_inspection') {
+        // 出荷品確認検査（機械組立が無い工番向け）もステップ表示で機械が確定しているためロックする
+        openShippingCheckInspectionModal();
+        currentSciProjectNum = projectNum;
+        document.getElementById('sci_project_display').textContent = projectNum;
+        await onSciProjectChange(machineName);
     } else if (flowType === 'shipping_meeting') {
         openShippingMeetingModal();
         currentSmProjectNum = projectNum;
