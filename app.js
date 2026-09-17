@@ -7718,6 +7718,18 @@ function sortRecipientPickerDepartments(keys) {
         return ra !== rb ? ra - rb : a.localeCompare(b, 'ja');
     });
 }
+// 送付先一覧（プロフィール・社外いずれも）を同じ部署順で並べ替える
+function sortRecipientsByDepartment(list, getDept) {
+    return [...list].sort((a, b) => {
+        const da = getDept(a) || '';
+        const db = getDept(b) || '';
+        const ia = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(da);
+        const ib = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(db);
+        const ra = ia === -1 ? RECIPIENT_PICKER_DEPARTMENT_ORDER.length : ia;
+        const rb = ib === -1 ? RECIPIENT_PICKER_DEPARTMENT_ORDER.length : ib;
+        return ra !== rb ? ra - rb : da.localeCompare(db, 'ja');
+    });
+}
 
 async function getProfilesForRecipientSelect() {
     if (!allProfilesForRecipientSelect) {
