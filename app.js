@@ -2644,7 +2644,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         const requesterName = requesterNames[req.requester_id] || '—';
         const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
         const isApproved = req.status === 'approved';
-        const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const canEditRejected = req.status === 'rejected' && (req.requester_id === currentUser.id || canApplyFlow('electrical'));
         const unresolvedPendingCount = countUnresolvedPendingItems(req);
         const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${SHEET_FLOW_META.electrical.file}?draft_id=${req.id}` : `${SHEET_FLOW_META.electrical.file}?view=1&id=${req.id}`;
