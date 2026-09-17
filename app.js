@@ -9345,6 +9345,17 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             break;
         }
 
+        case 'shipping_check_inspection': {
+            // 機械組立が無い工番向けの検査フロー（簡易検査・外観検査の代わり）。宛先は設計担当者・営業担当者・品証・製管のみ
+            const dyn = getDynamicRecipientPlan('shipping_check_inspection');
+            notifType = 'shipping_check_inspection_invite';
+            profileIds.add(req.requester_id); requiredIds.add(req.requester_id); // 開催者は必須出席者として自分にも案内を送る
+            await addFixedRecipients();                                         // 品証・製管（設定画面で個人単位に選択）
+            if (dyn.sales)        await addOwnerByName(salesOwner);             // 営業担当者
+            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o); // 設計担当者
+            break;
+        }
+
         case 'shipping_prep':
             // 固定宛先（設定画面で個人単位に選択、製管へはメール送信時にCCで届く）。工番担当者の自動通知は対象外
             await addFixedRecipients();
