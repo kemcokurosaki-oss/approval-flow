@@ -485,6 +485,48 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
     }
 
+    case 'shipping_check_inspection_invite': {
+      const date     = req?.inspection_date     || '未定';
+      const time     = req?.inspection_time     ? ` ${req.inspection_time}` : '';
+      const location = req?.inspection_location || '未定';
+      return {
+        from,
+        subject: `【出荷品確認検査開催案内】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷品確認検査を下記のとおり実施します。\n\n` +
+          `日時: ${date}${time}\n` +
+          `場所: ${location}` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+    }
+
+    case 'shipping_check_inspection_reschedule': {
+      const date     = req?.inspection_date     || '未定';
+      const time     = req?.inspection_time     ? ` ${req.inspection_time}` : '';
+      const location = req?.inspection_location || '未定';
+      return {
+        from,
+        subject: `【出荷品確認検査 日程変更】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷品確認検査の日程が変更されました。\n\n` +
+          `日時: ${date}${time}\n` +
+          `場所: ${location}` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+    }
+
+    case 'shipping_check_inspection_cancel':
+      return {
+        from,
+        subject: `【出荷品確認検査 キャンセル】${pStr}`,
+        text:
+          `${recipientName} 様\n\n` +
+          `${pStr} の出荷品確認検査はキャンセルになりました。` +
+          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+      };
+
     case 'test_run_ready':
       // 組立フローの承認申請とは独立した通知のため、reqを使わずdetail（工事番号・機械名）だけで組み立てる
       return {
