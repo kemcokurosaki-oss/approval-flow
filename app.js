@@ -5112,11 +5112,12 @@ async function openDetailModal(requestId, returnTo = null) {
         ? `<button type="button" class="btn btn-outline" style="margin-right:auto;" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
         : '';
 
-    // プロフィール名を取得
-    const approverIds = steps.filter(s => s.approver_id).map(s => s.approver_id);
+    // プロフィール名を取得（承認者＋出荷日変更者）
+    const approverIds = new Set(steps.filter(s => s.approver_id).map(s => s.approver_id));
+    shippingDateHistory.forEach(h => { if (h.changed_by) approverIds.add(h.changed_by); });
     let approverNames = {};
-    if (approverIds.length > 0) {
-        const { data: prs } = await db.from('profiles').select('id, name').in('id', approverIds);
+    if (approverIds.size > 0) {
+        const { data: prs } = await db.from('profiles').select('id, name').in('id', [...approverIds]);
         if (prs) prs.forEach(p => { approverNames[p.id] = p.name; });
     }
 
