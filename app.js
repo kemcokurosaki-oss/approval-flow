@@ -6763,7 +6763,8 @@ async function saveEditQaPendingItem(requestId, idx) {
         const prevOwner   = items[idx].owner || '';
         const prevContent = items[idx].content;
         const newOwner    = ownerEl ? ownerEl.value.trim() : prevOwner;
-        const shipAfter   = shipAfterEl ? shipAfterEl.checked : !!items[idx].ship_after;
+        // 試運転は完了予定日・出荷後対応を廃止したため、編集フォームに欄が無ければ常にクリアする
+        const shipAfter   = shipAfterEl ? shipAfterEl.checked : (req?.flow_type === 'test_run' ? false : !!items[idx].ship_after);
 
         let photoPath = items[idx].photo_path || null;
         if (photoFile) {
