@@ -489,6 +489,7 @@ const FLOW_LABELS = {
 const QA_DETAIL_TITLE_LABELS = {
     simple_inspection: '簡易検査',
     inspection:        '外観検査',
+    shipping_check_inspection: '出荷品確認検査',
     shipping_meeting:  '出荷確認会議',
     assembly:          '組立',
     test_run:          '試運転'
@@ -496,11 +497,12 @@ const QA_DETAIL_TITLE_LABELS = {
 
 // タスク名 → フロー種別（工程表の実タスクからフロー構成・順序を導出するための対応表）
 const TASK_TEXT_TO_FLOW = {
-    '簡易検査':     'simple_inspection',
-    '外観検査':     'inspection',
-    '試運転':       'test_run',
-    '出荷確認会議': 'shipping_meeting',
-    '出荷準備':     'shipping_prep'
+    '簡易検査':       'simple_inspection',
+    '外観検査':       'inspection',
+    '出荷品確認検査': 'shipping_check_inspection',
+    '試運転':         'test_run',
+    '出荷確認会議':   'shipping_meeting',
+    '出荷準備':       'shipping_prep'
 };
 
 const ROLE_LABELS = {
