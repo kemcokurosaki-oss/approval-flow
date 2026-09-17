@@ -8774,7 +8774,7 @@ async function confirmAndSubmitShipping(requestId) {
 }
 
 // 営業・品証・製管: 確定出荷日を後から変更する。既に常務へ申請・承認済み（status: submitted/approved）の場合は
-// 承認ステップをリセットして常務の再承認を必須にする
+// 初回入力時と同じルート（品証の確認待ち→品証が再申請→常務の再承認）に戻す
 async function changeConfirmedShippingDate(requestId) {
     if (requireLogin()) return;
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
