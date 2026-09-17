@@ -7091,13 +7091,16 @@ async function saveReschedule() {
                     if (newOptional !== !!n.optional) {
                         optionalUpdates.push({ recipientId: n.recipient_id || null, email: n.recipient_email || null, optional: newOptional });
                     }
-                    notifs.push({
-                        request_id:        requestId,
-                        recipient_id:      n.recipient_id    || null,
-                        recipient_email:   n.recipient_email || null,
-                        notification_type: rescheduleType,
-                        optional:          newOptional
-                    });
+                    // 参加者追加だけの保存（日時・場所・備考は無変更）では、既存参加者に「変更通知」を再送しない
+                    if (contentChanged) {
+                        notifs.push({
+                            request_id:        requestId,
+                            recipient_id:      n.recipient_id    || null,
+                            recipient_email:   n.recipient_email || null,
+                            notification_type: rescheduleType,
+                            optional:          newOptional
+                        });
+                    }
                 }
             }
             if (notifs.length > 0) await db.from('approval_notifications').insert(notifs);
