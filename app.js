@@ -8844,7 +8844,7 @@ async function changeConfirmedShippingDate(requestId) {
             (sRows || []).forEach(p => notifIds.add(p.id));
             if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
-                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: changeSummary || 'changed' }))
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: changeSummary || '（日付の変更はありません）' }))
                 );
             }
         }
