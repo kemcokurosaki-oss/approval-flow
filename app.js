@@ -1835,6 +1835,10 @@ function renderProgressCards() {
             const info = (taskInfoMap || {})[`${num}__${machine}__出荷確認会議`];
             return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
         }
+        if (flowType === 'shipping_check_inspection') {
+            const info = (taskInfoMap || {})[`${num}__${machine}__出荷品確認検査`];
+            return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+        }
         return false;
     };
 
