@@ -14,7 +14,7 @@
 
 ## 出欠状況（RSVP）の記録
 
-簡易検査・外観検査・出荷確認会議の開催案内は、宛先ごとに「必須/任意」を選択して送信できる（宛先プレビュー画面のチェックボックス）。ICSのATTENDEEにはROLE=REQ-PARTICIPANT/OPT-PARTICIPANTとして反映され、Outlook上でも任意出席者として表示される。
+簡易検査・外観検査・出荷品確認検査・出荷確認会議の開催案内は、宛先ごとに「必須/任意」を選択して送信できる（宛先プレビュー画面のチェックボックス）。ICSのATTENDEEにはROLE=REQ-PARTICIPANT/OPT-PARTICIPANTとして反映され、Outlook上でも任意出席者として表示される。
 
 Outlook/Teams本体の出欠確認パネルは、予定の主催者（自動送信専用のGmailアカウント）のメールボックスでしか集計されないため使えない。代わりに、参加者がOutlookで承諾/辞退/仮の予定を選ぶと自動送信されるiTIP返信メール（METHOD:REPLY）を、[scripts/check-rsvp.js](../scripts/check-rsvp.js)（GitHub Actions [.github/workflows/check-rsvp.yml](../.github/workflows/check-rsvp.yml)、現状は手動実行のみ）がIMAPで受信・解析し、Supabaseの`invitation_rsvp`テーブルに記録する。承認フローアプリの申請詳細画面に「出欠状況」として一覧表示される。
 
