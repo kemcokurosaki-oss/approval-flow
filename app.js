@@ -8800,7 +8800,8 @@ async function changeConfirmedShippingDate(requestId) {
         if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
         if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
         if (needsReapproval) {
-            updatePayload.status      = 'submitted';
+            // 初回入力時と同じく、まず品証の確認待ちに戻す（常務への再承認依頼は品証の確認後）
+            updatePayload.status      = 'awaiting_shipping_confirm';
             updatePayload.is_resubmit = true;
         }
 
@@ -8809,15 +8810,16 @@ async function changeConfirmedShippingDate(requestId) {
         if (error) throw error;
 
         if (needsReapproval) {
-            // 常務の承認ステップをリセットして再承認を依頼する
-            await db.from('approval_steps').update({
-                status: 'pending', approver_id: null, comment: null, decided_at: null
-            }).eq('request_id', requestId);
-
-            const { data: directors } = await db.from('profiles').select('id').eq('role', 'assembly_director');
-            if (directors?.length > 0) {
+            // 申請者（品証）＋品証・製管全体へ確認依頼を通知
+            const notifIds = new Set();
+            if (req.requester_id) notifIds.add(req.requester_id);
+            const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+            (qRows || []).forEach(p => notifIds.add(p.id));
+            const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+            (sRows || []).forEach(p => notifIds.add(p.id));
+            if (notifIds.size > 0) {
                 await db.from('approval_notifications').insert(
-                    directors.map(d => ({ request_id: requestId, recipient_id: d.id, notification_type: 'approval_request' }))
+                    [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done' }))
                 );
             }
         }
@@ -8826,7 +8828,7 @@ async function changeConfirmedShippingDate(requestId) {
 
         closeDetailModal();
         await refreshAll();
-        showToast(needsReapproval ? '出荷日を変更しました。常務に再承認を依頼します。' : '出荷日を変更しました。', 'success');
+        showToast(needsReapproval ? '出荷日を変更しました。品証の確認後、常務に再申請されます。' : '出荷日を変更しました。', 'success');
     } catch (e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
