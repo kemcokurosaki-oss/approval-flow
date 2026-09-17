@@ -7077,6 +7077,8 @@ async function saveReschedule() {
             ? 'shipping_meeting_reschedule'
             : currentDetailFlowType === 'inspection'
             ? 'inspection_reschedule'
+            : currentDetailFlowType === 'shipping_check_inspection'
+            ? 'shipping_check_inspection_reschedule'
             : 'simple_inspection_reschedule';
 
         if (existingNotifs?.length > 0) {
