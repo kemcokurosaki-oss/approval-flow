@@ -7772,7 +7772,7 @@ const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Se
 
 // ===== 宛先追加：名簿（profiles）からのプルダウン選択 =====
 // 既にリストに表示されている宛先（送付先一覧＋追加済み）のメールアドレス。プルダウンの候補から除外する
-const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
+const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), sci: new Set(), reschedule: new Set() };
 let allProfilesForRecipientSelect = null;
 // プルダウン内の部署グループの並び順（未指定の部署は末尾に五十音順で表示）
 const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '電装', '物流', '操業', '技戦', '品証', '製管'];
