@@ -2158,8 +2158,8 @@ function renderProgressCards() {
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (f.type === 'test_run') {
                     // 試運転(2000番以外)は組立と同様、状態に関わらず工番全体の機械一覧モーダルを開く。
-                    // 承認済みかつペンディング未完了が無ければモーダルを経由せず直接完了報告書を開く
-                    // （ペンディングが残っている場合は一覧モーダル経由にし、モーダル内で完了操作できるようにする）
+                    // 試運転は完了操作自体を廃止しているため、承認済みなら常に直接完了報告書を開く
+                    // （countUnresolvedPendingItemsは試運転に対して常に0を返す）
                     const hasUnresolvedTestRunPending = countUnresolvedPendingItems(req) > 0;
                     clickAttr = (req && req.status === 'approved' && !hasUnresolvedTestRunPending)
                         ? `onclick="event.stopPropagation(); window.open('${SHEET_FLOW_META.test_run.file}?view=1&id=${req.id}', '_blank')"`
