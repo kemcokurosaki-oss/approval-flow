@@ -722,13 +722,33 @@ async function saveNow() {
 }
 
 function addPendingItem() {
-    pendingItems.push({ machine: '', content: '', owner: '' });
+    pendingItems.push({ machine: '', content: '', owner: '', depts: [] });
     renderPendingItems();
 }
 
 function removePendingItem(idx) {
     pendingItems.splice(idx, 1);
     renderPendingItems();
+}
+
+// 宛先部署のselect(multiple)変更時: 「該当なし」を選んだら他の部署の選択を解除する
+function onDeptsChange(idx, selectEl) {
+    const values = Array.from(selectEl.selectedOptions).map(o => o.value);
+    if (values.includes('')) {
+        Array.from(selectEl.options).forEach(o => { o.selected = (o.value === ''); });
+        pendingItems[idx].depts = [];
+    } else {
+        pendingItems[idx].depts = values;
+    }
+}
+
+function deptOptionsHtml(selectedDepts) {
+    const selected = selectedDepts && selectedDepts.length > 0 ? selectedDepts : [];
+    const noneOption = `<option value="" ${selected.length === 0 ? 'selected' : ''}>該当なし</option>`;
+    const deptOptions = DEPT_OPTIONS.map(d =>
+        `<option value="${esc(d)}" ${selected.includes(d) ? 'selected' : ''}>${esc(d)}</option>`
+    ).join('');
+    return noneOption + deptOptions;
 }
 
 function renderPendingItems() {
@@ -753,6 +773,12 @@ function renderPendingItems() {
                 <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
                        oninput="pendingItems[${i}].owner=this.value">
             </div>
+            <div style="display:flex;flex-direction:column;width:120px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">宛先部署（複数可）</span>
+                <select multiple size="4" class="pending-depts" onchange="onDeptsChange(${i}, this)">
+                    ${deptOptionsHtml(item.depts)}
+                </select>
+            </div>
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
                 <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
             </div>
@@ -767,13 +793,16 @@ function renderPendingItemsView() {
         c.innerHTML = '<div class="pending-empty">申し送り事項はありません</div>';
         return;
     }
-    c.innerHTML = pendingItems.map(item => `
+    c.innerHTML = pendingItems.map(item => {
+        const deptText = (item.depts && item.depts.length > 0) ? item.depts.join('・') : '該当なし';
+        return `
         <div class="pending-row">
             <span style="width:120px; font-size:13px; color:#444; padding:5px 8px;">${esc(item.machine || '—')}</span>
             <span style="flex:1; font-size:13px; color:#444; padding:5px 8px;">${esc(item.content || '—')}</span>
             <span style="width:120px; font-size:13px; color:#888; padding:5px 8px;">${item.owner ? '担当: ' + esc(item.owner) : ''}</span>
-        </div>`
-    ).join('');
+            <span style="width:140px; font-size:13px; color:#888; padding:5px 8px;">宛先: ${esc(deptText)}</span>
+        </div>`;
+    }).join('');
 }
 
 function clearMissingMarks() {
