@@ -8104,16 +8104,11 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
     for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
 
-    // 申請者本人（＝現在ログイン中のユーザー）は案内送信時に必須宛先として自動追加されるため、
-    // 「実際に届くのに一覧に出ない」という誤解を防ぐためプレビューにも表示する
-    if (currentProfile?.id) {
-        const self = profileList.find(p => p.id === currentProfile.id);
-        if (self) {
-            self.isRequester = true;
-        } else {
-            profileIds.add(currentProfile.id);
-            profileList.push({ ...currentProfile, isRequester: true });
-        }
+    // 申請者本人（＝現在ログイン中のユーザー）は案内送信時に宛先候補として自動追加されるため、
+    // 「実際に届くのに一覧に出ない」という誤解を防ぐためプレビューにも表示する（必須/任意は他の宛先と同様にチェックボックスで指定）
+    if (currentProfile?.id && !profileIds.has(currentProfile.id)) {
+        profileIds.add(currentProfile.id);
+        profileList.push({ ...currentProfile });
     }
 
     return { profiles: profileList, external: extList };
