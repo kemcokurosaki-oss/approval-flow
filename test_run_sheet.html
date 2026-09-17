@@ -817,13 +817,17 @@ function renderPendingItems() {
         c.innerHTML = '<div class="pending-empty">申し送り事項はありません</div>';
         return;
     }
+    // 「宛先部署」列だけラベルがあるため、他の列にも同じ高さの透明ラベルを入れて開始位置を揃える
+    const lbl = `<span style="display:block;font-size:10px;line-height:1.4;color:transparent;user-select:none;">宛先部署</span>`;
     c.innerHTML = pendingItems.map((item, i) => `
         <div class="pending-row">
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
                 <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
                        oninput="pendingItems[${i}].machine=this.value">
             </div>
             <div style="display:flex;flex-direction:column;flex:1;">
+                ${lbl}
                 <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
                        oninput="pendingItems[${i}].content=this.value">
             </div>
@@ -832,6 +836,7 @@ function renderPendingItems() {
                 <button type="button" class="dept-summary-btn" ondblclick="openDeptModal(${i}, this)" title="ダブルクリックで宛先部署を選択">${esc(deptSummaryText(item.depts))}</button>
             </div>
             <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                ${lbl}
                 <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
             </div>
         </div>
