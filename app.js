@@ -7955,23 +7955,28 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
             });
         }
     };
-    // members テーブルから設計担当者の上長を取得（プレビュー用）
-    // 担当者不明・未登録の場合は設計全管理職にフォールバック
+    // members テーブルから設計担当者ごとの上長（supervisor_email1/2）を取得（プレビュー用）
+    // 担当者単位でmembers未登録・上長未設定の場合のみ、その担当者分は設計全管理職にフォールバック
     // ※ recordFlowNotifications側と同じ判定（ログインアカウントありならprofiles/id、なければnotification_recipients/email）で
     //   振り分けないと、「任意」チェックのキーが送信時と食い違い、必須/任意の指定が反映されなくなる
     const addSekkeiSupervisors = async () => {
-        let resolved = false;
+        let hasUnresolvedOwner = sekkeiOwnersFallback.length === 0;
         if (sekkeiOwnersFallback.length > 0) {
             const { data: memberRows } = await db.from('members')
-                .select('supervisor_email1, supervisor_email_2')
+                .select('name, supervisor_email1, supervisor_email_2')
                 .in('name', sekkeiOwnersFallback);
+            const memberMap = Object.fromEntries((memberRows || []).map(m => [m.name, m]));
             const supEmails = new Set();
-            for (const m of (memberRows || [])) {
-                if (m.supervisor_email1)  supEmails.add(m.supervisor_email1);
-                if (m.supervisor_email_2) supEmails.add(m.supervisor_email_2);
+            for (const name of sekkeiOwnersFallback) {
+                const m = memberMap[name];
+                const emails = m ? [m.supervisor_email1, m.supervisor_email_2].filter(Boolean) : [];
+                if (emails.length > 0) {
+                    emails.forEach(e => supEmails.add(e));
+                } else {
+                    hasUnresolvedOwner = true;
+                }
             }
             if (supEmails.size > 0) {
-                resolved = true;
                 const { data: supRecips } = await db.from('notification_recipients')
                     .select('name, email, department, role').in('email', [...supEmails]).eq('active', true);
                 const { data: supProfiles } = await db.from('profiles')
@@ -7989,7 +7994,7 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
                 }
             }
         }
-        if (!resolved) {
+        if (hasUnresolvedOwner) {
             await addP({ department: '設計', role: 'design_manager' });
             await addP({ department: '設計', role: 'design_director' });
         }
