@@ -7167,6 +7167,7 @@ async function saveReschedule() {
 async function cancelMeeting(requestId, flowType) {
     const label = flowType === 'shipping_meeting' ? '出荷確認会議'
         : flowType === 'inspection' ? '外観検査'
+        : flowType === 'shipping_check_inspection' ? '出荷品確認検査'
         : '簡易検査';
     if (!confirm(`${label}の開催をキャンセルします。\n参加者にキャンセル通知を送ります。よろしいですか？`)) return;
 
