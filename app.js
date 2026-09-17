@@ -5401,6 +5401,10 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
                 <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ②${dateLabel}を入力してください</span>
                 <input type="date" id="sales_date_input_2" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>` : '';
+    const packingOnlyHint = hasPackingShipping ? `
+        <div style="width:100%;font-size:12px;color:#666;">
+            ※ 梱包出荷日のみ先に入力して保存することもできます（この場合、出荷確定申請はまだ行われません）。
+        </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
             ${packingBox}
@@ -5410,6 +5414,7 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
                 <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
             ${dateBox2}
+            ${packingOnlyHint}
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
         <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
