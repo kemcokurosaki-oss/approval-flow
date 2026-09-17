@@ -3447,7 +3447,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
         const requesterName = requesterNames[req.requester_id] || '—';
         const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
         const isApproved = req.status === 'approved';
-        const canEditRejected = req.status === 'rejected' && req.requester_id === currentUser.id;
+        const canEditRejected = req.status === 'rejected' && (req.requester_id === currentUser.id || canApplyFlow('test_run'));
         const unresolvedPendingCount = countUnresolvedPendingItems(req);
         const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
         const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${req.id}` : `${meta.file}?view=1&id=${req.id}`;
