@@ -7707,6 +7707,17 @@ const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Se
 // 既にリストに表示されている宛先（送付先一覧＋追加済み）のメールアドレス。プルダウンの候補から除外する
 const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), reschedule: new Set() };
 let allProfilesForRecipientSelect = null;
+// プルダウン内の部署グループの並び順（未指定の部署は末尾に五十音順で表示）
+const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '操業', '物流'];
+function sortRecipientPickerDepartments(keys) {
+    return keys.sort((a, b) => {
+        const ia = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(a);
+        const ib = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(b);
+        const ra = ia === -1 ? RECIPIENT_PICKER_DEPARTMENT_ORDER.length : ia;
+        const rb = ib === -1 ? RECIPIENT_PICKER_DEPARTMENT_ORDER.length : ib;
+        return ra !== rb ? ra - rb : a.localeCompare(b, 'ja');
+    });
+}
 
 async function getProfilesForRecipientSelect() {
     if (!allProfilesForRecipientSelect) {
