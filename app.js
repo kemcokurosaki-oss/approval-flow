@@ -4770,17 +4770,19 @@ async function submitRequest() {
 // ===== ペンディングセクション HTML 生成 =====
 function buildPendingSectionInner(req, isMyRequest) {
     const isQaFlow   = QA_MEETING_FLOWS.includes(req.flow_type);
-    // 組立・試運転フローの担当部署の上司（組立課長・部長／操業課長・部長）も完了操作できる
+    // 試運転は「試運転完了時の伝達事項」の一覧であり、完了操作自体を持たない（閲覧専用、承認後は編集・削除も不可）
+    const isTestRun  = req.flow_type === 'test_run';
+    // 組立フローの担当部署の上司（組立課長・部長）も完了操作できる
     const isFlowSupervisor = (FLOW_SUPERVISOR_ROLES[req.flow_type] || []).includes(getEffectiveRole());
-    // 組立・試運転フローは担当部署（組立部／操業部）の部員なら誰でも完了操作できる
+    // 組立フローは担当部署（組立部）の部員なら誰でも完了操作できる
     const isFlowDeptMember = getEffectiveDept() === FLOW_DEPARTMENTS[req.flow_type];
-    // 組立・試運転フローは「申請者本人」「品証・製管」「担当部署の課長・部長」「担当部署の部員全員」が完了操作できる（担当者本人は下記itemCanComplete参照）
+    // 組立フローは「申請者本人」「品証・製管」「担当部署の課長・部長」「担当部署の部員全員」が完了操作できる（担当者本人は下記itemCanComplete参照）
     const statusOkForNonQa = ['submitted', 'in_review', 'approved'].includes(req.status);
-    const canComplete = isQaFlow
-        ? null // QAフローは項目ごとに判定する（下記itemCanComplete）
+    const canComplete = (isQaFlow || isTestRun)
+        ? null // QAフローは項目ごとに判定する（下記itemCanComplete）。試運転は完了操作自体が無い
         : (statusOkForNonQa && (isMyRequest || isQualityOrSeikan || isFlowSupervisor || isFlowDeptMember));
-    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能）
-    const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : statusOkForNonQa);
+    // ペンディング項目は品証・製管であれば編集・削除できる（組立フローは提出〜承認済みの間、QAフローは開催案内送信済み〜完了後も可能、試運転は承認前まで）
+    const canManage = isQualityOrSeikan && (isQaFlow ? ['submitted', 'approved'].includes(req.status) : (isTestRun ? ['submitted', 'in_review'].includes(req.status) : statusOkForNonQa));
     const allItems = req.sheet_data?.pending_items || [];
     const items = allItems
         .map((item, idx) => ({ item, idx }))
@@ -4788,16 +4790,18 @@ function buildPendingSectionInner(req, isMyRequest) {
     if (!items.length) return '';
     const editLbl = `<span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>`;
     // 試運転フローは「ペンディング項目」ではなく「申し送り事項」と呼ぶ
-    const sectionLabel = isQaFlow ? 'タスクリスト' : (req.flow_type === 'test_run' ? '申し送り事項' : 'ペンディング項目');
+    const sectionLabel = isQaFlow ? 'タスクリスト' : (isTestRun ? '申し送り事項' : 'ペンディング項目');
     return `
         <hr class="section-divider">
         <div class="section-title">${sectionLabel}</div>
         ${items.map(({ item, idx }, pos) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             // QAフローのタスクリストはさらに、担当者の上長（組立課長/部長・操業課長/部長）も完了操作できる
-            const itemCanComplete = isQaFlow
-                ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner) || isSupervisorOfOwner(item.owner)))
-                : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner));
+            const itemCanComplete = isTestRun
+                ? false
+                : (isQaFlow
+                    ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner) || isSupervisorOfOwner(item.owner)))
+                    : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner)));
             if (canManage && qaEditingPendingIdx === idx) {
                 return `
             <div class="pending-detail-row pending-detail-editing">
