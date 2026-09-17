@@ -76,9 +76,10 @@ function splitOwnerNames(ownerStr) {
 const QA_MEETING_LABELS = {
   simple_inspection: '簡易検査',
   inspection:        '外観検査',
+  shipping_check_inspection: '出荷品確認検査',
   shipping_meeting:  '出荷確認会議',
 };
-// 簡易検査・外観検査・出荷確認会議（この3フローの「ペンディング」は画面上「タスク」表記に統一）
+// 簡易検査・外観検査・出荷品確認検査・出荷確認会議（このフローの「ペンディング」は画面上「タスク」表記に統一）
 const QA_MEETING_FLOWS = Object.keys(QA_MEETING_LABELS);
 
 // リマインダー催促のCC固定宛先（アプリの設定画面「リマインダー通知のCC設定」で編集可能。
