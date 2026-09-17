@@ -7054,7 +7054,7 @@ async function saveReschedule() {
     const newNote = document.getElementById('reschedule_note_input').value.trim() || null;
     const oldNote = currentDetailReq?.note || null;
 
-    // 日時が実際に変わったかどうか（参加者追加や場所・備考のみの変更ではリセットしないための判定）
+    // 日時が実際に変わったかどうか（変更通知の文面種別の判定に使う）
     const oldDate = currentDetailReq?.inspection_date || '';
     const oldTime = currentDetailReq?.inspection_time ? currentDetailReq.inspection_time.slice(0, 5) : null;
     const dateTimeChanged = newDate !== oldDate || newTime !== oldTime;
