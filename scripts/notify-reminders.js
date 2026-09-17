@@ -755,18 +755,30 @@ async function runShippingListReminders() {
     .filter(t => !t.is_completed)
     .map(t => ({ project_number: t.project_number, machine: t.machine }));
 
+  // 出荷品確認検査（機械組立が無い工番向け）：自身の終了日の3日前を基準（案内催促と同じ）
+  const shippingCheckInspectionTasks = await supabaseFetch(
+    `tasks?text=eq.${encodeURIComponent('出荷品確認検査')}&end_date=lte.${threeDaysLater}` +
+    `&select=project_number,machine,end_date,is_completed`
+  );
+  const shippingCheckInspectionTargets = (shippingCheckInspectionTasks || [])
+    .filter(t => !t.is_completed)
+    .map(t => ({ project_number: t.project_number, machine: t.machine }));
+
   // 各タスク種別ごとに「この工番_機械に該当タスクが存在するか」のセットを構築（案内催促と同じ）
   const hasInspectionTask = new Set();
   const hasSimpleInspectionTask = new Set();
   const hasShippingMeetingTask = new Set();
-  const [inspRows, siRows, smRows] = await Promise.all([
+  const hasShippingCheckInspectionTask = new Set();
+  const [inspRows, siRows, smRows, sciRows] = await Promise.all([
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('外観検査')}&select=project_number,machine`),
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('簡易検査')}&select=project_number,machine`),
     supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷確認会議')}&select=project_number,machine`),
+    supabaseFetch(`tasks?text=eq.${encodeURIComponent('出荷品確認検査')}&select=project_number,machine`),
   ]);
   for (const r of (inspRows || [])) hasInspectionTask.add(`${r.project_number}__${r.machine}`);
   for (const r of (siRows   || [])) hasSimpleInspectionTask.add(`${r.project_number}__${r.machine}`);
   for (const r of (smRows   || [])) hasShippingMeetingTask.add(`${r.project_number}__${r.machine}`);
+  for (const r of (sciRows  || [])) hasShippingCheckInspectionTask.add(`${r.project_number}__${r.machine}`);
 
   // 出荷確認会議タスクがある工事番号（外観検査タイミングでの二重通知を避けるため、工事番号単位で判定）
   const projectsWithShippingMeeting = new Set(
@@ -776,6 +788,7 @@ async function runShippingListReminders() {
   const meetingFlows = [
     { flowType: 'simple_inspection', label: '簡易検査',     hasTask: key => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
     { flowType: 'inspection',        label: '外観検査',     hasTask: key => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'shipping_check_inspection', label: '出荷品確認検査', hasTask: key => hasShippingCheckInspectionTask.has(key), targets: shippingCheckInspectionTargets, noAssembly: true },
     { flowType: 'shipping_meeting',  label: '出荷確認会議', hasTask: key => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
   ];
 
