@@ -1353,11 +1353,11 @@ async function loadMineSide() {
     const buildAssemblyLikeColumns = (list, flowType) => {
         // shipping_prep は承認ステップを持たないため「申請＝完了」。列見出しもそれに合わせる
         const isNoApprovalFlow = flowType === 'shipping_prep';
-        // 試運転フローは「ペンディング」ではなく「申し送り事項」と呼ぶ
-        const pendingLabel = flowType === 'test_run' ? '申し送り事項' : 'ペンディング';
+        // 試運転は完了操作自体を廃止したため、申し送り事項の有無にかかわらず承認済みならそのまま「承認済み」列に入れる（専用列も出さない）
+        const isTestRun = flowType === 'test_run';
         const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
         list.forEach(req => {
-            const unresolvedPending = (req.sheet_data?.pending_items || [])
+            const unresolvedPending = isTestRun ? [] : (req.sheet_data?.pending_items || [])
                 .filter(p => (p.content || p.machine) && !p.completed);
             if (req.status === 'draft' || req.status === 'rejected') {
                 groups.inprogress.push(req);
@@ -1371,12 +1371,13 @@ async function loadMineSide() {
                 groups.waiting.push(req);
             }
         });
-        return [
+        const columns = [
             ['入力中', groups.inprogress, false],
             [isNoApprovalFlow ? '完了待ち' : '承認待ち', groups.waiting, false],
-            [pendingLabel, groups.pending, true],
-            [isNoApprovalFlow ? '完了' : '承認済み', groups.approved, false],
         ];
+        if (!isTestRun) columns.push(['ペンディング', groups.pending, true]);
+        columns.push([isNoApprovalFlow ? '完了' : '承認済み', groups.approved, false]);
+        return columns;
     };
 
     // 検査・会議（承認ステップなし、開催案内→ペンディング消化→完了）
