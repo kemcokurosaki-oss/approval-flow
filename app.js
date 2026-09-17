@@ -7147,7 +7147,12 @@ async function saveReschedule() {
         closeRescheduleModal();
         closeDetailModal();
         await refreshAll();
-        showToast('日程を変更しました。関係者に変更通知を送ります。', 'success');
+        showToast(
+            contentChanged
+                ? '日程を変更しました。関係者に変更通知を送ります。'
+                : '参加者を追加しました。追加した参加者に開催案内を送ります。',
+            'success'
+        );
     } catch (e) {
         showToast('保存に失敗しました: ' + e.message, 'error');
         btn.disabled = false; btn.textContent = '保存して通知';
