@@ -2548,10 +2548,11 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const requesterName = requesterNames[g.req.requester_id] || '—';
             const submittedDate = g.req.created_at ? fmtDate(g.req.created_at) : '—';
 
-            // チェックシート/完了報告書へのリンク（承認済みなら報告書、却下されて自分の申請なら編集可能）
+            // チェックシート/完了報告書へのリンク（承認済みなら報告書、却下されたら組立申請権限を持つ人なら誰でも編集可能）
+            // 申請者本人が不在でも組立部門の他のメンバーが修正・再申請できるよう、申請権限(canApply)は申請者本人と同じ基準にする
             // 承認済みでもペンディング項目が未完了で残っている場合は、報告書へ直接飛ばさず申請詳細（完了操作可能）を開く
             const isApproved = g.req.status === 'approved';
-            const canEditRejected = g.req.status === 'rejected' && g.req.requester_id === currentUser.id;
+            const canEditRejected = g.req.status === 'rejected' && (g.req.requester_id === currentUser.id || canApply);
             const unresolvedPendingCount = countUnresolvedPendingItems(g.req);
             const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
             const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${g.req.id}` : `${meta.file}?view=1&id=${g.req.id}`;
