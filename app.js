@@ -8144,8 +8144,6 @@ async function renderRecipientsList(prefix, recipients) {
             <input type="checkbox" ${optionalKeys.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('${prefix}', '${esc(key)}', this.checked)">
             必須
         </label>`;
-    // 申請者本人は送信時に必ず必須宛先として届くため、任意/必須を切り替えられない固定表示にする
-    const requesterFixedLabel = `<span class="recipient-optional-toggle" style="color:#888;">必須（申請者本人）</span>`;
 
     // profiles（社内アカウント）とexternal（notification_recipients由来、技戦部門など）は別テーブルから来るため、
     // 個別に並べ替えて連結すると常にprofilesが先に来てしまう。部署順で混在させるため一旦統合してから並べ替える
