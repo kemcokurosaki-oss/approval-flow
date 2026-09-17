@@ -7764,7 +7764,7 @@ async function _getPrepBlockers(projectNum, machine) {
 }
 
 // ===== 宛先確認ステップ（開催案内共通） =====
-const extraRecipients = { inspection: [], sm: [], si: [], reschedule: [] };
+const extraRecipients = { inspection: [], sm: [], si: [], sci: [], reschedule: [] };
 // 宛先プレビュー画面でチェックが入れられた宛先のキー（profile idまたはemail）。
 // inspection/sm/siはデフォルト「任意」・チェックで「必須」指定（＝このSetに入っているキーが必須指定）、
 // rescheduleは既存の送信済み通知の「任意」フラグを反映（＝このSetに入っているキーが任意）と意味が異なるので注意。
