@@ -7869,8 +7869,8 @@ function selectExtraRecipientProfile(prefix, email, name) {
 }
 
 async function showRecipientsStep(type) {
-    const prefix = type; // 'inspection' | 'sm' | 'si'
-    const projectNumMap = { si: currentSiProjectNum, inspection: currentInspectionProjectNum, sm: currentSmProjectNum };
+    const prefix = type; // 'inspection' | 'sm' | 'si' | 'sci'
+    const projectNumMap = { si: currentSiProjectNum, inspection: currentInspectionProjectNum, sci: currentSciProjectNum, sm: currentSmProjectNum };
     const projectNum = projectNumMap[prefix];
     const machines   = getSelectedMachines(`${prefix}_machine_list`);
     const dateVal    = document.getElementById(`${prefix}_date_input`).value;
