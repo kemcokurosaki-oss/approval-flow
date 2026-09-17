@@ -4822,6 +4822,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                             <span style="display:block;font-size:14px;line-height:1.4;color:#999;">内容</span>
                             <input type="text" id="qa_edit_content_${idx}" class="pending-content" placeholder="内容" value="${esc(item.content)}">
                         </div>
+                        ${isTestRun ? '' : `
                         <div style="display:flex;flex-direction:column;flex-shrink:0;">
                             ${editLbl}
                             <input type="date" id="qa_edit_due_${idx}" class="pending-due" value="${esc(item.due || '')}">
@@ -4829,7 +4830,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                         <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
                             <span style="display:block;font-size:14px;line-height:1.4;color:#999;">出荷後対応</span>
                             <input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''} style="margin-top:2px;">
-                        </label>
+                        </label>`}
                     </div>
                     <div style="display:flex;flex-direction:column;">
                         <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真</span>
