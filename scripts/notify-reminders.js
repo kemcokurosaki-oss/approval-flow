@@ -530,6 +530,8 @@ async function runPendingItemReminders() {
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
     if (isFlowExcludedFor2000s(req.project_number, req.flow_type)) continue;
     if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+    // 試運転は完了操作・完了予定日を廃止したため、期日超過催促の対象外にする
+    if (req.flow_type === 'test_run') continue;
 
     const items = req.sheet_data?.pending_items || [];
     for (const item of items) {
