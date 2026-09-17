@@ -1966,6 +1966,11 @@ function renderProgressCards() {
         // 組立(assembly)は機械・ユニットが工程表と紐づかないため工番全体で1つに集約するが、
         // 見た目は他フローと同じ「機械行の中の丸」として、各機械行の先頭に共通で表示する（ラインで他フローとつながる）
         const assemblyAggStatus = computeAssemblyAggStatus(num, assemblyReqsByProject);
+        // 機械組立タスクが1つも無く、組立申請も無い工番（出荷品確認検査など機械組立を伴わないフロー専用）は
+        // 組立の丸自体を表示しない（機械組立が存在するかのような誤解を防ぐため）
+        const hasAnyAssemblyTask = machines.some(m => hasTask(num, m, '機械組立'));
+        const hasAssemblyReq     = (assemblyReqsByProject[num] || []).length > 0;
+        const showAssemblyNode   = hasAnyAssemblyTask || hasAssemblyReq;
 
         const machineRows = (machines.length > 0 ? machines : [null]).map(machine => {
             const mData = machine ? projectData[num][machine] : null;
