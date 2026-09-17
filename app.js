@@ -7132,6 +7132,8 @@ async function saveReschedule() {
                 ? 'shipping_meeting_invite'
                 : currentDetailFlowType === 'inspection'
                 ? 'inspection_invite'
+                : currentDetailFlowType === 'shipping_check_inspection'
+                ? 'shipping_check_inspection_invite'
                 : 'simple_inspection_invite';
             await db.from('approval_notifications').insert(
                 extraRecipients.reschedule.map(r => ({
