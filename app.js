@@ -479,6 +479,7 @@ const FLOW_LABELS = {
     test_run:            '試運転完了申請',
     simple_inspection:   '簡易検査開催案内',
     inspection:          '外観検査開催案内',
+    shipping_check_inspection: '出荷品確認検査開催案内',
     shipping_meeting:    '出荷確認会議開催案内',
     shipping_prep:       '出荷準備完了申請',
     shipping:            '出荷確定申請'
