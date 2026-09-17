@@ -5256,6 +5256,28 @@ async function openDetailModal(requestId, returnTo = null) {
         }
     }
 
+    // 確定出荷日の変更履歴（常務承認後に日付を変更した場合のみ記録される）
+    const shippingDateHistoryHtml = shippingDateHistory.length > 0 ? `
+        <details style="margin-top:4px;">
+            <summary style="cursor:pointer;font-size:14px;color:#888;">確定出荷日の変更履歴（${shippingDateHistory.length}件）</summary>
+            <div style="font-size:13px;color:#666;margin-top:4px;padding-left:12px;border-left:2px solid #eee;">
+                ${shippingDateHistory.map(h => {
+                    const lines = [];
+                    if (h.old_confirmed_shipping_date !== h.new_confirmed_shipping_date) {
+                        lines.push(`確定出荷日: ${fmtDate(h.old_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date) || '未定'}`);
+                    }
+                    if ((h.old_confirmed_shipping_date_2 || h.new_confirmed_shipping_date_2) && h.old_confirmed_shipping_date_2 !== h.new_confirmed_shipping_date_2) {
+                        lines.push(`②確定出荷日: ${fmtDate(h.old_confirmed_shipping_date_2) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date_2) || '未定'}`);
+                    }
+                    if ((h.old_packing_confirmed_shipping_date || h.new_packing_confirmed_shipping_date) && h.old_packing_confirmed_shipping_date !== h.new_packing_confirmed_shipping_date) {
+                        lines.push(`梱包出荷日: ${fmtDate(h.old_packing_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_packing_confirmed_shipping_date) || '未定'}`);
+                    }
+                    const who = approverNames[h.changed_by] || '';
+                    return `<div style="margin-bottom:4px;">${esc(fmtDate(h.changed_at))}${who ? '　' + esc(who) + ' が変更' : ''}<br>${lines.map(esc).join('<br>')}</div>`;
+                }).join('')}
+            </div>
+        </details>` : '';
+
     // ヘッダー1行目: 工事番号【機械名】　客先名／2行目: 工事名（客先名の開始位置に揃える）
     const headerLine1Left = `${esc(pNum)}${req.machine_name ? `【${esc(req.machine_name)}${req.unit_name ? '・' + esc(req.unit_name) : ''}】` : ''}`;
     document.getElementById('detail_body').innerHTML = `
