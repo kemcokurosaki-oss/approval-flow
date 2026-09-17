@@ -4061,6 +4061,7 @@ let currentFlowType = 'assembly';
 let currentProjectNum = '';
 let currentSiProjectNum = '';
 let currentInspectionProjectNum = '';
+let currentSciProjectNum = '';
 let currentSmProjectNum = '';
 let currentShippingProjectNum = '';
 let selectedApproverRole = 'assembly_manager';
