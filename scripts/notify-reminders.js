@@ -826,7 +826,8 @@ async function runShippingListReminders() {
         const ccEmails = REMINDER_CC_EMAILS.shipping_list_reminder.filter(email => email !== recipient.email);
 
         try {
-          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
+          // 送信記録を先に残してから送信する（メール送信後に記録すると、記録の保存が
+          // 何らかの理由で失敗した場合に「1回だけ」の判定が効かず翌日以降も再送されてしまうため）
           await supabaseInsert('approval_notifications', {
             request_id:         null,
             recipient_id:       recipient.id || null,
@@ -837,6 +838,7 @@ async function runShippingListReminders() {
           });
           sentThisRun.add(dedupKey);
           sentBeforeSet.add(dedupKey);
+          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
           count++;
         } catch (e) {
           console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
