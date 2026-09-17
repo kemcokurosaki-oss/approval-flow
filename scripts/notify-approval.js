@@ -638,9 +638,11 @@ async function main() {
     if (!req) continue;
     const reschedType = req.flow_type === 'shipping_meeting' ? 'shipping_meeting_reschedule'
         : req.flow_type === 'inspection' ? 'inspection_reschedule'
+        : req.flow_type === 'shipping_check_inspection' ? 'shipping_check_inspection_reschedule'
         : 'simple_inspection_reschedule';
     const cancelType  = req.flow_type === 'shipping_meeting' ? 'shipping_meeting_cancel'
         : req.flow_type === 'inspection' ? 'inspection_cancel'
+        : req.flow_type === 'shipping_check_inspection' ? 'shipping_check_inspection_cancel'
         : 'simple_inspection_cancel';
     const prev = await supabaseFetch(
       `approval_notifications?request_id=eq.${reqId}&notification_type=in.(${reschedType},${cancelType})&emailed_at=not.is.null&select=id`
