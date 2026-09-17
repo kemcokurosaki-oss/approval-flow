@@ -3871,7 +3871,7 @@ function renderShipAfterPendingList(wrap) {
                     ${r.item.owner ? `<div class="pending-detail-owner">担当: ${esc(r.item.owner)}</div>` : ''}
                     ${r.item.due ? `<div class="pending-detail-due">完了予定日: ${esc(r.item.due)}</div>` : ''}
                 </div>
-                ${canComplete ? `<button class="btn-primary-xs" onclick="completePendingItem('${r.req.id}', ${r.idx}, {skipModalFallback:true, isQaFlow: ${QA_MEETING_FLOWS.includes(r.req.flow_type)}, isTestRun: ${r.req.flow_type === 'test_run'}})">完了にする</button>` : ''}
+                ${canComplete ? `<button class="btn-primary-xs" onclick="completePendingItem('${r.req.id}', ${r.idx}, {skipModalFallback:true, isQaFlow: ${QA_MEETING_FLOWS.includes(r.req.flow_type)}})">完了にする</button>` : ''}
             </div>`;
         }).join('');
         return `
