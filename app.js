@@ -1988,8 +1988,10 @@ function renderProgressCards() {
                 if (f.type === 'shipping_prep')     return hasTask(num, machine, '出荷準備')   || !!mData.flows['shipping_prep'];
                 return false;
             }) : [];
-            // 組立は常に先頭に表示する疑似エントリとして合成する
-            const fullChain = [{ type: 'assembly', label: '組立', __isAssembly: true }, ...applicable];
+            // 組立は先頭に表示する疑似エントリとして合成する（機械組立タスクが無い工番では表示しない）
+            const fullChain = showAssemblyNode
+                ? [{ type: 'assembly', label: '組立', __isAssembly: true }, ...applicable]
+                : [...applicable];
 
             const nodes = fullChain.map((f, i) => {
                 if (f.__isAssembly) {
