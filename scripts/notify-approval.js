@@ -626,6 +626,7 @@ async function main() {
   const icsSeqTypes = [
     'simple_inspection_reschedule', 'simple_inspection_cancel',
     'inspection_reschedule',        'inspection_cancel',
+    'shipping_check_inspection_reschedule', 'shipping_check_inspection_cancel',
     'shipping_meeting_reschedule',  'shipping_meeting_cancel',
   ];
   const icsSeqReqIds = [...new Set(
