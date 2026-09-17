@@ -8005,7 +8005,6 @@ function departmentBadgeStyle(dept) {
 
 async function renderRecipientsList(prefix, recipients) {
     const listEl = document.getElementById(`${prefix}_recipients_list`);
-    const ROLE_MAP = { assembly_director: '組立部長', assembly_manager: '組立課長', quality: '品保', staff: '' };
     const optionalKeys = recipientOptionalKeys[prefix];
 
     existingRecipientEmails[prefix] = new Set([
