@@ -587,6 +587,100 @@
     </div>
 </div>
 
+<!-- ===== Shipping Check Inspection Modal (出荷品確認検査：機械組立が無い工番向け) ===== -->
+<div id="shipping_check_inspection_modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>出荷品確認検査－開催案内作成</h2>
+            <button class="modal-close" onclick="closeShippingCheckInspectionModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="mph-header">
+                <div class="mph-pnum" id="sci_project_display"></div>
+                <div id="sci_project_info" style="display:none;">
+                    <div class="mph-customer" id="sci_customer_display"></div>
+                    <div></div>
+                    <div class="mph-name" id="sci_project_name_display"></div>
+                </div>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group" id="sci_machine_group" style="display:none;">
+                <label>機械名</label>
+                <div class="machine-checkbox-bar">
+                    <button type="button" class="btn-xs" onclick="toggleAllMachines('sci_machine_list', this)">全選択</button>
+                </div>
+                <div class="machine-checkbox-list" id="sci_machine_list"></div>
+            </div>
+            <hr class="section-divider">
+            <div class="section-title">開催情報</div>
+            <div class="form-group">
+                <label>出荷品確認検査日 <span class="required-mark">*</span></label>
+                <input type="date" id="sci_date_input">
+            </div>
+            <div class="form-group">
+                <label>開始時刻 <span class="required-mark">*</span></label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="sci_time_hour" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
+                        <option value="">--</option>
+                        <option value="08">08時</option>
+                        <option value="09">09時</option>
+                        <option value="10">10時</option>
+                        <option value="11">11時</option>
+                        <option value="12">12時</option>
+                        <option value="13">13時</option>
+                        <option value="14">14時</option>
+                        <option value="15">15時</option>
+                        <option value="16">16時</option>
+                    </select>
+                    <select id="sci_time_min" style="padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
+                        <option value="">--</option>
+                        <option value="00">00分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="45">45分</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>場所 <span class="required-mark">*</span></label>
+                <div id="sci_location_input" class="location-checkbox-area"></div>
+                <small style="color:#888; font-size:12px;">複数選択可</small>
+            </div>
+            <hr class="section-divider">
+            <div class="form-group">
+                <label>コメント（任意）</label>
+                <textarea id="sci_note_input" placeholder="参加者への連絡事項など"></textarea>
+            </div>
+            <!-- Step2: 宛先確認 -->
+            <div id="sci_recipients_step" style="display:none;">
+                <hr class="section-divider">
+                <div class="section-title">送付先一覧</div>
+                <div class="recipient-list" id="sci_recipients_list"></div>
+                <hr class="section-divider">
+                <div class="section-title">宛先を追加（任意）</div>
+                <div class="profile-picker">
+                    <button type="button" class="profile-picker-trigger" onclick="toggleProfilePickerPanel('sci')">名簿から選択...</button>
+                    <div class="profile-picker-panel" id="sci_extra_profile_panel"></div>
+                </div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="sci_extra_name" placeholder="名前" style="flex:1; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <input type="text" id="sci_extra_email" placeholder="メールアドレス" style="flex:2; padding:5px 8px; border:1px solid #ccc; border-radius:4px; font-size:13px;">
+                    <button class="btn btn-sm btn-secondary" onclick="addExtraRecipient('sci')">追加</button>
+                </div>
+                <div id="sci_extra_list"></div>
+            </div>
+        </div>
+        <div class="modal-footer" id="sci_footer_step1">
+            <button class="btn btn-secondary" onclick="closeShippingCheckInspectionModal()">キャンセル</button>
+            <button class="btn btn-primary" onclick="showRecipientsStep('sci')">宛先を確認する →</button>
+        </div>
+        <div class="modal-footer" id="sci_footer_step2" style="display:none;">
+            <button class="btn btn-secondary" onclick="showFormStep('sci')">← 戻る</button>
+            <button class="btn btn-primary" id="sci_submit_btn" onclick="submitShippingCheckInspection()">案内を送信</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== Shipping Meeting Modal (フロー5) ===== -->
 <div id="shipping_meeting_modal" class="modal-overlay">
     <div class="modal">
