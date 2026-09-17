@@ -8031,7 +8031,7 @@ async function renderRecipientsList(prefix, recipients) {
             必須
         </label>`;
 
-    const profileRows = recipients.profiles.map(p => `
+    const profileRows = sortRecipientsByDepartment(recipients.profiles, p => p.department).map(p => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(p.name || '—')}</span>
             <span class="recipient-email">${esc(p.email || '—')}</span>
@@ -8039,7 +8039,7 @@ async function renderRecipientsList(prefix, recipients) {
             ${optionalToggle(p.id)}
         </div>`).join('');
 
-    const extRows = recipients.external.map(r => `
+    const extRows = sortRecipientsByDepartment(recipients.external, r => r.department).map(r => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(r.name || '—')}</span>
             <span class="recipient-email" style="color:${r.email ? '#888' : '#e74c3c'};">${esc(r.email || '⚠ メール未登録')}</span>
