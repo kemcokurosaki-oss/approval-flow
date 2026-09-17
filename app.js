@@ -8696,9 +8696,28 @@ async function submitSalesShippingDate(requestId) {
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
 
-    if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
-    if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
+    if (!dateVal && !packingDateVal) { showToast('確定出荷日または梱包出荷日を入力してください', 'error'); return; }
+    if (isSplitShipping && dateVal && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
+
+    // 工場出荷日が未入力で梱包出荷日のみの入力の場合は、承認フローを進めず梱包出荷日だけを保存する
+    // （右上の梱包出荷日表示にのみ反映。工場出荷日が確定した時点で改めて出荷確定申請を行う）
+    if (!dateVal) {
+        showLoading('処理中...');
+        try {
+            const { error } = await db.from('approval_requests')
+                .update({ packing_confirmed_shipping_date: packingDateVal, updated_at: new Date().toISOString() })
+                .eq('id', requestId).eq('status', 'awaiting_shipping_date');
+            if (error) throw error;
+            closeDetailModal();
+            await refreshAll();
+            showToast('梱包出荷日を保存しました。工場出荷日が確定したら出荷確定申請を行ってください。', 'success');
+        } catch (e) {
+            showToast('保存に失敗しました: ' + e.message, 'error');
+        } finally {
+            hideLoading();
+        }
+        return;
+    }
 
     showLoading('処理中...');
     try {
