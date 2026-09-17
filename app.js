@@ -8831,7 +8831,6 @@ async function changeConfirmedShippingDate(requestId) {
 
     if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
     if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
 
     showLoading('処理中...');
     try {
