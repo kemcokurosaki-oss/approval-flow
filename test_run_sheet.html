@@ -728,13 +728,17 @@ async function saveNow() {
 }
 
 function addPendingItem() {
-    pendingItems.push({ machine: '', content: '', owner: '', depts: [] });
+    pendingItems.push({ machine: '', content: '', depts: [] });
     renderPendingItems();
 }
 
 function removePendingItem(idx) {
     pendingItems.splice(idx, 1);
     renderPendingItems();
+}
+
+function deptSummaryText(depts) {
+    return (depts && depts.length > 0) ? depts.join('・') : '該当なし';
 }
 
 // 宛先部署のトグル: 「該当なし」を押すと他の部署の選択を解除する
@@ -749,6 +753,8 @@ function toggleDept(idx, dept) {
         else item.depts.push(dept);
     }
     renderPendingItems();
+    // 部署選択モーダルを開いたままトグルした場合は、モーダル側の表示も選択状態に合わせて更新する
+    if (document.getElementById('dept_modal')) openDeptModal(idx);
 }
 
 function deptButtonsHtml(idx, selectedDepts) {
@@ -760,6 +766,30 @@ function deptButtonsHtml(idx, selectedDepts) {
     return noneBtn + deptBtns;
 }
 
+// 宛先部署ボタンをダブルクリックすると開く選択モーダル
+function openDeptModal(idx) {
+    document.getElementById('dept_modal')?.remove();
+    const item = pendingItems[idx];
+    const overlay = document.createElement('div');
+    overlay.id = 'dept_modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,30,50,.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:10px;padding:20px;width:320px;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.25);">
+            <div style="font-size:15px;font-weight:bold;margin-bottom:12px;color:#1e3a5f;">宛先部署を選択</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${deptButtonsHtml(idx, item.depts)}
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+                <button class="btn btn-secondary" onclick="closeDeptModal()">閉じる</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function closeDeptModal() {
+    document.getElementById('dept_modal')?.remove();
+}
+
 function renderPendingItems() {
     const c = document.getElementById('pending_container');
     if (!c) return;
@@ -768,30 +798,21 @@ function renderPendingItems() {
         return;
     }
     c.innerHTML = pendingItems.map((item, i) => `
-        <div class="pending-row" style="flex-direction:column; align-items:stretch; gap:8px;">
-            <div style="display:flex; gap:8px;">
-                <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                    <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
-                           oninput="pendingItems[${i}].machine=this.value">
-                </div>
-                <div style="display:flex;flex-direction:column;flex:1;">
-                    <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
-                           oninput="pendingItems[${i}].content=this.value">
-                </div>
-                <div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;">
-                    <span style="display:block;font-size:10px;line-height:1.4;color:#999;">担当者（任意）</span>
-                    <input type="text" class="pending-content" placeholder="担当者名" value="${esc(item.owner || '')}"
-                           oninput="pendingItems[${i}].owner=this.value">
-                </div>
-                <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                    <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
-                </div>
+        <div class="pending-row">
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                <input type="text" class="pending-machine" placeholder="機器名" value="${esc(item.machine)}"
+                       oninput="pendingItems[${i}].machine=this.value">
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-                <span style="font-size:10px;color:#999;">宛先部署（複数可）</span>
-                <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                    ${deptButtonsHtml(i, item.depts)}
-                </div>
+            <div style="display:flex;flex-direction:column;flex:1;">
+                <input type="text" class="pending-content" placeholder="内容" value="${esc(item.content)}"
+                       oninput="pendingItems[${i}].content=this.value">
+            </div>
+            <div style="display:flex;flex-direction:column;width:150px;flex-shrink:0;">
+                <span style="display:block;font-size:10px;line-height:1.4;color:#999;">宛先部署（ダブルクリックで選択）</span>
+                <button type="button" class="dept-summary-btn" ondblclick="openDeptModal(${i})" title="ダブルクリックで宛先部署を選択">${esc(deptSummaryText(item.depts))}</button>
+            </div>
+            <div style="display:flex;flex-direction:column;flex-shrink:0;">
+                <button class="btn-danger-xs" onclick="removePendingItem(${i})">削除</button>
             </div>
         </div>
     `).join('');
@@ -805,12 +826,11 @@ function renderPendingItemsView() {
         return;
     }
     c.innerHTML = pendingItems.map(item => {
-        const deptText = (item.depts && item.depts.length > 0) ? item.depts.join('・') : '該当なし';
+        const deptText = deptSummaryText(item.depts);
         return `
         <div class="pending-row">
             <span style="width:120px; font-size:13px; color:#444; padding:5px 8px;">${esc(item.machine || '—')}</span>
             <span style="flex:1; font-size:13px; color:#444; padding:5px 8px;">${esc(item.content || '—')}</span>
-            <span style="width:120px; font-size:13px; color:#888; padding:5px 8px;">${item.owner ? '担当: ' + esc(item.owner) : ''}</span>
             <span style="width:140px; font-size:13px; color:#888; padding:5px 8px;">宛先: ${esc(deptText)}</span>
         </div>`;
     }).join('');
