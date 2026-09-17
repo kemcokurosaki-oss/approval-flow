@@ -7182,6 +7182,8 @@ async function cancelMeeting(requestId, flowType) {
             ? 'shipping_meeting_invite'
             : flowType === 'inspection'
             ? 'inspection_invite'
+            : flowType === 'shipping_check_inspection'
+            ? 'shipping_check_inspection_invite'
             : 'simple_inspection_invite';
         await db.from('approval_notifications')
             .delete()
