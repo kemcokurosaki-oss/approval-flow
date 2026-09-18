@@ -8280,7 +8280,7 @@ async function buildAttendanceSectionHtml(req) {
     });
 
     const rows = groups.map(g => `
-        <div class="profile-picker-group-label" style="background:#1e3a5f;color:#fff;">${esc(g.dept)}</div>
+        <div class="profile-picker-group-label" style="background:#1e3a5f;color:#fff;margin-left:0;">${esc(g.dept)}</div>
         ${g.items.map(a => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(a.name)}</span>
