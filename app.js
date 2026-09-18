@@ -5408,27 +5408,16 @@ async function openDetailModal(requestId, returnTo = null) {
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
-        const [required, doneFlows, pendingBlockers] = await Promise.all([
-            _getRequiredFlows(req.project_number, req.machine_name),
-            _getMachineDoneFlows(req.project_number, req.machine_name),
-            _getShippingPendingBlockers(req.project_number, req.machine_name)
-        ]);
-        const priorFlowsDone = [...required].every(t => doneFlows.has(t));
-        const blockReason = !priorFlowsDone ? '前フローが未完了のため申請できません'
-            : pendingBlockers.length > 0 ? '残件があるため申請できません'
-            : null;
-        const blockWarningHtml = blockReason
-            ? `<div style="color:#c0392b; font-weight:bold; font-size:14px; text-align:right;">⚠ ${blockReason}</div>`
-            : '';
+        const pendingBlockers = await _getShippingPendingBlockers(req.project_number, req.machine_name);
+        const blockWarningHtml = pendingBlockers.length > 0 ? `
+            <div style="margin-right:auto;display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ ${pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</span>
+            </div>` : '';
         footer.innerHTML = `
-            <div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; width:100%;">
-                ${blockWarningHtml}
-                <div style="display:flex; gap:8px; justify-content:flex-end;">
-                    ${changeDateFooterLinkHtml}
-                    <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
-                    <button class="btn btn-success" ${blockReason ? 'disabled title="残件を解消すると申請できます"' : ''} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
-                </div>
-            </div>
+            ${changeDateFooterLinkHtml}
+            ${blockWarningHtml}
+            <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
+            <button class="btn btn-success" ${pendingBlockers.length > 0 ? 'disabled title="残件を解消すると申請できます"' : ''} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
@@ -8352,18 +8341,18 @@ async function buildAttendanceSectionHtml(req) {
         .filter(k => counts[k] > 0)
         .map(k => {
             const s = RSVP_STATUS_LABELS[k];
-            return `<span style="font-size:14px;font-weight:700;padding:4px 11px;border-radius:20px;background:${s.bg};color:${s.color};white-space:nowrap;">${s.label} ${counts[k]}</span>`;
+            return `<span style="font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;background:${s.bg};color:${s.color};white-space:nowrap;">${s.label} ${counts[k]}</span>`;
         }).join('');
     const followSummaryHtml = counts.follow > 0
-        ? `<span style="font-size:14px;font-weight:700;padding:4px 11px;border-radius:20px;background:${RSVP_FOLLOW_BADGE.bg};color:${RSVP_FOLLOW_BADGE.color};white-space:nowrap;">${RSVP_FOLLOW_BADGE.label} ${counts.follow}</span>`
+        ? `<span style="font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;background:${RSVP_FOLLOW_BADGE.bg};color:${RSVP_FOLLOW_BADGE.color};white-space:nowrap;">${RSVP_FOLLOW_BADGE.label} ${counts.follow}</span>`
         : '';
 
     const alertHtml = pendingRequired.length > 0
-        ? `<div style="display:flex;align-items:center;gap:8px;background:#fff8e6;border:1px solid #f0d98c;border-radius:10px;padding:9px 12px;font-size:14px;color:#7a5c00;font-weight:700;margin-bottom:12px;">必須メンバー${pendingRequired.length}名が未回答です（${pendingRequired.map(a => esc(a.name)).join('・')}）</div>`
+        ? `<div style="display:flex;align-items:center;gap:8px;background:#fff8e6;border:1px solid #f0d98c;border-radius:8px;padding:5px 11px;font-size:13px;color:#7a5c00;font-weight:700;margin-bottom:8px;">必須メンバー${pendingRequired.length}名が未回答です（${pendingRequired.map(a => esc(a.name)).join('・')}）</div>`
         : '';
 
-    const ROW_GRID = 'display:grid;grid-template-columns:130px 46px 120px;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eef1f6;';
-    const DEPT_HEAD = 'display:flex;align-items:center;gap:8px;background:#f6f8fb;border-left:3px solid #2f6fb0;border-radius:0 8px 8px 0;padding:6px 12px;font-size:14px;font-weight:700;color:#16233a;';
+    const ROW_GRID = 'display:grid;grid-template-columns:120px 44px 108px;align-items:center;gap:8px;padding:3px 12px;';
+    const DEPT_HEAD = 'display:flex;align-items:center;gap:8px;background:#f6f8fb;border-left:3px solid #2f6fb0;border-radius:0 8px 8px 0;padding:3px 12px;font-size:13px;font-weight:700;color:#16233a;';
     const REQ_TAG = 'font-size:11px;font-weight:700;color:#b5342a;border:1px solid #f3c4bd;background:#fdf2f0;border-radius:4px;padding:1px 5px;justify-self:start;white-space:nowrap;';
 
     const rows = groups.map(g => `
@@ -8371,20 +8360,20 @@ async function buildAttendanceSectionHtml(req) {
             <div style="${DEPT_HEAD}">${esc(g.dept)}<span style="font-size:13px;color:#8a94a6;font-weight:500;">${g.items.length}名</span></div>
             ${g.items.map(a => `
             <div style="${ROW_GRID}">
-                <span style="font-size:16px;font-weight:700;color:#20293a;">${esc(a.name)}</span>
+                <span style="font-size:15px;font-weight:700;color:#20293a;line-height:1.3;">${esc(a.name)}</span>
                 ${a.optional ? '<span></span>' : `<span style="${REQ_TAG}">必須</span>`}
-                <span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:700;padding:4px 13px;border-radius:20px;background:${a.st.bg};color:${a.st.color};justify-self:start;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:${a.st.dot || a.st.color};flex:none;"></span>${a.st.label}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:1px 10px;border-radius:20px;background:${a.st.bg};color:${a.st.color};justify-self:start;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:${a.st.dot || a.st.color};flex:none;"></span>${a.st.label}</span>
             </div>`).join('')}
         </div>`).join('');
 
     return `
         <hr class="section-divider">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
             <div style="font-size:16px;color:#16233a;font-weight:700;">出欠状況<span style="font-size:14px;color:#8a94a6;font-weight:500;margin-left:8px;">${sorted.length}名</span></div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">${summaryHtml}${followSummaryHtml}</div>
         </div>
         ${alertHtml}
-        <div style="display:flex;flex-direction:column;gap:12px;">${rows}</div>`;
+        <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>`;
 }
 
 function addExtraRecipient(prefix) {
