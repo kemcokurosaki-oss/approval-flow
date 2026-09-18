@@ -8284,8 +8284,8 @@ async function buildAttendanceSectionHtml(req) {
         ${g.items.map(a => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(a.name)}</span>
-            ${a.optional ? '' : '<span class="recipient-tag">必須</span>'}
             <span class="recipient-tag" style="background:${a.st.bg};color:${a.st.color};">${a.st.label}</span>
+            ${a.optional ? '' : '<span class="recipient-required-text">必須</span>'}
         </div>`).join('')}
     `).join('');
 
