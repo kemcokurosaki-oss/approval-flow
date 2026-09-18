@@ -8285,7 +8285,7 @@ async function buildAttendanceSectionHtml(req) {
         <div class="recipient-item">
             <span class="recipient-name">${esc(a.name)}</span>
             <span class="recipient-tag" style="background:${a.st.bg};color:${a.st.color};">${a.st.label}</span>
-            ${a.optional ? '' : '<span class="recipient-tag" style="background:#f0f0f0;color:#888;">必須</span>'}
+            ${a.optional ? '' : '<span class="recipient-required-text">必須</span>'}
         </div>`).join('')}
     `).join('');
 
