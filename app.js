@@ -5408,16 +5408,17 @@ async function openDetailModal(requestId, returnTo = null) {
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
-        // 前フロー自体が未完了の場合は別のエラー（クリック時のトースト）で伝えるため、ここでは前フロー完了済みの時だけ残件警告を出す
         const [required, doneFlows, pendingBlockers] = await Promise.all([
             _getRequiredFlows(req.project_number, req.machine_name),
             _getMachineDoneFlows(req.project_number, req.machine_name),
             _getShippingPendingBlockers(req.project_number, req.machine_name)
         ]);
         const priorFlowsDone = [...required].every(t => doneFlows.has(t));
-        const showPendingWarning = priorFlowsDone && pendingBlockers.length > 0;
-        const blockWarningHtml = showPendingWarning
-            ? `<div style="color:#c0392b; font-weight:bold; font-size:14px; text-align:right;">⚠ ${pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</div>`
+        const blockReason = !priorFlowsDone ? '前フローが未完了のため申請できません'
+            : pendingBlockers.length > 0 ? '残件があるため申請できません'
+            : null;
+        const blockWarningHtml = blockReason
+            ? `<div style="color:#c0392b; font-weight:bold; font-size:14px; text-align:right;">⚠ ${blockReason}</div>`
             : '';
         footer.innerHTML = `
             <div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; width:100%;">
@@ -5425,7 +5426,7 @@ async function openDetailModal(requestId, returnTo = null) {
                 <div style="display:flex; gap:8px; justify-content:flex-end;">
                     ${changeDateFooterLinkHtml}
                     <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
-                    <button class="btn btn-success" ${showPendingWarning ? 'disabled title="残件を解消すると申請できます"' : ''} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
+                    <button class="btn btn-success" ${blockReason ? 'disabled title="残件を解消すると申請できます"' : ''} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
                 </div>
             </div>
         `;
