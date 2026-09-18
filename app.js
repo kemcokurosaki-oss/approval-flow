@@ -6903,7 +6903,7 @@ async function finalizeQaMeeting(requestId) {
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
 
-        // 外観検査or簡易検査＋（あれば）出荷確認会議が揃って完了したら、出荷フローを自動起票する
+        // 外観検査/簡易検査/出荷品確認検査のいずれか＋（あれば）出荷確認会議が揃って完了したら、出荷フローを自動起票する
         if (reqRow?.project_number && reqRow?.machine_name) {
             await _autoIssueShippingIfReady(reqRow.project_number, reqRow.machine_name);
         }
