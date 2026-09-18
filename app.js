@@ -7802,6 +7802,30 @@ async function _getPrepBlockers(projectNum, machine) {
     return blockers;
 }
 
+// 出荷確定申請（起票・品証本申請いずれも）の前提として、各フローが承認済みかどうかによらず、
+// 「出荷後対応」でない未完了ペンディング項目が残っていないか調べる
+// （試運転は完了操作・出荷後対応チェックを廃止した申し送り事項のため対象外。組立はsheet_data.pending_itemsを持たないため対象外）
+async function _getShippingPendingBlockers(projectNum, machine) {
+    const chain = await _getMachineFlowChain(projectNum, machine);
+    const targetFlows = chain.filter(t => t !== 'assembly' && t !== 'shipping' && t !== 'test_run');
+    if (targetFlows.length === 0) return [];
+
+    const { data: reqs } = await db.from('approval_requests').select('flow_type, status, sheet_data')
+        .eq('project_number', projectNum).eq('machine_name', machine).in('flow_type', targetFlows);
+
+    const blockers = [];
+    for (const flowType of targetFlows) {
+        const matching = (reqs || []).filter(r => r.flow_type === flowType);
+        // 却下→再申請等で同じflow_typeに複数レコードがある場合、承認済みのものを優先して判定する
+        const req = matching.find(r => r.status === 'approved') || matching[0];
+        if (!req) continue;
+        const items = (req.sheet_data?.pending_items || [])
+            .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
+        if (items.length > 0) blockers.push({ flowType, count: items.length });
+    }
+    return blockers;
+}
+
 // ===== 宛先確認ステップ（開催案内共通） =====
 const extraRecipients = { inspection: [], sm: [], si: [], sci: [], reschedule: [] };
 // 宛先プレビュー画面でチェックが入れられた宛先のキー（profile idまたはemail）。
