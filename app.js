@@ -8252,13 +8252,13 @@ const QA_INVITE_NOTIFICATION_TYPES = {
     shipping_meeting:  ['shipping_meeting_invite', 'shipping_meeting_reschedule'],
 };
 const RSVP_STATUS_LABELS = {
-    accepted:       { label: '承諾',   color: '#1c8f4d', bg: '#eafaf0' },
-    declined:       { label: '辞退',   color: '#c0392b', bg: '#fde8e8' },
-    tentative:      { label: '仮',     color: '#8a6d00', bg: '#fff8e6' },
-    'needs-action': { label: '未回答', color: '#888',    bg: '#f0f0f0' },
+    accepted:       { label: '承諾',   color: '#0f7a3d', bg: '#eafaf0', dot: '#1c8f4d' },
+    declined:       { label: '辞退',   color: '#b5342a', bg: '#fde8e8', dot: '#d4443b' },
+    tentative:      { label: '仮',     color: '#7a6000', bg: '#fff8e6', dot: '#c9a227' },
+    'needs-action': { label: '未回答', color: '#5b6b80', bg: '#eef1f6', dot: '#98a3b4' },
 };
 // Outlookの「出欠せずフォロー」応答（案内メールへの回答の一種、出欠は未回答のまま関心のみ表明）
-const RSVP_FOLLOW_BADGE = { label: 'フォロー', color: '#0969da', bg: '#e8f2ff' };
+const RSVP_FOLLOW_BADGE = { label: 'フォロー', color: '#0969da', bg: '#e8f2ff', dot: '#4b93e8' };
 
 async function buildAttendanceSectionHtml(req) {
     const types = QA_INVITE_NOTIFICATION_TYPES[req.flow_type];
@@ -8318,7 +8318,7 @@ async function buildAttendanceSectionHtml(req) {
         const status = (email && statusByEmail[email]) || 'needs-action';
         const isFollow = !!(email && followByEmail[email]);
         const st     = isFollow ? RSVP_FOLLOW_BADGE : (RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action']);
-        return { name, department, optional: e.optional, st };
+        return { name, department, optional: e.optional, st, statusKey: isFollow ? 'follow' : status };
     });
 
     // 名簿プルダウン（renderExtraProfileSelect）と同じ部署順に揃え、部署ごとに見出しでグループ化する
@@ -8331,20 +8331,49 @@ async function buildAttendanceSectionHtml(req) {
         else last.items.push(a);
     });
 
+    // 集計サマリ（承諾/辞退/仮/未回答の件数）と、必須かつ未回答のメンバー
+    const counts = { accepted: 0, declined: 0, tentative: 0, 'needs-action': 0, follow: 0 };
+    sorted.forEach(a => { if (counts[a.statusKey] !== undefined) counts[a.statusKey]++; });
+    const pendingRequired = sorted.filter(a => !a.optional && (a.statusKey === 'needs-action' || a.statusKey === 'follow'));
+
+    const summaryOrder = ['accepted', 'declined', 'tentative', 'needs-action'];
+    const summaryHtml = summaryOrder
+        .filter(k => counts[k] > 0)
+        .map(k => {
+            const s = RSVP_STATUS_LABELS[k];
+            return `<span style="font-size:14px;font-weight:700;padding:4px 11px;border-radius:20px;background:${s.bg};color:${s.color};white-space:nowrap;">${s.label} ${counts[k]}</span>`;
+        }).join('');
+    const followSummaryHtml = counts.follow > 0
+        ? `<span style="font-size:14px;font-weight:700;padding:4px 11px;border-radius:20px;background:${RSVP_FOLLOW_BADGE.bg};color:${RSVP_FOLLOW_BADGE.color};white-space:nowrap;">${RSVP_FOLLOW_BADGE.label} ${counts.follow}</span>`
+        : '';
+
+    const alertHtml = pendingRequired.length > 0
+        ? `<div style="display:flex;align-items:center;gap:8px;background:#fff8e6;border:1px solid #f0d98c;border-radius:10px;padding:9px 12px;font-size:14px;color:#7a5c00;font-weight:700;margin-bottom:12px;">必須メンバー${pendingRequired.length}名が未回答です（${pendingRequired.map(a => esc(a.name)).join('・')}）</div>`
+        : '';
+
+    const ROW_GRID = 'display:grid;grid-template-columns:130px 46px 120px;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eef1f6;';
+    const DEPT_HEAD = 'display:flex;align-items:center;gap:8px;background:#f6f8fb;border-left:3px solid #2f6fb0;border-radius:0 8px 8px 0;padding:6px 12px;font-size:14px;font-weight:700;color:#16233a;';
+    const REQ_TAG = 'font-size:11px;font-weight:700;color:#b5342a;border:1px solid #f3c4bd;background:#fdf2f0;border-radius:4px;padding:1px 5px;justify-self:start;white-space:nowrap;';
+
     const rows = groups.map(g => `
-        <div class="profile-picker-group-label" style="background:#1e3a5f;color:#fff;margin-left:0;">${esc(g.dept)}</div>
-        ${g.items.map(a => `
-        <div class="recipient-item">
-            <span class="recipient-name">${esc(a.name)}</span>
-            <span class="recipient-tag" style="background:${a.st.bg};color:${a.st.color};">${a.st.label}</span>
-            ${a.optional ? '' : '<span class="recipient-required-text">必須</span>'}
-        </div>`).join('')}
-    `).join('');
+        <div>
+            <div style="${DEPT_HEAD}">${esc(g.dept)}<span style="font-size:13px;color:#8a94a6;font-weight:500;">${g.items.length}名</span></div>
+            ${g.items.map(a => `
+            <div style="${ROW_GRID}">
+                <span style="font-size:16px;font-weight:700;color:#20293a;">${esc(a.name)}</span>
+                ${a.optional ? '<span></span>' : `<span style="${REQ_TAG}">必須</span>`}
+                <span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:700;padding:4px 13px;border-radius:20px;background:${a.st.bg};color:${a.st.color};justify-self:start;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:${a.st.dot || a.st.color};flex:none;"></span>${a.st.label}</span>
+            </div>`).join('')}
+        </div>`).join('');
 
     return `
         <hr class="section-divider">
-        <div class="section-title">出欠状況</div>
-        <div>${rows}</div>`;
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+            <div style="font-size:16px;color:#16233a;font-weight:700;">出欠状況<span style="font-size:14px;color:#8a94a6;font-weight:500;margin-left:8px;">${sorted.length}名</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">${summaryHtml}${followSummaryHtml}</div>
+        </div>
+        ${alertHtml}
+        <div style="display:flex;flex-direction:column;gap:12px;">${rows}</div>`;
 }
 
 function addExtraRecipient(prefix) {
