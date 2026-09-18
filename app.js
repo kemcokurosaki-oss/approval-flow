@@ -7031,7 +7031,7 @@ async function renderExistingRecipients(requestId) {
         uniqueNotifs.map(n => {
             const p = n.recipient_id ? profileMap[n.recipient_id] : null;
             return (p?.email || n.recipient_email || '').toLowerCase();
-        }).filter(Boolean)
+        }).filter(email => email && !declinedEmails.has(email))
     );
     await renderExtraProfileSelect('reschedule');
 }
