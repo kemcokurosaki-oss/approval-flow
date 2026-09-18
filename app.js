@@ -7718,7 +7718,7 @@ async function _getShippingIssueRequiredFlows(projectNum, machine) {
     return new Set(middle.filter(t => QA_MEETING_FLOWS.includes(t)));
 }
 
-// 外観検査/簡易検査（＋あれば出荷確認会議）が完了したら出荷フローを自動起票し、営業へ確定出荷日入力を依頼する
+// 外観検査/簡易検査/出荷品確認検査のいずれか（＋あれば出荷確認会議）が完了したら出荷フローを自動起票し、営業へ確定出荷日入力を依頼する
 // （出荷準備フローの完了は待たない）。既に起票済みの場合は何もしない
 async function _autoIssueShippingIfReady(projectNum, machine) {
     const required = await _getShippingIssueRequiredFlows(projectNum, machine);
