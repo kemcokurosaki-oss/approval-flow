@@ -9013,6 +9013,12 @@ async function confirmAndSubmitShipping(requestId) {
                 showToast(`前フロー（${missing.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません`, 'error');
                 return;
             }
+            const pendingBlockers = await _getShippingPendingBlockers(checkReq.project_number, checkReq.machine_name);
+            if (pendingBlockers.length > 0) {
+                const labels = pendingBlockers.map(t => FLOW_LABELS[t.flowType] || t.flowType).join('・');
+                showToast(`${labels}に未完了のペンディング項目が残っているため申請できません`, 'error');
+                return;
+            }
         }
 
         const { data: req, error } = await db.from('approval_requests')
