@@ -8266,17 +8266,25 @@ async function buildAttendanceSectionHtml(req) {
         return { name, department, optional: e.optional, st };
     });
 
-    // 名簿プルダウン（renderExtraProfileSelect）と同じ部署順に揃える
-    const rows = sortRecipientsByDepartment(attendees, a => a.department).map(a => {
-        const deptLabel = a.department || 'その他';
-        return `
+    // 名簿プルダウン（renderExtraProfileSelect）と同じ部署順に揃え、部署ごとに見出しでグループ化する
+    const sorted = sortRecipientsByDepartment(attendees, a => a.department);
+    const groups = [];
+    sorted.forEach(a => {
+        const dept = a.department || 'その他';
+        const last = groups[groups.length - 1];
+        if (!last || last.dept !== dept) groups.push({ dept, items: [a] });
+        else last.items.push(a);
+    });
+
+    const rows = groups.map(g => `
+        <div class="profile-picker-group-label" style="${departmentBadgeStyle(g.dept)}">${esc(g.dept)}</div>
+        ${g.items.map(a => `
         <div class="recipient-item">
             <span class="recipient-name">${esc(a.name)}</span>
-            <span class="recipient-tag" style="${departmentBadgeStyle(deptLabel)}">${esc(deptLabel)}</span>
-            <span class="recipient-tag">${a.optional ? '任意' : '必須'}</span>
+            ${a.optional ? '' : '<span class="recipient-tag">必須</span>'}
             <span class="recipient-tag" style="background:${a.st.bg};color:${a.st.color};">${a.st.label}</span>
-        </div>`;
-    }).join('');
+        </div>`).join('')}
+    `).join('');
 
     return `
         <hr class="section-divider">
