@@ -9578,6 +9578,48 @@ db.auth.onAuthStateChange((event, session) => {
     }
 });
 
+// localStorageに保存されたトークンでセッションを復元する。成功時はsessionを、失敗時はnullを返す（失敗時はlocalStorageも削除）
+async function restoreSessionFromStorage() {
+    const accessToken  = localStorage.getItem('ap_access_token');
+    const refreshToken = localStorage.getItem('ap_refresh_token');
+    if (!accessToken) return null;
+
+    const { data, error } = await db.auth.setSession({
+        access_token:  accessToken,
+        refresh_token: refreshToken
+    });
+    if (error || !data.session) {
+        localStorage.removeItem('ap_access_token');
+        localStorage.removeItem('ap_refresh_token');
+        return null;
+    }
+    localStorage.setItem('ap_access_token',  data.session.access_token);
+    localStorage.setItem('ap_refresh_token', data.session.refresh_token);
+    return data.session;
+}
+
+// タブを長時間バックグラウンドに置くとSDKの自動更新タイマーが働かず、
+// トークンが失効したまま気づかないことがあるため、画面に戻ってきたタイミングで再確認する
+let _revalidatingSession = false;
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (!currentUser?.id) return; // ゲスト（未ログイン）時は対象外
+    if (_revalidatingSession) return;
+
+    _revalidatingSession = true;
+    try {
+        const session = await restoreSessionFromStorage();
+        if (!session && currentUser?.id) {
+            currentUser    = null;
+            currentProfile = null;
+            showToast('ログインの有効期限が切れました。再度ログインしてください', 'error');
+            await bootGuest();
+        }
+    } finally {
+        _revalidatingSession = false;
+    }
+});
+
 // ===== ページロード時にセッションを復元 =====
 (async () => {
     // 招待・パスワードリセットのメールリンクから来た場合は、通常ログインより先に判定する
@@ -9595,21 +9637,8 @@ db.auth.onAuthStateChange((event, session) => {
         }
     }
 
-    const accessToken  = localStorage.getItem('ap_access_token');
-    const refreshToken = localStorage.getItem('ap_refresh_token');
-    if (!accessToken) { await bootGuest(); return; } // 未ログイン → 閲覧のみで起動
-
-    const { data, error } = await db.auth.setSession({
-        access_token:  accessToken,
-        refresh_token: refreshToken
-    });
-    if (error || !data.session) {
-        // トークン期限切れなど → 閲覧のみで起動
-        localStorage.removeItem('ap_access_token');
-        localStorage.removeItem('ap_refresh_token');
-        await bootGuest();
-        return;
-    }
-    await bootApp(data.session);
+    const session = await restoreSessionFromStorage();
+    if (!session) { await bootGuest(); return; } // 未ログイン・失効 → 閲覧のみで起動
+    await bootApp(session);
 })();
 
