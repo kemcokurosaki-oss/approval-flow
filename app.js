@@ -9378,15 +9378,25 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             // 固定宛先（設定画面で個人単位に選択）
             await addFixedRecipients();
             // 工番担当者（profiles）: 組立（複数人対応、ON/OFF切替可）
-            if (dyn.kumitate_owner) for (const o of kumitateOwners) await addPbyName(o);
+            if (dyn.kumitate_owner) {
+                for (const o of kumitateOwners) await addPbyName(o);
+                // 機械+ユニットで絞り込んだ結果、担当者が誰も見つからなかった場合は申請者本人に通知する
+                if (kumitateOwners.length === 0 && kumitateResult.unresolved && req.requester_id) profileIds.add(req.requester_id);
+            }
             // 操業部（試運転担当者・操業課長/部長）は組立完了通知の対象外
             // 工番担当者（外部）: 営業・設計staff（ON/OFF切替可）
             if (dyn.sales) await addOwnerByName(salesOwner);
-            if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o);
+            if (dyn.sekkei_owner) {
+                for (const o of sekkeiOwners) await addOwnerByName(o);
+                if (sekkeiOwners.length === 0 && sekkeiResult.unresolved && req.requester_id) profileIds.add(req.requester_id);
+            }
             // 設計管理職: 担当者の上長を members テーブルから取得（本人・上長を別々にON/OFF切替可）
             if (dyn.sekkei_manager) await addSekkeiSupervisors();
             // 電気艤装タスクがある場合のみ電装担当者も追加
-            if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+            if (dyn.denki_owner) {
+                for (const o of denkiOwners) await addPbyName(o);
+                if (denkiOwners.length === 0 && denkiResult.unresolved && req.requester_id) profileIds.add(req.requester_id);
+            }
             break;
         }
 
