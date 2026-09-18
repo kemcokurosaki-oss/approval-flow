@@ -8875,15 +8875,6 @@ async function onShippingMachineChange() {
         warnEl.textContent = `⚠ 前フローが未完了のため申請できません`;
         warnEl.style.display = 'block';
         document.getElementById('shipping_submit_btn').disabled = true;
-    } else {
-        const pendingBlockers = await _getShippingPendingBlockers(num, machine);
-        if (pendingBlockers.length > 0) {
-            const labels = pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・');
-            const warnEl = document.getElementById('shipping_missing_warning');
-            warnEl.textContent = `⚠ ${labels}に未完了のペンディング項目が残っているため申請できません`;
-            warnEl.style.display = 'block';
-            document.getElementById('shipping_submit_btn').disabled = true;
-        }
     }
     } finally {
         hideLoading();
