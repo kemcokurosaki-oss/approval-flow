@@ -7804,17 +7804,39 @@ async function _getPrepBlockers(projectNum, machine) {
 
 // 出荷確定申請（起票・品証本申請いずれも）の前提として、各フローが承認済みかどうかによらず、
 // 「出荷後対応」でない未完了ペンディング項目が残っていないか調べる
-// （試運転は完了操作・出荷後対応チェックを廃止した申し送り事項のため対象外。組立はsheet_data.pending_itemsを持たないため対象外）
+// （試運転は完了操作・出荷後対応チェックを廃止した申し送り事項のため対象外。
+//  組立はsheet_data.pending_itemsを持つが、machine_nameで単純に絞り込めないためassembly_items一致で個別に判定する）
 async function _getShippingPendingBlockers(projectNum, machine) {
     const chain = await _getMachineFlowChain(projectNum, machine);
-    const targetFlows = chain.filter(t => t !== 'assembly' && t !== 'shipping' && t !== 'test_run');
+    const targetFlows = chain.filter(t => t !== 'shipping' && t !== 'test_run');
     if (targetFlows.length === 0) return [];
 
-    const { data: reqs } = await db.from('approval_requests').select('flow_type, status, sheet_data')
-        .eq('project_number', projectNum).eq('machine_name', machine).in('flow_type', targetFlows);
+    const nonAssemblyFlows = targetFlows.filter(t => t !== 'assembly');
+    const [{ data: reqs }, { data: assemblyReqs }] = await Promise.all([
+        nonAssemblyFlows.length > 0
+            ? db.from('approval_requests').select('flow_type, status, sheet_data')
+                .eq('project_number', projectNum).eq('machine_name', machine).in('flow_type', nonAssemblyFlows)
+            : Promise.resolve({ data: [] }),
+        targetFlows.includes('assembly')
+            ? db.from('approval_requests').select('assembly_items, machine_name, unit_name, status, sheet_data')
+                .eq('project_number', projectNum).eq('flow_type', 'assembly').neq('status', 'draft')
+            : Promise.resolve({ data: [] })
+    ]);
 
     const blockers = [];
-    for (const flowType of targetFlows) {
+
+    if (targetFlows.includes('assembly')) {
+        const matching = (assemblyReqs || []).filter(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
+        // 却下→再申請等で同じ機械に複数レコードがある場合、承認済みのものを優先して判定する
+        const req = matching.find(r => r.status === 'approved') || matching[0];
+        if (req) {
+            const items = (req.sheet_data?.pending_items || [])
+                .filter(p => (p.content || p.machine) && !p.completed && !p.ship_after);
+            if (items.length > 0) blockers.push({ flowType: 'assembly', count: items.length });
+        }
+    }
+
+    for (const flowType of nonAssemblyFlows) {
         const matching = (reqs || []).filter(r => r.flow_type === flowType);
         // 却下→再申請等で同じflow_typeに複数レコードがある場合、承認済みのものを優先して判定する
         const req = matching.find(r => r.status === 'approved') || matching[0];
