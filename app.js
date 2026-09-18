@@ -6963,10 +6963,17 @@ async function renderExistingRecipients(requestId) {
     const listEl = document.getElementById('reschedule_recipients_list');
     listEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px;">読み込み中...</div>';
 
-    const { data: notifs } = await db.from('approval_notifications')
-        .select('recipient_id, recipient_email, optional')
-        .eq('request_id', requestId)
-        .not('emailed_at', 'is', null);
+    const [{ data: notifs }, { data: rsvps }] = await Promise.all([
+        db.from('approval_notifications')
+            .select('recipient_id, recipient_email, optional')
+            .eq('request_id', requestId)
+            .not('emailed_at', 'is', null),
+        db.from('invitation_rsvp').select('email, status').eq('request_id', requestId)
+    ]);
+    // 辞退済みの人は「名簿から選択」の候補から除外しない（再度招待し直せるようにするため）
+    const declinedEmails = new Set(
+        (rsvps || []).filter(r => r.status === 'declined').map(r => (r.email || '').toLowerCase())
+    );
 
     const seen = new Set();
     const uniqueNotifs = (notifs || []).filter(n => {
