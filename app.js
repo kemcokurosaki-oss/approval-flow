@@ -9612,11 +9612,8 @@ async function restoreSessionFromStorage() {
 // タブを長時間バックグラウンドに置くとSDKの自動更新タイマーが働かず、
 // トークンが失効したまま気づかないことがあるため、画面に戻ってきたタイミングで再確認する
 let _revalidatingSession = false;
-document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible') return;
-    if (!currentUser?.id) return; // ゲスト（未ログイン）時は対象外
+async function revalidateSession() {
     if (_revalidatingSession) return;
-
     _revalidatingSession = true;
     try {
         const session = await restoreSessionFromStorage();
@@ -9629,6 +9626,22 @@ document.addEventListener('visibilitychange', async () => {
     } finally {
         _revalidatingSession = false;
     }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (!currentUser?.id) return; // ゲスト（未ログイン）時は対象外
+    revalidateSession();
+});
+
+// 同じ承認フローを複数タブ・複数ウィンドウで開いている場合、片方のタブがトークンを更新すると
+// もう片方は古いトークンのまま取り残される。古いトークンで更新しようとすると
+// 「使用済みトークン」としてSupabase側にセッションごと無効化されてしまうため、
+// 他タブでのトークン更新をstorageイベントで検知し、即座にこのタブにも反映する
+window.addEventListener('storage', (e) => {
+    if (e.key !== 'ap_access_token' && e.key !== 'ap_refresh_token') return;
+    if (!currentUser?.id) return;
+    revalidateSession();
 });
 
 // ===== ページロード時にセッションを復元 =====
