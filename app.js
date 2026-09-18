@@ -7711,7 +7711,7 @@ async function _getRequiredFlows(projectNum, machine) {
     return new Set(chain.filter(t => t !== 'shipping'));
 }
 
-// 出荷フロー「起票」の前提として完了しているべきフロー一覧（外観検査or簡易検査＋あれば出荷確認会議のみ。
+// 出荷フロー「起票」の前提として完了しているべきフロー一覧（外観検査/簡易検査/出荷品確認検査のいずれか＋あれば出荷確認会議のみ。
 // 出荷準備・試運転等の完了は問わない。出荷準備を含む全前フロー完了は品証の確定出荷申請時に別途チェックする）
 async function _getShippingIssueRequiredFlows(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
