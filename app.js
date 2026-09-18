@@ -7636,8 +7636,8 @@ async function _getMachineDoneFlows(projectNum, machine) {
     return approved;
 }
 
-// 工程表の実タスク（sort_order）から、その機械に該当する中間フロー（簡易検査・外観検査・試運転・出荷確認会議）を
-// 実際の工程順で返す（簡易検査と外観検査は排他、試運転・出荷確認会議は無い場合がある）
+// 工程表の実タスク（sort_order）から、その機械に該当する中間フロー（簡易検査・外観検査・出荷品確認検査・試運転・出荷確認会議）を
+// 実際の工程順で返す（簡易検査・外観検査・出荷品確認検査は排他、試運転・出荷確認会議は無い場合がある）
 async function _getMiddleFlowChain(projectNum, machine) {
     const { data: rows } = await db.from('tasks')
         .select('text, machine, sort_order')
