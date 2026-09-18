@@ -9237,25 +9237,53 @@ async function sendTestRunReadyNotification(projectNum, machine, unit) {
 
 async function recordFlowNotifications(requestId, flowType, optionalKeys = null) {
     // 工番・機械名・申請者IDを取得
-    const { data: req } = await db.from('approval_requests').select('project_number, machine_name, requester_id').eq('id', requestId).single();
+    const { data: req } = await db.from('approval_requests').select('project_number, machine_name, unit_name, requester_id, assembly_items').eq('id', requestId).single();
     const projectNum = req?.project_number;
-    // 組立(assembly)は機械名が工程表と紐づかない自由入力/要約文字列のため、機械では絞り込まず工番全体でオーナーを検索する
-    const machineName = flowType === 'assembly' ? null : req?.machine_name;
     if (!projectNum) return;
+    // 2000番台の組立(assembly)は1申請に複数機械・ユニットが紐づくため、機械+ユニット単位でオーナーを絞り込む。
+    // それ以外（2000番以外の工番、または組立以外のフロー）は機械名が工程表と紐づかない自由入力/要約文字列のことがあるため、従来通り機械名（無ければ工番全体）で検索する。
+    const assemblyItems = (flowType === 'assembly' && is2000sSeries(projectNum)) ? getAssemblyItemsForReq(req) : null;
+    const machineName = flowType === 'assembly' ? null : req?.machine_name;
 
     // 対象機械のタスクオーナーを取得（機械名がある場合は機械でフィルタ）
-    let taskQuery = db.from('tasks').select('text, owner, major_item').eq('project_number', projectNum);
+    let taskQuery = db.from('tasks').select('text, owner, major_item, machine, unit').eq('project_number', projectNum);
     if (machineName) taskQuery = taskQuery.eq('machine', machineName);
     const { data: tasks } = await taskQuery;
-    const findOwners = (taskName, majorItem) => {
-        const matched = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem));
-        return [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))];
-    };
 
-    const kumitateOwners = findOwners('機械組立');
-    const shiuntenOwners = findOwners('試運転');
-    const sekkeiOwners   = findOwners('出図', '設計');
-    const denkiOwners    = findOwners('電気艤装');
+    // tasks.unitがカンマ区切りで複数ユニットをまとめている場合（例: "OF,CU,DS"）に対応
+    const unitMatches = (rowUnit, itemUnit) => String(rowUnit || '').split(',').map(s => s.trim()).includes(String(itemUnit || '').trim());
+
+    // assembly_items（機械+ユニット）ごとにオーナーを検索する。
+    // unit列が'ALL'の行は「そのユニット専用の行が無い場合のデフォルト担当者」として扱い、専用行が見つかった場合のみそちらを優先する。
+    // 該当機械のタスク自体はあるのに誰も見つからない場合はunresolvedを立て、申請者へのフォールバック通知に使う。
+    const findOwnersByItems = (taskName, majorItem) => {
+        const names = new Set();
+        let unresolved = false;
+        for (const item of assemblyItems) {
+            const rowsForMachine = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem) && t.machine === item.machine);
+            if (rowsForMachine.length === 0) continue;
+            const exact = rowsForMachine.filter(t => unitMatches(t.unit, item.unit));
+            const rows = exact.length > 0 ? exact : rowsForMachine.filter(t => String(t.unit || '').trim() === 'ALL');
+            const before = names.size;
+            rows.flatMap(t => splitOwnerNames(t.owner)).forEach(n => names.add(n));
+            if (names.size === before) unresolved = true;
+        }
+        return { owners: [...names], unresolved };
+    };
+    const findOwnersFlat = (taskName, majorItem) => {
+        const matched = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem));
+        return { owners: [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))], unresolved: false };
+    };
+    const findOwners = assemblyItems ? findOwnersByItems : findOwnersFlat;
+
+    const kumitateResult = findOwners('機械組立');
+    const shiuntenResult = findOwners('試運転');
+    const sekkeiResult   = findOwners('出図', '設計');
+    const denkiResult    = findOwners('電気艤装');
+    const kumitateOwners = kumitateResult.owners;
+    const shiuntenOwners = shiuntenResult.owners;
+    const sekkeiOwners   = sekkeiResult.owners;
+    const denkiOwners    = denkiResult.owners;
 
     // 営業担当者をapp_settingsから取得
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
