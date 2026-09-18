@@ -8893,6 +8893,11 @@ async function submitShipping() {
             if (missing.length > 0) {
                 throw new Error(`${machine}: 前フローが未完了のため申請できません`);
             }
+            const pendingBlockers = await _getShippingPendingBlockers(num, machine);
+            if (pendingBlockers.length > 0) {
+                const labels = pendingBlockers.map(t => FLOW_LABELS[t.flowType] || t.flowType).join('・');
+                throw new Error(`${machine}: ${labels}に未完了のペンディング項目が残っているため申請できません`);
+            }
         }
 
         // 営業担当者を解決（sales_person_map）
