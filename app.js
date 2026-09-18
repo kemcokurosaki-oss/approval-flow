@@ -8234,20 +8234,21 @@ async function buildAttendanceSectionHtml(req) {
     const profileIds = entries.filter(e => e.recipientId).map(e => e.recipientId);
     let profileMap = {};
     if (profileIds.length > 0) {
-        const { data: prs } = await db.from('profiles').select('id, name, email').in('id', profileIds);
+        const { data: prs } = await db.from('profiles').select('id, name, email, department').in('id', profileIds);
         (prs || []).forEach(p => { profileMap[p.id] = p; });
     }
     const emails = entries.map(e => e.email || profileMap[e.recipientId]?.email).filter(Boolean);
     let nameByEmail = {};
+    let deptByEmail = {};
     if (emails.length > 0) {
-        // recipient_idが未設定の宛先向けに、notification_recipientsに加えprofilesもメールアドレスで検索して名前を補完する
+        // recipient_idが未設定の宛先向けに、notification_recipientsに加えprofilesもメールアドレスで検索して名前・部署を補完する
         // （過去に上長メール等がrecipient_idと紐付けられずrecipient_emailのみで保存されたケースの救済）
         const [{ data: recs }, { data: prsByEmail }] = await Promise.all([
-            db.from('notification_recipients').select('name, email').in('email', emails),
-            db.from('profiles').select('name, email').in('email', emails)
+            db.from('notification_recipients').select('name, email, department').in('email', emails),
+            db.from('profiles').select('name, email, department').in('email', emails)
         ]);
-        (recs      || []).forEach(r => { if (r.email) nameByEmail[r.email] = r.name; });
-        (prsByEmail || []).forEach(p => { if (p.email) nameByEmail[p.email] = p.name; }); // profilesを優先
+        (recs      || []).forEach(r => { if (r.email) { nameByEmail[r.email] = r.name; deptByEmail[r.email] = r.department; } });
+        (prsByEmail || []).forEach(p => { if (p.email) { nameByEmail[p.email] = p.name; deptByEmail[p.email] = p.department; } }); // profilesを優先
     }
 
     const { data: rsvps } = await db.from('invitation_rsvp').select('email, status, is_follow').eq('request_id', req.id);
