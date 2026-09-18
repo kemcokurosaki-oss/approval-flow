@@ -8255,18 +8255,26 @@ async function buildAttendanceSectionHtml(req) {
     const statusByEmail = Object.fromEntries((rsvps || []).map(r => [r.email, r.status]));
     const followByEmail = Object.fromEntries((rsvps || []).map(r => [r.email, !!r.is_follow]));
 
-    const rows = entries.map(e => {
+    const attendees = entries.map(e => {
         const profile = e.recipientId ? profileMap[e.recipientId] : null;
         const email  = e.email || profile?.email || '';
         const name   = profile?.name || nameByEmail[email] || email || '—';
+        const department = profile?.department || deptByEmail[email] || '';
         const status = (email && statusByEmail[email]) || 'needs-action';
         const isFollow = !!(email && followByEmail[email]);
         const st     = isFollow ? RSVP_FOLLOW_BADGE : (RSVP_STATUS_LABELS[status] || RSVP_STATUS_LABELS['needs-action']);
+        return { name, department, optional: e.optional, st };
+    });
+
+    // 名簿プルダウン（renderExtraProfileSelect）と同じ部署順に揃える
+    const rows = sortRecipientsByDepartment(attendees, a => a.department).map(a => {
+        const deptLabel = a.department || 'その他';
         return `
         <div class="recipient-item">
-            <span class="recipient-name">${esc(name)}</span>
-            <span class="recipient-tag">${e.optional ? '任意' : '必須'}</span>
-            <span class="recipient-tag" style="background:${st.bg};color:${st.color};">${st.label}</span>
+            <span class="recipient-name">${esc(a.name)}</span>
+            <span class="recipient-tag" style="${departmentBadgeStyle(deptLabel)}">${esc(deptLabel)}</span>
+            <span class="recipient-tag">${a.optional ? '任意' : '必須'}</span>
+            <span class="recipient-tag" style="background:${a.st.bg};color:${a.st.color};">${a.st.label}</span>
         </div>`;
     }).join('');
 
