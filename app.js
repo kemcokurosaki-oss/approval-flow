@@ -8353,7 +8353,7 @@ async function buildAttendanceSectionHtml(req) {
 
     const ROW_GRID = 'display:grid;grid-template-columns:120px 44px 108px;align-items:center;gap:8px;padding:3px 12px;';
     const DEPT_HEAD = 'display:flex;align-items:center;gap:8px;background:#f6f8fb;border-left:3px solid #2f6fb0;border-radius:0 8px 8px 0;padding:3px 12px;font-size:13px;font-weight:700;color:#16233a;';
-    const REQ_TAG = 'font-size:11px;font-weight:700;color:#b5342a;border:1px solid #f3c4bd;background:#fdf2f0;border-radius:4px;padding:1px 5px;justify-self:start;white-space:nowrap;';
+    const REQ_TAG = 'font-size:11px;font-weight:700;color:#3d4a5d;border:1px solid #c8d2e0;background:#eef2f8;border-radius:4px;padding:1px 5px;justify-self:start;white-space:nowrap;';
 
     const rows = groups.map(g => `
         <div>
