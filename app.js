@@ -8351,7 +8351,7 @@ async function buildAttendanceSectionHtml(req) {
         ? `<div style="display:flex;align-items:center;gap:8px;background:#fff8e6;border:1px solid #f0d98c;border-radius:8px;padding:5px 11px;font-size:13px;color:#7a5c00;font-weight:700;margin-bottom:8px;">必須メンバー${pendingRequired.length}名が未回答です（${pendingRequired.map(a => esc(a.name)).join('・')}）</div>`
         : '';
 
-    const ROW_GRID = 'display:grid;grid-template-columns:120px 44px 108px;align-items:center;gap:8px;padding:3px 12px;';
+    const ROW_GRID = 'display:grid;grid-template-columns:120px 44px 108px;align-items:center;gap:8px;padding:6px 12px;';
     const DEPT_HEAD = 'display:flex;align-items:center;gap:8px;background:#f6f8fb;border-left:3px solid #2f6fb0;border-radius:0 8px 8px 0;padding:3px 12px;font-size:13px;font-weight:700;color:#16233a;';
     const REQ_TAG = 'font-size:11px;font-weight:700;color:#3d4a5d;border:1px solid #c8d2e0;background:#eef2f8;border-radius:4px;padding:1px 5px;justify-self:start;white-space:nowrap;';
 
