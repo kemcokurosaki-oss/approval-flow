@@ -1361,10 +1361,11 @@ async function loadMineSide() {
         // shipping_prep は承認ステップを持たないため「申請＝完了」。列見出しもそれに合わせる
         const isNoApprovalFlow = flowType === 'shipping_prep';
         // 試運転は完了操作自体を廃止したため、申し送り事項の有無にかかわらず承認済みならそのまま「承認済み」列に入れる（専用列も出さない）
-        const isTestRun = flowType === 'test_run';
+        // 出荷準備はペンディング機能自体が不要なため、試運転と同様に専用列を出さない
+        const noPendingColumn = flowType === 'test_run' || isNoApprovalFlow;
         const groups = { inprogress: [], waiting: [], pending: [], approved: [] };
         list.forEach(req => {
-            const unresolvedPending = isTestRun ? [] : (req.sheet_data?.pending_items || [])
+            const unresolvedPending = noPendingColumn ? [] : (req.sheet_data?.pending_items || [])
                 .filter(p => (p.content || p.machine) && !p.completed);
             if (req.status === 'draft' || req.status === 'rejected') {
                 groups.inprogress.push(req);
@@ -1378,11 +1379,10 @@ async function loadMineSide() {
                 groups.waiting.push(req);
             }
         });
-        const columns = [
-            ['入力中', groups.inprogress, false],
-            [isNoApprovalFlow ? '完了待ち' : '承認待ち', groups.waiting, false],
-        ];
-        if (!isTestRun) columns.push(['ペンディング', groups.pending, true]);
+        const columns = [['入力中', groups.inprogress, false]];
+        // shipping_prep は申請＝即承認で「承認待ち」状態を経由しないため、専用列を出さない
+        if (!isNoApprovalFlow) columns.push(['承認待ち', groups.waiting, false]);
+        if (!noPendingColumn) columns.push(['ペンディング', groups.pending, true]);
         columns.push([isNoApprovalFlow ? '完了' : '承認済み', groups.approved, false]);
         return columns;
     };
@@ -1421,7 +1421,7 @@ async function loadMineSide() {
         return [
             ['品証確認待ち', groups.confirmWait, false],
             ['常務承認待ち', groups.approvalWait, false],
-            ['完了', groups.approved, false],
+            ['承認済み', groups.approved, false],
         ];
     };
 
@@ -2211,7 +2211,7 @@ function renderProgressCards() {
                         const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
                         if (dateIso) {
                             const d = new Date(dateIso);
-                            const prefix = req.status === 'approved' ? '完了' : req.status === 'rejected' ? '却下' : '申請';
+                            const prefix = req.status === 'approved' ? (f.type === 'shipping' ? '承認' : '完了') : req.status === 'rejected' ? '却下' : '申請';
                             flowDateStr = `${prefix} ${d.getMonth()+1}/${d.getDate()}`;
                         }
                     }
