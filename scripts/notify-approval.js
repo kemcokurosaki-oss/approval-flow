@@ -292,7 +292,6 @@ function buildEmail(type, req, recipientName, extra = {}) {
         subject: `【確定出荷日入力依頼】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `${pStr} の出荷確定申請が品証より起票されました。\n` +
           `承認フロー管理システムにログインし、確定出荷日を入力してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
