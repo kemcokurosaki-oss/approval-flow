@@ -7260,8 +7260,17 @@ async function cancelMeeting(requestId, flowType) {
 // フロー承認完了時に全体工程表のタスク完了チェックを自動連動（承認→完了の一方通行のみ）
 // 2026-09-07 本番運用開始に伴いON
 const FLOW_TASK_SYNC_ENABLED = true;
-// 出荷は承認完了≠実出荷完了（未来日の出荷予定を承認するケースがあるため）連携対象外とする
-const FLOW_APPROVAL_TASK_TEXT = { assembly: '機械組立', test_run: '試運転', electrical: '電気艤装' };
+// 出荷は承認完了≠実出荷完了（未来日の出荷予定を承認するケースがあるため）連携対象外とする（意図的に手動のまま）
+// 2026-09-22 検査・会議系4フロー（簡易検査/外観検査/出荷品確認検査/出荷確認会議）を追加
+const FLOW_APPROVAL_TASK_TEXT = {
+    assembly:                  '機械組立',
+    test_run:                  '試運転',
+    electrical:                '電気艤装',
+    simple_inspection:         '簡易検査',
+    inspection:                '外観検査',
+    shipping_check_inspection: '出荷品確認検査',
+    shipping_meeting:          '出荷確認会議'
+};
 
 async function syncTaskCompletionOnFlowApproval(req) {
     if (!FLOW_TASK_SYNC_ENABLED) return;
