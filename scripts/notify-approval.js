@@ -52,6 +52,83 @@ function photoUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
 }
 
+// ===== 出荷準備フロー: 品証宛メールへの追加CC（組立/操業/設計/営業/現地工事担当者） =====
+// app.js の splitOwnerNames / isBusinessTripTaskRow / isTripTaskExpired / tripTaskDurationDays と同じ判定をここでも再現する
+function splitOwnerNames(ownerStr) {
+  return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
+}
+function isBusinessTripTaskRow(t) {
+  const val = t?.is_business_trip;
+  if (val === true || val === 'true' || val === 'TRUE') return true;
+  return String(t?.task_type || '').trim().toLowerCase() === 'field_trip';
+}
+function tripTaskDurationDays(t) {
+  let dur = Number(t?.duration);
+  if (!Number.isFinite(dur) || dur < 1) dur = 1;
+  const sM = t?.start_date ? String(t.start_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+  const eM = t?.end_date   ? String(t.end_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)   : null;
+  if (sM && eM) {
+    const s = new Date(+sM[1], +sM[2] - 1, +sM[3]);
+    const e = new Date(+eM[1], +eM[2] - 1, +eM[3]);
+    const days = Math.floor((e - s) / 86400000) + 1;
+    if (days >= 1 && days <= 5000) dur = days;
+  }
+  return dur;
+}
+function isTripTaskExpired(t) {
+  if (!t?.start_date) return false;
+  const m = String(t.start_date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return false;
+  const s = new Date(+m[1], +m[2] - 1, +m[3]);
+  const expiry = new Date(s);
+  expiry.setDate(expiry.getDate() + tripTaskDurationDays(t) - 1 + 7);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return today > expiry;
+}
+
+// 工番担当者名からメールアドレスを解決する（profiles・notification_recipientsの両方を検索。app.jsのaddOwnerByNameと同じ範囲）
+async function resolveOwnerEmails(names, { profilesOnly = false } = {}) {
+  const uniqueNames = [...new Set((names || []).filter(Boolean))];
+  const emails = new Set();
+  if (uniqueNames.length === 0) return emails;
+  const nameListParam = uniqueNames.map(n => `"${n}"`).join(',');
+  const profileRows = await supabaseFetch(`profiles?name=in.(${nameListParam})&select=email`);
+  (profileRows || []).forEach(p => { if (p.email) emails.add(p.email); });
+  if (!profilesOnly) {
+    const recipientRows = await supabaseFetch(`notification_recipients?name=in.(${nameListParam})&active=eq.true&select=email`);
+    (recipientRows || []).forEach(r => { if (r.email) emails.add(r.email); });
+  }
+  return emails;
+}
+
+// 出荷準備完了通知（品証宛）に追加するCC先を、当該工番・機械の担当者から解決する
+async function resolveShippingPrepCcEmails(req) {
+  const emails = new Set();
+  if (!req?.project_number) return emails;
+
+  let taskQuery = `tasks?project_number=eq.${encodeURIComponent(req.project_number)}&select=text,owner,major_item,task_type,is_business_trip,start_date,end_date,duration`;
+  if (req.machine_name) taskQuery += `&machine=eq.${encodeURIComponent(req.machine_name)}`;
+  const tasks = await supabaseFetch(taskQuery);
+
+  const kumitateNames = [...new Set((tasks || []).filter(t => t.text === '機械組立').flatMap(t => splitOwnerNames(t.owner)))];
+  const shiuntenNames = [...new Set((tasks || []).filter(t => t.text === '試運転').flatMap(t => splitOwnerNames(t.owner)))];
+  const sekkeiNames   = [...new Set((tasks || []).filter(t => t.text === '出図' && String(t.major_item || '').trim() === '設計').flatMap(t => splitOwnerNames(t.owner)))];
+  const tripNames     = [...new Set((tasks || []).filter(t => isBusinessTripTaskRow(t) && !isTripTaskExpired(t)).flatMap(t => splitOwnerNames(t.owner)))];
+
+  (await resolveOwnerEmails(kumitateNames, { profilesOnly: true })).forEach(e => emails.add(e));
+  (await resolveOwnerEmails(shiuntenNames, { profilesOnly: true })).forEach(e => emails.add(e));
+  (await resolveOwnerEmails(sekkeiNames)).forEach(e => emails.add(e));
+  (await resolveOwnerEmails(tripNames)).forEach(e => emails.add(e));
+
+  const salesMapRow = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
+  const salesMap = salesMapRow?.[0]?.value ? JSON.parse(salesMapRow[0].value) : {};
+  const salesOwnerName = salesMap[req.project_number] || null;
+  if (salesOwnerName) (await resolveOwnerEmails([salesOwnerName])).forEach(e => emails.add(e));
+
+  return emails;
+}
+
 // 完了予定日が3日以内(期限切れ含む)かどうか。アプリ側のpendingDueSoon()と同じ基準
 function isDueSoon(dueStr) {
   if (!dueStr) return false;
@@ -790,14 +867,19 @@ async function main() {
         }
       }
 
-      // 出荷準備フロー: 品証宛の通知には製管をCCに追加（品証不在時の緊急対応の把握用）
+      // 出荷準備フロー: 品証宛の通知には製管・組立/操業/設計/営業/現地工事担当者をCCに追加
+      // （品証以外は全員To ではなくCCで届く。品証不在時の緊急対応の把握用に加え、各担当者への周知を兼ねる）
       const recipientProfile = notif.recipient_id ? profileMap[notif.recipient_id] : null;
-      const ccEmails = (!TEST_MODE
+      let ccEmails = [];
+      if (!TEST_MODE
         && req?.flow_type === 'shipping_prep'
         && SHIPPING_PREP_CC_TYPES.includes(notif.notification_type)
-        && recipientProfile?.role === 'quality')
-        ? productionControlEmails.filter(e => e !== actualEmail)
-        : [];
+        && recipientProfile?.role === 'quality') {
+        const ccSet = new Set(productionControlEmails);
+        (await resolveShippingPrepCcEmails(req)).forEach(e => ccSet.add(e));
+        ccSet.delete(actualEmail);
+        ccEmails = [...ccSet];
+      }
 
       await transporter.sendMail({
         from:        mail.from,

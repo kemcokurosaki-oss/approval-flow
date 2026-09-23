@@ -440,7 +440,8 @@ const DYNAMIC_RECIPIENT_GROUPS = {
     shipping_check_inspection: ['sales', 'sekkei_owner'],
     shipping:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
     electrical:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager']
-    // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ）
+    // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ。組立/操業/設計/営業/現地工事担当者は
+    // notify-approval.js側で品証宛メールのCCとして解決するため、ここでは扱わない）
 };
 const DYNAMIC_GROUP_LABELS = {
     kumitate_owner:   '組立担当者（本人）',
@@ -9564,7 +9565,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
 
         case 'shipping_prep':
-            // 固定宛先（設定画面で個人単位に選択、製管へはメール送信時にCCで届く）。工番担当者の自動通知は対象外
+            // 固定宛先（設定画面で個人単位に選択）。工番担当者の自動通知は対象外（To は品証のみ）。
+            // 組立/操業/設計/営業/現地工事担当者と製管は、メール送信時（notify-approval.js）に品証宛メールのCCとして届く
             await addFixedRecipients();
             break;
 
