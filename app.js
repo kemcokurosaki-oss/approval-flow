@@ -2206,7 +2206,8 @@ function renderProgressCards() {
                 if (req && req.status !== 'draft') {
                     if (QA_MEETING_FLOWS.includes(f.type) && req.inspection_date) {
                         const d = new Date(req.inspection_date + 'T00:00:00');
-                        flowDateStr = `開催 ${d.getMonth()+1}/${d.getDate()}`;
+                        const label = req.status === 'approved' ? '完了' : '開催';
+                        flowDateStr = `${label} ${d.getMonth()+1}/${d.getDate()}`;
                     } else {
                         const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
                         if (dateIso) {
