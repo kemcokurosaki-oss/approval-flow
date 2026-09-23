@@ -8889,43 +8889,51 @@ async function onShippingMachineChange() {
     const machine = machines[0];
     showLoading('読み込み中...');
     try {
-    // 担当者確認: tasks から設計・組立・操業 owner を取得
-    const { data: taskRows } = await db.from('tasks')
-        .select('text, owner, major_item')
-        .eq('project_number', num).eq('machine', machine)
-        .in('text', ['機械組立', '試運転', '出図']);
-
-    const findOwners = (taskText, majorItem) =>
-        [...new Set((taskRows || [])
-            .filter(t => t.text === taskText && (!majorItem || (t.major_item || '').trim() === majorItem))
-            .flatMap(t => splitOwnerNames(t.owner)))].join('・') || 'なし';
-
-    const kumitateOwner = findOwners('機械組立');
-    const shiuntenOwner = findOwners('試運転');
-    const sekkeiOwner   = findOwners('出図', '設計');
-
-    // 営業担当者
-    const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
-    const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[num] || 'なし';
-
-    // 見出し（「〇〇承認済み」の〇〇部分）を工番・機械の実際の検査系フロー名に合わせて動的に変える
-    const inspectionLabel = await _getInspectionFlowLabel(num, machine);
-    document.getElementById('shipping_approver_label').textContent = `担当者確認（${inspectionLabel}承認済み）`;
-
-    // 現地(出張)担当者
-    const tripOwners = await getBusinessTripOwnerNames(num);
-    const tripOwner = tripOwners.join('、') || 'なし';
-
-    document.getElementById('shipping_approver_list').innerHTML = [
-        ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner], ['現地', tripOwner]
-    ].map(([role, name]) =>
-        `<div class="flow-info-item"><span style="width:32px;font-size:12px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
-    ).join('');
-    document.getElementById('shipping_approver_box').style.display = 'block';
-
     // フロー状況（外観検査or簡易検査＋あれば出荷確認会議を動的判定し、未完了があれば申請不可にする。出荷準備の完了は問わない）
     const doneFlows = await _getMachineDoneFlows(num, machine);
     const required  = await _getShippingIssueRequiredFlows(num, machine);
+
+    // 担当者確認欄は検査フロー（簡易検査/外観検査/出荷品確認検査のいずれか）が承認済みになってから表示する。
+    // 未完了のうちは見出し「〇〇承認済み」が実態と合わず不自然なため、それまでは非表示にする
+    const inspectionType = [...required].find(t => ['simple_inspection', 'inspection', 'shipping_check_inspection'].includes(t));
+    const inspectionDone = !inspectionType || doneFlows.has(inspectionType);
+
+    if (inspectionDone) {
+        // 担当者確認: tasks から設計・組立・操業 owner を取得
+        const { data: taskRows } = await db.from('tasks')
+            .select('text, owner, major_item')
+            .eq('project_number', num).eq('machine', machine)
+            .in('text', ['機械組立', '試運転', '出図']);
+
+        const findOwners = (taskText, majorItem) =>
+            [...new Set((taskRows || [])
+                .filter(t => t.text === taskText && (!majorItem || (t.major_item || '').trim() === majorItem))
+                .flatMap(t => splitOwnerNames(t.owner)))].join('・') || 'なし';
+
+        const kumitateOwner = findOwners('機械組立');
+        const shiuntenOwner = findOwners('試運転');
+        const sekkeiOwner   = findOwners('出図', '設計');
+
+        // 営業担当者
+        const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
+        const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[num] || 'なし';
+
+        // 見出し（「〇〇承認済み」の〇〇部分）を工番・機械の実際の検査系フロー名に合わせて動的に変える
+        const inspectionLabel = QA_DETAIL_TITLE_LABELS[inspectionType] || '検査';
+        document.getElementById('shipping_approver_label').textContent = `担当者確認（${inspectionLabel}承認済み）`;
+
+        // 現地(出張)担当者
+        const tripOwners = await getBusinessTripOwnerNames(num);
+        const tripOwner = tripOwners.join('、') || 'なし';
+
+        document.getElementById('shipping_approver_list').innerHTML = [
+            ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner], ['現地', tripOwner]
+        ].map(([role, name]) =>
+            `<div class="flow-info-item"><span style="width:32px;font-size:12px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
+        ).join('');
+        document.getElementById('shipping_approver_box').style.display = 'block';
+    }
+
     const rows = [...required].map(t => ({ type: t, label: FLOW_LABELS[t] || t }));
     document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
         rows.map(f => doneFlows.has(f.type)
