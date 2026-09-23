@@ -37,6 +37,9 @@
         /* ===== Doc title ===== */
         .doc-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 6px; margin-bottom: 14px; }
         .doc-date  { text-align: right; font-size: 13px; color: #666; margin-bottom: 4px; }
+        /* 画面上は非表示。入力モードで印刷した際に工事番号・機械名が分かるようにするための見出し
+           （通常のsheet-meta-boxは印刷時に非表示にしているため、外注先への配布用に別途用意） */
+        .print-only-header { display: none; }
         .save-status { font-size: 12px; color: #888; margin-right: auto; white-space: nowrap; }
         .save-status.saving { color: #d35400; }
         .save-status.error  { color: #c0392b; }
@@ -390,6 +393,16 @@
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
+            /* 入力モード（申請するボタンから開いた画面）を印刷する場合のみ、工事番号・機械名の見出しを表示する。
+               閲覧モード（完了報告書）は別途 report-doc 側で表示済みのためここでは出さない。 */
+            body:not(.view-mode) .print-only-header {
+                display: block !important;
+                font-size: 13px;
+                line-height: 1.7;
+                margin-bottom: 10px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #333;
+            }
             /* 画面と同じ1カラムレイアウト。区切りが不自然な位置で切れないよう避ける */
             .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
             .report-doc              { margin-bottom: 8px !important; padding: 12px 14px !important; }
@@ -433,6 +446,7 @@
     </div>
     <div class="doc-date" id="doc_date_top" style="display:none"></div>
     <div class="doc-title" id="doc_title_top" data-i18n="doc_title">機械組立完了チェックシート</div>
+    <div class="print-only-header" id="print_only_header"></div>
     <div class="sheet-legend" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
         <span data-i18n="legend_main">○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　</span><strong data-i18n="legend_autosave">入力内容は自動保存されます</strong>
     </div>
@@ -557,6 +571,7 @@ const db = supabase.createClient(S_URL, S_KEY);
 const broadcastChannel = new BroadcastChannel('approval_sheet');
 
 let draftId = null;
+let currentProjectNumber = '';
 let checks = {};
 let assemblyItems = [];
 let isAssembly2000sProject = false;
@@ -730,6 +745,19 @@ function setSheetInfoHeader(projectNum) {
     const pn = document.getElementById('sheet_project_num');
     if (pn) pn.textContent = projectNum;
     isAssembly2000sProject = isAssembly2000sSeries(projectNum);
+    currentProjectNumber = projectNum || '';
+    updatePrintOnlyHeader();
+}
+
+// 入力モードの画面をそのまま印刷（Ctrl+P／ブラウザメニュー）した場合に、
+// 工事番号・機械名と、外注先が手書きで記入するための欄を印刷面に出す。
+function updatePrintOnlyHeader() {
+    const el = document.getElementById('print_only_header');
+    if (!el) return;
+    const machineSummary = buildAssemblyMachineNameSummary(assemblyItems) || '—';
+    el.innerHTML =
+        `工事番号：${esc(currentProjectNumber || '—')}　　機械名・ユニット：${esc(machineSummary)}<br>` +
+        `記入者（外注先会社名・氏名）：　　　　　　　　　　　　記入日：　　　　　　`;
 }
 
 // 機械・ユニットの選択候補を取得する。2000番台は標準リスト(CSV由来)、
@@ -818,9 +846,10 @@ function renderAssemblyItems() {
     if (!c) return;
     if (assemblyItems.length === 0) {
         c.innerHTML = `<div class="pending-empty">${t('assembly_empty')}</div>`;
-        return;
+    } else {
+        c.innerHTML = assemblyItems.map((item, i) => renderAssemblyItemRow(item, i)).join('');
     }
-    c.innerHTML = assemblyItems.map((item, i) => renderAssemblyItemRow(item, i)).join('');
+    updatePrintOnlyHeader();
 }
 
 function renderAssemblyItemRow(item, i) {
@@ -1134,6 +1163,11 @@ async function init() {
 
     // 一時保存済みの下書きを開いた場合のみ「保存済み」を表示する（未保存のまま開いた直後は何も表示しない）
     if (draft.sheet_saved_at) setSaveStatus('ok');
+
+    // 外注先へ配布する空欄チェックシートを印刷できるようにする
+    // （通常の入力モードでも印刷ボタンを表示。工事番号・機械名は print_only_header に印刷される）
+    const printBtn = document.getElementById('btn_print');
+    if (printBtn) printBtn.style.display = '';
 
     document.getElementById('loading').classList.remove('visible');
 }
