@@ -5178,11 +5178,13 @@ async function openDetailModal(requestId, returnTo = null) {
         const findO = (text, major) => [...new Set((sTasks || [])
             .filter(t => t.text === text && (!major || (t.major_item || '').trim() === major))
             .flatMap(t => splitOwnerNames(t.owner)))].join('・') || 'なし';
+        const tripOwners = await getBusinessTripOwnerNames(pNum);
         shippingOwners = {
             sekkei:   findO('出図', '設計'),
             kumitatе: findO('機械組立'),
             shiunten: findO('試運転'),
-            sales:    salesOwner || 'なし'
+            sales:    salesOwner || 'なし',
+            trip:     tripOwners.join('、') || 'なし'
         };
     }
 
@@ -5360,6 +5362,7 @@ async function openDetailModal(requestId, returnTo = null) {
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">操業</span>${esc(shippingOwners?.shiunten || 'なし')}</div>
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">営業</span>${esc(shippingOwners?.sales || 'なし')}</div>
+                <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">現地</span>${esc(shippingOwners?.trip || 'なし')}</div>
             </div>
         </div>` : ''}
         ${req.sheet_data && SHEET_FLOW_META[req.flow_type] ? (() => {
