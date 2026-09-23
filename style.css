@@ -666,6 +666,10 @@
             padding-top: 9px;
         }
         .prog-machine-row:first-of-type { border-top: none; padding-top: 5px; }
+        /* 2000番完了報告：一覧カードには「組立申請はこちら→」「試運転申請はこちら→」の2つのボタンだけを並べる
+           （機械ごとの丸は、押した先の一覧モーダル側にのみ表示する） */
+        .prog-flow-2000-buttons { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 4px; }
+        .prog-flow-2000-btn { font-size: 15px; }
         .prog-machine-label {
             font-size: 16px;
             font-weight: bold;
@@ -1010,6 +1014,15 @@
             padding: 10px 12px; border: 1px solid #e5e9f1; border-radius: 10px; background: #fff;
             flex: 0 1 calc(50% - 4px); min-width: 260px; box-sizing: border-box;
         }
+        /* 2000番完了報告：組立・試運転の機械一覧は行ごとに内容量（申請者・申請日の有無等）が違うため、
+           flexのstretchだけでは高さが揃わないことがある。grid化して同じ行のカード高さを強制的に揃え、
+           カード内は上段（機械名・バッジ・メタ情報）と下段（操作リンク）で分けて下段を下端に揃える */
+        .unit-list-wrap.wrap-2000-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            align-items: stretch;
+        }
+        .unit-list-wrap.wrap-2000-grid .unit-list-row { justify-content: space-between; }
         .unit-list-row-main { display: flex; align-items: center; gap: 10px; }
         .unit-list-dot {
             width: 17px; height: 17px; border-radius: 50%;
@@ -2015,6 +2028,7 @@
         /* ----- 工程ステッパー ----- */
         .prog-machine-row { margin-top: 14px; padding-top: 16px; border-top: 1px solid #f1f4f9; }
         .prog-machine-row:first-of-type { padding-top: 6px; }
+        .prog-flow-2000-buttons { margin-top: 6px; }
         .prog-machine-label { font-size: 14px; font-weight: 700; color: #5b6b80; }
         .flow-steps { overflow-x: auto; padding-top: 8px; padding-bottom: 4px; }
         .flow-node { min-width: 88px; gap: 8px; }
@@ -2824,4 +2838,85 @@
     .recip-head, .recip-row { min-width: 480px; }
     .audit-head, .audit-row { min-width: 480px; }
     .rm-dept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+
+/* =========================================================
+   v2-g: 2000番完了報告 一覧カード（組立→試運転タイル）
+         ／機械一覧モーダルのステップ表示
+   ========================================================= */
+
+.main-layout.assembly-report-mode .prog-card { width: min(820px, 100%); }
+
+.p2k-tiles { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 28px; margin-top: 12px; }
+.p2k-tiles.is-single { grid-template-columns: minmax(0,1fr); max-width: 50%; }
+.p2k-tile {
+    position: relative; display: flex; flex-direction: column; gap: 12px;
+    padding: 14px 16px; border-radius: 12px; background: #f6f8fb; border: 1px solid #e5e9f1;
+    cursor: pointer; transition: background .12s, border-color .12s, box-shadow .12s;
+}
+.p2k-tile:hover { background: #fff; border-color: #9fb0c6; box-shadow: 0 4px 14px rgba(20,36,63,.08); }
+.p2k-tile-arrow {
+    position: absolute; right: -24px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: #9fb0c6;
+}
+.p2k-tile-head { display: flex; align-items: center; gap: 12px; }
+.p2k-tile-circle {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; border: 2px solid transparent;
+}
+.p2k-tile-circle.st-approved { background: #2ba55d; border-color: #2ba55d; color: #fff; }
+.p2k-tile-circle.st-active   { background: #f0a020; border-color: #f0a020; color: #fff; box-shadow: 0 0 0 4px rgba(240,160,32,.18); }
+.p2k-tile-circle.st-rejected { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px rgba(229,72,77,.16); }
+.p2k-tile-circle.st-draft    { background: #fff; color: #8593a8; border: 2px dashed #9fb0c6; }
+.p2k-tile-circle.st-empty    { background: #fff; color: #c3ccd9; border: 2px dashed #9fb0c6; }
+.p2k-tile-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.p2k-tile-step  { font-size: 11px; font-weight: 700; color: #9aa5b6; letter-spacing: .08em; }
+.p2k-tile-title { font-size: 15px; font-weight: 700; color: #16233a; }
+.p2k-pill { font-size: 12px; font-weight: 700; border-radius: 20px; padding: 3px 11px; white-space: nowrap; }
+.p2k-pill.st-approved { background: #d4edda; color: #155724; }
+.p2k-pill.st-active   { background: #fff3cd; color: #856404; }
+.p2k-pill.st-rejected { background: #f8d7da; color: #721c24; }
+.p2k-pill.st-draft,
+.p2k-pill.st-empty    { background: #e9ecef; color: #6c757d; }
+.p2k-progress { display: flex; align-items: center; gap: 10px; }
+.p2k-bar { flex: 1; height: 6px; border-radius: 3px; background: #e6ebf3; overflow: hidden; }
+.p2k-bar > i { display: block; height: 100%; border-radius: 3px; background: #2ba55d; }
+.p2k-count { font-size: 13px; color: #5b6b80; font-weight: 700; white-space: nowrap; }
+.p2k-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+.p2k-warns { display: flex; gap: 6px; flex-wrap: wrap; }
+.p2k-warn { font-size: 12px; border-radius: 20px; padding: 2px 9px; background: #fdecec; color: #c0392b; }
+.p2k-warn.is-pending { background: #f6edfa; color: #8e44ad; }
+.p2k-open-btn {
+    flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 14px;
+    background: #2f6fb0; color: #fff; transition: background .12s;
+}
+.p2k-tile:hover .p2k-open-btn { background: #255d97; }
+
+/* 機械一覧モーダル上部のステップ表示 */
+.p2k-steps {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-top: 12px; padding: 10px 12px;
+    background: #f6f8fb; border: 1px solid #eef1f6; border-radius: 10px;
+}
+.p2k-step { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #9aa5b6; }
+.p2k-step-num {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    background: #fff; color: #9aa5b6; border: 1.5px solid #cdd8e8;
+}
+.p2k-step.is-done { color: #3d4a5d; }
+.p2k-step.is-done .p2k-step-num { background: #2ba55d; border-color: #2ba55d; color: #fff; }
+.p2k-step.is-current { color: #16233a; font-weight: 700; }
+.p2k-step.is-current .p2k-step-num { background: #2f6fb0; border-color: #2f6fb0; color: #fff; }
+.p2k-step.is-link { cursor: pointer; }
+.p2k-step.is-link:hover { color: #2f6fb0; text-decoration: underline; }
+.p2k-step-sep { color: #c3ccd9; font-weight: 700; }
+
+@media (max-width: 900px) {
+    .p2k-tiles { grid-template-columns: minmax(0,1fr); gap: 12px; }
+    .p2k-tiles.is-single { max-width: none; }
+    .p2k-tile-arrow { display: none; }
 }
