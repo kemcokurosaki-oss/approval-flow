@@ -5167,6 +5167,7 @@ async function openDetailModal(requestId, returnTo = null) {
 
     // shipping: 担当者確認セクション用にtasksを取得
     let shippingOwners = null;
+    let shippingInspectionLabel = '検査';
     if (req.flow_type === 'shipping') {
         const { data: sTasks } = await db.from('tasks')
             .select('text, owner, major_item')
@@ -5186,6 +5187,7 @@ async function openDetailModal(requestId, returnTo = null) {
             sales:    salesOwner || 'なし',
             trip:     tripOwners.join('、') || 'なし'
         };
+        shippingInspectionLabel = await _getInspectionFlowLabel(pNum, req.machine_name);
     }
 
     let stepsHtml;
@@ -5356,7 +5358,7 @@ async function openDetailModal(requestId, returnTo = null) {
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
-            <div style="font-size:15px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（参考）</div>
+            <div style="font-size:15px; color:#888; font-weight:bold; margin-bottom:6px;">担当者確認（${esc(shippingInspectionLabel)}承認済み）</div>
             <div style="font-size:16px; line-height:2; background:#f8f9fa; border-radius:4px; padding:8px 12px;">
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">設計</span>${esc(shippingOwners?.sekkei || 'なし')}</div>
                 <div><span style="color:#888; font-size:14px; width:36px; display:inline-block;">組立</span>${esc(shippingOwners?.kumitatе || 'なし')}</div>
@@ -7675,6 +7677,14 @@ async function _getMiddleFlowChain(projectNum, machine) {
     return Object.keys(best).sort((a, b) => best[a] - best[b]);
 }
 
+// その機械の検査系フロー（簡易検査/外観検査/出荷品確認検査のいずれか、排他）のラベルを返す。
+// 出荷確定申請の「担当者確認」見出し（「〇〇承認済み」）に使う
+async function _getInspectionFlowLabel(projectNum, machine) {
+    const middle = await _getMiddleFlowChain(projectNum, machine);
+    const t = middle.find(x => ['simple_inspection', 'inspection', 'shipping_check_inspection'].includes(x));
+    return QA_DETAIL_TITLE_LABELS[t] || '検査';
+}
+
 // 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
 async function _getMachineFlowChain(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
@@ -8898,8 +8908,16 @@ async function onShippingMachineChange() {
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
     const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[num] || 'なし';
 
+    // 見出し（「〇〇承認済み」の〇〇部分）を工番・機械の実際の検査系フロー名に合わせて動的に変える
+    const inspectionLabel = await _getInspectionFlowLabel(num, machine);
+    document.getElementById('shipping_approver_label').textContent = `担当者確認（${inspectionLabel}承認済み）`;
+
+    // 現地(出張)担当者
+    const tripOwners = await getBusinessTripOwnerNames(num);
+    const tripOwner = tripOwners.join('、') || 'なし';
+
     document.getElementById('shipping_approver_list').innerHTML = [
-        ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner]
+        ['設計', sekkeiOwner], ['組立', kumitateOwner], ['操業', shiuntenOwner], ['営業', salesOwner], ['現地', tripOwner]
     ].map(([role, name]) =>
         `<div class="flow-info-item"><span style="width:32px;font-size:12px;color:#999;flex-shrink:0;">${role}</span><span>${esc(name)}</span></div>`
     ).join('');
