@@ -5927,16 +5927,27 @@ async function openDetailModal(requestId, returnTo = null) {
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
-        const pendingBlockers = await _getShippingPendingBlockers(req.project_number, req.machine_name);
+        const [pendingBlockers, doneFlows, requiredFlows] = await Promise.all([
+            _getShippingPendingBlockers(req.project_number, req.machine_name),
+            _getMachineDoneFlows(req.project_number, req.machine_name),
+            _getRequiredFlows(req.project_number, req.machine_name)
+        ]);
+        const missingFlows = [...requiredFlows].filter(t => !doneFlows.has(t));
+        const missingWarningHtml = missingFlows.length > 0 ? `
+            <div style="margin-right:auto;display:flex;align-items:center;background:#fdecea;border:2px solid #e57373;border-radius:6px;padding:8px 14px;">
+                <span style="font-size:14px;color:#c0392b;font-weight:bold;">⚠ 前フロー（${missingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</span>
+            </div>` : '';
         const blockWarningHtml = pendingBlockers.length > 0 ? `
             <div style="margin-right:auto;display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ ${pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</span>
             </div>` : '';
+        const canSubmitShippingConfirm = missingFlows.length === 0 && pendingBlockers.length === 0;
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
+            ${missingWarningHtml}
             ${blockWarningHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
-            <button class="btn btn-success" ${pendingBlockers.length > 0 ? 'disabled title="残件を解消すると申請できます"' : ''} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
+            <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
