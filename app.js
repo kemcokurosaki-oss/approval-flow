@@ -2523,7 +2523,7 @@ function build2000FlowTileHtml({ kind, statuses, pendingCount, overdueCount, onc
     const warns = [];
     if (agg === 'rejected')  warns.push('<span class="p2k-warn">⚠ 却下あり</span>');
     if (overdueCount > 0)    warns.push(`<span class="p2k-warn">⚠ 未申請・未承認 ${overdueCount}台</span>`);
-    if (pendingCount > 0)    warns.push(`<span class="p2k-warn is-pending">⚠ 申し送り ${pendingCount}件</span>`);
+    if (pendingCount > 0)    warns.push(`<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`);
 
     const arrowHtml = withArrow
         ? '<div class="p2k-tile-arrow"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M8.5 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>'
@@ -2618,7 +2618,7 @@ function build2000AssemblyRowHtml(num, machine, hasElectrical, shipDate, assembl
         : 0;
     const pendingCount = assemblyPendingCount + electricalPendingCount;
     const warningHtml = pendingCount > 0
-        ? `<span class="p2k-warn is-pending">⚠ 申し送り ${pendingCount}件</span>`
+        ? `<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`
         : '';
 
     // ユニット区分がある機械は、一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する（組立ユニット基準）
@@ -2702,7 +2702,7 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
     }
 
     const warningHtml = isOverdue
-        ? `<span class="p2k-warn">⚠ 期限超過・${activeReq ? '未承認' : '未申請'}</span>`
+        ? `<span class="p2k-warn">⚠ ${activeReq ? '未承認' : '未申請'}</span>`
         : '';
     const shipMeta = shipDate ? `工場出荷予定日 ${esc(fmtDate(shipDate))}` : '';
 
