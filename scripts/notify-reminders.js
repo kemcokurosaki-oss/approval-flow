@@ -73,6 +73,13 @@ function splitOwnerNames(ownerStr) {
   return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
 }
 
+// 2000番台：試運転タスクのunit列を正規化する（app.js側のnormalizeTestRunUnitと同じロジック）。
+// 「ALL」はユニット区別が無いことを表す工程表側の入力慣習のため、ユニット無し（空文字）として扱う
+function normalizeTestRunUnit(unit) {
+  const u = String(unit || '').trim();
+  return u === 'ALL' ? '' : u;
+}
+
 const QA_MEETING_LABELS = {
   simple_inspection: '簡易検査',
   inspection:        '外観検査',
@@ -274,7 +281,7 @@ async function runApprovalReminders() {
   const cutoff = TEST_MODE ? new Date().toISOString() : todayMidnightJST();
   const requests = await supabaseFetch(
     `approval_requests?status=eq.submitted&flow_type=in.(assembly,electrical,test_run,shipping)` +
-    `&created_at=lt.${encodeURIComponent(cutoff)}&select=id,project_number,machine_name,flow_type`
+    `&created_at=lt.${encodeURIComponent(cutoff)}&select=id,project_number,machine_name,unit_name,flow_type`
   );
 
   if (!requests || requests.length === 0) {
@@ -310,7 +317,7 @@ async function runApprovalReminders() {
         if (sentSet.has(key)) continue;
 
         const flow  = FLOW_LABELS[req.flow_type] || req.flow_type;
-        const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
+        const pStr  = req.machine_name ? `${req.project_number} ${req.machine_name}${req.unit_name || ''}` : String(req.project_number);
         const subject = `【承認催促】${pStr}　${flow}`;
         const text    =
           `${approver.name} 様\n\n` +
@@ -348,14 +355,23 @@ async function runSubmissionReminders() {
 
   const todayStr = tokyoDateStr();
 
-  // 申請済みリクエストのセット（rejected以外）。test_run/shipping_prep/shipping/electricalはmachine_name一致で判定
+  // 申請済みリクエストのセット（rejected以外）。shipping_prep/shipping/electricalはmachine_name一致で判定
   const submitted = await supabaseFetch(
     `approval_requests?flow_type=in.(test_run,shipping_prep,shipping,electrical)&status=neq.rejected` +
-    `&select=project_number,machine_name,flow_type`
+    `&select=project_number,machine_name,unit_name,flow_type`
   );
   const submittedSet = new Set(
     (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
   );
+
+  // 試運転(test_run)は2000番台に限り機械・ユニット単位申請のため、machine_name+unit_nameで判定する別セットを作る。
+  // unit_nameが無い申請（2000番台以外、またはユニット単位化前の旧申請）はその機械の全ユニットに一致するとみなす
+  const testRunSubmittedExact = new Set();
+  const testRunSubmittedMachineWildcard = new Set();
+  (submitted || []).filter(r => r.flow_type === 'test_run').forEach(r => {
+    if (r.unit_name) testRunSubmittedExact.add(`${r.project_number}__${r.machine_name}__${r.unit_name}`);
+    else testRunSubmittedMachineWildcard.add(`${r.project_number}__${r.machine_name}`);
+  });
 
   // 組立(assembly)は1申請に複数機械をまとめられるため、assembly_itemsのJSON配列を展開してキー化する
   const assemblySubmitted = await supabaseFetch(
@@ -415,15 +431,21 @@ async function runSubmissionReminders() {
     const endDateFilter = flowType === 'shipping'
       ? `end_date=lte.${tomorrowStr}`  // 前日以降（前日・当日・超過後も継続）
       : `end_date=lt.${todayStr}`;      // 終了日超過後
-    const tasks = await supabaseFetch(
+    const tasksRaw = await supabaseFetch(
       `tasks?text=eq.${encodeURIComponent(taskText)}&${endDateFilter}` +
-      `&select=project_number,machine,owner,end_date,is_completed`
+      `&select=project_number,machine,unit,owner,end_date,is_completed`
     );
+    // 試運転(test_run)のunit列は「ALL」をユニット無しとして正規化する（app.js側と揃える）
+    const tasks = (tasksRaw || []).map(t => flowType === 'test_run' ? { ...t, unit: normalizeTestRunUnit(t.unit) } : t);
 
-    // 同一工事番号・同一機械のタスクが複数ある場合は、終了日が最も遅いものだけを対象にする
+    // 同一工事番号・同一機械のタスクが複数ある場合は、終了日が最も遅いものだけを対象にする。
+    // 試運転(test_run)は2000番台に限り機械・ユニット単位申請のため、機械・ユニットの組み合わせごとに対象にする
     const dedupedTasks = new Map();
     for (const task of (tasks || [])) {
-      const dedupKey = `${task.project_number}__${task.machine || ''}`;
+      const is2000sTestRun = flowType === 'test_run' && isAssembly2000sSeries(task.project_number);
+      const dedupKey = is2000sTestRun
+        ? `${task.project_number}__${task.machine || ''}__${task.unit || ''}`
+        : `${task.project_number}__${task.machine || ''}`;
       const existing = dedupedTasks.get(dedupKey);
       if (!existing || task.end_date > existing.end_date) {
         dedupedTasks.set(dedupKey, task);
@@ -440,8 +462,15 @@ async function runSubmissionReminders() {
       // テストモードで工事番号が指定されている場合は絞り込み
       if (TEST_MODE && TEST_PROJECT && String(task.project_number) !== TEST_PROJECT) continue;
 
-      const key = `${task.project_number}__${task.machine}__${flowType}`;
-      if (submittedSet.has(key)) continue;
+      const is2000sTestRun = flowType === 'test_run' && isAssembly2000sSeries(task.project_number);
+      if (is2000sTestRun) {
+        const exactKey = `${task.project_number}__${task.machine}__${task.unit || ''}`;
+        const wildcardKey = `${task.project_number}__${task.machine}`;
+        if (testRunSubmittedExact.has(exactKey) || testRunSubmittedMachineWildcard.has(wildcardKey)) continue;
+      } else {
+        const key = `${task.project_number}__${task.machine}__${flowType}`;
+        if (submittedSet.has(key)) continue;
+      }
 
       // 宛先を決定: shipping は品証・製管スタッフ、それ以外はタスクオーナー
       let recipients;
@@ -460,11 +489,14 @@ async function runSubmissionReminders() {
 
       for (const profile of (recipients || [])) {
         if (!profile.email) continue;
-        const dedupKey = `${task.project_number}__${task.machine || ''}__${flowType}__${profile.id}`;
+        const dedupKey = is2000sTestRun
+          ? `${task.project_number}__${task.machine || ''}__${task.unit || ''}__${flowType}__${profile.id}`
+          : `${task.project_number}__${task.machine || ''}__${flowType}__${profile.id}`;
         if (sentThisRun.has(dedupKey)) continue;
 
         const flow    = FLOW_LABELS[flowType] || flowType;
-        const pStr    = task.machine ? `${task.project_number} ${task.machine}` : String(task.project_number);
+        const machineDisplay = is2000sTestRun ? `${task.machine}${task.unit || ''}` : task.machine;
+        const pStr    = task.machine ? `${task.project_number} ${machineDisplay}` : String(task.project_number);
         const subject = `【申請催促】${pStr}　${flow}`;
         const bodyDetail = flowType === 'shipping'
           ? `${task.end_date} が予定出荷日ですが、申請がされていません。`

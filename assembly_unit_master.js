@@ -24,7 +24,9 @@ const ASSEMBLY_UNIT_MASTER = {
 
 const ASSEMBLY_MACHINE_CODES = Object.keys(ASSEMBLY_UNIT_MASTER);
 
-// 工番が2000番台（組立・試運転フローのみ対象＝標準リストを使う工事）かどうかを判定する。
+// 工番が2000番台（組立・試運転フローのみ対象の工事）かどうかを判定する。
+// この標準リストを使うのは組立・電装のユニット候補算出のみで、試運転は工程表の「試運転」タスクの
+// 機械・ユニットをそのまま使うため参照しない。
 // app.js の is2000sSeries() と同じ判定ロジック（sheet.htmlはapp.jsを読み込まない独立ファイルのため複製）。
 function isAssembly2000sSeries(projectNum) {
     const s = (projectNum || '').toString().trim();
