@@ -487,6 +487,15 @@ const FLOW_LABELS = {
     shipping:            '出荷確定申請'
 };
 
+// 出荷確定申請の残件警告で使う呼称（組立・電装は「ペンディング」、検査系開催案内は「タスク」）
+const PENDING_ITEM_NOUN = {
+    assembly:            'ペンディング',
+    electrical:          'ペンディング',
+    simple_inspection:   'タスク',
+    inspection:          'タスク',
+    shipping_check_inspection: 'タスク'
+};
+
 // 開催案内送信後の詳細モーダルヘッダー用（「開催案内」を省いた表記）。出荷後対応ペンディング一覧のフロー名短縮でも流用する
 const QA_DETAIL_TITLE_LABELS = {
     simple_inspection: '簡易検査',
@@ -5802,8 +5811,9 @@ async function openDetailModal(requestId, returnTo = null) {
     }
     const shippingConfirmMissingWarningHtml = shippingConfirmMissingFlows.length > 0 ? `
         <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ 前フロー（${shippingConfirmMissingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</div>` : '';
-    const shippingConfirmPendingWarningHtml = shippingConfirmPendingBlockers.length > 0 ? `
-        <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${shippingConfirmPendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</div>` : '';
+    const shippingConfirmPendingWarningHtml = shippingConfirmPendingBlockers.map(b =>
+        `<div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${FLOW_LABELS[b.flowType] || b.flowType}に未完了の${PENDING_ITEM_NOUN[b.flowType] || 'ペンディング'}が残っているため申請できません</div>`
+    ).join('');
 
     // ステップ表示の先頭に「申請」ステップを追加する（誰が・いつ申請したか）
     const appliedStepHtml = `
