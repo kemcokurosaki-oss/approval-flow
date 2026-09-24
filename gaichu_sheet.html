@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>組立完了チェックシート（外注先入力用）</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+        background: #f4f6fb;
+        color: #333;
+        padding-bottom: 64px;
+    }
+    .wrap { max-width: 840px; width: 100%; margin: 20px auto; padding: 28px 34px 90px; background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,0.13); }
+    .doc-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 6px; margin-bottom: 18px; }
+    .note-box { font-size: 13px; color: #555; background: #fff8e6; border: 1px solid #f0d98c; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; }
+
+    /* ログイン */
+    .login-box { max-width: 360px; margin: 80px auto; background: #fff; border: 1px solid #dde3ee; border-radius: 8px; padding: 28px; box-shadow: 0 2px 14px rgba(0,0,0,0.08); }
+    .login-box h1 { font-size: 17px; margin-bottom: 18px; text-align: center; }
+    .login-box label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+    .login-box input { width: 100%; padding: 9px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; margin-bottom: 14px; }
+    .login-box button { width: 100%; padding: 10px; border: none; border-radius: 5px; background: #1e3a5f; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .login-box button:hover { background: #163050; }
+    .login-error { color: #c0392b; font-size: 12px; margin-bottom: 10px; min-height: 14px; }
+
+    /* 案件選択 */
+    .req-pick-item { border: 1px solid #dde3ee; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+    .req-pick-item:hover { border-color: #1e3a5f; background: #f7f9fc; }
+    .req-pick-item .pn { font-weight: bold; font-size: 15px; }
+    .req-pick-item .mn { color: #666; font-size: 13px; margin-top: 2px; }
+    .req-pick-item .submitted-badge { display: inline-block; margin-top: 6px; font-size: 11px; color: #2a7a3a; background: #e7f5ea; border-radius: 4px; padding: 2px 8px; }
+
+    /* メタ情報 */
+    .meta-box { display: flex; gap: 24px; flex-wrap: wrap; background: #fff; border: 1px solid #e0e5f0; border-radius: 6px; padding: 10px 16px; margin-bottom: 14px; }
+    .meta-item { display: flex; align-items: center; gap: 8px; }
+    .meta-label { font-size: 12px; color: #999; }
+    .meta-value { font-size: 14px; color: #333; font-weight: bold; }
+    .meta-date-input { font-size: 14px; border: 1px solid #ccc; border-radius: 4px; padding: 3px 7px; font-family: inherit; }
+
+    .legend { font-size: 13px; color: #666; margin-bottom: 14px; padding: 9px 14px; background: #fff; border-radius: 6px; border: 1px solid #e0e5f0; }
+
+    .grp { margin-bottom: 12px; border: 1px solid #dde3ee; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .grp-label { background: #eef2f8; font-size: 13px; font-weight: bold; color: #1e3a5f; padding: 8px 14px; }
+    .item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid #eef1f6; flex-wrap: wrap; }
+    .item:first-of-type { border-top: none; }
+    .no { flex: 0 0 22px; color: #999; font-size: 12px; }
+    .txt { flex: 1 1 260px; font-size: 13.5px; }
+    .btns { display: flex; gap: 4px; flex: 0 0 auto; }
+    .mk-btn { width: 34px; height: 30px; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 15px; cursor: pointer; font-family: inherit; }
+    .mk-btn:hover { border-color: #1e3a5f; }
+    .mk-btn.on-maru { background: #2a7a3a; color: #fff; border-color: #2a7a3a; }
+    .mk-btn.on-batu { background: #c0392b; color: #fff; border-color: #c0392b; }
+    .mk-btn.on-dash { background: #888; color: #fff; border-color: #888; }
+    .note-in { flex: 1 1 160px; min-width: 120px; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+
+    .pending-row { display: flex; gap: 8px; padding: 8px 14px; border-top: 1px solid #eef1f6; }
+    .pending-row input { flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+    .pending-row button { border: none; background: #fbeaea; color: #c0392b; border-radius: 4px; padding: 0 10px; cursor: pointer; }
+    .btn-add-sm { font-size: 12px; color: #1e3a5f; background: #fff; border: 1px solid #b7c4d9; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-family: inherit; margin: 8px 14px 12px; }
+
+    .footer-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #dde3ee; padding: 12px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+    .save-status { font-size: 12px; color: #888; margin-right: auto; }
+    .save-status.ok { color: #2a7a3a; }
+    .save-status.error { color: #c0392b; }
+    .btn { padding: 10px 22px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; border: 1px solid #1e3a5f; }
+    .btn-primary { background: #1e3a5f; color: #fff; }
+    .btn-primary:hover { background: #163050; }
+    .btn-secondary { background: #fff; color: #1e3a5f; }
+
+    .hidden { display: none !important; }
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #555; z-index: 50; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay hidden" id="loading">読み込み中...</div>
+
+<!-- ログイン画面 -->
+<div class="login-box" id="login_box">
+    <h1>組立完了チェックシート（外注先入力用）</h1>
+    <div class="login-error" id="login_error"></div>
+    <label>メールアドレス</label>
+    <input type="email" id="login_email" autocomplete="username">
+    <label>パスワード</label>
+    <input type="password" id="login_password" autocomplete="current-password">
+    <button type="button" onclick="doLogin()">ログイン</button>
+</div>
+
+<!-- 案件選択画面（割り当てが複数ある場合） -->
+<div class="wrap hidden" id="pick_box">
+    <div class="doc-title">記入する案件を選択してください</div>
+    <div id="pick_list"></div>
+    <div style="text-align:right;margin-top:16px;">
+        <button type="button" class="btn btn-secondary" onclick="doLogout()">ログアウト</button>
+    </div>
+</div>
+
+<!-- チェックシート本体 -->
+<div class="wrap hidden" id="sheet_box">
+    <div class="doc-title">機械組立完了チェックシート</div>
+    <div class="note-box">
+        各項目を確認のうえ、判定欄に「○（確認済み）」「×（NG）」「―（対象外）」のいずれかを選択してください。
+        NGの場合は必ず備考欄に内容をご記入ください。入力後は画面下部の「保存する」を押してください。
+        保存後、弊社担当者が内容を確認したうえで正式な申請を行います。
+    </div>
+    <div class="meta-box">
+        <div class="meta-item"><span class="meta-label">工事番号</span><span class="meta-value" id="m_project">—</span></div>
+        <div class="meta-item"><span class="meta-label">機械名・ユニット</span><span class="meta-value" id="m_machine">—</span></div>
+        <div class="meta-item">
+            <span class="meta-label">組立完了日</span>
+            <input type="date" id="m_completion_date" class="meta-date-input">
+        </div>
+    </div>
+    <div class="legend">○：確認済み　　×：NG　　―：対象外　　備考欄は任意（NGの場合は必須）</div>
+    <div id="groups_container"></div>
+    <div class="grp">
+        <div class="grp-label">ペンディング項目リスト（任意・出荷までに対応できなかった項目があれば記入）</div>
+        <div id="pending_container"></div>
+        <button type="button" class="btn-add-sm" onclick="addPendingRow()">＋ 追加</button>
+    </div>
+</div>
+
+<div class="footer-bar hidden" id="footer_bar">
+    <span class="save-status" id="save_status"></span>
+    <button type="button" class="btn btn-secondary" onclick="doLogout()">ログアウト</button>
+    <button type="button" class="btn btn-secondary" onclick="backToPicker()">別の案件を選ぶ</button>
+    <button type="button" class="btn btn-primary" onclick="saveChecklist()">保存する</button>
+</div>
+
+<script>
+const S_URL = "https://dgekjzkrybrswsxlcbvh.supabase.co";
+const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU";
+const db = supabase.createClient(S_URL, S_KEY);
+
+// sheet.html の33項目・9グループと完全一致させること（内容を変える場合は両方直す）
+const GROUPS = [
+    { label: '組立作業確認', items: [
+        [1, 'Iマークは全てのボルトに付けられているか？'],
+        [2, '必要な場所に油を塗布しているか？'],
+        [3, '必要な場所にグリスを充填しているか？'],
+        [4, 'グリスニップル口の向きは適切か？'],
+    ]},
+    { label: '干渉チェック', items: [
+        [5, 'グリスニップルが回転軸・ハンドル等に干渉しないか？'],
+        [6, '可動部と固定部の干渉箇所はないか？'],
+    ]},
+    { label: '動作確認', items: [
+        [7, 'ハンドルはスムーズに回るか？'],
+        [8, 'その他回転物はスムーズに回るか？'],
+        [9, 'モーターは問題なく作動するか？'],
+        [10, '空圧シリンダーはスムーズに動くか？'],
+        [11, '油圧シリンダーはスムーズに動くか？'],
+        [12, 'クーラント経路をエアーで確認したか？'],
+    ]},
+    { label: '数値調整', items: [
+        [13, 'デジタルカウンターの数値はあっているか？'],
+        [14, '通り芯は公差内に収まっていたか？（ミルの場合）'],
+        [15, '組図によるストロークチェックはしたか？'],
+        [16, '組図に指定のある各種設定値は公差内に収まっているか？'],
+    ]},
+    { label: '外観チェック', items: [
+        [17, '塗装色は社内製作仕様書と一致しているか？'],
+        [18, '塗装が必要なすべての場所に塗装しているか？'],
+        [19, '塗装が剥げている箇所はないか？'],
+        [20, 'キズ・凹みなどないか？'],
+        [21, '錆はないか？'],
+    ]},
+    { label: '据付用', items: [
+        [22, '据付水平基準マークはあるか？'],
+        [23, '据付センター基準線は入っているか？'],
+        [24, '据付面（機械底面）に塗装していないか？'],
+    ]},
+    { label: 'シール・銘板', items: [
+        [25, 'グリスシールは全て貼り付けたか？'],
+        [26, '回転シールは全て貼り付けたか？'],
+        [27, '社銘板・オーダー銘板は付いているか？'],
+        [28, '空圧ゲージの銘板はあるか？'],
+        [29, '油圧ゲージの銘板はあるか？'],
+        [30, 'センサーの銘板はあるか？'],
+        [31, 'ペンディングリストは取り付けたか？'],
+    ]},
+    { label: '外観検査準備', items: [
+        [32, '検査のため、電源・エアー電源・油圧源を切っているか？'],
+    ]},
+    { label: '出荷準備', items: [
+        [33, '単品納入品リストの部品は揃っているか？'],
+    ]},
+];
+
+let myRequests = [];
+let currentReq = null;
+let checks = {};      // { '1': { mark: '○', note: '' }, ... }
+let pendingItems = []; // [ '内容', ... ]
+
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showLoading(v) { document.getElementById('loading').classList.toggle('hidden', !v); }
+function setSaveStatus(text, cls) {
+    const el = document.getElementById('save_status');
+    el.textContent = text;
+    el.className = 'save-status' + (cls ? ' ' + cls : '');
+}
+
+function buildMachineSummary(items, fallbackName) {
+    if (!Array.isArray(items) || items.length === 0) return fallbackName || '—';
+    const s = items.filter(it => it && it.machine)
+        .map(it => (it.unit && it.unit !== '-') ? `${it.machine}${it.unit}` : it.machine)
+        .join(' / ');
+    return s || fallbackName || '—';
+}
+
+async function doLogin() {
+    const email = document.getElementById('login_email').value.trim();
+    const password = document.getElementById('login_password').value;
+    const errEl = document.getElementById('login_error');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'メールアドレスとパスワードを入力してください。'; return; }
+
+    showLoading(true);
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    showLoading(false);
+    if (error) {
+        errEl.textContent = 'ログインに失敗しました。メールアドレス・パスワードをご確認ください。';
+        return;
+    }
+    await afterLogin();
+}
+
+async function afterLogin() {
+    showLoading(true);
+    const { data, error } = await db.rpc('contractor_list_my_requests');
+    showLoading(false);
+    if (error) {
+        document.getElementById('login_error').textContent = 'データの取得に失敗しました: ' + error.message;
+        return;
+    }
+    myRequests = data || [];
+    document.getElementById('login_box').classList.add('hidden');
+
+    if (myRequests.length === 0) {
+        document.getElementById('pick_box').classList.remove('hidden');
+        document.getElementById('pick_list').innerHTML = '<p style="color:#888;font-size:13px;">現在、記入をお願いしている案件はありません。</p>';
+        return;
+    }
+    if (myRequests.length === 1) {
+        openRequest(myRequests[0]);
+        return;
+    }
+    showPicker();
+}
+
+function showPicker() {
+    document.getElementById('sheet_box').classList.add('hidden');
+    document.getElementById('footer_bar').classList.add('hidden');
+    document.getElementById('pick_box').classList.remove('hidden');
+    document.getElementById('pick_list').innerHTML = myRequests.map((r, i) => `
+        <div class="req-pick-item" onclick="openRequest(myRequests[${i}])">
+            <div class="pn">工事番号：${esc(r.project_number)}</div>
+            <div class="mn">機械名・ユニット：${esc(buildMachineSummary(r.assembly_items, r.machine_name))}</div>
+            ${r.contractor_submitted_at ? '<div class="submitted-badge">保存済み（担当者確認待ち）</div>' : ''}
+        </div>
+    `).join('');
+}
+
+function backToPicker() {
+    if (myRequests.length <= 1) return;
+    showPicker();
+}
+
+function openRequest(req) {
+    currentReq = req;
+    checks = (req.sheet_data && req.sheet_data.check_items) ? { ...req.sheet_data.check_items } : {};
+    pendingItems = (req.sheet_data && Array.isArray(req.sheet_data.pending_items)) ? [...req.sheet_data.pending_items] : [];
+
+    document.getElementById('pick_box').classList.add('hidden');
+    document.getElementById('sheet_box').classList.remove('hidden');
+    document.getElementById('footer_bar').classList.remove('hidden');
+
+    document.getElementById('m_project').textContent = req.project_number || '—';
+    document.getElementById('m_machine').textContent = buildMachineSummary(req.assembly_items, req.machine_name);
+    document.getElementById('m_completion_date').value =
+        (req.sheet_data && req.sheet_data.meta && req.sheet_data.meta.completion_date) || '';
+
+    renderGroups();
+    renderPending();
+    setSaveStatus(req.contractor_submitted_at ? '前回保存済み' : '');
+}
+
+function renderGroups() {
+    const c = document.getElementById('groups_container');
+    c.innerHTML = GROUPS.map(g => `
+        <div class="grp">
+            <div class="grp-label">${esc(g.label)}</div>
+            ${g.items.map(([no, text]) => renderItemRow(no, text)).join('')}
+        </div>
+    `).join('');
+}
+
+function renderItemRow(no, text) {
+    const cur = checks[no] || {};
+    const mk = (mark, cls, label) => {
+        const on = cur.mark === mark ? ` on-${cls}` : '';
+        return `<button type="button" class="mk-btn${on}" onclick="setMark('${no}','${mark}','${cls}')">${label}</button>`;
+    };
+    return `
+        <div class="item">
+            <span class="no">${no}</span>
+            <span class="txt">${esc(text)}</span>
+            <span class="btns">
+                ${mk('○','maru','○')}${mk('×','batu','×')}${mk('―','dash','―')}
+            </span>
+            <input type="text" class="note-in" placeholder="備考" value="${esc(cur.note || '')}" oninput="setNote('${no}', this.value)">
+        </div>
+    `;
+}
+
+function setMark(no, mark, cls) {
+    checks[no] = checks[no] || {};
+    checks[no].mark = (checks[no].mark === mark) ? '' : mark; // 同じボタンをもう一度押すと解除
+    renderGroups();
+}
+function setNote(no, value) {
+    checks[no] = checks[no] || {};
+    checks[no].note = value;
+}
+
+function renderPending() {
+    const c = document.getElementById('pending_container');
+    if (pendingItems.length === 0) {
+        c.innerHTML = '<div style="padding:10px 14px;color:#999;font-size:12px;">ペンディング項目はありません</div>';
+        return;
+    }
+    c.innerHTML = pendingItems.map((v, i) => `
+        <div class="pending-row">
+            <input type="text" value="${esc(v)}" oninput="pendingItems[${i}]=this.value">
+            <button type="button" onclick="removePendingRow(${i})">削除</button>
+        </div>
+    `).join('');
+}
+function addPendingRow() { pendingItems.push(''); renderPending(); }
+function removePendingRow(i) { pendingItems.splice(i, 1); renderPending(); }
+
+async function saveChecklist() {
+    if (!currentReq) return;
+    const completionDate = document.getElementById('m_completion_date').value || null;
+    setSaveStatus('保存中...', '');
+
+    const { error } = await db.rpc('contractor_save_checklist', {
+        p_request_id: currentReq.id,
+        p_check_items: checks,
+        p_pending_items: pendingItems.filter(v => (v || '').trim() !== ''),
+        p_completion_date: completionDate,
+    });
+
+    if (error) {
+        setSaveStatus('保存に失敗しました: ' + error.message, 'error');
+        return;
+    }
+    setSaveStatus('保存しました（' + new Date().toLocaleString('ja-JP') + '）', 'ok');
+}
+
+async function doLogout() {
+    showLoading(true);
+    await db.auth.signOut();
+    showLoading(false);
+    location.reload();
+}
+
+async function init() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+        await afterLogin();
+    }
+}
+init();
+</script>
+</body>
+</html>
