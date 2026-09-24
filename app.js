@@ -2749,13 +2749,20 @@ async function renderAssembly2000FlowDetailBody(projectNum) {
         .eq('project_number', projectNum)
         .in('text', ['機械組立', '電気艤装', '工場出荷'])
         .not('machine', 'is', null);
-    const machines = [...new Set((taskRows || []).filter(t => t.text === '機械組立').map(t => t.machine))].sort();
+    const machines = [...new Set((taskRows || []).filter(t => t.text === '機械組立').map(t => t.machine))];
     const elecMachineSet = new Set((taskRows || []).filter(t => t.text === '電気艤装').map(t => t.machine));
     const shipDateByMachine = {};
     (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
         if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
             shipDateByMachine[t.machine] = t.end_date;
         }
+    });
+    // 表示順は工場出荷予定日の昇順（不明は末尾）。同じ出荷日・出荷日不明同士は機械名順で安定させる（試運転フローと同じ並び）
+    machines.sort((a, b) => {
+        const da = shipDateByMachine[a] || '9999-99-99';
+        const db_ = shipDateByMachine[b] || '9999-99-99';
+        if (da !== db_) return da < db_ ? -1 : 1;
+        return a.localeCompare(b);
     });
 
     const rowsHtml = machines.length > 0
@@ -2787,17 +2794,31 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         .eq('project_number', projectNum).eq('flow_type', 'test_run');
 
     const { data: taskRows } = await db.from('tasks')
-        .select('machine, end_date, is_completed')
-        .eq('project_number', projectNum).eq('text', '試運転')
+        .select('machine, text, end_date, is_completed')
+        .eq('project_number', projectNum).in('text', ['試運転', '工場出荷'])
         .not('machine', 'is', null);
     const taskInfoByMachine = {};
-    (taskRows || []).forEach(t => {
+    (taskRows || []).filter(t => t.text === '試運転').forEach(t => {
         const existing = taskInfoByMachine[t.machine];
         if (!existing || (t.end_date && (!existing.end_date || t.end_date < existing.end_date))) {
             taskInfoByMachine[t.machine] = { end_date: t.end_date, is_completed: t.is_completed };
         }
     });
-    const machines = Object.keys(taskInfoByMachine).sort();
+    // 表示する「工場出荷予定日」は試運転タスクの終了日ではなく、同一工番・同一機械名の
+    // 「工場出荷」タスクの終了日を使う（工場出荷タスクが無ければ不明扱い）
+    const shipDateByMachine = {};
+    (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
+        if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
+            shipDateByMachine[t.machine] = t.end_date;
+        }
+    });
+    // 表示順は工場出荷予定日の昇順（不明は末尾）。同じ出荷日・出荷日不明同士は機械名順で安定させる
+    const machines = Object.keys(taskInfoByMachine).sort((a, b) => {
+        const da = shipDateByMachine[a] || '9999-99-99';
+        const db_ = shipDateByMachine[b] || '9999-99-99';
+        if (da !== db_) return da < db_ ? -1 : 1;
+        return a.localeCompare(b);
+    });
 
     // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
     const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
@@ -2819,7 +2840,7 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         const machineReqs = (reqs || []).filter(r => r.machine_name === machine);
         const myDraft = machineReqs.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
         const activeReq = machineReqs.find(r => r.status !== 'draft');
-        return build2000TestRunRowHtml(projectNum, machine, activeReq, myDraft, taskInfoByMachine[machine]?.end_date, isOverdue(machine, activeReq), ctx);
+        return build2000TestRunRowHtml(projectNum, machine, activeReq, myDraft, shipDateByMachine[machine], isOverdue(machine, activeReq), ctx);
     }).join('') || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転タスクが工程表にありません</div>';
 
     const pInfo = projectsMap[projectNum] || {};
