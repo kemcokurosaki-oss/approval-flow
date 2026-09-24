@@ -2581,22 +2581,23 @@ function build2000StatusBadgeHtml(prefix, status) {
 // 1機械分の行（unit-list-row形式）。machineがnull/空の場合は工番全体集約行として表示する。
 // 上段（機械名・バッジ・出荷予定日）と下段（操作リンク）を分け、カードの高さが揃った際に下段が
 // カード下端に揃うようにする（wrap-2000-grid・justify-content:space-betweenと合わせて使う）
-function build2000MachineListRowHtml({ machine, shipDate, badgesHtml, warningHtml, linkOnclick }) {
+function build2000MachineListRowHtml({ machine, shipDate, badgesHtml, warningHtml, linkOnclick, unitProgress }) {
     const nameHtml = machine ? `【${esc(machine)}】` : '組立（全体）';
     // machineが特定できている行は「探したが工場出荷タスクが無い」=不明。
     // machineが無い集約行（機械組立タスク自体が工程表未登録）は出荷日を探しようがないため空欄のままにする
     const shipMeta = machine ? `工場出荷予定日 ${shipDate ? esc(fmtDate(shipDate)) : '不明'}` : '';
-    return `<div class="unit-list-row">
+    return `<div class="unit-list-row p2k-mrow" onclick="${linkOnclick}">
         <div>
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                 <div class="unit-list-name">${nameHtml}</div>
                 <div class="unit-list-status" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">${badgesHtml}</div>
             </div>
+            ${unitProgress ? `<div class="p2k-progress p2k-mrow-progress"><div class="p2k-bar"><i style="width:${unitProgress.total > 0 ? Math.round(unitProgress.done / unitProgress.total * 100) : 0}%;"></i></div><span class="p2k-count">ユニット ${unitProgress.total}件中 ${unitProgress.done}件完了</span></div>` : ''}
             <div class="unit-list-meta">${shipMeta || '&nbsp;'}</div>
         </div>
-        <div class="unit-list-row-actions" style="justify-content:space-between;">
-            <span class="unit-list-link" style="cursor:pointer;" onclick="event.stopPropagation(); ${linkOnclick}">詳細を見る →</span>
-            ${warningHtml || ''}
+        <div class="unit-list-row-actions p2k-foot">
+            <div class="p2k-warns">${warningHtml || ''}</div>
+            <span class="p2k-open-btn" onclick="event.stopPropagation(); ${linkOnclick}">ユニット一覧を見る<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
         </div>
     </div>`;
 }
@@ -2622,8 +2623,15 @@ function build2000AssemblyRowHtml(num, machine, hasElectrical, shipDate, assembl
         ? `<span class="si-badge si-orange" style="background:#8e44ad;">⚠${pendingCount}件</span>`
         : '';
 
+    // ユニット区分がある機械は、一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する（組立ユニット基準）
+    const unitReqs  = (assemblyReqsByProject || {})[num] || [];
+    const unitList  = getAssemblyUnitListForMachine(machine, unitReqs).filter(u => u && u !== '-');
+    const unitProgress = unitList.length > 0
+        ? { total: unitList.length, done: unitList.filter(u => computeAssemblyUnitStatus(num, machine, u, unitReqs, assemblyNotRequiredSet) === 'done').length }
+        : null;
+
     return build2000MachineListRowHtml({
-        machine, shipDate, badgesHtml, warningHtml,
+        machine, shipDate, badgesHtml, warningHtml, unitProgress,
         linkOnclick: `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
     });
 }
@@ -3646,6 +3654,31 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
     `;
+    equalizeAssemblyElecRowHeights();
+}
+
+// 組立・電装のユニット一覧（左右2列）で、同じ段のカードの高さを揃える。
+// 不要マークの行は「試運転準備」欄が無い等で高さが変わり、左右で段がずれて見えるため、描画後に各段の最大高さに合わせる。
+function equalizeAssemblyElecRowHeights() {
+    const apply = () => {
+        const cols = [...document.querySelectorAll('#detail_body .assembly-elec-split .unit-list-wrap')];
+        if (cols.length < 2) return;
+        const rowsByCol = cols.map(c => [...c.querySelectorAll(':scope > .unit-list-row')]);
+        rowsByCol.flat().forEach(r => { r.style.minHeight = ''; });
+        // 1列表示（狭い画面）のときは揃えない
+        if (Math.abs(cols[0].getBoundingClientRect().top - cols[1].getBoundingClientRect().top) > 2) return;
+        const maxLen = Math.max(...rowsByCol.map(r => r.length));
+        for (let i = 0; i < maxLen; i++) {
+            const rows = rowsByCol.map(r => r[i]).filter(Boolean);
+            const h = Math.max(...rows.map(r => r.getBoundingClientRect().height));
+            rows.forEach(r => { r.style.minHeight = h + 'px'; });
+        }
+    };
+    requestAnimationFrame(apply);
+    if (!window.__assemblyElecEqualizeBound) {
+        window.__assemblyElecEqualizeBound = true;
+        window.addEventListener('resize', () => requestAnimationFrame(apply));
+    }
 }
 
 async function toggleAssemblyUnitNotRequired(projectNum, machine, unit, checked) {
