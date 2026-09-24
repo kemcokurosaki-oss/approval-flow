@@ -2814,13 +2814,20 @@ async function renderAssembly2000FlowDetailBody(projectNum) {
         .eq('project_number', projectNum)
         .in('text', ['機械組立', '電気艤装', '工場出荷'])
         .not('machine', 'is', null);
-    const machines = [...new Set((taskRows || []).filter(t => t.text === '機械組立').map(t => t.machine))].sort();
+    const machines = [...new Set((taskRows || []).filter(t => t.text === '機械組立').map(t => t.machine))];
     const elecMachineSet = new Set((taskRows || []).filter(t => t.text === '電気艤装').map(t => t.machine));
     const shipDateByMachine = {};
     (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
         if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
             shipDateByMachine[t.machine] = t.end_date;
         }
+    });
+    // 表示順は工場出荷予定日の昇順（不明は末尾）。同じ出荷日・出荷日不明同士は機械名順で安定させる（試運転フローと同じ並び）
+    machines.sort((a, b) => {
+        const da = shipDateByMachine[a] || '9999-99-99';
+        const db_ = shipDateByMachine[b] || '9999-99-99';
+        if (da !== db_) return da < db_ ? -1 : 1;
+        return a.localeCompare(b);
     });
 
     const rowsHtml = machines.length > 0
