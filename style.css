@@ -2871,6 +2871,8 @@
 .p2k-tile-circle.st-rejected { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px rgba(229,72,77,.16); }
 .p2k-tile-circle.st-draft    { background: #fff; color: #8593a8; border: 2px dashed #9fb0c6; }
 .p2k-tile-circle.st-empty    { background: #fff; color: #c3ccd9; border: 2px dashed #9fb0c6; }
+/* 未ログイン（閲覧のみ）は申請できないため、承認ステータス画面の fc-empty と同じ実線の丸にする */
+.is-guest .p2k-tile-circle.st-empty { color: #d5dce6; border: 2px solid #e0e6ef; }
 .p2k-tile-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
 .p2k-tile-step  { font-size: 11px; font-weight: 700; color: #9aa5b6; letter-spacing: .08em; }
 .p2k-tile-title { font-size: 15px; font-weight: 700; color: #16233a; }
