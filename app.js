@@ -5934,9 +5934,7 @@ async function openDetailModal(requestId, returnTo = null) {
         ]);
         const missingFlows = [...requiredFlows].filter(t => !doneFlows.has(t));
         const missingWarningHtml = missingFlows.length > 0 ? `
-            <div style="margin-right:auto;display:flex;align-items:center;background:#fdecea;border:2px solid #e57373;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#c0392b;font-weight:bold;">⚠ 前フロー（${missingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</span>
-            </div>` : '';
+            <div style="margin-right:auto;color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ 前フロー（${missingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</div>` : '';
         const blockWarningHtml = pendingBlockers.length > 0 ? `
             <div style="margin-right:auto;display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ ${pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</span>
