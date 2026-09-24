@@ -2583,7 +2583,9 @@ function build2000StatusBadgeHtml(prefix, status) {
 // カード下端に揃うようにする（wrap-2000-grid・justify-content:space-betweenと合わせて使う）
 function build2000MachineListRowHtml({ machine, shipDate, badgesHtml, warningHtml, linkOnclick }) {
     const nameHtml = machine ? `【${esc(machine)}】` : '組立（全体）';
-    const shipMeta = shipDate ? `工場出荷予定日 ${esc(fmtDate(shipDate))}` : '';
+    // machineが特定できている行は「探したが工場出荷タスクが無い」=不明。
+    // machineが無い集約行（機械組立タスク自体が工程表未登録）は出荷日を探しようがないため空欄のままにする
+    const shipMeta = machine ? `工場出荷予定日 ${shipDate ? esc(fmtDate(shipDate)) : '不明'}` : '';
     return `<div class="unit-list-row">
         <div>
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -2696,7 +2698,7 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
     const warningHtml = isOverdue
         ? `<span class="si-badge si-orange" style="background:#8e44ad;">⚠${activeReq ? '未承認' : '未申請'}</span>`
         : '';
-    const shipMeta = shipDate ? `工場出荷予定日 ${esc(fmtDate(shipDate))}` : '';
+    const shipMeta = `工場出荷予定日 ${shipDate ? esc(fmtDate(shipDate)) : '不明'}`;
 
     return `<div class="unit-list-row">
         <div>
@@ -2705,7 +2707,7 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
                 <div class="unit-list-status">${badgesHtml}</div>
             </div>
             <div class="unit-list-meta">${metaLine || '&nbsp;'}</div>
-            <div class="unit-list-meta">${shipMeta || '&nbsp;'}</div>
+            <div class="unit-list-meta">${shipMeta}</div>
         </div>
         <div>
             <div class="unit-list-row-actions" style="justify-content:space-between;">
@@ -2779,17 +2781,26 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         .eq('project_number', projectNum).eq('flow_type', 'test_run');
 
     const { data: taskRows } = await db.from('tasks')
-        .select('machine, end_date, is_completed')
-        .eq('project_number', projectNum).eq('text', '試運転')
+        .select('machine, text, end_date, is_completed')
+        .eq('project_number', projectNum).in('text', ['試運転', '工場出荷'])
         .not('machine', 'is', null);
     const taskInfoByMachine = {};
-    (taskRows || []).forEach(t => {
+    (taskRows || []).filter(t => t.text === '試運転').forEach(t => {
         const existing = taskInfoByMachine[t.machine];
         if (!existing || (t.end_date && (!existing.end_date || t.end_date < existing.end_date))) {
             taskInfoByMachine[t.machine] = { end_date: t.end_date, is_completed: t.is_completed };
         }
     });
     const machines = Object.keys(taskInfoByMachine).sort();
+
+    // 表示する「工場出荷予定日」は試運転タスクの終了日ではなく、同一工番・同一機械名の
+    // 「工場出荷」タスクの終了日を使う（工場出荷タスクが無ければ不明扱い＝build2000TestRunRowHtml側で表示）
+    const shipDateByMachine = {};
+    (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
+        if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
+            shipDateByMachine[t.machine] = t.end_date;
+        }
+    });
 
     // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
     const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
@@ -2811,7 +2822,7 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         const machineReqs = (reqs || []).filter(r => r.machine_name === machine);
         const myDraft = machineReqs.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
         const activeReq = machineReqs.find(r => r.status !== 'draft');
-        return build2000TestRunRowHtml(projectNum, machine, activeReq, myDraft, taskInfoByMachine[machine]?.end_date, isOverdue(machine, activeReq), ctx);
+        return build2000TestRunRowHtml(projectNum, machine, activeReq, myDraft, shipDateByMachine[machine], isOverdue(machine, activeReq), ctx);
     }).join('') || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転タスクが工程表にありません</div>';
 
     const pInfo = projectsMap[projectNum] || {};
