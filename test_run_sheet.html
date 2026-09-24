@@ -324,7 +324,7 @@
             <span class="sheet-meta-value" id="sheet_project_num">—</span>
         </div>
         <div class="sheet-meta-item">
-            <span class="sheet-meta-label">機械名</span>
+            <span class="sheet-meta-label">機械/ユニット</span>
             <span class="sheet-meta-value" id="sheet_machine_name">—</span>
         </div>
         <div class="sheet-meta-item">
@@ -512,7 +512,7 @@ function buildReportHeader(projectNum, machineName, authorName, issueDate, compl
                 <div class="report-doc-notice">下記の機械の試運転が完了しましたので、報告します。</div>
                 <table class="report-info-tbl">
                     <tr><th>工事番号</th><td class="td-num">${esc(projectNum)}</td></tr>
-                    <tr><th>機械名</th><td class="td-mach">${esc(machineName)}</td></tr>
+                    <tr><th>機械/ユニット</th><td class="td-mach">${esc(machineName)}</td></tr>
                     <tr><th>試運転完了日</th><td>${esc(fmtCompletionDate(completionDate))}</td></tr>
                 </table>
             </div>
@@ -547,7 +547,7 @@ async function init() {
     if (viewMode && viewId) {
         const { data: req, error } = await db
             .from('approval_requests')
-            .select('project_number, machine_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
+            .select('project_number, machine_name, unit_name, sheet_data, requester_id, status, approval_steps(approver_id, status, decided_at, step_order, approver_role)')
             .eq('id', viewId)
             .single();
 
@@ -559,7 +559,8 @@ async function init() {
         }
 
         const isApproved = req.status === 'approved';
-        setSheetInfoHeader(req.project_number, req.machine_name);
+        const machineLabel = req.machine_name + (req.unit_name || '');
+        setSheetInfoHeader(req.project_number, machineLabel);
         checks       = req.sheet_data.check_items   || {};
         pendingItems = req.sheet_data.pending_items || [];
 
@@ -592,16 +593,16 @@ async function init() {
             document.getElementById('doc_title_top').textContent = '社内試運転完了報告書';
             document.getElementById('doc_date_top').textContent = meta.date || '';
             document.getElementById('doc_date_top').style.display = '';
-            document.title = `社内試運転完了報告書 - ${req.project_number} ${req.machine_name}`;
+            document.title = `社内試運転完了報告書 - ${req.project_number} ${machineLabel}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', approvers));
+                buildReportHeader(req.project_number, machineLabel, authorName, meta.date || '', meta.completion_date || '', approvers));
         } else {
             document.getElementById('doc_title_top').textContent = '社内試運転完了チェックシート';
-            document.title = `社内試運転完了チェックシート - ${req.project_number} ${req.machine_name}`;
+            document.title = `社内試運転完了チェックシート - ${req.project_number} ${machineLabel}`;
             const legend = document.querySelector('.sheet-legend');
             if (legend) legend.insertAdjacentHTML('beforebegin',
-                buildReportHeader(req.project_number, req.machine_name, authorName, meta.date || '', meta.completion_date || '', []));
+                buildReportHeader(req.project_number, machineLabel, authorName, meta.date || '', meta.completion_date || '', []));
         }
 
         restoreChecks();
@@ -619,7 +620,7 @@ async function init() {
 
     const { data: draft, error } = await db
         .from('approval_requests')
-        .select('project_number, machine_name, sheet_data, requester_id, status, sheet_saved_at')
+        .select('project_number, machine_name, unit_name, sheet_data, requester_id, status, sheet_saved_at')
         .eq('id', draftId)
         .single();
 
@@ -630,8 +631,9 @@ async function init() {
         return;
     }
 
-    setSheetInfoHeader(draft.project_number, draft.machine_name);
-    document.title = `社内試運転完了チェックシート - ${draft.project_number} ${draft.machine_name}`;
+    const draftMachineLabel = draft.machine_name + (draft.unit_name || '');
+    setSheetInfoHeader(draft.project_number, draftMachineLabel);
+    document.title = `社内試運転完了チェックシート - ${draft.project_number} ${draftMachineLabel}`;
 
     // 却下された申請の修正用に開いた場合: 「申請へ進む」ではなく保存して閉じるだけにする
     // （再申請自体は元の詳細画面の「再申請する」ボタンで行う）
