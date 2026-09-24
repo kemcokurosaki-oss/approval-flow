@@ -2296,6 +2296,13 @@ function renderProgressCards() {
                         const d = new Date(req.inspection_date + 'T00:00:00');
                         const label = req.status === 'approved' ? '完了' : '開催';
                         flowDateStr = `${label} ${d.getMonth()+1}/${d.getDate()}`;
+                    } else if (f.type === 'shipping' && (req.status === 'awaiting_shipping_date' || req.status === 'awaiting_shipping_confirm')) {
+                        // 出荷フローは起票→申請（常務への本申請=submitted）→承認の3段階。本申請前はまだ「起票」段階として表示する
+                        const d = new Date(req.created_at);
+                        flowDateStr = `起票 ${d.getMonth()+1}/${d.getDate()}`;
+                    } else if (f.type === 'shipping' && req.status === 'submitted') {
+                        const d = new Date(req.updated_at);
+                        flowDateStr = `申請 ${d.getMonth()+1}/${d.getDate()}`;
                     } else {
                         const dateIso = (req.status === 'approved' || req.status === 'rejected') ? req.updated_at : req.created_at;
                         if (dateIso) {
@@ -5795,6 +5802,8 @@ async function openDetailModal(requestId, returnTo = null) {
     }
     const shippingConfirmMissingWarningHtml = shippingConfirmMissingFlows.length > 0 ? `
         <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ 前フロー（${shippingConfirmMissingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</div>` : '';
+    const shippingConfirmPendingWarningHtml = shippingConfirmPendingBlockers.length > 0 ? `
+        <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${shippingConfirmPendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</div>` : '';
 
     // ステップ表示の先頭に「申請」ステップを追加する（誰が・いつ申請したか）
     const appliedStepHtml = `
@@ -5883,6 +5892,7 @@ async function openDetailModal(requestId, returnTo = null) {
         <div class="section-title">申請・承認状況</div>
         <div class="steps-list">${appliedStepHtml}${stepsHtml}</div>`}
         ${shippingConfirmMissingWarningHtml}
+        ${shippingConfirmPendingWarningHtml}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
@@ -5943,15 +5953,9 @@ async function openDetailModal(requestId, returnTo = null) {
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
         footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
-        const pendingBlockers = shippingConfirmPendingBlockers;
-        const blockWarningHtml = pendingBlockers.length > 0 ? `
-            <div style="margin-right:auto;display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
-                <span style="font-size:14px;color:#8a4b00;font-weight:bold;">⚠ ${pendingBlockers.map(b => FLOW_LABELS[b.flowType] || b.flowType).join('・')}に未完了のペンディング／タスクが残っているため申請できません</span>
-            </div>` : '';
-        const canSubmitShippingConfirm = shippingConfirmMissingFlows.length === 0 && pendingBlockers.length === 0;
+        const canSubmitShippingConfirm = shippingConfirmMissingFlows.length === 0 && shippingConfirmPendingBlockers.length === 0;
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
-            ${blockWarningHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
         `;
