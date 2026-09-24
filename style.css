@@ -2895,6 +2895,17 @@
 }
 .p2k-tile:hover .p2k-open-btn { background: #255d97; }
 
+/* 組立フロー：機械一覧の行（行全体クリック＋「ユニット一覧を見る」ボタン） */
+.unit-list-row.p2k-mrow { cursor: pointer; transition: background .12s, border-color .12s, box-shadow .12s; }
+.unit-list-row.p2k-mrow:hover { background: #f6f8fb; border-color: #9fb0c6; box-shadow: 0 4px 14px rgba(20,36,63,.08); }
+.unit-list-row.p2k-mrow .p2k-foot { min-height: 0; margin-top: 6px; }
+.p2k-open-btn { cursor: pointer; }
+.unit-list-row.p2k-mrow:hover .p2k-open-btn { background: #255d97; }
+.p2k-mrow-progress { margin-top: 8px; }
+
+/* 組立・電装ユニット一覧：高さを揃えたカード内で、操作行・試運転準備を上詰めのまま配置 */
+.assembly-elec-split .unit-list-wrap > .unit-list-row { justify-content: flex-start; }
+
 /* 機械一覧モーダル上部のステップ表示 */
 .p2k-steps {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
