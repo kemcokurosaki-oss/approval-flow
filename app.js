@@ -5987,7 +5987,7 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     const packingBox = hasPackingShipping ? `
         <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
             <span style="font-size:15px;color:#c0392b;font-weight:bold;">● 梱包出荷日（確定）を入力してください</span>
-            <input type="date" id="packing_sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
+            <input type="date" id="packing_sales_date_input" oninput="updateSalesDateSubmitButtonState()" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
         </div>` : '';
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
         <div style="display:flex;align-items:center;background:#fff3e0;border:2px solid #f0c078;border-radius:6px;padding:8px 14px;">
@@ -5997,7 +5997,7 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     const dateBox2 = isSplitShipping ? `
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ②${dateLabel}を入力してください</span>
-                <input type="date" id="sales_date_input_2" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
+                <input type="date" id="sales_date_input_2" oninput="updateSalesDateSubmitButtonState()" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>` : '';
     return `
         <div style="margin-right:auto;display:flex;gap:10px;flex-wrap:wrap;">
@@ -6005,13 +6005,23 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
             ${packingWarningBox}
             <div class="sales-date-highlight" style="display:flex;flex-direction:column;background:#fde8e8;border:2px solid #e74c3c;border-radius:6px;padding:8px 14px;">
                 <span style="font-size:15px;color:#c0392b;font-weight:bold;">● ${isSplitShipping ? '①' : ''}${dateLabel}を入力してください</span>
-                <input type="date" id="sales_date_input" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
+                <input type="date" id="sales_date_input" oninput="updateSalesDateSubmitButtonState()" style="padding:8px 10px;border:1px solid #e74c3c;border-radius:4px;font-size:15px;margin-top:4px;">
             </div>
             ${dateBox2}
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        <button class="btn btn-success"   onclick="submitSalesShippingDate('${req.id}')">入力する</button>
+        <button class="btn btn-success" id="btn_submit_sales_date" disabled onclick="submitSalesShippingDate('${req.id}')">入力する</button>
     `;
+}
+
+// ===== 確定出荷日入力フッターの必須項目が全て埋まっているかで「入力する」ボタンの活性/非活性を切り替える =====
+function updateSalesDateSubmitButtonState() {
+    const btn = document.getElementById('btn_submit_sales_date');
+    if (!btn) return;
+    const requiredInputs = ['sales_date_input', 'sales_date_input_2', 'packing_sales_date_input']
+        .map(id => document.getElementById(id))
+        .filter(el => el);
+    btn.disabled = requiredInputs.some(el => !el.value);
 }
 
 // ===== 「日付を変更する」クリック時にフッターを編集フォームへ切り替える =====
