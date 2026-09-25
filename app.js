@@ -5516,8 +5516,10 @@ function buildQaResultSectionInner(req, isMyRequest) {
                 </div>
             </div>
         ` : '';
+        const pendingNoteHtml = pendingHtml
+            ? `<div style="font-size:13px;color:#888;padding:6px 0;">※処置が完了したら品証に連絡してください（不在時は製造管理に連絡してください）</div>` : '';
         body = (pendingHtml || addFormHtml)
-            ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}${sendCardBtnHtml}`
+            ? `<div id="pending_detail_section">${pendingHtml}</div>${pendingNoteHtml}${addFormHtml}${sendCardBtnHtml}`
             : `<div style="color:#888; font-size:15px; padding:4px 0;">タスクなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
