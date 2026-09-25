@@ -386,10 +386,13 @@
 
         /* ===== 印刷用スタイル ===== */
         @media print {
-            @page { margin: 10mm 8mm; }
+            @page { size: A4 portrait; margin: 10mm 8mm; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            body { background: #fff !important; }
+            body { background: #fff !important; padding-bottom: 0 !important; }
             .sheet-footer  { display: none !important; }
+            /* 発行日は報告書ヘッダー内にも出ているため、右上の重複表示は印刷しない */
+            .doc-date      { display: none !important; }
+            .doc-title     { font-size: 20px; margin-bottom: 8px; }
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
@@ -407,25 +410,34 @@
             .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
             .report-doc              { margin-bottom: 8px !important; padding: 12px 14px !important; }
             .report-section-heading  { margin-bottom: 6px !important; }
-            .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; }
-            .sheet-group-label { padding: 5px 10px !important; }
+            /* グループ単位で改ページを避けると大きいグループが丸ごと次ページへ送られ空白ができるため、
+               グループはページをまたいで分割可とし、行単位でのみ分割を避ける。
+               見出しだけがページ末尾に取り残されないよう、見出しの直後では改ページしない */
+            .sheet-group { margin-bottom: 6px !important; box-shadow: none !important; border-radius: 4px !important; overflow: visible !important; }
+            .sheet-group-label { padding: 4px 10px !important; break-after: avoid; page-break-after: avoid; }
             .sheet-bulk-btn { display: none !important; }
-            .sheet-item { padding: 5px 10px !important; page-break-inside: avoid; break-inside: avoid; }
+            .sheet-item { padding: 3px 10px !important; gap: 8px !important; page-break-inside: avoid; break-inside: avoid; }
+            /* 設問が2行に折り返して行が高くなるのを防ぐため、印刷時は設問欄を広げボタンを小さくする */
+            .sheet-text { flex: 0 0 300px !important; font-size: 12.5px !important; line-height: 1.4 !important; }
+            .sheet-btn  { width: 30px !important; height: 24px !important; font-size: 16px !important; }
+            .sheet-btns .sheet-btn:nth-child(-n+2):not(.sheet-btn-wide) { font-size: 16px !important; }
+            .sheet-note-wrap { min-width: 0 !important; }
+            .pending-row { padding: 4px 10px !important; break-inside: avoid; page-break-inside: avoid; }
             /* 備考欄：印刷時は入力欄を隠し、画面と同じ見た目のまま折り返し可能なテキストに差し替える
                （<input>は折り返せず長文が欠けるため） */
             .sheet-note { display: none !important; }
             .sheet-note-print {
                 display: block !important;
                 width: 100%;
-                min-height: 32px;
+                min-height: 24px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
-                padding: 5px 8px;
+                padding: 3px 8px;
                 box-sizing: border-box;
                 white-space: pre-wrap;
                 word-break: break-word;
                 color: #555 !important;
-                font-size: 13px !important;
+                font-size: 12px !important;
             }
             /* 報告書ヘッダー */
             .report-info-tbl th { background-color: #eef2f8 !important; }
