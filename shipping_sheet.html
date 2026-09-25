@@ -62,6 +62,16 @@
         .notes-copy { font-size: 10px; color: #777; float: right; }
         .notes-box  { border: 1px solid #555; min-height: 90px; padding: 8px 10px; font-size: 12px; white-space: pre-wrap; }
 
+        /* ===== QA task list ===== */
+        .qa-task-table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 16px; }
+        .qa-task-table th, .qa-task-table td { border: 1px solid #555; padding: 5px 6px; font-size: 11px; text-align: center; vertical-align: middle; }
+        .qa-task-table th { background: #f0f0f0; font-weight: bold; }
+        .qa-task-table .qa-lbl { white-space: nowrap; font-weight: bold; background: #f7f7f7; }
+        .qa-status { display: inline-block; padding: 1px 8px; border-radius: 4px; font-weight: bold; white-space: nowrap; }
+        .qa-status.qa-st-done  { color: #1c8f4d; background: #eafaf0; }
+        .qa-status.qa-st-open  { color: #c0392b; background: #fde8e8; }
+        .qa-status.qa-st-after { color: #a06a00; background: #fff3d6; }
+
         /* ===== Footer button bar ===== */
         .btn-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
@@ -122,6 +132,57 @@ function fmtSD(iso) {
     return `${String(d.getFullYear()).slice(2)}.${d.getMonth()+1}.${d.getDate()}`;
 }
 
+// 検査・会議フロー（簡易検査・外観検査・出荷品確認検査・出荷確認会議）のタスクリストを出荷確認書に載せるための定義
+const QA_FLOW_LABELS = {
+    simple_inspection:         '簡易検査',
+    inspection:                '外観検査',
+    shipping_check_inspection: '出荷品確認検査',
+    shipping_meeting:          '出荷確認会議'
+};
+const QA_MEETING_FLOWS = Object.keys(QA_FLOW_LABELS);
+
+// 完了済み・出荷後対応にかかわらず全タスクを対象に、状態（完了済み／未完了／出荷後対応）付きでフローごとに一覧HTMLを作る
+function buildQaTaskListHtml(qaReqs) {
+    const byFlow = {};
+    for (const flowType of QA_MEETING_FLOWS) {
+        const matching = (qaReqs || [])
+            .filter(r => r.flow_type === flowType)
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        if (!matching.length) continue;
+        // 却下→再申請等で同じフローに複数レコードがある場合、承認済みのものを優先し、無ければ最新のものを使う
+        byFlow[flowType] = matching.find(r => r.status === 'approved') || matching[matching.length - 1];
+    }
+
+    const statusOf = (item) => {
+        if (item.completed)  return { lbl: '完了済み', cls: 'qa-st-done' };
+        if (item.ship_after) return { lbl: '出荷後対応', cls: 'qa-st-after' };
+        return { lbl: '未完了', cls: 'qa-st-open' };
+    };
+
+    return QA_MEETING_FLOWS.map(flowType => {
+        const req = byFlow[flowType];
+        if (!req) return '';
+        const items = (req.sheet_data?.pending_items || []).filter(it => it.content || it.machine);
+        if (!items.length) return '';
+
+        const trs = items.map(item => {
+            const st = statusOf(item);
+            return `<tr>` +
+                `<td style="text-align:left;">${esc(item.content || '—')}</td>` +
+                `<td>${esc(item.location || '')}</td>` +
+                `<td>${esc(item.owner || '')}</td>` +
+                `<td><span class="qa-status ${st.cls}">${st.lbl}</span></td>` +
+            `</tr>`;
+        }).join('');
+
+        return `<div class="notes-head">${esc(QA_FLOW_LABELS[flowType])}タスクリスト</div>` +
+            `<table class="qa-task-table">` +
+                `<thead><tr><th>内容</th><th style="width:90px;">場所</th><th style="width:80px;">担当</th><th style="width:80px;">状態</th></tr></thead>` +
+                `<tbody>${trs}</tbody>` +
+            `</table>`;
+    }).join('');
+}
+
 function mkStamp(dept, name, pending = false) {
     if (name) {
         return `<div class="sw"><div class="sk">` +
@@ -154,15 +215,18 @@ async function init() {
     const pNum = req.project_number;
     const mac  = req.machine_name;
 
-    const [{ data: projRows }, { data: tasks }, { data: sData }] = await Promise.all([
+    const [{ data: projRows }, { data: tasks }, { data: sData }, { data: qaReqs }] = await Promise.all([
         db.from('tasks').select('customer_name, project_details').eq('project_number', pNum),
         db.from('tasks')
             .select('text, owner, major_item')
             .eq('project_number', pNum)
             .eq('machine', mac)
             .in('text', ['機械組立', '試運転', '出図', '電気図面出図', '電気艤装']),
-        db.from('app_settings').select('value').eq('key', 'sales_person_map').single()
+        db.from('app_settings').select('value').eq('key', 'sales_person_map').single(),
+        db.from('approval_requests').select('flow_type, status, sheet_data, created_at')
+            .eq('project_number', pNum).eq('machine_name', mac).in('flow_type', QA_MEETING_FLOWS)
     ]);
+    const qaTaskListHtml = buildQaTaskListHtml(qaReqs);
 
     // タスク行によって customer_name/project_details が空文字のものもあるため、値が入っている行を探す
     const customer = (projRows || []).map(r => r.customer_name).find(v => v) || '—';
@@ -263,7 +327,8 @@ async function init() {
             `<tbody>${tbody}</tbody>` +
         `</table>` +
 
-        `<div class="notes-head">特記事項（残件など）<span class="notes-copy">※コピーを物流課へ、原本は品質保証部へ</span></div>` +
+        qaTaskListHtml +
+        `<div class="notes-head" style="margin-top:20px;">特記事項（残件など）<span class="notes-copy">※コピーを物流課へ、原本は品質保証部へ</span></div>` +
         `<div class="notes-box">${esc(req.note || '')}</div>`;
 }
 
