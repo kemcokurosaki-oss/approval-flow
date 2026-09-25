@@ -298,7 +298,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'completed': {
       const isShipping = req?.flow_type === 'shipping';
       const shippingDate = isShipping && req?.confirmed_shipping_date
-        ? `\n確定出荷日: ${req.confirmed_shipping_date}` : '';
+        ? `\n工場出荷確定日: ${req.confirmed_shipping_date}` : '';
       const approverLine = isShipping && extra?.approverName
         ? `\n承認者: ${extra.approverName}（常務）` : '';
       const completedSubject = isShipping
@@ -366,10 +366,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'shipping_date_request':
       return {
         from,
-        subject: `【確定出荷日入力依頼】${pStr}`,
+        subject: `【工場出荷確定日入力依頼】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
-          `承認フロー管理システムにログインし、確定出荷日を入力してください。` +
+          `承認フロー管理システムにログインし、工場出荷確定日を入力してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
@@ -378,12 +378,12 @@ function buildEmail(type, req, recipientName, extra = {}) {
       const changeDetailLine = isDateChange ? `\n${extra.detail}\n` : '';
       return {
         from,
-        subject: isDateChange ? `【確定出荷日変更】${pStr}` : `【確定出荷日入力済み】${pStr}`,
+        subject: isDateChange ? `【工場出荷確定日変更】${pStr}` : `【工場出荷確定日入力済み】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
           (isDateChange
-            ? `${pStr} の確定出荷日が変更されました。`
-            : `${pStr} の確定出荷日が営業担当者より入力されました。`) +
+            ? `${pStr} の工場出荷確定日が変更されました。`
+            : `${pStr} の工場出荷確定日が営業担当者より入力されました。`) +
           changeDetailLine +
           `\n内容を確認し、常務への本申請をお願いします。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,

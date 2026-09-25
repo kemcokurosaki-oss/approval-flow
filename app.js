@@ -1219,7 +1219,7 @@ async function loadPendingSide() {
             flowType:   'shipping',
             flowLabel:  '出荷確定申請',
             date:       r.created_at,
-            statusText: '🔴 確定出荷日 入力待ち',
+            statusText: '🔴 工場出荷確定日 入力待ち',
         }));
     }
 
@@ -5675,7 +5675,7 @@ async function openDetailModal(requestId, returnTo = null) {
         && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
         && (isSales || isQualityOrSeikan) && !myStep;
     const changeDateOnclick = `showChangeConfirmedDateFooter('${req.id}')`;
-    const changeDateLabel = hasPackingShipping ? '工場出荷日・梱包出荷日を変更する' : '確定出荷日を変更する';
+    const changeDateLabel = hasPackingShipping ? '工場出荷確定日・梱包出荷確定日を変更する' : '工場出荷確定日を変更する';
     // ズレ警告バナー内に変更ボタンを表示する場合は、フッター側には重複して表示しない
     const changeDateBannerButtonHtml = canChangeConfirmedDate
         ? `<button type="button" class="btn btn-outline" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
@@ -5790,9 +5790,9 @@ async function openDetailModal(requestId, returnTo = null) {
     // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
     let statusNote = '';
     if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') {
-        statusNote = '営業担当者による確定出荷日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
+        statusNote = '営業担当者による工場出荷確定日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm') {
-        statusNote = '営業担当者が確定出荷日を入力しました。品証が内容を確認し「内容を確認し申請する」を押すと常務に承認依頼が届きます。';
+        statusNote = '営業担当者が工場出荷確定日を入力しました。品証が内容を確認し「内容を確認し申請する」を押すと常務に承認依頼が届きます。';
     } else if (req.status === 'rejected' && isMyRequest) {
         statusNote = '却下されました。内容を確認・修正のうえ「再申請する」から再申請してください。';
     }
@@ -5842,7 +5842,7 @@ async function openDetailModal(requestId, returnTo = null) {
         shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
     }
     if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
-        const factoryDateLabel = req.packing_confirmed_shipping_date ? '工場出荷確定日' : '確定出荷日';
+        const factoryDateLabel = '工場出荷確定日';
         const isSplitShipping  = currentDetailShippingTaskCount >= 2;
         shippingInfoParts.push(`${isSplitShipping ? '①' : ''}${factoryDateLabel}: ${fmtDate(req.confirmed_shipping_date)}`);
         if (isSplitShipping && req.confirmed_shipping_date_2) {
@@ -5853,18 +5853,18 @@ async function openDetailModal(requestId, returnTo = null) {
     // 確定出荷日の変更履歴（常務承認後に日付を変更した場合のみ記録される）
     const shippingDateHistoryHtml = shippingDateHistory.length > 0 ? `
         <details style="margin-top:4px;">
-            <summary style="cursor:pointer;font-size:14px;color:#888;">確定出荷日の変更履歴（${shippingDateHistory.length}件）</summary>
+            <summary style="cursor:pointer;font-size:14px;color:#888;">出荷確定日の変更履歴（${shippingDateHistory.length}件）</summary>
             <div style="font-size:13px;color:#666;margin-top:4px;padding-left:12px;border-left:2px solid #eee;">
                 ${shippingDateHistory.map(h => {
                     const lines = [];
                     if (h.old_confirmed_shipping_date !== h.new_confirmed_shipping_date) {
-                        lines.push(`確定出荷日: ${fmtDate(h.old_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date) || '未定'}`);
+                        lines.push(`工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date) || '未定'}`);
                     }
                     if ((h.old_confirmed_shipping_date_2 || h.new_confirmed_shipping_date_2) && h.old_confirmed_shipping_date_2 !== h.new_confirmed_shipping_date_2) {
-                        lines.push(`②確定出荷日: ${fmtDate(h.old_confirmed_shipping_date_2) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date_2) || '未定'}`);
+                        lines.push(`②工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date_2) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date_2) || '未定'}`);
                     }
                     if ((h.old_packing_confirmed_shipping_date || h.new_packing_confirmed_shipping_date) && h.old_packing_confirmed_shipping_date !== h.new_packing_confirmed_shipping_date) {
-                        lines.push(`梱包出荷日: ${fmtDate(h.old_packing_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_packing_confirmed_shipping_date) || '未定'}`);
+                        lines.push(`梱包出荷確定日: ${fmtDate(h.old_packing_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_packing_confirmed_shipping_date) || '未定'}`);
                     }
                     const who = approverNames[h.changed_by] || '';
                     return `<div style="margin-bottom:4px;">${esc(fmtDate(h.changed_at))}${who ? '　' + esc(who) + ' が変更' : ''}<br>${lines.map(esc).join('<br>')}</div>`;
@@ -5986,10 +5986,10 @@ async function openDetailModal(requestId, returnTo = null) {
 // packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
 function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
-    const dateLabel = hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日';
-    const missingName = hasPackingShipping ? '工場出荷日' : '確定出荷日';
+    const dateLabel = '工場出荷確定日';
+    const missingName = '工場出荷確定日';
     const fields = [];
-    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷日（確定）', '梱包出荷日', '', true));
+    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', '梱包出荷確定日', '', true));
     fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, `${isSplitShipping ? '①' : ''}${missingName}`, '', true));
     if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, `②${missingName}`, '', true));
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
@@ -6042,9 +6042,7 @@ function updateSalesDateSubmitButtonState() {
     const warn = document.getElementById('sales_date_missing_warning');
     if (warn) {
         const names = missing.map(el => el.dataset.missingName);
-        const text = (names.length === 1 && names[0] === '確定出荷日')
-            ? '確定出荷日が未入力のため申請できません'
-            : `確定出荷日（${names.join('・')}）が未入力のため申請できません`;
+        const text = `${names.join('・')}が未入力のため申請できません`;
         warn.innerHTML = names.length
             ? `<div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${esc(text)}</div>`
             : '';
@@ -6060,10 +6058,10 @@ function showChangeConfirmedDateFooter(requestId) {
 // ===== 確定出荷日の変更フォーム（現在値をプリフィルし、常務承認済み等であれば再承認が必要になる） =====
 function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
-    const dateLabel = hasPackingShipping ? '工場出荷日（確定）' : '確定出荷日';
-    const missingName = hasPackingShipping ? '工場出荷日' : '確定出荷日';
+    const dateLabel = '工場出荷確定日';
+    const missingName = '工場出荷確定日';
     const fields = [];
-    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷日（確定）', '梱包出荷日', req.packing_confirmed_shipping_date, false));
+    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', '梱包出荷確定日', req.packing_confirmed_shipping_date, false));
     fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, `${isSplitShipping ? '①' : ''}${missingName}`, req.confirmed_shipping_date, false));
     if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, `②${missingName}`, req.confirmed_shipping_date_2, false));
     return `
@@ -9584,7 +9582,7 @@ async function submitShipping() {
         }
         closeShippingModal();
         await refreshAll();
-        showToast(`${machines.length}機械の申請をしました。\n営業担当者に確定出荷日の入力を依頼します。`, 'success');
+        showToast(`${machines.length}機械の申請をしました。\n営業担当者に工場出荷確定日の入力を依頼します。`, 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
@@ -9603,9 +9601,9 @@ async function submitSalesShippingDate(requestId) {
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
 
-    if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
-    if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
+    if (!dateVal) { showToast('工場出荷確定日を入力してください', 'error'); return; }
+    if (isSplitShipping && !dateVal2) { showToast('②の工場出荷確定日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷確定日を入力してください', 'error'); return; }
 
     showLoading('処理中...');
     try {
@@ -9641,7 +9639,7 @@ async function submitSalesShippingDate(requestId) {
 
         closeDetailModal();
         await refreshAll();
-        showToast('確定出荷日を入力しました。品証の確認後、申請されます。', 'success');
+        showToast(`${packingInputEl ? '工場出荷確定日・梱包出荷確定日' : '工場出荷確定日'}を入力しました。品証の確認後、申請されます。`, 'success');
     } catch (e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
@@ -9723,9 +9721,9 @@ async function changeConfirmedShippingDate(requestId) {
     const packingInputEl = document.getElementById('packing_sales_date_input');
     const packingDateVal = packingInputEl?.value || null;
 
-    if (!dateVal) { showToast('確定出荷日を入力してください', 'error'); return; }
-    if (isSplitShipping && !dateVal2) { showToast('②の確定出荷日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷日（確定）を入力してください', 'error'); return; }
+    if (!dateVal) { showToast('工場出荷確定日を入力してください', 'error'); return; }
+    if (isSplitShipping && !dateVal2) { showToast('②の工場出荷確定日を入力してください', 'error'); return; }
+    if (packingInputEl && !packingDateVal) { showToast('梱包出荷確定日を入力してください', 'error'); return; }
 
     showLoading('処理中...');
     try {
@@ -9751,7 +9749,7 @@ async function changeConfirmedShippingDate(requestId) {
 
         if (needsReapproval) {
             // 変更前後の日付を履歴として記録する（詳細画面・出荷確認書で参照）
-            const dateLabel = packingInputEl ? '工場出荷日（確定）' : '確定出荷日';
+            const dateLabel = '工場出荷確定日';
             const changeLines = [];
             if (current.confirmed_shipping_date !== dateVal) {
                 changeLines.push(`${isSplitShipping ? '①' : ''}${dateLabel}: ${current.confirmed_shipping_date || '未定'} → ${dateVal}`);
@@ -9760,7 +9758,7 @@ async function changeConfirmedShippingDate(requestId) {
                 changeLines.push(`②${dateLabel}: ${current.confirmed_shipping_date_2 || '未定'} → ${dateVal2}`);
             }
             if (packingInputEl && current.packing_confirmed_shipping_date !== packingDateVal) {
-                changeLines.push(`梱包出荷日（確定）: ${current.packing_confirmed_shipping_date || '未定'} → ${packingDateVal}`);
+                changeLines.push(`梱包出荷確定日: ${current.packing_confirmed_shipping_date || '未定'} → ${packingDateVal}`);
             }
             const changeSummary = changeLines.join('\n');
 
