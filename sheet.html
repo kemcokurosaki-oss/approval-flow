@@ -396,6 +396,8 @@
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
+            /* 追加・削除などの操作ボタンは紙面では不要なため印刷しない */
+            .btn-add-sm, .btn-danger-xs, .lang-toggle-bar { display: none !important; }
             /* 入力モード（申請するボタンから開いた画面）を印刷する場合のみ、工事番号・機械名の見出しを表示する。
                閲覧モード（完了報告書）は別途 report-doc 側で表示済みのためここでは出さない。 */
             body:not(.view-mode) .print-only-header {
