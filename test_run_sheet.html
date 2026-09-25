@@ -20,6 +20,9 @@
         /* ===== Doc title ===== */
         .doc-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 6px; margin-bottom: 14px; }
         .doc-date  { text-align: right; font-size: 13px; color: #666; margin-bottom: 4px; }
+        /* 画面上は非表示。入力モードで印刷した際に工事番号・機械名が分かるようにするための見出し
+           （通常のsheet-meta-boxは印刷時に非表示にしているため別途用意） */
+        .print-only-header { display: none; }
         .save-status { font-size: 12px; color: #888; margin-right: auto; white-space: nowrap; }
         .save-status.saving { color: #d35400; }
         .save-status.error  { color: #c0392b; }
@@ -278,6 +281,18 @@
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
+            /* 追加・削除などの操作ボタンは紙面では不要なため印刷しない */
+            .btn-add-sm, .btn-danger-xs { display: none !important; }
+            /* 入力モード（申請するボタンから開いた画面）を印刷する場合のみ、工事番号・機械名の見出しを表示する。
+               閲覧モード（完了報告書）は別途 report-doc 側で表示済みのためここでは出さない。 */
+            body:not(.view-mode) .print-only-header {
+                display: block !important;
+                font-size: 13px;
+                line-height: 1.7;
+                margin-bottom: 10px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #333;
+            }
             /* 1カラムレイアウト（2カラムだと申し送り事項が狭い列に押し込まれ文字が縦に崩れるため）。
                グループはページをまたいで分割可とし、行単位・見出し直後でのみ改ページを避ける */
             .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
@@ -288,8 +303,11 @@
             .sheet-item { padding: 5px 10px !important; break-inside: avoid; page-break-inside: avoid; }
             .pending-row { padding: 5px 10px !important; align-items: flex-start !important; break-inside: avoid; page-break-inside: avoid; }
             .pending-row > span { white-space: pre-wrap; word-break: break-word; }
-            .sheet-btn:not([class*="active-"]) { display: none !important; }
-            .sheet-btn[class*="active-"] {
+            /* 閲覧モード（報告書）では選択された結果だけを文字で表示する。
+               入力モードの印刷は手書き記入用に全選択肢を枠付きで残す */
+            body.view-mode .sheet-btn:not([class*="active-"]) { display: none !important; }
+            body:not(.view-mode) .sheet-btn { height: 26px !important; padding: 0 8px !important; font-size: 12px !important; }
+            body.view-mode .sheet-btn[class*="active-"] {
                 background: none !important;
                 border: none !important;
                 box-shadow: none !important;
@@ -299,8 +317,8 @@
                 min-width: auto !important;
                 color: #333 !important;
             }
-            .sheet-btn.active-a { color: #1a7a3a !important; }
-            .sheet-btn.active-b { color: #c0392b !important; }
+            body.view-mode .sheet-btn.active-a { color: #1a7a3a !important; }
+            body.view-mode .sheet-btn.active-b { color: #c0392b !important; }
             .sheet-note {
                 border: none !important;
                 background: transparent !important;
@@ -322,6 +340,7 @@
 <main class="sheet-content" id="sheet_content">
     <div class="doc-date" id="doc_date_top" style="display:none"></div>
     <div class="doc-title" id="doc_title_top">社内試運転完了チェックシート</div>
+    <div class="print-only-header" id="print_only_header"></div>
     <div class="sheet-legend">各項目の実施結果を選択してください　　<strong>入力内容は自動保存されます</strong></div>
     <div class="sheet-meta-box">
         <div class="sheet-meta-item">
@@ -466,6 +485,8 @@ const db = supabase.createClient(S_URL, S_KEY);
 const broadcastChannel = new BroadcastChannel('approval_sheet');
 
 let draftId      = null;
+let currentProjectNumber = '';
+let currentMachineLabel  = '';
 let checks       = {};
 let pendingItems = [];
 let isSaving     = false;
@@ -485,6 +506,19 @@ function setSheetInfoHeader(projectNum, machineName) {
     const mn = document.getElementById('sheet_machine_name');
     if (pn) pn.textContent = projectNum;
     if (mn) mn.textContent = machineName;
+    currentProjectNumber = projectNum || '';
+    currentMachineLabel  = machineName || '';
+    updatePrintOnlyHeader();
+}
+
+// 入力モードの画面を印刷した場合に、工事番号・機械名と手書きで記入するための欄を印刷面に出す。
+window.addEventListener('beforeprint', () => updatePrintOnlyHeader());
+function updatePrintOnlyHeader() {
+    const el = document.getElementById('print_only_header');
+    if (!el) return;
+    el.innerHTML =
+        `工事番号：${esc(currentProjectNumber || '—')}　　機械/ユニット：${esc(currentMachineLabel || '—')}<br>` +
+        `記入者（外注先会社名・氏名）：　　　　　　　　　　　　記入日：　　　　　　`;
 }
 
 function fmtStampDate(iso) {
@@ -681,6 +715,11 @@ async function init() {
 
     // 一時保存済みの下書きを開いた場合のみ「保存済み」を表示する（未保存のまま開いた直後は何も表示しない）
     if (draft.sheet_saved_at) setSaveStatus('ok');
+
+    // 申請前でも紙で記入・確認できるよう、入力モードでも印刷ボタンを表示する
+    // （工事番号・機械名は print_only_header に印刷される）
+    const printBtn = document.getElementById('btn_print');
+    if (printBtn) printBtn.style.display = '';
 
     document.getElementById('loading').classList.remove('visible');
 }
