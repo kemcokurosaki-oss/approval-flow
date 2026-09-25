@@ -911,17 +911,20 @@
                         <div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:5px; padding:9px 12px; font-size:12.5px; line-height:1.6; color:#7a5c00;">
                             営業担当者による確定出荷日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。<span class="callout">2</span>
                         </div>
-                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:10px 0;">︙（タスクリストなど）</div>
-                        <div style="background:#fde8e8; border:2px solid #e74c3c; border-radius:6px; padding:10px 14px;">
-                            <div style="font-size:13px; color:#c0392b; font-weight:bold;">● 確定出荷日を入力してください<span class="callout">3</span></div>
-                            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
-                                <input disabled placeholder="yyyy/mm/dd" style="flex:1; padding:7px 9px; border:1px solid #e74c3c; border-radius:4px; font-size:13px; color:#999; background:#fff;">
-                                <span class="callout">4</span>
+                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:10px 0;">︙（申請・承認状況など）</div>
+                        <div style="color:#c0392b; font-weight:bold; font-size:12.5px; padding:2px 0 10px;">⚠ 確定出荷日が未入力のため申請できません<span class="callout">3</span></div>
+                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:0 0 10px;">︙（担当者確認など）</div>
+                        <div style="display:flex;flex-direction:column;gap:6px;background:#f3f7fc; border:1px solid #cdd8e8; border-radius:10px; padding:10px 14px; max-width:200px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-size:12.5px; font-weight:bold; color:#1e3a5f;">確定出荷日<span class="callout">4</span></span>
+                                <span style="font-size:10px; font-weight:bold; color:#c0392b; background:#fdecea; border-radius:4px; padding:1px 6px;">必須<span class="callout">5</span></span>
                             </div>
+                            <input disabled placeholder="yyyy/mm/dd" style="padding:7px 9px; border:1px solid #9fb0c6; border-radius:9px; font-size:13px; color:#999; background:#fff;">
+                            <span style="font-size:11.5px; font-weight:bold; color:#c0392b;">⚠ 未入力です<span class="callout">6</span></span>
                         </div>
                         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
                             <span style="padding:7px 16px; border-radius:6px; background:#eef1f6; color:#6b7789; font-size:13px; font-weight:700;">閉じる</span>
-                            <span style="padding:7px 16px; border-radius:6px; background:#2ba55d; color:#fff; font-size:13px; font-weight:700;">入力する<span class="callout">5</span></span>
+                            <span style="padding:7px 16px; border-radius:6px; background:#a9d9bc; color:#fff; font-size:13px; font-weight:700;">入力する<span class="callout">7</span></span>
                         </div>
                     </div>
                 </div>
@@ -933,9 +936,11 @@
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>入力依頼メール、またはマイページの「承認」欄の「🔴 確定出荷日 入力待ち」カードをクリックして開く詳細画面</span></li>
                 <li><span class="callout">2</span><span>誰が何を待っているかを示す注意書き（品証・製管や他の担当者にも同じ内容が表示される）</span></li>
-                <li><span class="callout">3</span><span>赤枠が「ここに入力してください」の合図</span></li>
-                <li><span class="callout">4</span><span>日付を選択する入力欄</span></li>
-                <li><span class="callout">5</span><span>「入力する」を押すと入力完了。品証・製管による内容確認・常務への本申請待ちへ進む</span></li>
+                <li><span class="callout">3</span><span>未入力の項目があると本文側にも赤字で「申請できません」と表示される（梱包出荷日がある機械では項目名がまとめて表示される）</span></li>
+                <li><span class="callout">4</span><span>項目名。梱包出荷がある機械では「梱包出荷日（確定）」「工場出荷日（確定）」の2項目になる</span></li>
+                <li><span class="callout">5</span><span>「必須」ラベル</span></li>
+                <li><span class="callout">6</span><span>入力欄ごとの「未入力です／入力済み」表示。入力すると緑の「✓ 入力済み」に変わり、すべて揃うと「入力する」ボタンが有効になる</span></li>
+                <li><span class="callout">7</span><span>「入力する」を押すと入力完了。品証・製管による内容確認・常務への本申請待ちへ進む</span></li>
             </ol>
             </div>
             </div>
