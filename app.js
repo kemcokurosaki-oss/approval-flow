@@ -5792,7 +5792,7 @@ async function openDetailModal(requestId, returnTo = null) {
     if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') {
         statusNote = '営業担当者による工場出荷確定日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm') {
-        statusNote = '営業担当者が工場出荷確定日を入力しました。品証が内容を確認し「内容を確認し申請する」を押すと常務に承認依頼が届きます。';
+        statusNote = '営業担当者が工場出荷確定日を入力しました。品証が内容を確認し「申請する」を押すと常務に承認依頼が届きます。';
     } else if (req.status === 'rejected' && isMyRequest) {
         statusNote = '却下されました。内容を確認・修正のうえ「再申請する」から再申請してください。';
     }
@@ -5969,7 +5969,7 @@ async function openDetailModal(requestId, returnTo = null) {
         footer.innerHTML = `
             ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
-            <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">内容を確認し申請する</button>
+            <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">申請する</button>
         `;
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
@@ -9649,6 +9649,7 @@ async function submitSalesShippingDate(requestId) {
 
 // 品証: 営業入力済みの確定出荷日を確認し、常務へ本申請する
 async function confirmAndSubmitShipping(requestId) {
+    if (!confirm('本当に申請していいですか？')) return;
     showLoading('処理中...');
     try {
         // 出荷準備を含む前フローが全て完了しているか確認する（出荷フローは出荷準備の完了を待たずに起票され得るため、ここで担保する）
