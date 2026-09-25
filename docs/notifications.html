@@ -167,7 +167,7 @@
             <tbody>
                 <tr>
                     <td class="num">1</td><td class="name">承認依頼</td><td class="type-code">approval_request</td>
-                    <td>申請ボタン押下（初回申請）／並列承認でStep1が承認されStep2に進む時／出荷フローで品証が本申請（常務承認へ）する時／確定出荷日変更で再承認が必要な時</td>
+                    <td>申請ボタン押下（初回申請）／並列承認でStep1が承認されStep2に進む時／出荷フローで品証が本申請（常務承認へ）する時／工場出荷確定日変更で再承認が必要な時</td>
                     <td>assembly・test_run・shipping</td>
                     <td>該当承認ステップの承認者ロールを持つ<code>profiles</code>全員</td>
                 </tr>
@@ -203,14 +203,14 @@
             <thead><tr><th>#</th><th>通知種別</th><th class="type-code">notification_type</th><th>トリガー（操作）</th><th>対象フロー</th><th>宛先の決め方</th></tr></thead>
             <tbody>
                 <tr>
-                    <td class="num">6</td><td class="name">確定出荷日 入力依頼</td><td class="type-code">shipping_date_request</td>
+                    <td class="num">6</td><td class="name">工場出荷確定日 入力依頼</td><td class="type-code">shipping_date_request</td>
                     <td>品証が出荷確定申請を起票した時</td>
                     <td>shipping</td>
                     <td><code>app_settings</code>（sales_person_map）由来の担当営業</td>
                 </tr>
                 <tr>
-                    <td class="num">7</td><td class="name">確定出荷日 入力済み</td><td class="type-code">shipping_date_input_done</td>
-                    <td>営業が確定出荷日を入力した時、または常務承認後に確定出荷日を変更した時（件名・本文は変更時のみ「変更」表記に切替）</td>
+                    <td class="num">7</td><td class="name">工場出荷確定日 入力済み</td><td class="type-code">shipping_date_input_done</td>
+                    <td>営業が工場出荷確定日を入力した時、または常務承認後に工場出荷確定日を変更した時（件名・本文は変更時のみ「変更」表記に切替）</td>
                     <td>shipping</td>
                     <td>申請者本人＋品証（quality）全員＋製管（production_control）全員</td>
                 </tr>

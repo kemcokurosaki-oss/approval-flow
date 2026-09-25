@@ -1158,7 +1158,7 @@ async function runSalesShippingDateReminders() {
     if (names.size === 0) continue;
 
     const pStr    = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
-    const subject = `【確定出荷日 未入力】${pStr}`;
+    const subject = `【工場出荷確定日 未入力】${pStr}`;
 
     for (const name of names) {
       const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(name)}&select=id,name,email`);
@@ -1169,8 +1169,8 @@ async function runSalesShippingDateReminders() {
 
         const isOwner = name === salesOwner;
         const bodyDetail = isOwner
-          ? `確定出荷日がまだ入力されていません（申請から${elapsedDays}日経過）。`
-          : `担当者（${salesOwner || '未設定'}）による確定出荷日の入力が、申請から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
+          ? `工場出荷確定日がまだ入力されていません（申請から${elapsedDays}日経過）。`
+          : `担当者（${salesOwner || '未設定'}）による工場出荷確定日の入力が、申請から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
         const text =
           `${profile.name} 様\n\n` +
           `${pStr} の「出荷確定申請」について、${bodyDetail}\n` +
