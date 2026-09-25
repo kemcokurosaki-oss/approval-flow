@@ -5689,6 +5689,7 @@ async function openDetailModal(requestId, returnTo = null) {
     // プロフィール名を取得（承認者＋出荷日変更者）
     const approverIds = new Set(steps.filter(s => s.approver_id).map(s => s.approver_id));
     shippingDateHistory.forEach(h => { if (h.changed_by) approverIds.add(h.changed_by); });
+    if (req.submitted_by) approverIds.add(req.submitted_by);
     let approverNames = {};
     if (approverIds.size > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', [...approverIds]);
@@ -5725,17 +5726,11 @@ async function openDetailModal(requestId, returnTo = null) {
         // assembly/test_run/electrical: 単一の「承認」として表示、承認者名・役職を表示
         stepsHtml = _renderSingleApprovalStep(req, steps, approverNames);
     } else if (req.flow_type === 'shipping') {
-        // shipping: 常務承認ステップ（担当者確認は参考情報として別枠に表示）
+        // shipping: 起票→申請（品証→常務）→承認（常務）の3段階（担当者確認は参考情報として別枠に表示）
+        // 出荷日変更で品証の確認待ちに戻った場合も承認ステップはapprovedのまま残るため、表示はreq.statusで判定する
         const step = steps[0];
-        let icon, sc;
-        if      (step?.status === 'approved') { icon = '✓'; sc = 'sc-approved'; }
-        else if (step?.status === 'rejected') { icon = '<span class="fc-x-icon">×</span>'; sc = 'sc-rejected'; }
-        else if (req.status === 'submitted')  { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
-        else                                  { icon = '○';  sc = 'sc-waiting'; }
-        const who   = step?.approver_id ? (approverNames[step.approver_id] || '—') : null;
-        const when  = step?.decided_at ? fmtDate(step.decided_at) : '';
-        const label = step?.status === 'approved' ? '承認' : step?.status === 'rejected' ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
-        stepsHtml = `
+        const isSubmittedOrLater = ['submitted', 'approved', 'rejected'].includes(req.status);
+        const renderStep = (sc, icon, label, who, when, comment) => `
         <div class="step-item">
             <div class="step-circle ${sc}">${icon}</div>
             <div class="step-detail">
@@ -5743,10 +5738,44 @@ async function openDetailModal(requestId, returnTo = null) {
                 ${who
                     ? `<div class="step-name">${esc(who)}</div>`
                     : '<div class="step-name" style="color:#bbb;">未</div>'}
-                ${step?.comment ? `<div class="step-comment">"${esc(step.comment)}"</div>` : ''}
-                ${when          ? `<div class="step-date">${when}</div>` : ''}
+                ${comment ? `<div class="step-comment">"${esc(comment)}"</div>` : ''}
+                ${when    ? `<div class="step-date">${when}</div>` : ''}
             </div>
         </div>`;
+
+        const issuedHtml = `
+        <div class="step-item">
+            <div class="step-circle sc-applied"><span class="applied-dot"></span></div>
+            <div class="step-detail">
+                <div class="step-label">起票</div>
+                <div class="step-name">${esc(requesterName)}</div>
+                <div class="step-date">${fmtDate(req.created_at)}</div>
+            </div>
+        </div>`;
+
+        // 申請: 営業の確定出荷日入力待ち→品証の申請待ち→申請済み（申請者の記録がない過去データは「—」）
+        let submitHtml;
+        if (isSubmittedOrLater) {
+            const submitter = req.submitted_by ? (approverNames[req.submitted_by] || '—') : '—';
+            submitHtml = renderStep('sc-applied', '<span class="applied-dot"></span>', '申請', submitter, req.submitted_at ? fmtDate(req.submitted_at) : '', null);
+        } else if (req.status === 'awaiting_shipping_confirm') {
+            submitHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '申請待ち（品証確認中）', null, '', null);
+        } else {
+            submitHtml = renderStep('sc-waiting', '○', '申請待ち（営業の出荷確定日入力待ち）', null, '', null);
+        }
+
+        // 承認: 常務
+        let approveHtml;
+        if (req.status === 'approved' && step?.status === 'approved') {
+            approveHtml = renderStep('sc-approved', '✓', '承認', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDate(step.decided_at) : '', step.comment);
+        } else if (req.status === 'rejected' && step?.status === 'rejected') {
+            approveHtml = renderStep('sc-rejected', '<span class="fc-x-icon">×</span>', '却下', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDate(step.decided_at) : '', step.comment);
+        } else if (req.status === 'submitted') {
+            approveHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '承認待ち', null, '', null);
+        } else {
+            approveHtml = renderStep('sc-waiting', '○', '未承認', null, '', null);
+        }
+        stepsHtml = issuedHtml + submitHtml + approveHtml;
     } else if (QA_MEETING_FLOWS.includes(req.flow_type)) {
         // 簡易検査・外観検査・出荷確認会議は「申請・承認状況」表示自体を出さない
         stepsHtml = '';
@@ -5902,7 +5931,7 @@ async function openDetailModal(requestId, returnTo = null) {
         ${QA_MEETING_FLOWS.includes(req.flow_type) ? '' : `
         <hr class="section-divider">
         <div class="section-title">申請・承認状況</div>
-        <div class="steps-list">${appliedStepHtml}${stepsHtml}</div>`}
+        <div class="steps-list">${req.flow_type === 'shipping' ? '' : appliedStepHtml}${stepsHtml}</div>`}
         ${shippingConfirmMissingWarningHtml}
         ${shippingConfirmPendingWarningHtml}
         ${(req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') ? '<div id="sales_date_missing_warning"></div>' : ''}
@@ -9694,7 +9723,7 @@ async function confirmAndSubmitShipping(requestId) {
         }
 
         const { data: req, error } = await db.from('approval_requests')
-            .update({ status: 'submitted', updated_at: new Date().toISOString() })
+            .update({ status: 'submitted', submitted_by: currentUser.id, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             .eq('id', requestId).eq('status', 'awaiting_shipping_confirm')
             .select().single();
         if (error) throw error;
