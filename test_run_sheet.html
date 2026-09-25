@@ -268,21 +268,26 @@
 
         /* ===== 印刷用スタイル ===== */
         @media print {
-            @page { margin: 10mm 8mm; }
+            @page { size: A4 portrait; margin: 10mm 8mm; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            body { background: #fff !important; }
+            body { background: #fff !important; padding-bottom: 0 !important; }
             .sheet-footer  { display: none !important; }
-            .doc-title, .doc-date { column-span: all; }
+            /* 発行日は報告書ヘッダー内にも出ているため、右上の重複表示は印刷しない */
+            .doc-date      { display: none !important; }
+            .doc-title     { font-size: 20px; margin-bottom: 8px; }
             .sheet-legend  { display: none !important; }
             .sheet-meta-box { display: none !important; }
             .loading-overlay { display: none !important; }
-            /* 2カラムレイアウト */
-            .sheet-content { max-width: 100%; padding: 6px 8px 8px; columns: 2; column-gap: 14px; box-shadow: none !important; margin: 0 !important; }
-            .report-doc              { column-span: all; margin-bottom: 8px !important; padding: 12px 14px !important; }
-            .report-section-heading  { column-span: all; margin-bottom: 6px !important; }
-            .sheet-group { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; }
-            .sheet-group-label { padding: 5px 10px !important; }
-            .sheet-item { padding: 5px 10px !important; }
+            /* 1カラムレイアウト（2カラムだと申し送り事項が狭い列に押し込まれ文字が縦に崩れるため）。
+               グループはページをまたいで分割可とし、行単位・見出し直後でのみ改ページを避ける */
+            .sheet-content { max-width: 100%; padding: 6px 8px 8px; box-shadow: none !important; margin: 0 !important; }
+            .report-doc              { margin-bottom: 8px !important; padding: 12px 14px !important; }
+            .report-section-heading  { margin-bottom: 6px !important; }
+            .sheet-group { margin-bottom: 8px !important; box-shadow: none !important; border-radius: 4px !important; overflow: visible !important; }
+            .sheet-group-label { padding: 5px 10px !important; break-after: avoid; page-break-after: avoid; }
+            .sheet-item { padding: 5px 10px !important; break-inside: avoid; page-break-inside: avoid; }
+            .pending-row { padding: 5px 10px !important; align-items: flex-start !important; break-inside: avoid; page-break-inside: avoid; }
+            .pending-row > span { white-space: pre-wrap; word-break: break-word; }
             .sheet-btn:not([class*="active-"]) { display: none !important; }
             .sheet-btn[class*="active-"] {
                 background: none !important;
