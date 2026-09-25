@@ -18,9 +18,10 @@ const corsHeaders = {
 
 // 開催案内メールの notification_type と揃え、同じ宛先を再利用する
 const FLOW_NOTIF_TYPE: Record<string, string> = {
-    inspection:        "inspection_invite",
-    simple_inspection: "simple_inspection_invite",
-    shipping_meeting:  "shipping_meeting_invite",
+    inspection:                 "inspection_invite",
+    simple_inspection:          "simple_inspection_invite",
+    shipping_check_inspection:  "shipping_check_inspection_invite",
+    shipping_meeting:           "shipping_meeting_invite",
 };
 
 function json(body: unknown, status = 200) {
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
         if (reqErr || !reqRow) return json({ error: "対象データが見つかりません" }, 404);
 
         const notifType = FLOW_NOTIF_TYPE[reqRow.flow_type as string];
-        if (!notifType) return json({ error: "外観検査・簡易検査・出荷確認会議以外では利用できません" }, 400);
+        if (!notifType) return json({ error: "外観検査・簡易検査・出荷品確認検査・出荷確認会議以外では利用できません" }, 400);
 
         const items = ((reqRow.sheet_data as any)?.pending_items || []).filter((it: any) => it.content);
         if (items.length === 0) return json({ error: "ペンディング項目がありません" }, 400);
