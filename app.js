@@ -7093,13 +7093,37 @@ async function renderAuditLogRows() {
     `;
 }
 
+// 完了/完了取消の通知先を決める。検査・会議フロー（QA_MEETING_FLOWS）は開催案内を送った宛先をそのまま再利用し、
+// それ以外（組立・試運転）は従来通り品証・製管全員とする。
+async function _resolvePendingItemNotifyRecipients(flowType, requestId) {
+    const ids = new Set();
+    const emails = new Set();
+    const inviteTypes = QA_MEETING_FLOWS.includes(flowType) ? QA_INVITE_NOTIFICATION_TYPES[flowType] : null;
+    if (inviteTypes) {
+        const { data: notifRows } = await db.from('approval_notifications')
+            .select('recipient_id, recipient_email')
+            .eq('request_id', requestId)
+            .in('notification_type', inviteTypes);
+        (notifRows || []).forEach(n => {
+            if (n.recipient_id) ids.add(n.recipient_id);
+            if (n.recipient_email) emails.add(n.recipient_email);
+        });
+    } else {
+        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
+        (qRows || []).forEach(p => ids.add(p.id));
+        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
+        (sRows || []).forEach(p => ids.add(p.id));
+    }
+    return { ids: [...ids], emails: [...emails] };
+}
+
 async function completePendingItem(requestId, idx, opts = {}) {
     const itemLabel = opts.isQaFlow ? 'タスク' : 'ペンディング項目';
     if (!confirm(`この${itemLabel}を完了にします。よろしいですか？`)) return;
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data, requester_id').eq('id', requestId).single();
+            .select('sheet_data, requester_id, flow_type').eq('id', requestId).single();
         if (!req?.sheet_data) return;
 
         const items = req.sheet_data.pending_items || [];
@@ -7123,17 +7147,14 @@ async function completePendingItem(requestId, idx, opts = {}) {
             .eq('detail', items[idx].content)
             .is('emailed_at', null);
 
-        // ペンディング項目が完了したら品証・製管へ通知（組立/試運転/QAフロー共通）
-        const notifIds = new Set();
-        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-        (qRows || []).forEach(p => notifIds.add(p.id));
-        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
-        (sRows || []).forEach(p => notifIds.add(p.id));
-        notifIds.delete(currentUser.id); // 完了操作をした本人には通知不要
-        if (notifIds.size > 0) {
-            await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content }))
-            );
+        // ペンディング項目が完了したら通知（検査・会議フローは開催案内の宛先、組立/試運転は品証・製管全員）
+        const { ids: notifIds, emails: notifEmails } = await _resolvePendingItemNotifyRecipients(req.flow_type, requestId);
+        const inserts = [
+            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content })),
+            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_completed', detail: items[idx].content })),
+        ];
+        if (inserts.length > 0) {
+            await db.from('approval_notifications').insert(inserts);
         }
 
         _applyPendingUpdate(requestId, newSheetData, `${itemLabel}を完了にしました`, opts);
@@ -7149,7 +7170,7 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
     showLoading('更新中...');
     try {
         const { data: req } = await db.from('approval_requests')
-            .select('sheet_data, requester_id').eq('id', requestId).single();
+            .select('sheet_data, requester_id, flow_type').eq('id', requestId).single();
         if (!req?.sheet_data) return;
 
         const items = req.sheet_data.pending_items || [];
@@ -7168,17 +7189,14 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
             .eq('detail', items[idx].content)
             .is('emailed_at', null);
 
-        // ペンディング項目の完了が取り消されたら品証・製管へ通知
-        const notifIds = new Set();
-        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-        (qRows || []).forEach(p => notifIds.add(p.id));
-        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
-        (sRows || []).forEach(p => notifIds.add(p.id));
-        notifIds.delete(currentUser.id); // 取消操作をした本人には通知不要
-        if (notifIds.size > 0) {
-            await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content }))
-            );
+        // ペンディング項目の完了が取り消されたら通知（検査・会議フローは開催案内の宛先、組立/試運転は品証・製管全員）
+        const { ids: notifIds, emails: notifEmails } = await _resolvePendingItemNotifyRecipients(req.flow_type, requestId);
+        const inserts = [
+            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content })),
+            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_uncompleted', detail: items[idx].content })),
+        ];
+        if (inserts.length > 0) {
+            await db.from('approval_notifications').insert(inserts);
         }
 
         _applyPendingUpdate(requestId, newSheetData, '完了を取り消しました', opts);

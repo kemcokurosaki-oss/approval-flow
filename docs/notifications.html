@@ -231,13 +231,13 @@
                     <td class="num">9</td><td class="name">完了通知</td><td class="type-code">pending_item_completed</td>
                     <td>ペンディング項目／タスクの完了ボタン押下時</td>
                     <td>同上</td>
-                    <td>品証全員＋製管全員（操作した本人は除外）</td>
+                    <td>simple_inspection・inspection・shipping_check_inspection・shipping_meetingはその申請の開催案内（＋日程変更）で送信済みの宛先を再利用、assembly・test_runは品証全員＋製管全員（操作した本人も含む）</td>
                 </tr>
                 <tr>
                     <td class="num">10</td><td class="name">完了取消通知</td><td class="type-code">pending_item_uncompleted</td>
                     <td>完了取消ボタン押下時</td>
                     <td>同上</td>
-                    <td>品証全員＋製管全員（操作した本人は除外）</td>
+                    <td>同上</td>
                 </tr>
             </tbody>
         </table>
@@ -317,7 +317,7 @@
     </section>
 
     <footer>
-        作成: 2026-08-25／更新: 2026-08-27（仮出荷予定日機能の廃止に伴う整理）。仕様変更時は本ページの更新を忘れないこと。
+        作成: 2026-08-25／更新: 2026-09-25（完了通知・完了取消通知の宛先を検査・会議フローは開催案内の宛先再利用に変更）。仕様変更時は本ページの更新を忘れないこと。
     </footer>
 
 </div>
