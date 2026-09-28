@@ -10019,9 +10019,11 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         await addEbyName(name);
     };
     // 設定画面で個人単位に選ばれた固定宛先を追加（申請者自身は宛先から除く）
+    // 出荷確定は常務承認の結果を申請者にも知らせる必要があるため、固定宛先に含まれていれば申請者にも送る
     const addFixedRecipients = async () => {
         const plan = getFixedRecipientPlan(flowType);
-        plan.profileIds.filter(id => id !== req.requester_id).forEach(id => profileIds.add(id));
+        const keepRequester = flowType === 'shipping';
+        plan.profileIds.filter(id => keepRequester || id !== req.requester_id).forEach(id => profileIds.add(id));
         if (plan.recipientIds.length > 0) {
             const { data } = await db.from('notification_recipients').select('email').in('id', plan.recipientIds).eq('active', true);
             (data || []).map(r => r.email).filter(Boolean).forEach(e => extEmails.add(e));
