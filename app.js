@@ -10200,8 +10200,9 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
 
         case 'shipping_prep':
-            // 固定宛先（設定画面で個人単位に選択）。工番担当者の自動通知は対象外（To は品証のみ）。
+            // 固定宛先（設定画面で個人単位に選択）。工番担当者の自動通知は対象外（To は品証と申請者本人のみ）。
             // 組立/操業/設計/営業/現地工事担当者と製管は、メール送信時（notify-approval.js）に品証宛メールのCCとして届く
+            // （申請者本人はToで個別に届くため、CCからは除外される）
             await addFixedRecipients();
             break;
 
