@@ -907,10 +907,10 @@ async function main() {
         && recipientProfile?.role === 'quality') {
         const ccSet = new Set(productionControlEmails);
         (await resolveShippingPrepCcEmails(req)).forEach(e => ccSet.add(e));
-        ccSet.delete(actualEmail);
-        // 申請者本人には完了通知がToで個別に届くため、CCとの二重送信を避ける
+        // 申請者本人もCCに入れる（個別のToメールは上で送信済み扱いにしている）
         const requesterEmail = req.requester_id ? profileMap[req.requester_id]?.email : null;
-        if (requesterEmail) ccSet.delete(requesterEmail);
+        if (requesterEmail) ccSet.add(requesterEmail);
+        ccSet.delete(actualEmail);
         ccEmails = [...ccSet];
       }
 
