@@ -1424,7 +1424,7 @@ async function loadMineSide() {
             else groups.approvalWait.push(req);
         });
         return [
-            ['品証確認待ち', groups.confirmWait, false],
+            ['品証申請待ち', groups.confirmWait, false],
             ['常務承認待ち', groups.approvalWait, false],
             ['承認済み', groups.approved, false],
         ];
