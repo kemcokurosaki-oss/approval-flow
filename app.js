@@ -5668,12 +5668,15 @@ async function openDetailModal(requestId, returnTo = null) {
 
     // 出荷日の入力・変更リンク（確定出荷日の入力は品証の本申請・常務の承認とは別扱いのため、承認状況に関係なく入力・変更できる）
     const isSales = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isSuperAdmin();
-    const hasFactoryShippingDate = !!req.confirmed_shipping_date;
+    // 梱包出荷確定日・工場出荷確定日は別々に入力できるため、どちらか一方でも未入力なら「入力待ち」扱いにする
+    const hasMissingShippingDate = !req.confirmed_shipping_date
+        || (currentDetailShippingTaskCount >= 2 && !req.confirmed_shipping_date_2)
+        || (hasPackingShipping && !req.packing_confirmed_shipping_date);
     const canChangeConfirmedDate = req.flow_type === 'shipping' && req.status !== 'cancelled'
         && (isSales || isQualityOrSeikan) && !myStep;
     const changeDateOnclick = `showChangeConfirmedDateFooter('${req.id}')`;
-    const changeDateVerb  = hasFactoryShippingDate ? '変更する' : '入力する';
-    const changeDateLabel = hasPackingShipping ? `工場出荷確定日・梱包出荷確定日を${changeDateVerb}` : `工場出荷確定日を${changeDateVerb}`;
+    const changeDateVerb  = hasMissingShippingDate ? '入力する' : '変更する';
+    const changeDateLabel = hasPackingShipping ? `梱包出荷確定日・工場出荷確定日を${changeDateVerb}` : `工場出荷確定日を${changeDateVerb}`;
     // ズレ警告バナー内に変更ボタンを表示する場合は、フッター側には重複して表示しない
     const changeDateBannerButtonHtml = canChangeConfirmedDate
         ? `<button type="button" class="btn btn-outline" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
@@ -6009,17 +6012,18 @@ async function openDetailModal(requestId, returnTo = null) {
     }
 }
 
-// ===== 営業: 確定出荷日入力フッター =====
-// hasPackingShipping=true の場合、梱包出荷日（確定）の入力欄も並べて表示する
-// packingState==='unknown' の場合、未定のまま出荷日入力段階まで進んでいる旨の警告を出す（進行はブロックしない）
-function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
+// ===== 確定出荷日の入力・変更フッター =====
+// 梱包出荷確定日と工場出荷確定日（分割出荷の①②はまとめて1項目）はそれぞれ単独で入力・保存できる。
+// 入力済みの項目は現在値をプリフィルし、そのまま変更もできる。
+// hasPackingShipping=true の場合のみ梱包出荷確定日の入力欄を表示する。
+// packingState==='unknown' の場合、梱包出荷の有無が未定である旨の警告を出す（進行はブロックしない）
+function buildShippingDateFooterInner(req, hasPackingShipping, packingState) {
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const dateLabel = '工場出荷確定日';
-    const missingName = '工場出荷確定日';
     const fields = [];
-    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', '梱包出荷確定日', '', true));
-    fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, `${isSplitShipping ? '①' : ''}${missingName}`, '', true));
-    if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, `②${missingName}`, '', true));
+    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', req.packing_confirmed_shipping_date));
+    fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, req.confirmed_shipping_date));
+    if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, req.confirmed_shipping_date_2));
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
         <div style="background:#fff3e0;border:1px solid #f0c078;border-radius:10px;padding:10px 14px;font-size:14px;color:#8a4b00;font-weight:bold;">⚠ 梱包出荷の有無が未定です</div>` : '';
     return `
@@ -6028,7 +6032,7 @@ function buildSalesDateFooterInner(req, hasPackingShipping, packingState) {
             ${packingWarningBox}
         </div>
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        <button class="btn btn-success" id="btn_submit_sales_date" disabled onclick="submitSalesShippingDate('${req.id}')">入力する</button>
+        <button class="btn btn-success" id="btn_submit_sales_date" disabled onclick="saveShippingDates('${req.id}')">保存する</button>
     `;
 }
 
@@ -6037,65 +6041,78 @@ function _salesDateAreaHtml(fields) {
     return `<div style="display:flex;gap:12px;flex-wrap:wrap;background:#f3f7fc;border:1px solid #cdd8e8;border-radius:10px;padding:12px 14px;">${fields.join('')}</div>`;
 }
 
-// ===== 確定出荷日の入力欄1つ分（項目名＋必須ラベル＋日付入力＋未入力/入力済み表示） =====
-function _salesDateFieldHtml(id, label, missingName, value, showStatus) {
+// ===== 確定出荷日の入力欄1つ分（項目名＋日付入力＋未入力/入力済み/変更あり表示）。data-originalに保存済みの値を持つ =====
+function _salesDateFieldHtml(id, label, value) {
     return `
         <div style="display:flex;flex-direction:column;gap:6px;width:200px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-                <span style="font-size:14px;font-weight:bold;color:#1e3a5f;">${label}</span>
-                <span style="font-size:11px;font-weight:bold;color:#c0392b;background:#fdecea;border-radius:4px;padding:1px 6px;">必須</span>
-            </div>
-            <input type="date" id="${id}" data-missing-name="${missingName}" value="${value || ''}"${showStatus ? ' oninput="updateSalesDateSubmitButtonState()"' : ''} style="font-family:inherit;padding:8px 10px;border:1px solid #9fb0c6;border-radius:9px;font-size:15px;background:#fff;color:#333;">
-            ${showStatus ? `<span id="${id}_status" style="font-size:13px;font-weight:bold;color:#c0392b;">⚠ 未入力です</span>` : ''}
+            <span style="font-size:14px;font-weight:bold;color:#1e3a5f;">${label}</span>
+            <input type="date" id="${id}" data-original="${value || ''}" value="${value || ''}" oninput="updateSalesDateSubmitButtonState()" style="font-family:inherit;padding:8px 10px;border:1px solid #9fb0c6;border-radius:9px;font-size:15px;background:#fff;color:#333;">
+            <span id="${id}_status" style="font-size:13px;font-weight:bold;"></span>
         </div>`;
 }
 
-// ===== 確定出荷日入力フッターの必須項目が全て埋まっているかで「入力する」ボタンの活性/非活性を切り替える =====
+// 入力フォームの値を項目（梱包出荷／工場出荷）ごとにまとめ、保存済みの値からの変化を判定する
+// 工場出荷の分割出荷①②は1項目として扱い、どちらかを入力・変更する場合は両方の入力を必須にする
+function _collectShippingDateGroups() {
+    const read = id => {
+        const el = document.getElementById(id);
+        return el ? { value: el.value || null, original: el.dataset.original || null } : null;
+    };
+    const groups = [];
+    const packing = read('packing_sales_date_input');
+    if (packing) {
+        groups.push({
+            key: 'packing', label: '梱包出荷確定日', inputs: ['packing_sales_date_input'],
+            changed: packing.value !== packing.original,
+            complete: !!packing.value,
+            cleared: !!packing.original && !packing.value
+        });
+    }
+    const f1 = read('sales_date_input');
+    const f2 = read('sales_date_input_2');
+    if (f1) {
+        const parts = f2 ? [f1, f2] : [f1];
+        groups.push({
+            key: 'factory', label: '工場出荷確定日', inputs: f2 ? ['sales_date_input', 'sales_date_input_2'] : ['sales_date_input'],
+            changed: parts.some(x => x.value !== x.original),
+            complete: parts.every(x => !!x.value),
+            cleared: parts.some(x => !!x.original && !x.value)
+        });
+    }
+    return groups;
+}
+
+// ===== 入力フォームの「保存する」ボタンの活性/非活性と、各入力欄の状態表示を切り替える =====
+// 変更のある項目が1つ以上あり、変更した項目がすべて埋まっている（入力済みの日付を空にしていない）場合のみ保存可能
 function updateSalesDateSubmitButtonState() {
     const btn = document.getElementById('btn_submit_sales_date');
     if (!btn) return;
-    const requiredInputs = ['sales_date_input', 'sales_date_input_2', 'packing_sales_date_input']
-        .map(id => document.getElementById(id))
-        .filter(el => el);
-    const missing = requiredInputs.filter(el => !el.value);
-    btn.disabled = missing.length > 0;
-    // 各入力欄の下の「未入力です／入力済み」表示
-    requiredInputs.forEach(el => {
-        const st = document.getElementById(el.id + '_status');
-        if (!st) return;
-        st.textContent = el.value ? '✓ 入力済み' : '⚠ 未入力です';
-        st.style.color = el.value ? '#2ba55d' : '#c0392b';
+    const groups = _collectShippingDateGroups();
+    const changedGroups = groups.filter(g => g.changed);
+    btn.disabled = changedGroups.length === 0 || changedGroups.some(g => !g.complete || g.cleared);
+    ['packing_sales_date_input', 'sales_date_input', 'sales_date_input_2'].forEach(id => {
+        const el = document.getElementById(id);
+        const st = document.getElementById(id + '_status');
+        if (!el || !st) return;
+        const original = el.dataset.original || '';
+        let text, color;
+        if (!el.value) {
+            [text, color] = original ? ['⚠ 入力済みの日付は空にできません', '#c0392b'] : ['⚠ 未入力です', '#c0392b'];
+        } else if (el.value !== original) {
+            [text, color] = original ? ['✎ 変更します', '#b9770e'] : ['✎ 入力します', '#b9770e'];
+        } else {
+            [text, color] = ['✓ 入力済み', '#2ba55d'];
+        }
+        st.textContent = text;
+        st.style.color = color;
     });
 }
 
-// ===== 「日付を入力する／変更する」クリック時にフッターを入力・編集フォームへ切り替える =====
+// ===== 「日付を入力する／変更する」クリック時にフッターを入力フォームへ切り替える =====
 function showChangeConfirmedDateFooter(requestId) {
     if (!currentDetailReq || currentDetailReq.id !== requestId) return;
-    const footer = document.getElementById('detail_footer');
-    if (!currentDetailReq.confirmed_shipping_date) {
-        footer.innerHTML = buildSalesDateFooterInner(currentDetailReq, currentDetailHasPackingShipping, getPackingDisplayState(currentDetailReq.project_number, currentDetailHasPackingShipping));
-        updateSalesDateSubmitButtonState();
-        return;
-    }
-    footer.innerHTML = buildChangeConfirmedDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
-}
-
-// ===== 確定出荷日の変更フォーム（現在値をプリフィル。変更しても申請・承認状況には影響しない） =====
-function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
-    const isSplitShipping = currentDetailShippingTaskCount >= 2;
-    const dateLabel = '工場出荷確定日';
-    const missingName = '工場出荷確定日';
-    const fields = [];
-    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', '梱包出荷確定日', req.packing_confirmed_shipping_date, false));
-    fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, `${isSplitShipping ? '①' : ''}${missingName}`, req.confirmed_shipping_date, false));
-    if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, `②${missingName}`, req.confirmed_shipping_date_2, false));
-    return `
-        <div style="margin-right:auto;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
-            ${_salesDateAreaHtml(fields)}
-        </div>
-        <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
-        <button class="btn btn-success"   onclick="changeConfirmedShippingDate('${req.id}')">変更する</button>
-    `;
+    document.getElementById('detail_footer').innerHTML = buildShippingDateFooterInner(currentDetailReq, currentDetailHasPackingShipping, getPackingDisplayState(currentDetailReq.project_number, currentDetailHasPackingShipping));
+    updateSalesDateSubmitButtonState();
 }
 
 // ===== 開催結果・ペンディング確認の下部フッターボタン生成（簡易検査・外観検査・出荷確認会議） =====
