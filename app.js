@@ -5984,12 +5984,10 @@ async function openDetailModal(requestId, returnTo = null) {
         `;
     } else if (isMyRequest && req.status === 'rejected') {
         footer.innerHTML = `
+            ${changeDateFooterLinkHtml}
             <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-primary"   onclick="resubmit('${req.id}')">再申請する</button>
         `;
-    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date' && (isSales || isQualityOrSeikan)) {
-        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
-        updateSalesDateSubmitButtonState();
     } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm' && (isMyRequest || isQualityOrSeikan)) {
         const canSubmitShippingConfirm = shippingConfirmMissingFlows.length === 0 && shippingConfirmPendingBlockers.length === 0;
         footer.innerHTML = `
