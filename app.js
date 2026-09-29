@@ -1415,13 +1415,11 @@ async function loadMineSide() {
         ];
     };
 
-    // 出荷確定申請（品証・製管が申請 → 営業が出荷日入力 → 品証・製管が確認 → 常務が承認）
+    // 出荷確定申請（起票 → 品証・製管が本申請 → 常務が承認。営業の確定出荷日入力はこれとは別に並行して行う）
     const buildShippingColumns = (list) => {
-        // 「出荷日待ち」は営業側のアクション待ちであり品証・製管がすべき作業がないため、マイページには表示しない
         const groups = { confirmWait: [], approvalWait: [], approved: [] };
         list.forEach(req => {
-            if (req.status === 'awaiting_shipping_date') return;
-            else if (req.status === 'awaiting_shipping_confirm') groups.confirmWait.push(req);
+            if (req.status === 'awaiting_shipping_date' || req.status === 'awaiting_shipping_confirm') groups.confirmWait.push(req);
             else if (req.status === 'approved') groups.approved.push(req);
             else groups.approvalWait.push(req);
         });
