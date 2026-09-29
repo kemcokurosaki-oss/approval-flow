@@ -5749,15 +5749,13 @@ async function openDetailModal(requestId, returnTo = null) {
             </div>
         </div>`;
 
-        // 申請: 営業の確定出荷日入力待ち→品証の申請待ち→申請済み（申請者の記録がない過去データは「—」）
+        // 申請: 品証の申請待ち→申請済み（申請者の記録がない過去データは「—」）
         let submitHtml;
         if (isSubmittedOrLater) {
             const submitter = req.submitted_by ? (approverNames[req.submitted_by] || '—') : '—';
             submitHtml = renderStep('sc-applied', '<span class="applied-dot"></span>', '申請', submitter, req.submitted_at ? fmtDateTime(req.submitted_at) : '', null);
-        } else if (req.status === 'awaiting_shipping_confirm') {
-            submitHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '申請待ち（品証確認中）', null, '', null);
         } else {
-            submitHtml = renderStep('sc-waiting', '○', '申請待ち（営業の出荷確定日入力待ち）', null, '', null);
+            submitHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '申請待ち（品証）', null, '', null);
         }
 
         // 承認: 常務
