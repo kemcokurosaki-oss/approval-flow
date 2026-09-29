@@ -5877,7 +5877,7 @@ async function openDetailModal(requestId, returnTo = null) {
         }
     }
 
-    // 確定出荷日の変更履歴（常務承認後に日付を変更した場合のみ記録される）
+    // 確定出荷日の変更履歴（入力済みの日付を変更した場合に記録される）
     const shippingDateHistoryHtml = shippingDateHistory.length > 0 ? `
         <details style="margin-top:4px;">
             <summary style="cursor:pointer;font-size:14px;color:#888;">出荷確定日の変更履歴（${shippingDateHistory.length}件）</summary>
