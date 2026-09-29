@@ -10231,6 +10231,10 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
     }
 
+    // 完了通知は全フローで申請者本人にも必ず送る（担当者欄・固定宛先・ON/OFF設定に関係なく）
+    // （検査・会議の招待系は各caseで開催者として追加済み）
+    if (notifType === 'completed' && req.requester_id) profileIds.add(req.requester_id);
+
     // si/inspection/shipping_meetingの宛先確認画面ではデフォルト「任意」・チェックで「必須」指定する仕様のため、
     // optionalKeysには「必須指定された宛先」が入る（未指定=任意がデフォルト）。それ以外のフローはoptionalKeysを渡さないため従来通り全員必須のまま。
     const isOptional = (key) => {
