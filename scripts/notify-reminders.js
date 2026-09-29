@@ -1114,6 +1114,7 @@ async function runTestRunReadinessReminders() {
 
 // ===== 確定出荷日 未入力催促 =====
 // 確定出荷日は品証の本申請・常務の承認とは別扱いのため、承認状況に関係なく未入力の出荷フローを対象にする。
+// 工場出荷確定日に加え、工程表に梱包出荷（日付入りの実タスク）がある工番は梱包出荷確定日の未入力も対象にする。
 // 起票時に営業担当者へ入力依頼（shipping_date_request、notify-approval.js側）を送った後、
 // 起票から7日後・14日後・21日後…（7日ごと）にまだ未入力なら、営業担当者＋上長（課長＋専務）へ催促する。
 // 実行が抜けた日があっても取りこぼさないよう、「直近の催促期日以降にまだ送っていなければ送る」で判定する
@@ -1121,10 +1122,20 @@ async function runSalesShippingDateReminders() {
   console.log('\n--- 確定出荷日 未入力催促チェック ---');
 
   const requests = await supabaseFetch(
-    `approval_requests?flow_type=eq.shipping&confirmed_shipping_date=is.null&status=neq.cancelled` +
-    `&select=id,project_number,machine_name,created_at`
+    `approval_requests?flow_type=eq.shipping&status=neq.cancelled` +
+    `&or=(confirmed_shipping_date.is.null,packing_confirmed_shipping_date.is.null)` +
+    `&select=id,project_number,machine_name,created_at,confirmed_shipping_date,packing_confirmed_shipping_date`
   );
-  if (!requests || requests.length === 0) {
+  // 梱包出荷は有無未定の間、日付が空のプレースホルダータスクとして常設されるため、日付入りのものだけを「梱包出荷あり」とする
+  const packingTasks = await supabaseFetch(`tasks?text=eq.梱包出荷&start_date=not.is.null&select=project_number`);
+  const packingProjectSet = new Set((packingTasks || []).map(t => String(t.project_number).trim()));
+  const missingLabelsOf = req => {
+    const labels = [];
+    if (packingProjectSet.has(String(req.project_number).trim()) && !req.packing_confirmed_shipping_date) labels.push('梱包出荷確定日');
+    if (!req.confirmed_shipping_date) labels.push('工場出荷確定日');
+    return labels;
+  };
+  if (!requests || requests.every(r => missingLabelsOf(r).length === 0)) {
     console.log('確定出荷日 未入力催促: 対象なし');
     return;
   }
@@ -1148,6 +1159,9 @@ async function runSalesShippingDateReminders() {
     if (is5or7Series(req.project_number)) continue;
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
     if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+    const missingLabels = missingLabelsOf(req);
+    if (missingLabels.length === 0) continue;
+    const missingName = missingLabels.join('・');
 
     const elapsedDays = calendarDaysElapsedSinceJST(req.created_at);
     const cycle = Math.floor(elapsedDays / SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
@@ -1159,7 +1173,7 @@ async function runSalesShippingDateReminders() {
     const names = computeShippingEscalationRecipientNames(req.project_number, salesOwner);
 
     const pStr    = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
-    const subject = `【工場出荷確定日 未入力】${pStr}`;
+    const subject = `【${missingName} 未入力】${pStr}`;
 
     for (const name of names) {
       const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(name)}&select=id,name,email`);
@@ -1168,8 +1182,8 @@ async function runSalesShippingDateReminders() {
 
         const isOwner = name === salesOwner;
         const bodyDetail = isOwner
-          ? `工場出荷確定日がまだ入力されていません（起票から${elapsedDays}日経過）。`
-          : `担当者（${salesOwner || '未設定'}）による工場出荷確定日の入力が、起票から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
+          ? `${missingName}がまだ入力されていません（起票から${elapsedDays}日経過）。`
+          : `担当者（${salesOwner || '未設定'}）による${missingName}の入力が、起票から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
         const text =
           `${profile.name} 様\n\n` +
           `${pStr} の「出荷確定申請」について、${bodyDetail}\n` +
