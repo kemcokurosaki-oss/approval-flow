@@ -5814,10 +5814,10 @@ async function openDetailModal(requestId, returnTo = null) {
         : (FLOW_LABELS[req.flow_type] || req.flow_type);
     // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
     let statusNote = '';
-    if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') {
-        statusNote = '営業担当者による工場出荷確定日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。';
-    } else if (req.flow_type === 'shipping' && req.status === 'awaiting_shipping_confirm') {
-        statusNote = '営業担当者が工場出荷確定日を入力しました。品証が内容を確認し「申請する」を押すと常務に承認依頼が届きます。';
+    const isShippingAwaitingSubmit = req.flow_type === 'shipping'
+        && (req.status === 'awaiting_shipping_confirm' || req.status === 'awaiting_shipping_date');
+    if (isShippingAwaitingSubmit) {
+        statusNote = '品証が内容を確認し「申請する」を押すと常務に承認依頼が届きます。工場出荷確定日（営業が入力）は申請・承認とは別に、いつでも入力・変更できます。';
     } else if (req.status === 'rejected' && isMyRequest) {
         statusNote = '却下されました。内容を確認・修正のうえ「再申請する」から再申請してください。';
     }
