@@ -404,7 +404,7 @@
                 <li>承認者はアプリ上でボタン一つで承認できる</li>
                 <li>自分が出した申請／自分が承認すべき案件を「マイページ」でまとめて確認できる</li>
                 <li>申請忘れ・承認忘れがある場合は自動でメール通知が届く</li>
-                <li>完了報告書や出荷確定書などがデータとして保存できる</li>
+                <li>完了報告書や出荷確認書などがデータとして保存できる</li>
                 <li>外観検査や出荷確認会議が開催されたことが明確にわかる</li>
             </ul>
             <div class="note">対象となる工事番号は 3000番／4000番／3C番／4C番／D番 です。3T番／4T番（点検系）は基本的に対象外ですが、まれに機械組立タスクが発生した工番のみ例外的に表示されます。2000番台（組立・試運転）は専用の「2000番 完了報告」画面で扱います。</div>
@@ -534,8 +534,9 @@
                 <div class="flowline">
                     <div class="flow-step"><div class="flow-dot">👤</div><span class="label">申請</span><span class="sub">組立・営業<br>・物流担当者</span></div>
                     <div class="flow-arrow"></div>
-                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">完了通知</span><span class="sub">品証へメール<br>（製管をCC）</span></div>
+                    <div class="flow-step"><div class="flow-dot">📩</div><span class="label">完了通知</span><span class="sub">品証へメール<br>（製管・工番担当者をCC）</span></div>
                 </div>
+                <div class="note">完了通知メールは品証宛てで、製管の全員が常にCCに入ります。加えて、その工番・機械の組立担当者・試運転担当者・設計担当者・営業担当者・出張予定の担当者もCCに入ります（担当者ごとにCCに入れるかどうかは、Chapter 11「通知の宛先設定」でON/OFFできます）。</div>
             </div>
 
             <div class="step-card">
@@ -559,8 +560,7 @@
                     <div class="flow-arrow"></div>
                     <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">入力済み通知</span><span class="sub">品証・製管へメール<br>（確認のみ）</span></div>
                 </div>
-                <div class="note">確定出荷日が<b>未入力のままでも本申請・承認できます</b>。未入力の項目は詳細画面に赤字で「未入力」と表示され、承認完了メールには「工場出荷確定日: 未入力」と記載されます。確定出荷日は申請前・申請中・承認後のいつでも入力・変更でき、入力・変更しても本申請のやり直しや常務の再承認は不要です（品証・製管には確認のお知らせメールが届きます）。</div>
-                <div class="note">梱包出荷がある機械では、<b>梱包出荷確定日と工場出荷確定日を別々に入力・保存できます</b>（先に梱包出荷確定日だけ保存し、工場出荷確定日は後日入力する、といった運用が可能です）。品証・製管への入力済み通知は保存するたびに、保存した項目分だけが届きます。</div>
+                <div class="note">確定出荷日が<b>未入力のままでも本申請・承認できます</b>。確定出荷日は申請前・申請中・承認後のいつでも入力・変更でき、本申請のやり直しや常務の再承認は不要です。梱包出荷がある機械では、梱包出荷確定日と工場出荷確定日を別々に入力できます（入力画面の操作はChapter 8「例2」参照）。</div>
                 <div class="note">確定出荷日が未入力のまま起票から7日経過すると、7日ごとに営業担当者と上長（営業課長＋専務）へ催促メールが届き、上長のマイページにも入力待ちとして表示されます（詳しくはChapter 9）。</div>
                 <div class="note">承認完了メールは品証（申請者）だけでなく、営業担当者・設計担当者（設計課長・部長を含む）、機械組立や試運転がある場合は組立担当者・組立課長、操業担当者・操業課長・部長にも届きます。実際の宛先は工番の担当割り当てによって変わります。</div>
                 <div class="note warn">「本申請」の時点で、組立・簡易検査・外観検査・出荷品確認検査・出荷確認会議・出荷準備のいずれかに「出荷後対応」チェックの付いていない未完了のペンディング／タスクが残っていると、各工程が承認済みであっても本申請できません。該当する工程でペンディング／タスクを完了にするか、出荷後対応にチェックを入れてから本申請してください（試運転の申し送り事項は対象外です）。</div>
@@ -687,7 +687,7 @@
                 <li><span class="callout">3</span><span><b>工場出荷予定日</b>：現時点の出荷予定（進捗によって前後します）</span></li>
                 <li><span class="callout">4</span><span><b>工程名</b>：組立・外観検査・試運転…と工程が並ぶ</span></li>
                 <li><span class="callout">5</span><span><b>申請日・開催日・完了日</b>：各工程がいつ動いたか</span></li>
-                <li><span class="callout">6</span><span><b>ペンディング件数／タスク件数</b>：その工程に残っている未完了の残作業の件数（外観検査時点で組立担当者が把握している未完了作業を「ペンディング」、外観検査以降に生じた指摘事項や残作業を「タスク」と呼び分け。組立未完了（製作品の未納入など）のまま外観検査を行うこともあるための区別）</span></li>
+                <li><span class="callout">6</span><span><b>ペンディング件数／タスク件数</b>：その工程に残っている未完了の残作業の件数（呼び分けは下の「ペンディングリスト」「タスクリスト」「申し送り事項」の表を参照）</span></li>
                 <li><span class="callout">7</span><span><b>未申請・未承認バッジ</b>：期日を過ぎても対応がないと表示される催促の目印</span></li>
             </ol>
             </div>
@@ -700,7 +700,6 @@
                 <div class="legend-item"><div class="legend-icon rejected">✕</div><div class="legend-text"><b>却下</b><span>申請が却下された状態。申請者が内容を修正して再申請する</span></div></div>
                 <div class="legend-item"><div class="legend-icon warn">⚠</div><div class="legend-text"><b>未申請・未承認</b><span>期日を過ぎても対応がない状態（催促の対象）。却下の赤い✕とは別の意味なので注意</span></div></div>
             </div>
-            <p>各工程の下には申請日・開催日・完了日や、ペンディング（残作業）の件数バッジが表示されます。</p>
             <h3>絞り込み・検索・並び替え</h3>
             <ul>
                 <li><b>自分の担当</b>：自分が対応すべき工事番号だけに絞り込む</li>
@@ -724,6 +723,8 @@
                 <tr><td style="white-space:nowrap;">申し送り事項</td><td>試運転完了で残る対応事項。承認済みであれば工程は進み、内容は出荷後の引き継ぎ用として閲覧できるのみ</td><td>（完了操作なし・閲覧専用）</td><td>申請前のみ追加可能</td></tr>
             </table>
             <div class="note">担当者の割り当てや基本的な追加・表示の仕組みは共通ですが、上表のとおり完了操作ができる人や項目追加のタイミングに違いがあります。申し送り事項（試運転）は完了操作・編集・削除・催促のいずれも行わない閲覧専用の項目です。</div>
+            <div class="note">タスクリスト（検査・会議系）の項目を完了にした／完了を取り消したときの通知メールは、その検査・会議の<b>開催案内を送った宛先</b>全員に届きます（操作した本人も含みます）。組立・電装のペンディングリストは、従来どおり品証・製管の全員に届きます。</div>
+            <div class="note warn">タスクリストには「※処置が完了したら品証に連絡してください（不在時は製造管理に連絡してください）」と赤字で表示されます。担当者本人がタスクの処置を終えたら、アプリ上で完了にするだけでなく品証（不在時は製管）へ連絡してください。</div>
         </section>
 
         <section id="s6">
@@ -902,61 +903,67 @@
             </ol>
             <div class="note">検査・会議系（簡易検査・外観検査・出荷確認会議）は承認そのものは不要で、品証（不在時は製管）が「開催案内を送信」→ 開催後にタスクを確認して「完了にする」という流れになります。</div>
 
-            <h3>例2：営業担当者による工場出荷確定日の入力</h3>
-            <p>⑥出荷確定時の「工場出荷確定日」は営業担当者が入力します（役割とタイミングはChapter 3参照）。承認そのものではないため、マイページの「承認」欄に表示されますが承認ボタンはなく、日付入力欄と「入力する」ボタンのみが表示されます。この入力は特定の担当者に限定されておらず、営業部員であれば誰でも入力可能です。</p>
+            <h3>例2：営業担当者による確定出荷日の入力</h3>
+            <p>⑥出荷確定時の「工場出荷確定日」（梱包出荷がある機械は「梱包出荷確定日」も）は営業担当者が入力します（役割とタイミングはChapter 3参照）。承認そのものではないため、マイページの「承認」欄に表示されますが承認ボタンはなく、日付入力欄と「保存する」ボタンのみが表示されます。この入力は特定の担当者に限定されておらず、営業部員であれば誰でも入力可能です。また、品証の本申請・常務の承認とは別扱いのため、<b>承認状況（申請前・申請中・承認済み）に関係なく</b>入力・変更できます。</p>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup" style="max-width:460px;">
+            <div class="mockup" style="max-width:500px;">
                 <div class="mockup-bg">
-                <div class="mockup-panel" style="max-width:420px; margin:0 auto;">
+                <div class="mockup-panel" style="max-width:460px; margin:0 auto;">
                     <div class="side-panel-header">
                         <span class="side-panel-title">出荷確定申請<span class="callout">1</span></span>
                         <span class="side-panel-close-btn">✕</span>
                     </div>
                     <div style="padding:16px 18px; background:#fff;">
-                        <div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:5px; padding:9px 12px; font-size:12.5px; line-height:1.6; color:#7a5c00;">
-                            営業担当者による工場出荷確定日の入力待ちです。営業担当者は画面下部の入力欄からご入力ください。<span class="callout">2</span>
+                        <div style="font-size:12.5px; color:#888; display:flex; flex-wrap:wrap; column-gap:14px; row-gap:2px; padding:0 0 8px;">
+                            <span style="white-space:nowrap;">梱包出荷確定日: 2026/10/5</span>
+                            <span style="white-space:nowrap;">工場出荷確定日: <span style="color:#c0392b; font-weight:bold;">未入力</span><span class="callout">2</span></span>
                         </div>
-                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:10px 0;">︙（申請・承認状況など）</div>
-                        <div style="color:#c0392b; font-weight:bold; font-size:12.5px; padding:2px 0 10px;">⚠ 工場出荷確定日が未入力のため申請できません<span class="callout">3</span></div>
-                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:0 0 10px;">︙（担当者確認など）</div>
-                        <div style="display:flex;flex-direction:column;gap:6px;background:#f3f7fc; border:1px solid #cdd8e8; border-radius:10px; padding:10px 14px; max-width:200px;">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <span style="font-size:12.5px; font-weight:bold; color:#1e3a5f;">工場出荷確定日<span class="callout">4</span></span>
-                                <span style="font-size:10px; font-weight:bold; color:#c0392b; background:#fdecea; border-radius:4px; padding:1px 6px;">必須<span class="callout">5</span></span>
+                        <div style="background:#fff8e6; border:1px solid #f0d98c; border-radius:5px; padding:9px 12px; font-size:12.5px; line-height:1.6; color:#7a5c00;">
+                            品証が内容を確認し「申請する」を押すと常務に承認依頼が届きます。工場出荷確定日（営業が入力）は申請・承認とは別に、いつでも入力・変更できます。<span class="callout">3</span>
+                        </div>
+                        <div style="text-align:center; color:#c3ccd9; font-size:13px; padding:10px 0;">︙（申請・承認状況、担当者確認など）</div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; background:#f3f7fc; border:1px solid #cdd8e8; border-radius:10px; padding:10px 14px;">
+                            <div style="display:flex; flex-direction:column; gap:6px; width:170px;">
+                                <span style="font-size:12.5px; font-weight:bold; color:#1e3a5f;">梱包出荷確定日<span class="callout">4</span></span>
+                                <input disabled value="2026/10/05" style="padding:7px 9px; border:1px solid #9fb0c6; border-radius:9px; font-size:13px; color:#333; background:#fff;">
+                                <span style="font-size:11.5px; font-weight:bold; color:#2ba55d;">✓ 入力済み</span>
                             </div>
-                            <input disabled placeholder="yyyy/mm/dd" style="padding:7px 9px; border:1px solid #9fb0c6; border-radius:9px; font-size:13px; color:#999; background:#fff;">
-                            <span style="font-size:11.5px; font-weight:bold; color:#c0392b;">⚠ 未入力です<span class="callout">6</span></span>
+                            <div style="display:flex; flex-direction:column; gap:6px; width:170px;">
+                                <span style="font-size:12.5px; font-weight:bold; color:#1e3a5f;">工場出荷確定日</span>
+                                <input disabled value="2026/10/09" style="padding:7px 9px; border:1px solid #9fb0c6; border-radius:9px; font-size:13px; color:#333; background:#fff;">
+                                <span style="font-size:11.5px; font-weight:bold; color:#b9770e;">✎ 入力します<span class="callout">5</span></span>
+                            </div>
                         </div>
                         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
                             <span style="padding:7px 16px; border-radius:6px; background:#eef1f6; color:#6b7789; font-size:13px; font-weight:700;">閉じる</span>
-                            <span style="padding:7px 16px; border-radius:6px; background:#a9d9bc; color:#fff; font-size:13px; font-weight:700;">入力する<span class="callout">7</span></span>
+                            <span style="padding:7px 16px; border-radius:6px; background:#2ba55d; color:#fff; font-size:13px; font-weight:700;">保存する<span class="callout">6</span></span>
                         </div>
                     </div>
                 </div>
                 </div>
-                <div class="mockup-caption">営業担当者が対象カードをクリックすると開く詳細画面</div>
+                <div class="mockup-caption">営業担当者が対象カードをクリックすると開く詳細画面（梱包出荷がある機械で、梱包出荷確定日のみ入力済みの例）</div>
             </div>
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span>入力依頼メール、またはマイページの「承認」欄の「🔴 工場出荷確定日 入力待ち」カードをクリックして開く詳細画面</span></li>
-                <li><span class="callout">2</span><span>誰が何を待っているかを示す注意書き（品証・製管や他の担当者にも同じ内容が表示される）</span></li>
-                <li><span class="callout">3</span><span>未入力の項目があると本文側にも赤字で「申請できません」と表示される（梱包出荷がある機械では項目名がまとめて表示される）</span></li>
-                <li><span class="callout">4</span><span>項目名。梱包出荷がある機械では「梱包出荷確定日」「工場出荷確定日」の2項目になる</span></li>
-                <li><span class="callout">5</span><span>「必須」ラベル</span></li>
-                <li><span class="callout">6</span><span>入力欄ごとの「未入力です／入力済み」表示。入力すると緑の「✓ 入力済み」に変わり、すべて揃うと「入力する」ボタンが有効になる</span></li>
-                <li><span class="callout">7</span><span>「入力する」を押すと入力完了。品証・製管による内容確認・常務への本申請待ちへ進む</span></li>
+                <li><span class="callout">1</span><span>入力依頼メール、またはマイページの「承認」欄の「🔴 工場出荷確定日 入力待ち」カード（未入力の項目名が表示される。例：「🔴 梱包出荷確定日・工場出荷確定日 入力待ち」）をクリックして開く詳細画面</span></li>
+                <li><span class="callout">2</span><span>確定出荷日の入力状況。未入力の項目は赤字で「未入力」と表示される（常務が承認する際にも確認できる）。未入力のまま承認された場合、承認完了メールには「工場出荷確定日: 未入力」と記載される</span></li>
+                <li><span class="callout">3</span><span>品証の本申請前に表示される注意書き。確定出荷日が未入力でも本申請・承認は進められる</span></li>
+                <li><span class="callout">4</span><span>項目名。梱包出荷がある機械では「梱包出荷確定日」「工場出荷確定日」の2項目になり、<b>それぞれ単独で入力・保存できる</b>（入力済みの項目には現在の日付が入った状態で表示される）</span></li>
+                <li><span class="callout">5</span><span>入力欄ごとの状態表示：「⚠ 未入力です」「✎ 入力します」「✎ 変更します」「✓ 入力済み」。入力済みの日付を空に戻すことはできない</span></li>
+                <li><span class="callout">6</span><span>入力・変更した項目があると「保存する」が有効になる。保存すると確定し、保存した項目分の内容が品証・製管へメールで通知される（確認のお知らせのみで、本申請のやり直しや常務の再承認は不要）</span></li>
             </ol>
             </div>
             </div>
-            <div class="note">入力後に日付を修正したい場合は、同じ詳細画面の「工場出荷確定日を変更する」ボタンから再入力できます。それまでの間、承認ステータス画面の右上には工程表の工場出荷タスクの予定日がそのまま表示され、工場出荷確定日を入力すると表示が工場出荷確定日に切り替わります。</div>
+            <div class="note">入力後に日付を修正したい場合は、同じ詳細画面の「工場出荷確定日を変更する」（梱包出荷がある機械は「梱包出荷確定日・工場出荷確定日を変更する」）ボタンから再入力できます。変更した内容は詳細画面の「出荷確定日の変更履歴」に記録されます。品証・製管も同じボタンから入力・変更が可能です。</div>
+            <div class="note">工場出荷確定日を入力するまでの間、承認ステータス画面の右上には工程表の工場出荷タスクの予定日がそのまま表示され、工場出荷確定日を入力すると表示が工場出荷確定日に切り替わります。</div>
         </section>
 
         <section id="s9">
             <div class="section-eyebrow">Chapter 9</div>
             <h2>自動メール通知</h2>
-            <p>誰かが申請・承認・案内送信などの操作をするたびに送られる通知メールについては、Chapter 3「工程別詳細フロー」の表にまとめています。ここでは、対応漏れを防ぐために毎日自動でチェックされる「<b>リマインダー通知</b>」について説明します。件名・本文の形はどちらもほぼ共通で、以下は代表例として「承認依頼」メールです。</p>
+            <p>誰かが申請・承認・案内送信などの操作をするたびに送られる通知メールについては、Chapter 3「工程別詳細フロー」の各工程の図にまとめています。ここでは、対応漏れを防ぐために毎日自動でチェックされる「<b>リマインダー通知</b>」について説明します。件名・本文の形はどちらもほぼ共通で、以下は代表例として「承認依頼」メールです。</p>
             <div class="mockup" style="max-width:640px;">
                 <div class="mail-meta">
                     <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【承認依頼】3181 MC　組立完了申請</span></div>
@@ -986,6 +993,7 @@
                 <tr><td>案内催促</td><td>関連工程の予定日の3日前になっても検査・会議の開催案内が未送付</td><td>品証・製管</td><td>毎日1回（送付するまで継続）</td></tr>
                 <tr><td>ペンディング期日超過催促</td><td>ペンディング項目の完了予定日を過ぎても未完了</td><td>担当者（品証・製管をCC）</td><td>期日の翌日から毎日（完了にするまで継続）</td></tr>
                 <tr><td>完了処理催促</td><td>検査・会議の開催日を過ぎても「完了にする」が押されていない</td><td>品証（製管をCC）</td><td>開催日の翌日から毎日（完了にするまで継続）</td></tr>
+                <tr><td>確定出荷日 未入力催促</td><td>出荷確定フローの起票から7日経過しても工場出荷確定日（梱包出荷がある機械は梱包出荷確定日も）が未入力（本申請・承認の状況は問わない）</td><td>営業担当者＋上長（営業課長・専務。担当者本人が課長の場合は専務のみ）</td><td>起票から7日ごと（入力するまで継続）</td></tr>
             </table>
             <div class="note">通知はすべて自動送信です。心当たりのある通知が届いたら、放置せずアプリ上で該当の申請・承認・完了処理を行ってください。</div>
         </section>
@@ -1082,7 +1090,7 @@
                 <div class="cfg-recip-row cfg-recip-head"><div>フロー<span class="callout">1</span></div><div>固定宛先<span class="callout">2</span></div><div>工番担当者の自動通知<span class="callout">3</span></div><div></div></div>
                 <div class="cfg-recip-row"><div>組立完了申請</div><div>3名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›<span class="callout">4</span></div></div>
                 <div class="cfg-recip-row"><div>試運転完了申請</div><div>4名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›</div></div>
-                <div class="cfg-recip-row"><div>出荷準備完了申請</div><div>1名</div><div><span class="cfg-dyn-na">対象外</span></div><div class="cfg-chevron">›</div></div>
+                <div class="cfg-recip-row"><div>出荷準備完了申請</div><div>1名</div><div><span class="cfg-dyn-on">全てON</span></div><div class="cfg-chevron">›</div></div>
                 <div class="cfg-recip-row"><div>出荷確定申請</div><div>7名</div><div><span class="cfg-dyn-off">3件OFF</span></div><div class="cfg-chevron">›</div></div>
                 <div class="mockup-caption">通知の宛先設定（一覧）：フローごとの固定宛先の人数と、工番担当者の自動通知のON/OFF状況が並ぶ</div>
             </div>
@@ -1091,7 +1099,7 @@
             <ol class="callout-list">
                 <li><span class="callout">1</span><span>フロー名（組立完了申請・出荷確定申請など）</span></li>
                 <li><span class="callout">2</span><span>固定宛先に選ばれている人数</span></li>
-                <li><span class="callout">3</span><span>工番担当者の自動通知：<b>全てON／〇件OFF／対象外</b>（そもそも自動通知の対象がないフロー）</span></li>
+                <li><span class="callout">3</span><span>工番担当者の自動通知：<b>全てON／〇件OFF</b></span></li>
                 <li><span class="callout">4</span><span>行をクリックすると詳細画面へ</span></li>
             </ol>
             </div>
@@ -1119,6 +1127,7 @@
             </ol>
             </div>
             </div>
+            <div class="note">出荷準備完了申請だけは、「工番担当者の自動通知」でONにした担当者がToではなく<b>品証宛て完了通知メールのCC</b>に入ります（組立担当者・試運転担当者・設計担当者・営業担当者・出張予定の担当者の5グループ）。製管の全員はこの設定に関係なく常にCCに入ります。</div>
             <div class="note">誰にも通知が届かなくなる変更（固定宛先0件など）は特に慎重に。保存前に選択人数を必ず確認してください。</div>
 
             <h3>③リマインダー通知のCC設定</h3>
