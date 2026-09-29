@@ -9654,20 +9654,21 @@ async function submitSalesShippingDate(requestId) {
     try {
         const updatePayload = {
             confirmed_shipping_date: dateVal,
-            status: 'awaiting_shipping_confirm',
             updated_at: new Date().toISOString()
         };
         if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
         if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
 
-        const { data: req, error } = await db.from('approval_requests')
+        // 他の人が先に入力していた場合に上書きしないよう、未入力のものだけを更新する
+        const { data: rows, error } = await db.from('approval_requests')
             .update(updatePayload)
-            .eq('id', requestId).eq('status', 'awaiting_shipping_date')
-            .select().single();
+            .eq('id', requestId).is('confirmed_shipping_date', null)
+            .select();
         if (error) throw error;
-        if (!req) { showToast('既に処理済みです', 'error'); return; }
+        const req = rows?.[0];
+        if (!req) { showToast('既に入力済みです。画面を開き直して確認してください。', 'error'); return; }
 
-        // 申請者（品証）＋品証・製管全体へ確認依頼を通知
+        // 申請者（品証）＋品証・製管全体へ入力済みを通知
         const notifIds = new Set();
         if (req.requester_id) notifIds.add(req.requester_id);
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
