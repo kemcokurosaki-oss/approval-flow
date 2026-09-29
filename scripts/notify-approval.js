@@ -304,8 +304,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'approved':
     case 'completed': {
       const isShipping = req?.flow_type === 'shipping';
-      const shippingDate = isShipping && req?.confirmed_shipping_date
-        ? `\n工場出荷確定日: ${req.confirmed_shipping_date}` : '';
+      const shippingDate = isShipping
+        ? `\n工場出荷確定日: ${req?.confirmed_shipping_date || '未入力'}` : '';
       const approverLine = isShipping && extra?.approverName
         ? `\n承認者: ${extra.approverName}（常務）` : '';
       const completedSubject = isShipping
