@@ -753,6 +753,16 @@ async function main() {
   const productionControlEmails = (productionControlProfiles || []).map(p => p.email).filter(Boolean);
   const SHIPPING_PREP_CC_TYPES = ['completed'];
 
+  // 出荷準備で品証宛の完了通知が同時に送られる申請ID。これらの申請の申請者（品証以外）は個別のToメールを送らず、
+  // 品証宛メールのCCに入れる（品証宛が無い場合は申請者へToで送る）。アプリ内通知用の行はそのまま残す
+  const shippingPrepQualityReqIds = new Set(
+    notifications.filter(n => !TEST_MODE
+      && reqMap[n.request_id]?.flow_type === 'shipping_prep'
+      && SHIPPING_PREP_CC_TYPES.includes(n.notification_type)
+      && n.recipient_id && profileMap[n.recipient_id]?.role === 'quality')
+      .map(n => n.request_id)
+  );
+
   // notification_recipients の名前マップを取得（外部宛先の宛名に使用）
   const recipientEmails = [...new Set(notifications.map(n => n.recipient_email).filter(Boolean))];
   let recipientEmailNameMap = {};
