@@ -577,8 +577,8 @@ const STATUS_LABELS = {
     approved:   '承認完了',
     rejected:   '却下',
     cancelled:  'キャンセル',
-    awaiting_shipping_date:    '出荷日入力待ち',
-    awaiting_shipping_confirm: '品証確認待ち'
+    awaiting_shipping_date:    '出荷日入力待ち', // 旧フロー（出荷日入力→品証確認→常務承認の直列）の名残。新規には使わない
+    awaiting_shipping_confirm: '品証申請待ち'
 };
 
 const STATUS_CLASSES = {
