@@ -834,6 +834,19 @@ async function main() {
 
     const toEmail = TEST_MODE ? TEST_EMAIL : actualEmail;
 
+    // 出荷準備の申請者（品証以外）は品証宛メールのCCで届くため、個別のToメールは送らず送信済み扱いにする
+    if (shippingPrepQualityReqIds.has(notif.request_id)
+      && SHIPPING_PREP_CC_TYPES.includes(notif.notification_type)
+      && notif.recipient_id === req?.requester_id
+      && profileMap[notif.recipient_id]?.role !== 'quality') {
+      await supabaseFetch(`approval_notifications?id=eq.${notif.id}`, {
+        method:  'PATCH',
+        body:    JSON.stringify({ emailed_at: new Date().toISOString() }),
+      });
+      console.log(`- 品証宛メールのCCで送信: ${actualEmail} (${notif.notification_type} / 工番${req?.project_number})`);
+      continue;
+    }
+
     try {
       const extra = {
         approverName:  shippingApproverNameMap[notif.request_id],
