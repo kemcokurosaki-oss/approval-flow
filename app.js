@@ -6068,13 +6068,19 @@ function updateSalesDateSubmitButtonState() {
     });
 }
 
-// ===== 「日付を変更する」クリック時にフッターを編集フォームへ切り替える =====
+// ===== 「日付を入力する／変更する」クリック時にフッターを入力・編集フォームへ切り替える =====
 function showChangeConfirmedDateFooter(requestId) {
     if (!currentDetailReq || currentDetailReq.id !== requestId) return;
-    document.getElementById('detail_footer').innerHTML = buildChangeConfirmedDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
+    const footer = document.getElementById('detail_footer');
+    if (!currentDetailReq.confirmed_shipping_date) {
+        footer.innerHTML = buildSalesDateFooterInner(currentDetailReq, currentDetailHasPackingShipping, getPackingDisplayState(currentDetailReq.project_number, currentDetailHasPackingShipping));
+        updateSalesDateSubmitButtonState();
+        return;
+    }
+    footer.innerHTML = buildChangeConfirmedDateFooterInner(currentDetailReq, currentDetailHasPackingShipping);
 }
 
-// ===== 確定出荷日の変更フォーム（現在値をプリフィルし、常務承認済み等であれば再承認が必要になる） =====
+// ===== 確定出荷日の変更フォーム（現在値をプリフィル。変更しても申請・承認状況には影響しない） =====
 function buildChangeConfirmedDateFooterInner(req, hasPackingShipping) {
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const dateLabel = '工場出荷確定日';
