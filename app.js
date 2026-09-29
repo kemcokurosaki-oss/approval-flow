@@ -5995,6 +5995,10 @@ async function openDetailModal(requestId, returnTo = null) {
             <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
             <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">申請する</button>
         `;
+    } else if (req.flow_type === 'shipping' && !hasFactoryShippingDate && canChangeConfirmedDate) {
+        // 営業: 確定出荷日が未入力なら、承認状況に関係なく最初から入力欄を表示する
+        footer.innerHTML = buildSalesDateFooterInner(req, hasPackingShipping, packingState);
+        updateSalesDateSubmitButtonState();
     } else if (canReschedule) {
         footer.innerHTML = buildQaFooterInner(req);
     } else if (changeDateFooterLinkHtml) {
