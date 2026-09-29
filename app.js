@@ -176,36 +176,27 @@ function resolveSalesManagerNames(pNum) {
     if (/^4/.test(n)) return ['銭'];
     return [];
 }
-// 起票日（JST）を0日目とし、土日を除いた平日のみをカウントした経過営業日数を返す（0時をまたいだ瞬間にカウントアップ）
-function businessDaysElapsedSinceJST(awaitingSince) {
-    const startStr = new Date(awaitingSince).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+// 起票日（JST）を0日目とした経過日数（暦日。0時をまたいだ瞬間にカウントアップ）
+const SHIPPING_DATE_ESCALATION_DAYS = 7;
+function calendarDaysElapsedSinceJST(since) {
+    const startStr = new Date(since).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const nowStr   = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     const [sy, sm, sd] = startStr.split('-').map(Number);
     const [ny, nm, nd] = nowStr.split('-').map(Number);
-    let cursor = Date.UTC(sy, sm - 1, sd);
-    const end  = Date.UTC(ny, nm - 1, nd);
-    let days = 0;
-    while (cursor < end) {
-        cursor += 86400000;
-        const dow = new Date(cursor).getUTCDay(); // 0=日, 6=土
-        if (dow !== 0 && dow !== 6) days++;
-    }
-    return days;
+    return Math.round((Date.UTC(ny, nm - 1, nd) - Date.UTC(sy, sm - 1, sd)) / 86400000);
 }
-// 確定出荷日が未入力のまま経過した営業日数に応じて表示対象者を追加していく（上位者にも追加表示、担当者からは消さない）。
-// 3営業日後の0時から課長、5営業日後の0時から部長（専務）を追加。担当者本人が営業課長の場合は課長段階を飛ばし、
-// 3営業日後に直接部長へ追加する
-function computeShippingEscalationRecipients(pNum, salesOwner, awaitingSince) {
-    const elapsedDays = businessDaysElapsedSinceJST(awaitingSince);
+// 確定出荷日が未入力のまま起票から7日経過したら、担当者に加えて上長（課長＋専務）にも表示する（担当者からは消さない）。
+// 担当者本人が営業課長の場合は上長＝専務のみ
+function computeShippingEscalationRecipients(pNum, salesOwner, issuedAt) {
+    const elapsedDays = calendarDaysElapsedSinceJST(issuedAt);
     const managers = resolveSalesManagerNames(pNum);
     const ownerIsManager = managers.includes(salesOwner);
     const recipients = new Set();
     if (salesOwner) recipients.add(salesOwner);
-    if (elapsedDays >= 3) {
-        if (ownerIsManager) recipients.add(SALES_DIRECTOR_NAME);
-        else managers.forEach(m => recipients.add(m));
+    if (elapsedDays >= SHIPPING_DATE_ESCALATION_DAYS) {
+        if (!ownerIsManager) managers.forEach(m => recipients.add(m));
+        recipients.add(SALES_DIRECTOR_NAME);
     }
-    if (elapsedDays >= 5 && !ownerIsManager) recipients.add(SALES_DIRECTOR_NAME);
     return recipients;
 }
 
