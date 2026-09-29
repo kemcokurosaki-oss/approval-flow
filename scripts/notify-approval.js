@@ -381,16 +381,24 @@ function buildEmail(type, req, recipientName, extra = {}) {
       };
 
     case 'shipping_date_input_done': {
-      const isDateChange = !!extra?.detail;
-      const changeDetailLine = isDateChange ? `\n${extra.detail}\n` : '';
+      // detail は保存した項目ごとの明細（初回入力は「項目: 日付」、変更は「項目: 旧 → 新」の行）。
+      // 梱包出荷確定日・工場出荷確定日は別々に保存できるため、件名・本文の項目名は明細から決める
+      // （detail が無いのは旧仕様の工場出荷確定日の初回入力通知）
+      const detailLines = (extra?.detail || '').split('\n').filter(Boolean);
+      const isDateChange = detailLines.some(l => l.includes('→'));
+      const hasPacking = detailLines.some(l => l.startsWith('梱包出荷確定日'));
+      const hasFactory = detailLines.length === 0 || detailLines.some(l => !l.startsWith('梱包出荷確定日'));
+      const dateName = hasPacking && hasFactory ? '梱包出荷確定日・工場出荷確定日'
+                     : hasPacking ? '梱包出荷確定日' : '工場出荷確定日';
+      const changeDetailLine = detailLines.length ? `\n${detailLines.join('\n')}\n` : '';
       return {
         from,
-        subject: isDateChange ? `【工場出荷確定日変更】${pStr}` : `【工場出荷確定日入力済み】${pStr}`,
+        subject: isDateChange ? `【${dateName}変更】${pStr}` : `【${dateName}入力済み】${pStr}`,
         text:
           `${recipientName} 様\n\n` +
           (isDateChange
-            ? `${pStr} の工場出荷確定日が変更されました。`
-            : `${pStr} の工場出荷確定日が営業担当者より入力されました。`) +
+            ? `${pStr} の${dateName}が変更されました。`
+            : `${pStr} の${dateName}が入力されました。`) +
           changeDetailLine +
           `\n内容をご確認ください。問題がある場合は承認フロー管理システムで日付を変更してください。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
