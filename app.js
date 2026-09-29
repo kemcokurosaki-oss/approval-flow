@@ -8378,7 +8378,7 @@ async function _autoIssueShippingIfReady(projectNum, machine) {
 
     const { data: req, error } = await db.from('approval_requests').insert({
         project_number: projectNum, machine_name: machine, flow_type: 'shipping',
-        status: 'awaiting_shipping_date', requester_id: currentUser.id, note: null,
+        status: 'awaiting_shipping_confirm', requester_id: currentUser.id, note: null,
         confirmed_shipping_date: null
     }).select().single();
     if (error) throw error;
@@ -9602,7 +9602,7 @@ async function submitShipping() {
         for (const machine of machines) {
             const { data: req, error } = await db.from('approval_requests').insert({
                 project_number: num, machine_name: machine, flow_type: 'shipping',
-                status: 'awaiting_shipping_date', requester_id: currentUser.id, note: note || null,
+                status: 'awaiting_shipping_confirm', requester_id: currentUser.id, note: note || null,
                 confirmed_shipping_date: null
             }).select().single();
             if (error) throw error;
@@ -9636,7 +9636,8 @@ async function submitShipping() {
     }
 }
 
-// 営業: 確定出荷日を入力（品証の確認待ちへ）
+// 営業: 確定出荷日を入力する。品証の本申請・常務の承認とは別扱いのため、ステータスは変えず入力した時点で確定し、
+// 品証・製管には入力済みの通知だけを送る
 async function submitSalesShippingDate(requestId) {
     if (requireLogin()) return;
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
