@@ -439,9 +439,14 @@ const DYNAMIC_RECIPIENT_GROUPS = {
     inspection:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'denki_owner'],
     shipping_check_inspection: ['sales', 'sekkei_owner'],
     shipping:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
-    electrical:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager']
-    // shipping_prep: 工番担当者の自動通知は対象外（固定宛先のみ。組立/操業/設計/営業/現地工事担当者は
-    // notify-approval.js側で品証宛メールのCCとして解決するため、ここでは扱わない）
+    electrical:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager'],
+    // shipping_prep: 他フローと異なり To ではなく品証宛メールのCCに入る担当者のON/OFF。
+    // 宛先の解決は notify-approval.js（resolveShippingPrepCcEmails）がこの設定を読んで行う。製管全員のCCはON/OFF対象外
+    shipping_prep:     ['kumitate_owner', 'shiunten_owner', 'sekkei_owner', 'sales', 'trip_owner']
+};
+// ON/OFFの対象が To ではなく CC になるフローの補足説明（設定画面に表示）
+const DYNAMIC_RECIPIENT_NOTES = {
+    shipping_prep: '出荷準備では、ここでONにした担当者は品証宛の完了通知メールのCCに入ります（Toではありません）。製管の全員は、この設定に関係なく常にCCに入ります。'
 };
 const DYNAMIC_GROUP_LABELS = {
     kumitate_owner:   '組立担当者（本人）',
