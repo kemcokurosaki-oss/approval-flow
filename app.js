@@ -6064,15 +6064,6 @@ function updateSalesDateSubmitButtonState() {
         st.textContent = el.value ? '✓ 入力済み' : '⚠ 未入力です';
         st.style.color = el.value ? '#2ba55d' : '#c0392b';
     });
-    // 本文（申請・承認状況の下）の赤字エラー
-    const warn = document.getElementById('sales_date_missing_warning');
-    if (warn) {
-        const names = missing.map(el => el.dataset.missingName);
-        const text = `${names.join('・')}が未入力のため申請できません`;
-        warn.innerHTML = names.length
-            ? `<div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${esc(text)}</div>`
-            : '';
-    }
 }
 
 // ===== 「日付を変更する」クリック時にフッターを編集フォームへ切り替える =====
