@@ -878,6 +878,9 @@ async function main() {
         const ccSet = new Set(productionControlEmails);
         (await resolveShippingPrepCcEmails(req)).forEach(e => ccSet.add(e));
         ccSet.delete(actualEmail);
+        // 申請者本人には完了通知がToで個別に届くため、CCとの二重送信を避ける
+        const requesterEmail = req.requester_id ? profileMap[req.requester_id]?.email : null;
+        if (requesterEmail) ccSet.delete(requesterEmail);
         ccEmails = [...ccSet];
       }
 
