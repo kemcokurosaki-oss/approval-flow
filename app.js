@@ -5930,7 +5930,6 @@ async function openDetailModal(requestId, returnTo = null) {
         <div class="steps-list">${req.flow_type === 'shipping' ? '' : appliedStepHtml}${stepsHtml}</div>`}
         ${shippingConfirmMissingWarningHtml}
         ${shippingConfirmPendingWarningHtml}
-        ${(req.flow_type === 'shipping' && req.status === 'awaiting_shipping_date') ? '<div id="sales_date_missing_warning"></div>' : ''}
         ${req.flow_type === 'shipping' ? `
         <hr class="section-divider">
         <div>
