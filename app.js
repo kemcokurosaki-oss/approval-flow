@@ -9952,14 +9952,17 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
     // assembly_items（機械+ユニット）ごとにオーナーを検索する。
     // unit列が'ALL'の行は「そのユニット専用の行が無い場合のデフォルト担当者」として扱い、専用行が見つかった場合のみそちらを優先する。
     // 該当機械のタスク自体はあるのに誰も見つからない場合はunresolvedを立て、申請者へのフォールバック通知に使う。
+    // 電装・試運転のユニット指定なし申請は機械単位の申請のため、ユニットを問わずその機械の全行を対象にする（組立は従来通り）。
     const findOwnersByItems = (taskName, majorItem) => {
         const names = new Set();
         let unresolved = false;
         for (const item of assemblyItems) {
             const rowsForMachine = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem) && t.machine === item.machine);
             if (rowsForMachine.length === 0) continue;
+            const wholeMachine = !item.unit && flowType !== 'assembly';
             const exact = rowsForMachine.filter(t => unitMatches(t.unit, item.unit));
-            const rows = exact.length > 0 ? exact : rowsForMachine.filter(t => String(t.unit || '').trim() === 'ALL');
+            const rows = wholeMachine ? rowsForMachine
+                : exact.length > 0 ? exact : rowsForMachine.filter(t => String(t.unit || '').trim() === 'ALL');
             const before = names.size;
             rows.flatMap(t => splitOwnerNames(t.owner)).forEach(n => names.add(n));
             if (names.size === before) unresolved = true;
