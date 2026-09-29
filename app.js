@@ -456,7 +456,8 @@ const DYNAMIC_GROUP_LABELS = {
     sales:            '営業担当者',
     sekkei_owner:     '設計担当者（本人）',
     sekkei_manager:   '設計担当者の上長',
-    denki_owner:      '電装担当者（本人）'
+    denki_owner:      '電装担当者（本人）',
+    trip_owner:       '出張予定の担当者'
 };
 // フロー種別ごとの動的宛先ON/OFF設定（未設定のグループはON扱い＝従来通りの動作）
 function getDynamicRecipientPlan(flowType) {
