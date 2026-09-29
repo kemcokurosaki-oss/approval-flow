@@ -1193,18 +1193,27 @@ async function loadPendingSide() {
         statusText: '🔴 要承認',
     })).filter((item, idx, arr) => arr.findIndex(other => other.id === item.id) === idx); // 管理者は全ロール分を取得するため、並列承認中の申請は同一IDが複数回ヒットしうる（申請ID単位で重複排除）
 
-    // 営業: 確定出荷日が未入力の出荷フローを取得（品証の本申請・常務の承認とは別扱いのため、ステータスは問わない）。
+    // 営業: 確定出荷日（工場出荷、および梱包出荷がある工番は梱包出荷も）が未入力の出荷フローを取得
+    // （品証の本申請・常務の承認とは別扱いのため、ステータスは問わない）。
     // マイページには自分が担当する工番、および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示。
     // 入力操作自体は出荷フローマークからの詳細画面で誰でも可能なため、担当者以外の入力権限は制限しない）
     let salesItems = [];
     if (isSales) {
         const { data: salesReqs } = await db.from('approval_requests')
-            .select('id, project_number, machine_name, created_at')
-            .eq('flow_type', 'shipping').is('confirmed_shipping_date', null).neq('status', 'cancelled');
+            .select('id, project_number, machine_name, created_at, confirmed_shipping_date, packing_confirmed_shipping_date')
+            .eq('flow_type', 'shipping').neq('status', 'cancelled')
+            .or('confirmed_shipping_date.is.null,packing_confirmed_shipping_date.is.null');
+        const missingLabels = r => {
+            const labels = [];
+            if (packingShippingProjectNums.has(r.project_number) && !r.packing_confirmed_shipping_date) labels.push('梱包出荷確定日');
+            if (!r.confirmed_shipping_date) labels.push('工場出荷確定日');
+            return labels;
+        };
         const myName = currentProfile?.name;
-        const mySalesReqs = isSuperAdmin()
-            ? (salesReqs || [])
-            : (salesReqs || []).filter(r => {
+        const mySalesReqs = (salesReqs || [])
+            .filter(r => missingLabels(r).length > 0)
+            .filter(r => {
+                if (isSuperAdmin()) return true;
                 const pNum  = r.project_number || '—';
                 const owner = projectsMap[pNum]?.salesOwner;
                 return computeShippingEscalationRecipients(pNum, owner, r.created_at).has(myName);
@@ -1216,7 +1225,7 @@ async function loadPendingSide() {
             flowType:   'shipping',
             flowLabel:  '出荷確定申請',
             date:       r.created_at,
-            statusText: '🔴 工場出荷確定日 入力待ち',
+            statusText: `🔴 ${missingLabels(r).join('・')} 入力待ち`,
         }));
     }
 
@@ -7970,7 +7979,7 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
 }
 
 // 出荷フローが常務承認で完了した時点で、全体工程表・入出荷予定一覧表からの
-// 出荷日直接変更を禁止するロックをかける（変更は承認フロー[changeConfirmedShippingDate]経由のみ許可）
+// 出荷日直接変更を禁止するロックをかける（変更は承認フロー[saveShippingDates]経由のみ許可）
 async function lockShippingDateOnApproval(req) {
     if (!req?.project_number) return;
     try {
@@ -9653,39 +9662,81 @@ async function submitShipping() {
     }
 }
 
-// 営業: 確定出荷日を入力する。品証の本申請・常務の承認とは別扱いのため、ステータスは変えず入力した時点で確定し、
-// 品証・製管には入力済みの通知だけを送る
-async function submitSalesShippingDate(requestId) {
+// 営業・品証・製管: 確定出荷日を入力・変更する。確定出荷日は品証の本申請・常務の承認とは別扱いのため、
+// 承認状況（申請前・申請中・承認済み）に関係なくステータスは変えず、保存した時点で確定する。
+// 梱包出荷確定日と工場出荷確定日（分割出荷の①②はまとめて1項目）は別々に保存でき、品証・製管へは
+// 保存した項目分の内容を1通にまとめて通知する（別々に保存すれば、それぞれの保存ごとに通知が届く）
+async function saveShippingDates(requestId) {
     if (requireLogin()) return;
+    const groups = _collectShippingDateGroups().filter(g => g.changed);
+    if (groups.length === 0) { showToast('日付に変更はありません', 'error'); return; }
+    const invalid = groups.find(g => g.cleared || !g.complete);
+    if (invalid) {
+        showToast(invalid.cleared ? `入力済みの${invalid.label}は空にできません` : `${invalid.label}を入力してください`, 'error');
+        return;
+    }
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
-    const dateVal        = document.getElementById('sales_date_input')?.value;
-    const dateVal2       = isSplitShipping ? (document.getElementById('sales_date_input_2')?.value || null) : null;
-    const packingInputEl = document.getElementById('packing_sales_date_input');
-    const packingDateVal = packingInputEl?.value || null;
-
-    if (!dateVal) { showToast('工場出荷確定日を入力してください', 'error'); return; }
-    if (isSplitShipping && !dateVal2) { showToast('②の工場出荷確定日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷確定日を入力してください', 'error'); return; }
+    const val = id => document.getElementById(id)?.value || null;
+    const savePacking = groups.some(g => g.key === 'packing');
+    const saveFactory = groups.some(g => g.key === 'factory');
 
     showLoading('処理中...');
     try {
-        const updatePayload = {
-            confirmed_shipping_date: dateVal,
-            updated_at: new Date().toISOString()
+        const { data: current, error: fetchErr } = await db.from('approval_requests')
+            .select('confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date').eq('id', requestId).single();
+        if (fetchErr) throw fetchErr;
+        if (!current) { showToast('データが見つかりません', 'error'); return; }
+
+        const next = {
+            confirmed_shipping_date:         saveFactory ? val('sales_date_input') : current.confirmed_shipping_date,
+            confirmed_shipping_date_2:       saveFactory && isSplitShipping ? val('sales_date_input_2') : current.confirmed_shipping_date_2,
+            packing_confirmed_shipping_date: savePacking ? val('packing_sales_date_input') : current.packing_confirmed_shipping_date
         };
-        if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
-        if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
 
-        // 他の人が先に入力していた場合に上書きしないよう、未入力のものだけを更新する
-        const { data: rows, error } = await db.from('approval_requests')
-            .update(updatePayload)
-            .eq('id', requestId).is('confirmed_shipping_date', null)
-            .select();
+        // 通知本文の明細（初回入力は「項目: 日付」、変更は「項目: 旧 → 新」）
+        const detailLine = (label, oldVal, newVal) => oldVal ? `${label}: ${oldVal} → ${newVal}` : `${label}: ${newVal}`;
+        const lines = [];
+        let isChange = false;
+        if (savePacking && current.packing_confirmed_shipping_date !== next.packing_confirmed_shipping_date) {
+            lines.push(detailLine('梱包出荷確定日', current.packing_confirmed_shipping_date, next.packing_confirmed_shipping_date));
+            if (current.packing_confirmed_shipping_date) isChange = true;
+        }
+        if (saveFactory && current.confirmed_shipping_date !== next.confirmed_shipping_date) {
+            lines.push(detailLine(`${isSplitShipping ? '①' : ''}工場出荷確定日`, current.confirmed_shipping_date, next.confirmed_shipping_date));
+            if (current.confirmed_shipping_date) isChange = true;
+        }
+        if (saveFactory && isSplitShipping && current.confirmed_shipping_date_2 !== next.confirmed_shipping_date_2) {
+            lines.push(detailLine('②工場出荷確定日', current.confirmed_shipping_date_2, next.confirmed_shipping_date_2));
+            if (current.confirmed_shipping_date_2) isChange = true;
+        }
+        if (lines.length === 0) { showToast('日付に変更はありません', 'error'); return; }
+
+        const updatePayload = { updated_at: new Date().toISOString() };
+        if (saveFactory) {
+            updatePayload.confirmed_shipping_date = next.confirmed_shipping_date;
+            if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = next.confirmed_shipping_date_2;
+        }
+        if (savePacking) updatePayload.packing_confirmed_shipping_date = next.packing_confirmed_shipping_date;
+
+        const { data: req, error } = await db.from('approval_requests')
+            .update(updatePayload).eq('id', requestId).select().single();
         if (error) throw error;
-        const req = rows?.[0];
-        if (!req) { showToast('既に入力済みです。画面を開き直して確認してください。', 'error'); return; }
 
-        // 申請者（品証）＋品証・製管全体へ入力済みを通知
+        // 入力済みの日付を変更した場合は、変更前後の日付を履歴として記録する（詳細画面で参照）
+        if (isChange) {
+            await db.from('shipping_date_change_log').insert({
+                request_id: requestId,
+                old_confirmed_shipping_date: current.confirmed_shipping_date,
+                new_confirmed_shipping_date: next.confirmed_shipping_date,
+                old_confirmed_shipping_date_2: current.confirmed_shipping_date_2,
+                new_confirmed_shipping_date_2: next.confirmed_shipping_date_2,
+                old_packing_confirmed_shipping_date: current.packing_confirmed_shipping_date,
+                new_packing_confirmed_shipping_date: next.packing_confirmed_shipping_date,
+                changed_by: currentUser.id
+            });
+        }
+
+        // 申請者（品証）＋品証・製管全体へ入力・変更を通知
         const notifIds = new Set();
         if (req.requester_id) notifIds.add(req.requester_id);
         const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
@@ -9694,15 +9745,20 @@ async function submitSalesShippingDate(requestId) {
         (sRows || []).forEach(p => notifIds.add(p.id));
         if (notifIds.size > 0) {
             await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done' }))
+                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: lines.join('\n') }))
             );
         }
 
-        await syncShippingDateToTasks(req, { factoryDate: dateVal, factoryDate2: dateVal2, packingDate: packingDateVal });
+        await syncShippingDateToTasks(req, {
+            factoryDate:  saveFactory ? next.confirmed_shipping_date : null,
+            factoryDate2: saveFactory && isSplitShipping ? next.confirmed_shipping_date_2 : null,
+            packingDate:  savePacking ? next.packing_confirmed_shipping_date : null
+        });
 
         closeDetailModal();
         await refreshAll();
-        showToast(`${packingInputEl ? '工場出荷確定日・梱包出荷確定日' : '工場出荷確定日'}を入力しました。品証・製管に通知されます。`, 'success');
+        const savedLabels = groups.map(g => g.label).join('・');
+        showToast(`${savedLabels}を${isChange ? '保存' : '入力'}しました。品証・製管に通知されます。`, 'success');
     } catch (e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
@@ -9770,86 +9826,6 @@ async function confirmAndSubmitShipping(requestId) {
         showToast('申請しました。常務に承認依頼が届きます。', 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
-// 営業・品証・製管: 確定出荷日を後から変更する。確定出荷日は品証の本申請・常務の承認とは別扱いのため、
-// 承認状況（申請前・申請中・承認済み）に関係なくステータスは変えず、変更履歴の記録と品証・製管への通知だけを行う
-async function changeConfirmedShippingDate(requestId) {
-    if (requireLogin()) return;
-    const isSplitShipping = currentDetailShippingTaskCount >= 2;
-    const dateVal        = document.getElementById('sales_date_input')?.value;
-    const dateVal2       = isSplitShipping ? (document.getElementById('sales_date_input_2')?.value || null) : null;
-    const packingInputEl = document.getElementById('packing_sales_date_input');
-    const packingDateVal = packingInputEl?.value || null;
-
-    if (!dateVal) { showToast('工場出荷確定日を入力してください', 'error'); return; }
-    if (isSplitShipping && !dateVal2) { showToast('②の工場出荷確定日を入力してください', 'error'); return; }
-    if (packingInputEl && !packingDateVal) { showToast('梱包出荷確定日を入力してください', 'error'); return; }
-
-    showLoading('処理中...');
-    try {
-        const { data: current, error: fetchErr } = await db.from('approval_requests')
-            .select('confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date').eq('id', requestId).single();
-        if (fetchErr) throw fetchErr;
-        if (!current) { showToast('データが見つかりません', 'error'); return; }
-
-        // 変更前後の日付（通知本文に載せる）
-        const dateLabel = '工場出荷確定日';
-        const changeLines = [];
-        if (current.confirmed_shipping_date !== dateVal) {
-            changeLines.push(`${isSplitShipping ? '①' : ''}${dateLabel}: ${current.confirmed_shipping_date || '未定'} → ${dateVal}`);
-        }
-        if (isSplitShipping && current.confirmed_shipping_date_2 !== dateVal2) {
-            changeLines.push(`②${dateLabel}: ${current.confirmed_shipping_date_2 || '未定'} → ${dateVal2}`);
-        }
-        if (packingInputEl && current.packing_confirmed_shipping_date !== packingDateVal) {
-            changeLines.push(`梱包出荷確定日: ${current.packing_confirmed_shipping_date || '未定'} → ${packingDateVal}`);
-        }
-        if (changeLines.length === 0) { showToast('日付に変更はありません', 'error'); return; }
-
-        const updatePayload = { confirmed_shipping_date: dateVal, updated_at: new Date().toISOString() };
-        if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = dateVal2;
-        if (packingInputEl) updatePayload.packing_confirmed_shipping_date = packingDateVal;
-
-        const { data: req, error } = await db.from('approval_requests')
-            .update(updatePayload).eq('id', requestId).select().single();
-        if (error) throw error;
-
-        // 変更前後の日付を履歴として記録する（詳細画面で参照）
-        await db.from('shipping_date_change_log').insert({
-            request_id: requestId,
-            old_confirmed_shipping_date: current.confirmed_shipping_date,
-            new_confirmed_shipping_date: dateVal,
-            old_confirmed_shipping_date_2: current.confirmed_shipping_date_2,
-            new_confirmed_shipping_date_2: dateVal2,
-            old_packing_confirmed_shipping_date: current.packing_confirmed_shipping_date,
-            new_packing_confirmed_shipping_date: packingDateVal,
-            changed_by: currentUser.id
-        });
-
-        // 申請者（品証）＋品証・製管全体へ変更を通知
-        const notifIds = new Set();
-        if (req.requester_id) notifIds.add(req.requester_id);
-        const { data: qRows } = await db.from('profiles').select('id').eq('role', 'quality');
-        (qRows || []).forEach(p => notifIds.add(p.id));
-        const { data: sRows } = await db.from('profiles').select('id').eq('role', 'production_control');
-        (sRows || []).forEach(p => notifIds.add(p.id));
-        if (notifIds.size > 0) {
-            await db.from('approval_notifications').insert(
-                [...notifIds].map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'shipping_date_input_done', detail: changeLines.join('\n') }))
-            );
-        }
-
-        await syncShippingDateToTasks(req, { factoryDate: dateVal, factoryDate2: dateVal2, packingDate: packingDateVal });
-
-        closeDetailModal();
-        await refreshAll();
-        showToast('出荷日を変更しました。品証・製管に通知されます。', 'success');
-    } catch (e) {
-        showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
