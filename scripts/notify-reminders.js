@@ -138,36 +138,28 @@ function resolveSalesManagerNames(projectNumber) {
   if (/^4/.test(n)) return ['銭'];
   return [];
 }
-// 起票日（JST）を0日目とし、土日を除いた平日のみをカウントした経過営業日数を返す
-function businessDaysElapsedSinceJST(isoStr) {
+// 起票日（JST）を0日目とした経過日数（暦日）
+const SHIPPING_DATE_REMINDER_INTERVAL_DAYS = 7;
+function calendarDaysElapsedSinceJST(isoStr) {
   const startStr = new Date(isoStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
   const [sy, sm, sd] = startStr.split('-').map(Number);
   const [ty, tm, td] = tokyoDateStr().split('-').map(Number);
-  let cursor = Date.UTC(sy, sm - 1, sd);
-  const end  = Date.UTC(ty, tm - 1, td);
-  let days = 0;
-  while (cursor < end) {
-    cursor += 86400000;
-    const dow = new Date(cursor).getUTCDay(); // 0=日, 6=土
-    if (dow !== 0 && dow !== 6) days++;
-  }
-  return days;
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(sy, sm - 1, sd)) / 86400000);
 }
-// 確定出荷日が未入力のまま経過した営業日数に応じて通知先を追加していく。3営業日後の朝から課長、
-// 5営業日後の朝から部長（専務）を追加。担当者本人が営業課長の場合は課長段階を飛ばし、
-// 3営業日後に直接部長へ追加する
-function computeShippingEscalationRecipientNames(projectNumber, salesOwner, createdAt) {
-  const elapsedDays = businessDaysElapsedSinceJST(createdAt);
+// 起票日（JST）からN日後の日付文字列（YYYY-MM-DD）
+function jstDatePlusDays(isoStr, n) {
+  const [y, m, d] = new Date(isoStr).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' }).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+// 催促の宛先: 営業担当者＋上長（担当工番の営業課長＋専務）。担当者本人が営業課長の場合は上長＝専務のみ
+function computeShippingEscalationRecipientNames(projectNumber, salesOwner) {
   const managers = resolveSalesManagerNames(projectNumber);
   const ownerIsManager = managers.includes(salesOwner);
   const names = new Set();
   if (salesOwner) names.add(salesOwner);
-  if (elapsedDays >= 3) {
-    if (ownerIsManager) names.add(SALES_DIRECTOR_NAME);
-    else managers.forEach(m => names.add(m));
-  }
-  if (elapsedDays >= 5 && !ownerIsManager) names.add(SALES_DIRECTOR_NAME);
-  return { names, elapsedDays };
+  if (!ownerIsManager) managers.forEach(m => names.add(m));
+  names.add(SALES_DIRECTOR_NAME);
+  return names;
 }
 
 async function loadReminderCcSettings() {
@@ -1120,16 +1112,16 @@ async function runTestRunReadinessReminders() {
   console.log(`試運転準備完了 催促: ${count}件送信`);
 }
 
-// ===== 確定出荷日 未入力エスカレーション催促 =====
-// 出荷確定申請が「営業担当者による確定出荷日入力待ち」のまま経過した日数に応じて、
-// 担当者→（3日後）営業課長→（8日後）営業部長（専務）へ通知先を追加しながら毎日通知する
+// ===== 確定出荷日 未入力催促 =====
+// 確定出荷日は品証の本申請・常務の承認とは別扱いのため、承認状況に関係なく未入力の出荷フローを対象にする。
+// 起票時に営業担当者へ入力依頼（shipping_date_request、notify-approval.js側）を送った後、
+// 起票から7日後・14日後・21日後…（7日ごと）にまだ未入力なら、営業担当者＋上長（課長＋専務）へ催促する。
+// 実行が抜けた日があっても取りこぼさないよう、「直近の催促期日以降にまだ送っていなければ送る」で判定する
 async function runSalesShippingDateReminders() {
   console.log('\n--- 確定出荷日 未入力催促チェック ---');
 
-  const todayStr = tokyoDateStr();
-
   const requests = await supabaseFetch(
-    `approval_requests?flow_type=eq.shipping&status=eq.awaiting_shipping_date` +
+    `approval_requests?flow_type=eq.shipping&confirmed_shipping_date=is.null&status=neq.cancelled` +
     `&select=id,project_number,machine_name,created_at`
   );
   if (!requests || requests.length === 0) {
@@ -1140,12 +1132,16 @@ async function runSalesShippingDateReminders() {
   const salesMapRows  = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
   const salesPersonMap = salesMapRows?.[0]?.value ? JSON.parse(salesMapRows[0].value) : {};
 
-  // 今日すでに送ったリマインダーのセット
-  const sentToday = await supabaseFetch(
+  // 申請ごとの直近の催促送信日（JST）
+  const pastReminders = await supabaseFetch(
     `approval_notifications?notification_type=eq.sales_shipping_date_reminder` +
-    `&emailed_at=gte.${todayStr}&select=request_id,recipient_id`
+    `&request_id=in.(${requests.map(r => r.id).join(',')})&emailed_at=not.is.null&select=request_id,emailed_at`
   );
-  const sentSet = new Set((sentToday || []).map(n => `${n.request_id}__${n.recipient_id}`));
+  const lastSentMap = {};
+  (pastReminders || []).forEach(n => {
+    const d = new Date(n.emailed_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    if (!lastSentMap[n.request_id] || lastSentMap[n.request_id] < d) lastSentMap[n.request_id] = d;
+  });
 
   let count = 0;
   for (const req of requests) {
@@ -1153,9 +1149,14 @@ async function runSalesShippingDateReminders() {
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
     if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
 
+    const elapsedDays = calendarDaysElapsedSinceJST(req.created_at);
+    const cycle = Math.floor(elapsedDays / SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
+    if (cycle < 1) continue;
+    const dueDateStr = jstDatePlusDays(req.created_at, cycle * SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
+    if (lastSentMap[req.id] && lastSentMap[req.id] >= dueDateStr) continue;
+
     const salesOwner = salesPersonMap[String(req.project_number).trim()];
-    const { names, elapsedDays } = computeShippingEscalationRecipientNames(req.project_number, salesOwner, req.created_at);
-    if (names.size === 0) continue;
+    const names = computeShippingEscalationRecipientNames(req.project_number, salesOwner);
 
     const pStr    = req.machine_name ? `${req.project_number} ${req.machine_name}` : String(req.project_number);
     const subject = `【工場出荷確定日 未入力】${pStr}`;
@@ -1164,13 +1165,11 @@ async function runSalesShippingDateReminders() {
       const recipients = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(name)}&select=id,name,email`);
       for (const profile of (recipients || [])) {
         if (!profile.email) continue;
-        const key = `${req.id}__${profile.id}`;
-        if (sentSet.has(key)) continue;
 
         const isOwner = name === salesOwner;
         const bodyDetail = isOwner
-          ? `工場出荷確定日がまだ入力されていません（申請から${elapsedDays}日経過）。`
-          : `担当者（${salesOwner || '未設定'}）による工場出荷確定日の入力が、申請から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
+          ? `工場出荷確定日がまだ入力されていません（起票から${elapsedDays}日経過）。`
+          : `担当者（${salesOwner || '未設定'}）による工場出荷確定日の入力が、起票から${elapsedDays}日経過してもまだ完了していません。状況の確認・対応をお願いします。`;
         const text =
           `${profile.name} 様\n\n` +
           `${pStr} の「出荷確定申請」について、${bodyDetail}\n` +
@@ -1185,7 +1184,6 @@ async function runSalesShippingDateReminders() {
             notification_type: 'sales_shipping_date_reminder',
             emailed_at:        new Date().toISOString(),
           });
-          sentSet.add(key);
           count++;
         } catch (e) {
           console.error(`✗ 送信エラー: ${profile.email}`, e.message);
