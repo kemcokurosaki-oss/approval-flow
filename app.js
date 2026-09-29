@@ -6341,6 +6341,7 @@ async function showRecipientsDetailScreen(flowType) {
             <div class="recip-group-header">
                 <span class="recip-group-title">工番担当者の自動通知</span>
             </div>
+            ${DYNAMIC_RECIPIENT_NOTES[flowType] ? `<div class="recip-dyn-note">${esc(DYNAMIC_RECIPIENT_NOTES[flowType])}</div>` : ''}
             ${dynGroups.map(g => `
                 <label class="recip-dyn-row">
                     <input type="checkbox" data-dynamic-group="${g}" ${dynPlan[g] ? 'checked' : ''}
