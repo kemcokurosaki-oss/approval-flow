@@ -1348,7 +1348,7 @@ async function loadMineSide() {
         return `
         <div class="side-card ${cardClass}" onclick="${cardClick}" title="${esc(pNum)} ${flowLabel}">
             <div class="mine-col-num">${esc(pNum)}${machineHtml}${resubmitBadge}${packingWarningHtml}</div>
-            <div class="mine-col-date">${fmtDate(req.created_at)}</div>
+            <div class="mine-col-date">${fmtDateTime(req.created_at)}</div>
             <div class="mine-col-status">${statusText}</div>
         </div>`;
     };
@@ -2679,7 +2679,7 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
 
     if (activeReq) {
         const requesterName = requesterNames[activeReq.requester_id] || '—';
-        const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+        const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
         metaLine = `申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}`;
 
         const isApproved = activeReq.status === 'approved';
@@ -3030,7 +3030,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
             // 申請者・申請日を一覧に直接表示する（個別詳細画面を経由させないため）
             const requesterName = requesterNames[g.req.requester_id] || '—';
-            const submittedDate = g.req.created_at ? fmtDate(g.req.created_at) : '—';
+            const submittedDate = g.req.created_at ? fmtDateTime(g.req.created_at) : '—';
 
             // チェックシート/完了報告書へのリンク（承認済みなら報告書、却下されたら組立申請権限を持つ人なら誰でも編集可能）
             // 申請者本人が不在でも組立部門の他のメンバーが修正・再申請できるよう、申請権限(canApply)は申請者本人と同じ基準にする
@@ -3129,7 +3129,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         }
 
         const requesterName = requesterNames[req.requester_id] || '—';
-        const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
+        const submittedDate = req.created_at ? fmtDateTime(req.created_at) : '—';
         const isApproved = req.status === 'approved';
         const canEditRejected = req.status === 'rejected' && (req.requester_id === currentUser.id || canApplyFlow('electrical'));
         const unresolvedPendingCount = countUnresolvedPendingItems(req);
@@ -3498,7 +3498,7 @@ function buildMachineUnitRowsHtml(opts) {
         if (activeReq) {
             // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
             const requesterName = requesterNames[activeReq.requester_id] || '—';
-            const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+            const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
             metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
 
             const isApproved = activeReq.status === 'approved';
@@ -3973,7 +3973,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
         }
 
         const requesterName = requesterNames[req.requester_id] || '—';
-        const submittedDate = req.created_at ? fmtDate(req.created_at) : '—';
+        const submittedDate = req.created_at ? fmtDateTime(req.created_at) : '—';
         const isApproved = req.status === 'approved';
         const canEditRejected = req.status === 'rejected' && (req.requester_id === currentUser.id || canApplyFlow('test_run'));
         const unresolvedPendingCount = countUnresolvedPendingItems(req);
@@ -4066,7 +4066,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
             const { data: pr } = await db.from('profiles').select('name').eq('id', activeReq.requester_id).maybeSingle();
             requesterName = pr?.name || '—';
         }
-        const submittedDate = activeReq.created_at ? fmtDate(activeReq.created_at) : '—';
+        const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
         metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
 
         const isApproved = activeReq.status === 'approved';
@@ -5541,7 +5541,7 @@ function _renderSingleApprovalStep(req, steps, approverNames) {
     else if (req.status === 'submitted') { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
     else                                  { icon = '○';  sc = 'sc-waiting'; }
     const who   = activeStep?.approver_id ? (approverNames[activeStep.approver_id] || '—') : null;
-    const when  = activeStep?.decided_at ? fmtDate(activeStep.decided_at) : '';
+    const when  = activeStep?.decided_at ? fmtDateTime(activeStep.decided_at) : '';
     const label = approvedStep ? '承認' : rejectedStep ? '却下' : (req.status === 'submitted' ? '承認待ち' : '未承認');
     return `
         <div class="step-item">
@@ -5749,7 +5749,7 @@ async function openDetailModal(requestId, returnTo = null) {
             <div class="step-detail">
                 <div class="step-label">起票</div>
                 <div class="step-name">${esc(requesterName)}</div>
-                <div class="step-date">${fmtDate(req.created_at)}</div>
+                <div class="step-date">${fmtDateTime(req.created_at)}</div>
             </div>
         </div>`;
 
@@ -5757,7 +5757,7 @@ async function openDetailModal(requestId, returnTo = null) {
         let submitHtml;
         if (isSubmittedOrLater) {
             const submitter = req.submitted_by ? (approverNames[req.submitted_by] || '—') : '—';
-            submitHtml = renderStep('sc-applied', '<span class="applied-dot"></span>', '申請', submitter, req.submitted_at ? fmtDate(req.submitted_at) : '', null);
+            submitHtml = renderStep('sc-applied', '<span class="applied-dot"></span>', '申請', submitter, req.submitted_at ? fmtDateTime(req.submitted_at) : '', null);
         } else if (req.status === 'awaiting_shipping_confirm') {
             submitHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '申請待ち（品証確認中）', null, '', null);
         } else {
@@ -5767,9 +5767,9 @@ async function openDetailModal(requestId, returnTo = null) {
         // 承認: 常務
         let approveHtml;
         if (req.status === 'approved' && step?.status === 'approved') {
-            approveHtml = renderStep('sc-approved', '✓', '承認', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDate(step.decided_at) : '', step.comment);
+            approveHtml = renderStep('sc-approved', '✓', '承認', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDateTime(step.decided_at) : '', step.comment);
         } else if (req.status === 'rejected' && step?.status === 'rejected') {
-            approveHtml = renderStep('sc-rejected', '<span class="fc-x-icon">×</span>', '却下', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDate(step.decided_at) : '', step.comment);
+            approveHtml = renderStep('sc-rejected', '<span class="fc-x-icon">×</span>', '却下', step.approver_id ? (approverNames[step.approver_id] || '—') : null, step.decided_at ? fmtDateTime(step.decided_at) : '', step.comment);
         } else if (req.status === 'submitted') {
             approveHtml = renderStep('sc-pending', '<span class="fc-play-icon">▶</span>', '承認待ち', null, '', null);
         } else {
@@ -5786,7 +5786,7 @@ async function openDetailModal(requestId, returnTo = null) {
             <div class="step-circle sc-approved">✓</div>
             <div class="step-detail">
                 <div class="step-label">完了</div>
-                <div class="step-date">${fmtDate(req.updated_at)}</div>
+                <div class="step-date">${fmtDateTime(req.updated_at)}</div>
             </div>
         </div>`;
     } else {
@@ -5801,7 +5801,7 @@ async function openDetailModal(requestId, returnTo = null) {
                                               { icon = '<span class="fc-play-icon">▶</span>'; sc = 'sc-pending'; }
             else                              { icon = '○';  sc = 'sc-waiting'; }
             const who  = s.approver_id ? (approverNames[s.approver_id] || '—') : '—';
-            const when = s.decided_at  ? fmtDate(s.decided_at) : '';
+            const when = s.decided_at  ? fmtDateTime(s.decided_at) : '';
             return `
             <div class="step-item">
                 <div class="step-circle ${sc}">${icon}</div>
@@ -5853,7 +5853,7 @@ async function openDetailModal(requestId, returnTo = null) {
             <div class="step-detail">
                 <div class="step-label">申請</div>
                 <div class="step-name">${esc(requesterName)}</div>
-                <div class="step-date">${fmtDate(req.created_at)}</div>
+                <div class="step-date">${fmtDateTime(req.created_at)}</div>
             </div>
         </div>`;
 
@@ -5898,7 +5898,7 @@ async function openDetailModal(requestId, returnTo = null) {
                         lines.push(`梱包出荷確定日: ${fmtDate(h.old_packing_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_packing_confirmed_shipping_date) || '未定'}`);
                     }
                     const who = approverNames[h.changed_by] || '';
-                    return `<div style="margin-bottom:4px;">${esc(fmtDate(h.changed_at))}${who ? '　' + esc(who) + ' が変更' : ''}<br>${lines.map(esc).join('<br>')}</div>`;
+                    return `<div style="margin-bottom:4px;">${esc(fmtDateTime(h.changed_at))}${who ? '　' + esc(who) + ' が変更' : ''}<br>${lines.map(esc).join('<br>')}</div>`;
                 }).join('')}
             </div>
         </details>` : '';
@@ -10325,6 +10325,12 @@ document.addEventListener('drop', (e) => {
 function fmtDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
+}
+
+// 申請・承認など操作日時の表示用（例: 2026/9/29 14:35）
+function fmtDateTime(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function esc(str) {
