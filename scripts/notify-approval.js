@@ -116,15 +116,22 @@ async function resolveShippingPrepCcEmails(req) {
   const sekkeiNames   = [...new Set((tasks || []).filter(t => t.text === '出図' && String(t.major_item || '').trim() === '設計').flatMap(t => splitOwnerNames(t.owner)))];
   const tripNames     = [...new Set((tasks || []).filter(t => isBusinessTripTaskRow(t) && !isTripTaskExpired(t)).flatMap(t => splitOwnerNames(t.owner)))];
 
-  (await resolveOwnerEmails(kumitateNames, { profilesOnly: true })).forEach(e => emails.add(e));
-  (await resolveOwnerEmails(shiuntenNames, { profilesOnly: true })).forEach(e => emails.add(e));
-  (await resolveOwnerEmails(sekkeiNames)).forEach(e => emails.add(e));
-  (await resolveOwnerEmails(tripNames)).forEach(e => emails.add(e));
+  // 設定画面「工番担当者の自動通知」の出荷準備のON/OFF（未設定のグループはON扱い。app.jsのgetDynamicRecipientPlanと同じ）
+  const dynRow = await supabaseFetch(`flow_settings?key=eq.flow_dynamic_recipients&select=value`);
+  const dynSaved = dynRow?.[0]?.value?.shipping_prep || {};
+  const isOn = g => dynSaved[g] !== false;
 
-  const salesMapRow = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
-  const salesMap = salesMapRow?.[0]?.value ? JSON.parse(salesMapRow[0].value) : {};
-  const salesOwnerName = salesMap[req.project_number] || null;
-  if (salesOwnerName) (await resolveOwnerEmails([salesOwnerName])).forEach(e => emails.add(e));
+  if (isOn('kumitate_owner')) (await resolveOwnerEmails(kumitateNames, { profilesOnly: true })).forEach(e => emails.add(e));
+  if (isOn('shiunten_owner')) (await resolveOwnerEmails(shiuntenNames, { profilesOnly: true })).forEach(e => emails.add(e));
+  if (isOn('sekkei_owner'))   (await resolveOwnerEmails(sekkeiNames)).forEach(e => emails.add(e));
+  if (isOn('trip_owner'))     (await resolveOwnerEmails(tripNames)).forEach(e => emails.add(e));
+
+  if (isOn('sales')) {
+    const salesMapRow = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
+    const salesMap = salesMapRow?.[0]?.value ? JSON.parse(salesMapRow[0].value) : {};
+    const salesOwnerName = salesMap[req.project_number] || null;
+    if (salesOwnerName) (await resolveOwnerEmails([salesOwnerName])).forEach(e => emails.add(e));
+  }
 
   return emails;
 }
