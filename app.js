@@ -9951,11 +9951,9 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
 
     // assembly_items（機械+ユニット）ごとにオーナーを検索する。
     // unit列が'ALL'の行は「そのユニット専用の行が無い場合のデフォルト担当者」として扱い、専用行が見つかった場合のみそちらを優先する。
-    // 該当機械のタスク自体はあるのに誰も見つからない場合はunresolvedを立て、申請者へのフォールバック通知に使う。
     // 電装・試運転のユニット指定なし申請は機械単位の申請のため、ユニットを問わずその機械の全行を対象にする（組立は従来通り）。
     const findOwnersByItems = (taskName, majorItem) => {
         const names = new Set();
-        let unresolved = false;
         for (const item of assemblyItems) {
             const rowsForMachine = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem) && t.machine === item.machine);
             if (rowsForMachine.length === 0) continue;
@@ -9963,26 +9961,20 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             const exact = rowsForMachine.filter(t => unitMatches(t.unit, item.unit));
             const rows = wholeMachine ? rowsForMachine
                 : exact.length > 0 ? exact : rowsForMachine.filter(t => String(t.unit || '').trim() === 'ALL');
-            const before = names.size;
             rows.flatMap(t => splitOwnerNames(t.owner)).forEach(n => names.add(n));
-            if (names.size === before) unresolved = true;
         }
-        return { owners: [...names], unresolved };
+        return [...names];
     };
     const findOwnersFlat = (taskName, majorItem) => {
         const matched = (tasks || []).filter(t => t.text === taskName && (!majorItem || String(t.major_item || '').trim() === majorItem));
-        return { owners: [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))], unresolved: false };
+        return [...new Set(matched.flatMap(t => splitOwnerNames(t.owner)))];
     };
     const findOwners = assemblyItems ? findOwnersByItems : findOwnersFlat;
 
-    const kumitateResult = findOwners('機械組立');
-    const shiuntenResult = findOwners('試運転');
-    const sekkeiResult   = findOwners('出図', '設計');
-    const denkiResult    = findOwners('電気艤装');
-    const kumitateOwners = kumitateResult.owners;
-    const shiuntenOwners = shiuntenResult.owners;
-    const sekkeiOwners   = sekkeiResult.owners;
-    const denkiOwners    = denkiResult.owners;
+    const kumitateOwners = findOwners('機械組立');
+    const shiuntenOwners = findOwners('試運転');
+    const sekkeiOwners   = findOwners('出図', '設計');
+    const denkiOwners    = findOwners('電気艤装');
 
     // 営業担当者をapp_settingsから取得
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
