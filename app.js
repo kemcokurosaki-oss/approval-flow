@@ -5666,13 +5666,14 @@ async function openDetailModal(requestId, returnTo = null) {
         && (isMyRequest || isQualityOrSeikan)
         && req.status === 'submitted';
 
-    // 出荷日変更リンク（品証・製管の確認や常務の承認が済んだ後でも、日付を変更できるようにする）
+    // 出荷日の入力・変更リンク（確定出荷日の入力は品証の本申請・常務の承認とは別扱いのため、承認状況に関係なく入力・変更できる）
     const isSales = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isSuperAdmin();
-    const canChangeConfirmedDate = req.flow_type === 'shipping' && !!req.confirmed_shipping_date
-        && ['awaiting_shipping_confirm', 'submitted', 'approved'].includes(req.status)
+    const hasFactoryShippingDate = !!req.confirmed_shipping_date;
+    const canChangeConfirmedDate = req.flow_type === 'shipping' && req.status !== 'cancelled'
         && (isSales || isQualityOrSeikan) && !myStep;
     const changeDateOnclick = `showChangeConfirmedDateFooter('${req.id}')`;
-    const changeDateLabel = hasPackingShipping ? '工場出荷確定日・梱包出荷確定日を変更する' : '工場出荷確定日を変更する';
+    const changeDateVerb  = hasFactoryShippingDate ? '変更する' : '入力する';
+    const changeDateLabel = hasPackingShipping ? `工場出荷確定日・梱包出荷確定日を${changeDateVerb}` : `工場出荷確定日を${changeDateVerb}`;
     // ズレ警告バナー内に変更ボタンを表示する場合は、フッター側には重複して表示しない
     const changeDateBannerButtonHtml = canChangeConfirmedDate
         ? `<button type="button" class="btn btn-outline" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
