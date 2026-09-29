@@ -5723,7 +5723,7 @@ async function openDetailModal(requestId, returnTo = null) {
         stepsHtml = _renderSingleApprovalStep(req, steps, approverNames);
     } else if (req.flow_type === 'shipping') {
         // shipping: 起票→申請（品証→常務）→承認（常務）の3段階（担当者確認は参考情報として別枠に表示）
-        // 出荷日変更で品証の確認待ちに戻った場合も承認ステップはapprovedのまま残るため、表示はreq.statusで判定する
+        // 営業の確定出荷日入力はこの3段階とは独立しているため、ここには含めない
         const step = steps[0];
         const isSubmittedOrLater = ['submitted', 'approved', 'rejected'].includes(req.status);
         const renderStep = (sc, icon, label, who, when, comment) => `
