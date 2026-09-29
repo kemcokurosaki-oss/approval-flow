@@ -9685,7 +9685,7 @@ async function submitSalesShippingDate(requestId) {
 
         closeDetailModal();
         await refreshAll();
-        showToast(`${packingInputEl ? '工場出荷確定日・梱包出荷確定日' : '工場出荷確定日'}を入力しました。品証の確認後、申請されます。`, 'success');
+        showToast(`${packingInputEl ? '工場出荷確定日・梱包出荷確定日' : '工場出荷確定日'}を入力しました。品証・製管に通知されます。`, 'success');
     } catch (e) {
         showToast('更新に失敗しました: ' + e.message, 'error');
     } finally {
