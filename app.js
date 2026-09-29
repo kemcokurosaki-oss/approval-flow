@@ -5862,16 +5862,18 @@ async function openDetailModal(requestId, returnTo = null) {
         ? await buildAttendanceSectionHtml(req)
         : '';
 
+    // 確定出荷日は申請・承認とは別に入力されるため、未入力の間は「未入力」と明示する（常務の承認時にも分かるように）
     const shippingInfoParts = [];
-    if (req.flow_type === 'shipping' && req.packing_confirmed_shipping_date) {
-        shippingInfoParts.push(`梱包出荷確定日: ${fmtDate(req.packing_confirmed_shipping_date)}`);
+    const missingDateHtml = '<span style="color:#c0392b;font-weight:bold;">未入力</span>';
+    if (req.flow_type === 'shipping' && (req.packing_confirmed_shipping_date || hasPackingShipping)) {
+        shippingInfoParts.push(`梱包出荷確定日: ${req.packing_confirmed_shipping_date ? fmtDate(req.packing_confirmed_shipping_date) : missingDateHtml}`);
     }
-    if (req.flow_type === 'shipping' && req.confirmed_shipping_date) {
+    if (req.flow_type === 'shipping') {
         const factoryDateLabel = '工場出荷確定日';
         const isSplitShipping  = currentDetailShippingTaskCount >= 2;
-        shippingInfoParts.push(`${isSplitShipping ? '①' : ''}${factoryDateLabel}: ${fmtDate(req.confirmed_shipping_date)}`);
-        if (isSplitShipping && req.confirmed_shipping_date_2) {
-            shippingInfoParts.push(`②${factoryDateLabel}: ${fmtDate(req.confirmed_shipping_date_2)}`);
+        shippingInfoParts.push(`${isSplitShipping ? '①' : ''}${factoryDateLabel}: ${req.confirmed_shipping_date ? fmtDate(req.confirmed_shipping_date) : missingDateHtml}`);
+        if (isSplitShipping) {
+            shippingInfoParts.push(`②${factoryDateLabel}: ${req.confirmed_shipping_date_2 ? fmtDate(req.confirmed_shipping_date_2) : missingDateHtml}`);
         }
     }
 
