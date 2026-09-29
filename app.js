@@ -9933,10 +9933,12 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
     const { data: req } = await db.from('approval_requests').select('project_number, machine_name, unit_name, requester_id, assembly_items').eq('id', requestId).single();
     const projectNum = req?.project_number;
     if (!projectNum) return;
-    // 2000番台の組立(assembly)は1申請に複数機械・ユニットが紐づくため、機械+ユニット単位でオーナーを絞り込む。
-    // それ以外（2000番以外の工番、または組立以外のフロー）は機械名が工程表と紐づかない自由入力/要約文字列のことがあるため、従来通り機械名（無ければ工番全体）で検索する。
-    const assemblyItems = (flowType === 'assembly' && is2000sSeries(projectNum)) ? getAssemblyItemsForReq(req) : null;
-    const machineName = flowType === 'assembly' ? null : req?.machine_name;
+    // 2000番台の組立(assembly)・電装(electrical)は1申請に複数機械・ユニットが紐づくため、機械+ユニット単位でオーナーを絞り込む。
+    // （電装のmachine_nameは"PCDS"のような機械+ユニットの連結文字列で、工程表のmachine列と一致しないため機械名検索は使えない）
+    // それ以外（2000番以外の工番、または上記以外のフロー）は機械名が工程表と紐づかない自由入力/要約文字列のことがあるため、従来通り機械名（無ければ工番全体）で検索する。
+    const usesItemMatch = (flowType === 'assembly' || flowType === 'electrical') && is2000sSeries(projectNum);
+    const assemblyItems = usesItemMatch ? getAssemblyItemsForReq(req) : null;
+    const machineName = (flowType === 'assembly' || usesItemMatch) ? null : req?.machine_name;
 
     // 対象機械のタスクオーナーを取得（機械名がある場合は機械でフィルタ）
     let taskQuery = db.from('tasks').select('text, owner, major_item, machine, unit').eq('project_number', projectNum);
