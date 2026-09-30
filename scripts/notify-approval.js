@@ -328,7 +328,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         : req?.flow_type === 'shipping_prep'
         ? `${pStr} の出荷準備が完了しました。`
         : isShipping
-        ? `${pStr} の出荷日が確定しました。`
+        ? `${pStr} の出荷確定申請が承認されました。`
         : `${pStr} の「${flow}」が承認されました。`;
       // 試運転完了時の申し送り事項は、通知を見た人がその場で内容を把握できるよう本文にそのまま記載する
       const testRunPendingItems = req?.flow_type === 'test_run'
