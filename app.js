@@ -300,7 +300,9 @@ function isSuperAdmin() { return !!currentUser && ADMIN_EMAILS.includes(currentU
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
-    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || role === 'quality' || role === 'production_control' || isSuperAdmin();
+    const isApprover  = APPROVER_ROLES.includes(role) || role === 'quality' || role === 'production_control' || isSuperAdmin();
+    // 確定出荷日の入力待ちは「入力」セクションに表示する（営業staff＋管理者）
+    const isInputUser = isShippingDateInputUser();
     // 品証、および製管は同一権限（グローバル変数に保存）。管理者は常に品証・製管相当の操作を可能にする
     isQualityOrSeikan = role === 'quality' || role === 'production_control' || isSuperAdmin();
     // 組立・操業・電装 staff + 組立課長 + 操業課長 + 営業staff（出荷準備申請）が申請可
