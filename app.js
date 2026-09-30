@@ -297,6 +297,11 @@ const ADMIN_EMAILS = ['e-kurosaki@kusakabe.com', 's-morimura@kusakabe.com', 'm2-
 // ADMIN_EMAILSの3名は、自分の実際のロールに関わらず全てのロールパターンの操作（承認・申請・完了操作等）を常に行える
 function isSuperAdmin() { return !!currentUser && ADMIN_EMAILS.includes(currentUser.email); }
 
+// マイページの「入力」セクション（確定出荷日の入力待ち）を表示するユーザー
+function isShippingDateInputUser() {
+    return (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isSuperAdmin();
+}
+
 function applyRoleLayout(role) {
     const dept        = getEffectiveDept();
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
