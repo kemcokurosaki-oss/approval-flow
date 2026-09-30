@@ -974,19 +974,21 @@ function applyBoardSearch() {
     syncAppBar();
 }
 // 一覧が再描画されたら検索条件を再適用する
-// レールの「マイページ」から、権限に応じて承認／申請を開く
+// レールの「マイページ」から、権限に応じて承認／入力／申請を開く
 function openMypagePanel() {
-    const pendingRow = document.getElementById('side_tab_pending');
-    const isApprover = pendingRow && pendingRow.style.display !== 'none';
-    openSidePanelTo(isApprover ? 'pending' : 'mine');
+    const isVisible = key => { const row = document.getElementById('side_tab_' + key); return row && row.style.display !== 'none'; };
+    openSidePanelTo(isVisible('pending') ? 'pending' : isVisible('input') ? 'input' : 'mine');
 }
-// 承認バッジをレールのマイページに反映する
+// 承認・入力バッジの合計をレールのマイページに反映する
 function syncRailBadge() {
-    const src = document.getElementById('side_badge_pending');
     const dst = document.getElementById('rail_badge_pending');
-    if (!src || !dst) return;
-    dst.textContent = src.textContent;
-    dst.style.display = src.style.display === 'none' ? 'none' : 'inline-flex';
+    if (!dst) return;
+    const total = ['side_badge_pending', 'side_badge_input'].reduce((sum, id) => {
+        const src = document.getElementById(id);
+        return sum + (src && src.style.display !== 'none' ? (parseInt(src.textContent, 10) || 0) : 0);
+    }, 0);
+    dst.textContent = total;
+    dst.style.display = total > 0 ? 'inline-flex' : 'none';
 }
 // アプリバーの画面名／件数、レールのアバターを同期する
 function syncAppBar() {
