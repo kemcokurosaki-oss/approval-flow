@@ -1154,6 +1154,7 @@ function setMypageFilterMode(mode) {
     });
     loadMineSide();
     loadPendingSide();
+    if (isShippingDateInputUser()) loadInputSide();
 }
 
 // mypageFilterModeに応じた工事番号の絞り込み判定
