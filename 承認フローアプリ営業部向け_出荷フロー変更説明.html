@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>承認フローアプリ 営業部向け 出荷フロー変更のお知らせ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f9ddb'/><stop offset='1' stop-color='%232f6fb0'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M6 25V16M13 25V9M20 25V18M26 25V12' stroke='white' stroke-width='3.4' stroke-linecap='round'/></svg>">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+        font-family: "メイリオ", Meiryo, sans-serif;
+        color: #263142;
+        overflow: hidden;
+    }
+
+    /* ---------- 会場の背景（スライドが浮かぶ舞台） ---------- */
+    .stage {
+        height: 100vh;
+        width: 100vw;
+        background: radial-gradient(ellipse at 50% -10%, #24406b 0%, #142136 55%, #0b131f 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        position: relative;
+    }
+
+    /* ---------- スライド本体（16:9） ---------- */
+    .slide-frame {
+        position: relative;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 30px 70px rgba(0,0,0,.45);
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+    }
+    .slide {
+        position: absolute; inset: 0;
+        display: none;
+        flex-direction: column;
+        padding: 4.4% 6%;
+        overflow: hidden;
+    }
+    .slide.is-active { display: flex; }
+
+    .slide-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: .5em;
+        font-size: 1.05em;
+        font-weight: 800;
+        letter-spacing: .1em;
+        color: #2f6fb0;
+        text-transform: uppercase;
+        margin-bottom: .3em;
+    }
+    .eyebrow-icon {
+        width: 1.3em; height: 1.3em; border-radius: .3em; flex-shrink: 0;
+        background: linear-gradient(135deg, #4f9ddb, #2f6fb0);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .slide h1 { font-size: 2.55em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .28em; }
+    .slide h2 { font-size: 1.9em; font-weight: 800; color: #14243f; line-height: 1.25; margin-bottom: .3em; }
+    .slide h3 { font-size: 1.15em; font-weight: 700; color: #1e3a5f; margin: 0 0 .4em; }
+    .slide p  { font-size: 1.05em; color: #3d4a5d; line-height: 1.6; margin-bottom: .5em; max-width: 96%; }
+    .slide .lead { font-size: 1.2em; font-weight: 700; color: #16233a; margin-bottom: .6em; max-width: 96%; }
+
+    .slide-pageno {
+        position: absolute; right: 5%; bottom: 3.5%;
+        font-size: 1em; font-weight: 700; color: #b6c1d2;
+    }
+    .slide-brand {
+        position: absolute; left: 5%; bottom: 3.5%;
+        font-size: .85em; font-weight: 700; color: #c7cfdc;
+        letter-spacing: .08em;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .slide-brand-dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, #4f9ddb, #2f6fb0); }
+
+    /* ---------- 表紙・変更点カード ---------- */
+    .cover-badge {
+        display: inline-block;
+        background: #16233a;
+        color: #cfe0f5;
+        font-size: .85em;
+        font-weight: 700;
+        letter-spacing: .06em;
+        padding: .35em 1em;
+        border-radius: 20px;
+        margin-bottom: .7em;
+        align-self: flex-start;
+    }
+    .todo-grid { display: flex; gap: 3%; margin: 1em 0 1.2em; flex: 1; min-height: 0; }
+    .todo-card {
+        flex: 1;
+        background: #fff;
+        border: 3px solid #2ba55d;
+        border-radius: 16px;
+        padding: 4% 5%;
+        box-shadow: 0 10px 26px rgba(43,165,93,.16);
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    .todo-card .todo-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 1.9em; height: 1.9em; border-radius: 50%;
+        background: #2ba55d; color: #fff; font-size: 1.15em; font-weight: 800;
+        margin-bottom: .45em;
+    }
+    .todo-card h4 { font-size: 1.35em; font-weight: 800; color: #16233a; margin-bottom: .35em; line-height: 1.35; }
+    .todo-card p { font-size: 1em; color: #4a5768; margin-bottom: 0; }
+    .todo-none {
+        margin-top: auto;
+        background: #f5f6f9; border: 1px dashed #c7cfdc; border-radius: 10px;
+        padding: .7em 1em; font-size: .92em; color: #6a7890;
+    }
+
+    /* ---------- コンパクトな手順（横並び4ステップ） ---------- */
+    .step-compact-row { display: flex; gap: 2.6%; margin: .9em 0 .5em; }
+    .step-compact { flex: 1; background: #f6f8fb; border: 1px solid #e5e9f1; border-radius: 12px; padding: 4% 4.5%; position: relative; }
+    .step-compact .num {
+        position: absolute; top: -14px; left: 14px;
+        width: 30px; height: 30px; border-radius: 50%;
+        background: #2f6fb0; color: #fff; font-size: .95em; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 3px 8px rgba(47,111,176,.35);
+    }
+    .step-compact b { display: block; font-size: 1.1em; color: #16233a; margin: .5em 0 .3em; line-height: 1.3; }
+    .step-compact span { font-size: .92em; color: #5b6b80; line-height: 1.45; }
+
+    .note {
+        background: #eef4fb;
+        border-left: 4px solid #4f9ddb;
+        padding: .6em .9em;
+        border-radius: 6px;
+        font-size: .92em;
+        color: #29435f;
+        margin: .5em 0;
+    }
+    .note.warn   { background: #fdf1ed; border-left-color: #d9714a; color: #7a3a22; }
+    .note.action { background: #eefaf1; border-left-color: #2ba55d; color: #1e5c37; font-size: .92em; font-weight: 700; }
+    .note.muted  { background: #f5f6f9; border-left-color: #b6c1d2; color: #5b6b80; }
+
+    /* ---------- 2カラム ---------- */
+    .two-col { display: flex; gap: 4%; flex: 1; min-height: 0; }
+    .two-col .col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .mini-list { list-style: none; padding: 0; margin: .3em 0 0; }
+    .mini-list li { font-size: .92em; color: #3d4a5d; padding: .55em 0 .55em 1.5em; position: relative; border-bottom: 1px solid #f0f2f6; line-height: 1.45; }
+    .mini-list li:first-child { padding-top: 0; }
+    .mini-list li:last-child { border-bottom: none; }
+    .mini-list li::before { content: '▸'; position: absolute; left: 0; top: .55em; color: #2f6fb0; font-weight: 800; }
+    .mini-list li:first-child::before { top: 0; }
+
+    /* ---------- 変更前／変更後の比較 ---------- */
+    .ba-grid { display: flex; gap: 3%; margin: .5em 0 .4em; }
+    .ba-box { flex: 1; border-radius: 12px; padding: .9em 1.1em 1em; min-width: 0; }
+    .ba-box.before { background: #f5f6f9; border: 1px solid #dde2ea; }
+    .ba-box.after  { background: #eefaf1; border: 2px solid #2ba55d; }
+    .ba-tag {
+        display: inline-block; font-size: .8em; font-weight: 800; letter-spacing: .06em;
+        padding: .2em .8em; border-radius: 12px; margin-bottom: .5em;
+    }
+    .ba-box.before .ba-tag { background: #8a94a6; color: #fff; }
+    .ba-box.after  .ba-tag { background: #2ba55d; color: #fff; }
+    .ba-box p { font-size: .92em; margin-bottom: 0; line-height: 1.55; }
+    .ba-box.before p { color: #5b6b80; }
+    .ba-box.after  p { color: #1e5c37; }
+
+    /* ---------- レーン型フロー（申請・承認／出荷日入力） ---------- */
+    .lane { display: flex; align-items: center; gap: .6em; margin: .55em 0; }
+    .lane-title {
+        flex-shrink: 0; width: 7.2em; font-size: .82em; font-weight: 800; color: #1e3a5f;
+        line-height: 1.35;
+    }
+    .lane-steps { display: flex; align-items: center; gap: .4em; flex-wrap: nowrap; min-width: 0; }
+    .chip {
+        font-size: .8em; font-weight: 700; padding: .38em .7em; border-radius: 8px; white-space: nowrap;
+        background: #fff; border: 1px solid #bcd4ec; color: #1e3a5f;
+    }
+    .chip.sales { background: #fff4e0; border-color: #f0b35a; color: #7a4a00; }
+    .chip.block { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
+    .chip-arrow { color: #b9c6da; font-weight: 800; font-size: .9em; }
+    .lane-divider { border-top: 1px dashed #b7e0c4; margin: .2em 0 .2em 7.8em; }
+
+    /* ---------- メール・画面のイラスト ---------- */
+    .mockup {
+        border: 1px solid #d7dee9;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 6px 16px rgba(20,36,63,.10);
+        background: #fff;
+        font-size: .9em;
+    }
+    .mockup-caption { font-size: .82em; color: #6a7890; padding: .5em .9em; border-top: 1px solid #eef1f6; background: #f8fafc; }
+    .mail-meta { background: #f6f8fb; border-bottom: 1px solid #e5e9f1; padding: .7em 1em; }
+    .mail-row { display: flex; gap: .6em; font-size: .95em; padding: .1em 0; color: #333; }
+    .mail-label { flex-shrink: 0; width: 3.6em; color: #8a94a6; font-weight: 700; }
+    .mail-subject { font-weight: 700; color: #16233a; font-size: 1.05em; }
+    .mail-body { padding: .8em 1.1em; white-space: pre-line; font-size: .92em; color: #333; line-height: 1.65; }
+    .mail-link { color: #2f6fb0; text-decoration: underline; word-break: break-all; }
+
+    .panel-head {
+        display: flex; justify-content: space-between; align-items: center;
+        background: #1e3a5f; color: #fff; font-weight: 700; font-size: .95em; padding: .55em 1em;
+    }
+    .panel-body { padding: .8em 1em; }
+    .date-status { font-size: .85em; color: #888; display: flex; gap: 1.2em; flex-wrap: wrap; padding-bottom: .5em; }
+    .date-status .missing { color: #c0392b; font-weight: 700; }
+    .date-area { display: flex; gap: .8em; background: #f3f7fc; border: 1px solid #cdd8e8; border-radius: 10px; padding: .7em .9em; }
+    .date-field { display: flex; flex-direction: column; gap: .35em; flex: 1; }
+    .date-field .fl { font-size: .85em; font-weight: 700; color: #1e3a5f; }
+    .date-field .fi { padding: .35em .6em; border: 1px solid #9fb0c6; border-radius: 8px; font-size: .88em; background: #fff; color: #333; }
+    .date-field .fs { font-size: .8em; font-weight: 700; }
+    .panel-btns { display: flex; justify-content: flex-end; gap: .5em; margin-top: .7em; }
+    .panel-btns span { padding: .35em 1em; border-radius: 6px; font-size: .85em; font-weight: 700; }
+    .btn-close { background: #eef1f6; color: #6b7789; }
+    .btn-save  { background: #2ba55d; color: #fff; }
+
+    .mypage-sec { border: 1px solid #d7dee9; border-radius: 10px; background: #fff; overflow: hidden; }
+    .mypage-sec-head { background: #f6f8fb; border-bottom: 1px solid #e5e9f1; padding: .45em .9em; font-size: .88em; font-weight: 800; color: #1e3a5f; }
+    .mypage-sec-head small { font-weight: 400; color: #8a94a6; margin-left: .6em; }
+    .mypage-card { margin: .55em .7em; border: 1px solid #e5e9f1; border-left: 4px solid #c0392b; border-radius: 6px; padding: .45em .8em; font-size: .85em; }
+    .mypage-card b { color: #16233a; margin-right: .6em; }
+
+    table.spec { border-collapse: collapse; width: 100%; margin: .6em 0; font-size: .9em; }
+    table.spec th, table.spec td { border: 1px solid #dde3ee; padding: .55em .8em; text-align: left; vertical-align: top; }
+    table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
+    table.spec td.old { color: #6a7890; }
+    table.spec td.new { color: #1e5c37; font-weight: 700; background: #f5fcf7; }
+
+    .footer-list { list-style: none; padding: 0; margin: 0 0 1.2em; }
+    .footer-list li { display: flex; align-items: baseline; gap: .8em; font-size: 1.15em; color: #3d4a5d; padding: .7em 0; }
+    .footer-list li::before { content: '●'; color: #2f6fb0; font-size: .5em; flex-shrink: 0; }
+
+    /* ---------- 進行ドット & 操作ボタン ---------- */
+    .dots { display: flex; gap: 10px; }
+    .dots button {
+        width: 10px; height: 10px; border-radius: 50%; border: none;
+        background: rgba(255,255,255,.28); cursor: pointer; padding: 0;
+    }
+    .dots button.active { background: #4f9ddb; box-shadow: 0 0 0 4px rgba(79,157,219,.25); }
+
+    .ctrlbar { display: flex; gap: 8px; }
+    .ctrlbar button {
+        width: 42px; height: 42px; border-radius: 50%; border: none;
+        background: rgba(255,255,255,.12); color: #fff; font-size: 16px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0,0,0,.3);
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .ctrlbar button:hover { background: #2f6fb0; }
+
+    @media print {
+        body { overflow: visible; }
+        .stage { height: auto; background: #fff; display: block; }
+        .ctrlbar, .dots { display: none; }
+        .slide-frame { aspect-ratio: auto; box-shadow: none; border-radius: 0; }
+        .slide { display: flex !important; position: static; height: 100vh; break-after: page; }
+    }
+</style>
+</head>
+<body>
+
+<div class="stage">
+    <div class="slide-frame" id="slideFrame">
+
+        <!-- 1. 表紙 -->
+        <section class="slide is-active" id="s1">
+            <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
+            <div class="cover-badge">営業部向け 変更のお知らせ</div>
+            <h1 style="margin-top: .5em;">出荷確定フローの<br>確定出荷日入力が変わりました</h1>
+            <p class="lead">出荷確定フローで営業部の皆さんにお願いしている「確定出荷日の入力」について、入力のタイミングと入力方法を見直しました。今回の変更点は次の2つです。</p>
+            <ul class="footer-list">
+                <li>確定出荷日の入力が、品証の本申請・常務の承認と<b>別々に進む</b>ようになりました</li>
+                <li>梱包出荷確定日と工場出荷確定日を<b>別々に入力・保存</b>できるようになりました</li>
+            </ul>
+            <div class="note">営業部がすること（確定出荷日を入力する）自体は変わりません。「いつ入力できるか」と「どう入力するか」が変わります。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">1 / 7</div>
+        </section>
+
+        <!-- 2. 変更点まとめ -->
+        <section class="slide" id="s2">
+            <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
+            <div class="cover-badge">営業部向け 変更のお知らせ</div>
+            <h1>変更点は、この2つです</h1>
+            <p class="lead">どちらも「営業の入力が済むまで、他の作業が止まってしまう」「日付が決まっていない項目のせいで、決まっている日付も入力できない」という状況をなくすための変更です。</p>
+            <div class="todo-grid">
+                <div class="todo-card">
+                    <div class="todo-num">1</div>
+                    <h4>🔀 確定出荷日の入力と、<br>申請・承認を別々に進める</h4>
+                    <p>確定出荷日が未入力でも、品証の本申請・常務の承認が進められるようになりました。確定出荷日は承認の前でも後でも、いつでも入力・変更できます。</p>
+                </div>
+                <div class="todo-card">
+                    <div class="todo-num">2</div>
+                    <h4>📅 梱包出荷確定日と工場出荷確定日を<br>別々に入力する</h4>
+                    <p>梱包出荷がある機械では、これまで2つの日付をそろえて入力する必要がありました。今後は決まった方から1つずつ入力・保存できます。</p>
+                </div>
+            </div>
+            <div class="todo-none"><b>あわせて変わったこと：</b> 未入力のときの催促メールの頻度・宛先、マイページでの表示場所（「承認」欄 → 新しい「入力」欄）も変わっています（4枚目で説明します）。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">2 / 7</div>
+        </section>
+
+        <!-- 3. 変更① 申請・承認と入力の分離 -->
+        <section class="slide" id="s3">
+            <div class="slide-eyebrow">変更 ①</div>
+            <h2>確定出荷日の入力と、申請・承認を別々に進める</h2>
+            <p>これまでは営業が工場出荷確定日を入力するまで、品証は本申請できませんでした。今後は2つの作業が<b>並行して</b>進みます。</p>
+            <div class="ba-grid">
+                <div class="ba-box before">
+                    <span class="ba-tag">変更前</span>
+                    <div class="lane">
+                        <div class="lane-steps">
+                            <span class="chip">起票</span><span class="chip-arrow">→</span>
+                            <span class="chip sales">営業が入力</span><span class="chip-arrow">→</span>
+                            <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
+                            <span class="chip">常務が承認</span>
+                        </div>
+                    </div>
+                    <div class="lane"><div class="lane-steps"><span class="chip block">⚠ 未入力のため申請できません</span></div></div>
+                    <p>営業の入力が終わるまで本申請に進めず、出荷確定フロー全体が止まっていました。</p>
+                </div>
+                <div class="ba-box after">
+                    <span class="ba-tag">変更後</span>
+                    <div class="lane">
+                        <div class="lane-title">申請・承認</div>
+                        <div class="lane-steps">
+                            <span class="chip">起票</span><span class="chip-arrow">→</span>
+                            <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
+                            <span class="chip">常務が承認</span>
+                        </div>
+                    </div>
+                    <div class="lane-divider"></div>
+                    <div class="lane">
+                        <div class="lane-title">確定出荷日<br>の入力</div>
+                        <div class="lane-steps">
+                            <span class="chip">入力依頼メール</span><span class="chip-arrow">→</span>
+                            <span class="chip sales">営業が入力</span><span class="chip-arrow">→</span>
+                            <span class="chip">品証・製管へ通知</span>
+                        </div>
+                    </div>
+                    <p>お互いを待たずに進められます。</p>
+                </div>
+            </div>
+            <ul class="mini-list" style="margin-top:.6em;">
+                <li>確定出荷日は<b>申請前・申請中・承認後のいつでも</b>入力・変更できます（出荷確定フローの起票時に「工場出荷確定日入力依頼」メールが届く点は従来どおり）</li>
+                <li>入力・変更しても<b>品証の本申請のやり直しや常務の再承認は不要</b>です。品証・製管には確認のお知らせメールが自動で届きます</li>
+                <li>未入力のまま承認された場合、承認完了メールには「工場出荷確定日: 未入力」と記載されます。確定したら速やかに入力をお願いします</li>
+            </ul>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">3 / 7</div>
+        </section>
+
+        <!-- 4. 変更①に伴う変更：催促メール・マイページ -->
+        <section class="slide" id="s4">
+            <div class="slide-eyebrow">変更 ① に伴う変更</div>
+            <h2>催促メールとマイページの表示</h2>
+            <p>入力が承認の前提ではなくなったため、未入力時の催促を「毎日」から「7日ごと」に見直しました。</p>
+            <div class="two-col">
+                <div class="col">
+                    <table class="spec">
+                        <tr><th></th><th>変更前</th><th>変更後</th></tr>
+                        <tr><th>頻度</th><td class="old">毎日</td><td class="new">起票から7日ごと<br>（7日後・14日後・21日後…）</td></tr>
+                        <tr><th>宛先</th><td class="old">担当者に毎日<br>3営業日後から課長を追加<br>5営業日後から専務を追加</td><td class="new">担当者＋営業課長＋専務<br>（担当者が課長の場合は<br>担当者＋専務）</td></tr>
+                        <tr><th>対象</th><td class="old">工場出荷確定日の未入力</td><td class="new">梱包出荷確定日（梱包出荷がある機械）・工場出荷確定日のどちらかが未入力</td></tr>
+                    </table>
+                    <h3 style="font-size:1em; margin-top:.4em;">マイページの表示場所</h3>
+                    <div class="mypage-sec">
+                        <div class="mypage-sec-head">入力<small>確定出荷日の入力待ち</small></div>
+                        <div class="mypage-card"><b>3181 MC</b>🔴 梱包出荷確定日・工場出荷確定日 入力待ち</div>
+                    </div>
+                    <p style="font-size:.82em; color:#6a7890; margin-top:.4em;">これまで「承認」欄に出ていた入力待ちカードは、新しい「入力」欄に表示されます。カードには未入力の項目名が表示されます。</p>
+                </div>
+                <div class="col">
+                    <h3 style="font-size:1em; color:#7c8798; margin-bottom:.5em;">催促メールの例（担当者あて）</h3>
+                    <div class="mockup">
+                        <div class="mail-meta">
+                            <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【工場出荷確定日 未入力】3181 MC</span></div>
+                            <div class="mail-row"><span class="mail-label">宛先</span><span>営業担当者 様</span></div>
+                        </div>
+                        <div class="mail-body">3181 MC の「出荷確定申請」について、工場出荷確定日がまだ入力されていません（起票から7日経過）。
+承認フロー管理システムにログインしてご確認ください。
+
+▼ 承認フローを開く
+<span class="mail-link">https://kemcokurosaki-oss.github.io/approval-flow/</span></div>
+                        <div class="mockup-caption">件名・本文には未入力の項目名が入ります。課長・専務あてには「担当者による入力が完了していない」旨の文面で届きます</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">4 / 7</div>
+        </section>
+
+        <!-- 5. 変更② 梱包・工場の個別入力 -->
+        <section class="slide" id="s5">
+            <div class="slide-eyebrow">変更 ②</div>
+            <h2>梱包出荷確定日と工場出荷確定日を別々に入力する</h2>
+            <p>梱包出荷がある機械では、入力欄が「梱包出荷確定日」「工場出荷確定日」の2つになります。<b>決まった方だけを先に保存</b>できます。</p>
+            <div class="two-col">
+                <div class="col">
+                    <div class="ba-box before" style="flex:none; margin-bottom:.7em;">
+                        <span class="ba-tag">変更前</span>
+                        <p>2つとも「必須」で、両方を入力しないと「入力する」ボタンが押せませんでした。梱包出荷日だけ先に決まっていても入力できませんでした。</p>
+                    </div>
+                    <div class="ba-box after" style="flex:none;">
+                        <span class="ba-tag">変更後</span>
+                        <p>それぞれ単独で入力・保存できます。保存するたびに、保存した項目の内容が品証・製管へメールで通知されます。</p>
+                    </div>
+                    <ul class="mini-list" style="margin-top:.8em;">
+                        <li>未入力の項目が残っている間は、マイページの「入力」欄に表示され、催促の対象にもなります</li>
+                        <li>入力済みの日付は変更できますが、空に戻すことはできません</li>
+                        <li>梱包出荷がない機械は、これまでどおり工場出荷確定日のみです</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h3 style="font-size:1em; color:#7c8798; margin-bottom:.5em;">入力画面の例（梱包出荷確定日のみ入力済み）</h3>
+                    <div class="mockup">
+                        <div class="panel-head"><span>出荷確定申請　3181 MC</span><span>✕</span></div>
+                        <div class="panel-body">
+                            <div class="date-status">
+                                <span>梱包出荷確定日: 2026/10/5</span>
+                                <span>工場出荷確定日: <span class="missing">未入力</span></span>
+                            </div>
+                            <div style="text-align:center; color:#c3ccd9; font-size:.85em; padding:.2em 0 .5em;">︙（申請・承認状況など）</div>
+                            <div class="date-area">
+                                <div class="date-field">
+                                    <span class="fl">梱包出荷確定日</span>
+                                    <span class="fi">2026/10/05</span>
+                                    <span class="fs" style="color:#2ba55d;">✓ 入力済み</span>
+                                </div>
+                                <div class="date-field">
+                                    <span class="fl">工場出荷確定日</span>
+                                    <span class="fi">2026/10/09</span>
+                                    <span class="fs" style="color:#b9770e;">✎ 入力します</span>
+                                </div>
+                            </div>
+                            <div class="panel-btns"><span class="btn-close">閉じる</span><span class="btn-save">保存する</span></div>
+                        </div>
+                        <div class="mockup-caption">入力済みの項目は日付が入った状態で表示されます。入力・変更した項目があると「保存する」が押せるようになります</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">5 / 7</div>
+        </section>
+
+        <!-- 6. 入力手順 -->
+        <section class="slide" id="s6">
+            <div class="slide-eyebrow">操作手順</div>
+            <h2>確定出荷日の入力・変更のしかた</h2>
+            <p>入力は特定の担当者に限らず、営業部員であれば誰でも行えます。</p>
+            <div class="step-compact-row">
+                <div class="step-compact"><div class="num">1</div><b>対象を開く</b><span>入力依頼メール・催促メールのリンク、またはマイページ「入力」欄の入力待ちカードをクリック。</span></div>
+                <div class="step-compact"><div class="num">2</div><b>日付を入力</b><span>決まっている項目だけ入力すればOK。もう一方は空欄のままで構いません。</span></div>
+                <div class="step-compact"><div class="num">3</div><b>「保存する」を押す</b><span>保存した時点で確定。承認状況（申請前・申請中・承認済み）は関係ありません。</span></div>
+                <div class="step-compact"><div class="num">4</div><b>自動で通知・反映</b><span>品証・製管へ確認メールが届き、工程表の出荷日にも反映されます。</span></div>
+            </div>
+            <div class="note">あとから日付を修正したい場合は、同じ詳細画面の「工場出荷確定日を変更する」（梱包出荷がある機械は「梱包出荷確定日・工場出荷確定日を変更する」）ボタンから再入力できます。変更内容は「出荷確定日の変更履歴」に記録されます。</div>
+            <div class="note">分割出荷（工場出荷①②）の機械では、①②はまとめて1つの項目として扱います。どちらかを入力・変更する場合は①②の両方を入力してください。</div>
+            <div class="note muted">工場出荷確定日を入力するまでの間、承認ステータス画面の右上には工程表の工場出荷の予定日が表示され、入力すると確定日の表示に切り替わります。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">6 / 7</div>
+        </section>
+
+        <!-- 7. 困ったときは -->
+        <section class="slide" id="s7">
+            <div class="slide-eyebrow">困ったときは</div>
+            <h2>困ったときは</h2>
+            <ul class="footer-list">
+                <li>入力した日付が正しく反映されているか分からない場合は、品証・製管までご確認ください</li>
+                <li>アプリの不具合・表示がおかしい場合や、担当者の変更が必要な場合は製造管理課の森村・黒崎までご連絡ください</li>
+                <li>アプリ全体の操作方法は、アプリ内の「運用ガイド」からいつでも見返せます</li>
+            </ul>
+            <div class="note warn" style="margin-top:1em; padding:1em 1.2em;">通知メールが届いていない場合は、まず迷惑メールフォルダをご確認ください。送信元が黒崎個人のGmailアドレス（kemco.kurosaki@gmail.com）になっているため、環境によっては迷惑メールに自動振り分けされることがあります。心当たりがあれば、迷惑メール設定（ブロック）の解除をお願いします。</div>
+            <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日は、承認を待たずに「決まった日付から」「決まった項目から」入力してください。入力・変更しても再承認は不要です。</div>
+            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
+            <div class="slide-pageno">7 / 7</div>
+        </section>
+
+    </div>
+
+    <div class="dots" id="dots"></div>
+
+    <div class="ctrlbar">
+        <button id="btn_prev" title="前のスライド（← / PageUp）">◀</button>
+        <button id="btn_next" title="次のスライド（→ / Space / PageDown）">▶</button>
+        <button id="btn_full" title="フルスクリーン">⛶</button>
+    </div>
+</div>
+
+<script>
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var dotsWrap = document.getElementById('dots');
+    var frame = document.getElementById('slideFrame');
+    var currentIdx = 0;
+
+    slides.forEach(function (_, i) {
+        var b = document.createElement('button');
+        b.addEventListener('click', function () { showSlide(i); });
+        dotsWrap.appendChild(b);
+    });
+    var dotEls = Array.prototype.slice.call(dotsWrap.querySelectorAll('button'));
+
+    function showSlide(idx) {
+        idx = Math.max(0, Math.min(slides.length - 1, idx));
+        currentIdx = idx;
+        slides.forEach(function (sec, i) { sec.classList.toggle('is-active', i === idx); });
+        dotEls.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
+    }
+
+    document.getElementById('btn_prev').addEventListener('click', function () { showSlide(currentIdx - 1); });
+    document.getElementById('btn_next').addEventListener('click', function () { showSlide(currentIdx + 1); });
+    document.getElementById('btn_full').addEventListener('click', function () {
+        if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+        else { document.exitFullscreen(); }
+    });
+    window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); showSlide(currentIdx + 1); }
+        if (e.key === 'ArrowLeft'  || e.key === 'PageUp') { e.preventDefault(); showSlide(currentIdx - 1); }
+    });
+
+    // 16:9を保ったまま、画面に収まる最大サイズへスライド枠をリサイズする
+    function resizeFrame() {
+        var maxW = window.innerWidth * 0.92;
+        var maxH = window.innerHeight * 0.78;
+        var w = Math.min(maxW, maxH * 16 / 9);
+        frame.style.width = w + 'px';
+    }
+    window.addEventListener('resize', resizeFrame);
+    resizeFrame();
+    showSlide(0);
+</script>
+</body>
+</html>
