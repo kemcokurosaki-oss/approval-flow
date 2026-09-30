@@ -224,6 +224,18 @@
                     <div class="loading-indicator">読み込み中...</div>
                 </div>
             </div>
+            <div id="side_half_input" class="side-half">
+                <div class="side-half-header" onclick="toggleSideHalf('input')">
+                    <span class="side-half-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10.5 2.8 13.2 5.5 6 12.7 2.8 13.2 3.3 10Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9 4.3 11.7 7" stroke="currentColor" stroke-width="1.6"></path></svg></span>
+                    <span class="side-half-title">入力</span>
+                    <span class="side-half-desc">確定出荷日の入力待ち</span>
+                    <span id="side_input_count" class="badge" style="display:none;"></span>
+                    <span class="side-half-arrow">▾</span>
+                </div>
+                <div class="side-half-content side-half-content-sections" id="side_content_input">
+                    <div class="loading-indicator">読み込み中...</div>
+                </div>
+            </div>
         </div>
 
         <!-- ===== 設定画面（製管2名のみ、マイページと同じ幅の側面パネル） ===== -->
