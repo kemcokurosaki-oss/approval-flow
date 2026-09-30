@@ -4606,12 +4606,11 @@ function openSidePanelTo(section) {
     panel.classList.add('open');
 
     if (panel.classList.contains('has-both')) {
-        // 両方ある場合：クリックした方を展開、もう一方を折りたたむ
-        const OTHER = { mine: 'pending', pending: 'mine' };
-        const target = document.getElementById('side_half_' + section);
-        const other  = document.getElementById('side_half_' + OTHER[section]);
-        if (target) target.classList.remove('collapsed');
-        if (other)  other.classList.add('collapsed');
+        // 複数ある場合：クリックしたセクションを展開、それ以外を折りたたむ
+        ['mine', 'pending', 'input'].forEach(key => {
+            const half = document.getElementById('side_half_' + key);
+            if (half) half.classList.toggle('collapsed', key !== section);
+        });
     } else {
         // 片方だけの場合：折りたたまれていたら展開
         const half = document.getElementById('side_half_' + section);
