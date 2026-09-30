@@ -1134,12 +1134,13 @@ async function refreshAll() {
     const dept        = getEffectiveDept();
     const isQorS      = role === 'quality' || role === 'production_control';
     // 品証・製管は出荷準備フローの承認者でもあるため承認待ち一覧の対象に含める
-    const isApprover  = APPROVER_ROLES.includes(role) || (role === 'staff' && dept === '営業') || isQorS || isSuperAdmin();
+    const isApprover  = APPROVER_ROLES.includes(role) || isQorS || isSuperAdmin();
     const isApplicant = role === 'staff' && (dept === '組立' || dept === '操業' || dept === '営業');
 
     const loads = [];
     loads.push(loadProgress());
     if (isApprover) loads.push(loadPendingSide());
+    if (isShippingDateInputUser()) loads.push(loadInputSide());
     if (isApplicant || isQorS || role === 'assembly_manager' || role === 'operations_manager' || isSuperAdmin()) loads.push(loadMineSide());
 
     await Promise.all(loads);
