@@ -316,32 +316,36 @@ function applyRoleLayout(role) {
     userIsApplicant = isApplicant || isQualityOrSeikan;
 
     // サイドパネル：権限のないセクションをまるごと非表示
-    const halfMine    = document.getElementById('side_half_mine');
-    const halfPending = document.getElementById('side_half_pending');
-    const tabMine     = document.getElementById('side_tab_mine');
-    const tabPending  = document.getElementById('side_tab_pending');
+    const sectionVisible = { mine: userIsApplicant, pending: isApprover, input: isInputUser };
+    Object.entries(sectionVisible).forEach(([key, visible]) => {
+        const half = document.getElementById('side_half_' + key);
+        const tab  = document.getElementById('side_tab_' + key);
+        if (half) half.style.display = visible ? '' : 'none';
+        if (tab)  tab.style.display  = visible ? '' : 'none';
+    });
 
-    if (halfMine)    halfMine.style.display    = userIsApplicant ? '' : 'none';
-    if (halfPending) halfPending.style.display = isApprover      ? '' : 'none';
-    if (tabMine)     tabMine.style.display     = userIsApplicant ? '' : 'none';
-    if (tabPending)  tabPending.style.display  = isApprover      ? '' : 'none';
-
-    // 両方のセクションがある人だけ折りたたみ機能を有効化
-    const hasBoth   = userIsApplicant && isApprover;
+    // セクションが2つ以上ある人だけ折りたたみ機能を有効化
+    const hasBoth   = Object.values(sectionVisible).filter(Boolean).length >= 2;
     const sidePanel = document.getElementById('side_panel');
     if (sidePanel) sidePanel.classList.toggle('has-both', hasBoth);
 
-    // 片方しかないユーザーはヘッダー自体を隠してカンバン／リストのみ表示
-    const headerMine    = halfMine    ? halfMine.querySelector('.side-half-header')    : null;
-    const headerPending = halfPending ? halfPending.querySelector('.side-half-header') : null;
-    if (headerMine)    headerMine.style.display    = (userIsApplicant && !hasBoth) ? 'none' : '';
-    if (headerPending) headerPending.style.display = (isApprover      && !hasBoth) ? 'none' : '';
+    // 1つしかないユーザーはヘッダー自体を隠してカンバン／リストのみ表示
+    Object.entries(sectionVisible).forEach(([key, visible]) => {
+        const header = document.getElementById('side_half_' + key)?.querySelector('.side-half-header');
+        if (header) header.style.display = (visible && !hasBoth) ? 'none' : '';
+    });
 
     if (!isApprover) {
         const badgePending = document.getElementById('side_badge_pending');
         if (badgePending) badgePending.style.display = 'none';
         const countPending = document.getElementById('side_pending_count');
         if (countPending) countPending.style.display = 'none';
+    }
+    if (!isInputUser) {
+        const badgeInput = document.getElementById('side_badge_input');
+        if (badgeInput) badgeInput.style.display = 'none';
+        const countInput = document.getElementById('side_input_count');
+        if (countInput) countInput.style.display = 'none';
     }
 
     // 進捗一覧のみモード（申請ボタンをCSS非表示）
