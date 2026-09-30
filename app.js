@@ -1204,58 +1204,75 @@ async function loadPendingSide() {
         statusText: '🔴 要承認',
     })).filter((item, idx, arr) => arr.findIndex(other => other.id === item.id) === idx); // 管理者は全ロール分を取得するため、並列承認中の申請は同一IDが複数回ヒットしうる（申請ID単位で重複排除）
 
-    // 営業: 確定出荷日（工場出荷、および梱包出荷がある工番は梱包出荷も）が未入力の出荷フローを取得
-    // （品証の本申請・常務の承認とは別扱いのため、ステータスは問わない）。
-    // マイページには自分が担当する工番、および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示。
-    // 入力操作自体は出荷フローマークからの詳細画面で誰でも可能なため、担当者以外の入力権限は制限しない）
-    let salesItems = [];
-    if (isSales) {
-        const { data: salesReqs } = await db.from('approval_requests')
-            .select('id, project_number, machine_name, created_at, confirmed_shipping_date, packing_confirmed_shipping_date')
-            .eq('flow_type', 'shipping').neq('status', 'cancelled')
-            .or('confirmed_shipping_date.is.null,packing_confirmed_shipping_date.is.null');
-        const missingLabels = r => {
-            const labels = [];
-            if (packingShippingProjectNums.has(r.project_number) && !r.packing_confirmed_shipping_date) labels.push('梱包出荷確定日');
-            if (!r.confirmed_shipping_date) labels.push('工場出荷確定日');
-            return labels;
-        };
-        const myName = currentProfile?.name;
-        const mySalesReqs = (salesReqs || [])
-            .filter(r => missingLabels(r).length > 0)
-            .filter(r => {
-                if (isSuperAdmin()) return true;
-                const pNum  = r.project_number || '—';
-                const owner = projectsMap[pNum]?.salesOwner;
-                return computeShippingEscalationRecipients(pNum, owner, r.created_at).has(myName);
-            });
-        salesItems = mySalesReqs.map(r => ({
+    const items = actionable.filter(item => matchesMypageFilterMode(item.pNum));
+    renderSideActionItems(el, items, {
+        badgeId: 'side_badge_pending', countId: 'side_pending_count',
+        emptyHtml: '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">対応待ちの案件はありません</div></div>',
+    });
+}
+
+// マイページ「入力」: 確定出荷日（工場出荷、および梱包出荷がある工番は梱包出荷も）が未入力の出荷フローを表示
+// （品証の本申請・常務の承認とは別扱いのため、ステータスは問わない）。
+// 自分が担当する工番、および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示（管理者は全件）。
+// 入力操作自体は出荷フローマークからの詳細画面で誰でも可能なため、担当者以外の入力権限は制限しない
+async function loadInputSide() {
+    const el = document.getElementById('side_content_input');
+    if (!el) return;
+
+    const { data: salesReqs, error } = await db.from('approval_requests')
+        .select('id, project_number, machine_name, created_at, confirmed_shipping_date, packing_confirmed_shipping_date')
+        .eq('flow_type', 'shipping').neq('status', 'cancelled')
+        .or('confirmed_shipping_date.is.null,packing_confirmed_shipping_date.is.null');
+
+    if (error) { el.innerHTML = '<div class="empty"><div class="empty-text">データ取得エラー</div></div>'; return; }
+
+    const missingLabels = r => {
+        const labels = [];
+        if (packingShippingProjectNums.has(r.project_number) && !r.packing_confirmed_shipping_date) labels.push('梱包出荷確定日');
+        if (!r.confirmed_shipping_date) labels.push('工場出荷確定日');
+        return labels;
+    };
+    const myName = currentProfile?.name;
+    const items = (salesReqs || [])
+        .filter(r => missingLabels(r).length > 0)
+        .filter(r => {
+            if (isSuperAdmin()) return true;
+            const pNum  = r.project_number || '—';
+            const owner = projectsMap[pNum]?.salesOwner;
+            return computeShippingEscalationRecipients(pNum, owner, r.created_at).has(myName);
+        })
+        .map(r => ({
             id:         r.id,
             pNum:       r.project_number || '—',
             machineName: r.machine_name || '',
             flowType:   'shipping',
-            flowLabel:  '出荷確定申請',
+            flowLabel:  '確定出荷日',
             date:       r.created_at,
             statusText: `🔴 ${missingLabels(r).join('・')} 入力待ち`,
-        }));
-    }
+        }))
+        .filter(item => matchesMypageFilterMode(item.pNum));
 
-    let combined = [...actionable, ...salesItems];
-    combined = combined.filter(item => matchesMypageFilterMode(item.pNum));
+    renderSideActionItems(el, items, {
+        badgeId: 'side_badge_input', countId: 'side_input_count',
+        emptyHtml: '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">入力待ちの案件はありません</div></div>',
+    });
+}
 
-    // バッジ更新（side_badge_pending と side_pending_count 両方）
-    const badgePending = document.getElementById('side_badge_pending');
-    const countPending = document.getElementById('side_pending_count');
+// マイページ「承認」「入力」共通: 件数バッジを更新し、フロー種別ごとの見出し付きでカードを描画する
+function renderSideActionItems(el, combined, { badgeId, countId, emptyHtml }) {
+    // バッジ更新（レール側のバッジとセクション見出しの件数の両方）
+    const badge = document.getElementById(badgeId);
+    const count = document.getElementById(countId);
     if (combined.length > 0) {
-        if (badgePending) { badgePending.style.display = 'inline-flex'; badgePending.textContent = combined.length; }
-        if (countPending) { countPending.style.display = 'inline-flex'; countPending.textContent = combined.length; }
+        if (badge) { badge.style.display = 'inline-flex'; badge.textContent = combined.length; }
+        if (count) { count.style.display = 'inline-flex'; count.textContent = combined.length; }
     } else {
-        if (badgePending) badgePending.style.display = 'none';
-        if (countPending) countPending.style.display = 'none';
+        if (badge) badge.style.display = 'none';
+        if (count) count.style.display = 'none';
     }
 
     if (combined.length === 0) {
-        el.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">対応待ちの案件はありません</div></div>';
+        el.innerHTML = emptyHtml;
         return;
     }
 
