@@ -1167,8 +1167,6 @@ function matchesMypageFilterMode(num) {
 
 async function loadPendingSide() {
     const role    = getEffectiveRole();
-    const dept    = getEffectiveDept();
-    const isSales = (role === 'staff' && dept === '営業') || isSuperAdmin();
     const el      = document.getElementById('side_content_pending');
     if (!el) return;
 
