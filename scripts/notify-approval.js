@@ -304,12 +304,18 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'approved':
     case 'completed': {
       const isShipping = req?.flow_type === 'shipping';
+      // 出荷確定申請の承認と営業の確定出荷日入力は別扱いのため、承認時点で未入力の場合がある（未入力なら後日営業が入力する旨を表示）
+      const shippingDateValue = v => v || '未入力（営業が別途入力します）';
       const shippingDate = isShipping
-        ? `\n工場出荷確定日: ${req?.confirmed_shipping_date || '未入力'}` : '';
+        ? (req?.packing_confirmed_shipping_date ? `\n梱包出荷確定日: ${req.packing_confirmed_shipping_date}` : '') +
+          (req?.confirmed_shipping_date_2
+            ? `\n①工場出荷確定日: ${shippingDateValue(req?.confirmed_shipping_date)}\n②工場出荷確定日: ${req.confirmed_shipping_date_2}`
+            : `\n工場出荷確定日: ${shippingDateValue(req?.confirmed_shipping_date)}`)
+        : '';
       const approverLine = isShipping && extra?.approverName
         ? `\n承認者: ${extra.approverName}（常務）` : '';
       const completedSubject = isShipping
-        ? `【出荷確定通知】${pStr}`
+        ? `【出荷確定申請 承認通知】${pStr}`
         : ['assembly', 'electrical', 'test_run', 'shipping_prep'].includes(req?.flow_type)
         ? `【${flow}完了通知】${pStr}`
         : `【${flow}】${pStr}`;
