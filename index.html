@@ -1014,8 +1014,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameEl = document.getElementById('user_name_display');
     if (nameEl) new MutationObserver(() => syncAppBar()).observe(nameEl, { childList: true, characterData: true, subtree: true });
     setTimeout(syncAppBar, 300);
-    const badgeSrc = document.getElementById('side_badge_pending');
-    if (badgeSrc) new MutationObserver(syncRailBadge).observe(badgeSrc, { childList: true, attributes: true, characterData: true, subtree: true });
+    ['side_badge_pending', 'side_badge_input'].forEach(id => {
+        const badgeSrc = document.getElementById(id);
+        if (badgeSrc) new MutationObserver(syncRailBadge).observe(badgeSrc, { childList: true, attributes: true, characterData: true, subtree: true });
+    });
     setInterval(syncRailBadge, 1000);
 });
 </script>
