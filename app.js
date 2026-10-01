@@ -4606,12 +4606,15 @@ function openSidePanelTo(section) {
     panel.classList.add('open');
 
     if (panel.classList.contains('has-both')) {
-        // 複数ある場合：クリックしたセクションを展開、それ以外を折りたたむ
+        // 複数ある場合：カードが1件以上あるセクションを展開、何もないセクションは折りたたむ
+        // （section指定時はそのセクションも必ず展開する）
         ['mine', 'pending', 'input'].forEach(key => {
             const half = document.getElementById('side_half_' + key);
-            if (half) half.classList.toggle('collapsed', key !== section);
+            if (!half) return;
+            const hasCards = !!half.querySelector('.side-half-content .side-card');
+            half.classList.toggle('collapsed', !(hasCards || key === section));
         });
-    } else {
+    } else if (section) {
         // 片方だけの場合：折りたたまれていたら展開
         const half = document.getElementById('side_half_' + section);
         if (half && half.classList.contains('collapsed')) {
