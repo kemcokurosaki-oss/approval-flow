@@ -228,16 +228,17 @@
     .mypage-card b { color: #16233a; margin-right: .6em; }
 
     /* ---------- スライド別の文字サイズ調整 ---------- */
-    #s1 h1 { font-size: 3.1em; margin-top: 1.1em !important; margin-bottom: .45em; }
-    #s1 .lead { margin-top: .3em; }
-    #s1 .slide-eyebrow, #s2 .slide-eyebrow { font-size: 1.4em; }
-    #s1 .cover-badge, #s2 .cover-badge { font-size: 1.12em; }
+    #s1 h1 { font-size: 2.6em; margin-top: .25em; margin-bottom: .3em; }
+    #s1 .lead { margin-bottom: 0; }
+    #s1 .todo-grid { flex: none; margin: 1.6em 3% 1.4em; }
+    #s1 .todo-card { padding: 2em 2.2em; }
+    #s1 .todo-card h4 { font-size: 1.6em; display: flex; align-items: flex-start; gap: .5em; }
+    #s1 .todo-card h4 .todo-num { flex-shrink: 0; font-size: .8em; margin: .05em 0 0; }
+    #s1 .todo-card p { font-size: 1.18em; line-height: 1.6; }
+    #s1 .note { font-size: 1.05em; margin: .3em 0; }
+    #s1 .slide-eyebrow { font-size: 1.4em; }
+    #s1 .cover-badge { font-size: 1.12em; }
     .note.cover-note { font-size: 1em; }
-    #s2 h1 { font-size: 3.1em; margin-top: .3em; margin-bottom: .35em; }
-    #s2 .todo-grid { flex: none; margin: 1.3em 4% 1.3em; }
-    #s2 .todo-card { padding: 2em 2.4em; }
-    #s2 .todo-card h4 { font-size: 1.6em; }
-    #s2 .todo-card p { font-size: 1.18em; line-height: 1.6; }
     #s3 .ba-grid { gap: 2.5%; margin-top: .7em; }
     #s3 .ba-box { padding: 1em 1.2em 1.1em; }
     #s3 .ba-box.after { flex: 1.25; }
@@ -269,7 +270,7 @@
     }
     .tl-band small { display: block; font-size: .8em; font-weight: 700; color: #9a6a20; }
 
-    /* 4枚目：催促メールのカレンダー */
+    /* 3枚目：催促メールのカレンダー */
     .cal-wrap { margin: 1.8em 0 .6em; display: flex; flex-direction: column; gap: 1.1em; }
     .cal-row { display: flex; align-items: stretch; gap: .3em; }
     .cal-label { flex-shrink: 0; width: 4.6em; align-self: center; font-size: 1.1em; font-weight: 800; color: #fff; background: #8a94a6; border-radius: 12px; text-align: center; padding: .25em 0; }
@@ -288,12 +289,12 @@
     .cal-legend .lg.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
     #s4 .note { font-size: 1em; }
 
-    /* 5枚目：補足（入力画面のイラストを主役にする） */
+    /* 4枚目：補足（入力画面のイラストを主役にする） */
     .s5-mock { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
     .s5-mock .mockup { width: 70%; font-size: 1.45em; }
 
     #s7 .note { font-size: 1em; }
-    /* ---------- 6枚目：手順＋実際の画面 ---------- */
+    /* ---------- 5枚目：手順＋実際の画面 ---------- */
     .step-grid { display: grid; grid-template-columns: 1fr 2fr 1fr; column-gap: 2.2%; row-gap: 1em; margin: .35em 0 .4em; }
     .step-grid .step-compact { padding: 1.1em 1em 1em; display: flex; flex-direction: column; gap: .7em; }
     .step-grid .step-compact b { font-size: 1.05em; margin: 0 0 .3em; }
@@ -349,49 +350,32 @@
 <div class="stage">
     <div class="slide-frame" id="slideFrame">
 
-        <!-- 1. 表紙 -->
+        <!-- 1. 表紙・変更点 -->
         <section class="slide is-active" id="s1">
             <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
             <div class="cover-badge">営業部向け 変更のお知らせ</div>
-            <h1 style="margin-top: .5em;">確定出荷日の入力ルールが<br>ゆるやかになりました</h1>
-            <p class="lead">出荷確定フローで営業部の皆さんにお願いしている「確定出荷日の入力」について、制限をゆるめました。今回の変更点は次の2つです。</p>
-            <ul class="footer-list">
-                <li><span>確定出荷日を入力しなくても、品証が<b>本申請できる</b>ようになりました（入力は本申請の必須条件ではなくなりました）</span></li>
-                <li><span>未入力のときの催促メールを<b>毎日 → 週1回</b>に減らしました</span></li>
-            </ul>
-            <div class="note cover-note">確定出荷日は、<b>検査後に出荷確定フローが起票されてから、出荷までの間</b>に入力していただければOKです。</div>
-            <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">1 / 7</div>
-        </section>
-
-        <!-- 2. 変更点まとめ -->
-        <section class="slide" id="s2">
-            <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
-            <div class="cover-badge">営業部向け 変更のお知らせ</div>
-            <h1>変更点は、この2つです</h1>
-            <p class="lead">どちらも、営業部の確定出荷日の入力に関する制限をゆるめる変更です。</p>
+            <h1>確定出荷日の入力を変更しました</h1>
+            <p class="lead">出荷確定フローの「確定出荷日の入力」について、次の2点を変更しました。</p>
             <div class="todo-grid">
                 <div class="todo-card">
-                    <div class="todo-num">1</div>
-                    <h4>🔓 入力しなくても<br>本申請できるようになりました</h4>
-                    <p>これまでは確定出荷日を入力しないと本申請できませんでした。今後は未入力でも本申請・承認が進みます。</p>
+                    <h4><span class="todo-num">1</span><span>確定出荷日の入力期限を<br>「出荷まで」に変更しました</span></h4>
+                    <p>これまでは本申請の前に入力が必要でした。今後は申請・承認の状況に関係なく（承認後でも）、出荷までに入力してください。</p>
                 </div>
                 <div class="todo-card">
-                    <div class="todo-num">2</div>
-                    <h4>📉 催促メールを<br>毎日 → 週1回に減らしました</h4>
-                    <p>起票時に1回目のお知らせが届いた後は、未入力のままでも催促は7日ごとだけになります。</p>
+                    <h4><span class="todo-num">2</span><span>催促メールの頻度を<br>毎日 → 週1回に変更しました</span></h4>
+                    <p>起票時に1回目のお知らせが届いた後は、未入力の場合は7日ごとに催促メールが届きます。</p>
                 </div>
             </div>
-            <div class="note cover-note" style="margin-top:auto;"><b>補足：</b> 梱包出荷がある機械では、梱包出荷確定日と工場出荷確定日を別々に入力できるようになりました（5枚目）。</div>
+            <div class="note cover-note"><b>補足：</b> 梱包出荷がある機械では、梱包出荷確定日と工場出荷確定日を別々に入力できるようになりました（4枚目）。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">2 / 7</div>
+            <div class="slide-pageno">1 / 6</div>
         </section>
 
-        <!-- 3. 変更① 入力が本申請の必須条件ではなくなった -->
+        <!-- 2. 変更① 入力期限を出荷までに変更 -->
         <section class="slide" id="s3">
             <div class="slide-eyebrow">変更 ①</div>
-            <h2>確定出荷日が未入力でも、本申請できるようになりました</h2>
-            <p>これまでは確定出荷日の入力が本申請の<b>必須条件</b>でした。今後は<b>必須ではありません</b>。</p>
+            <h2>確定出荷日は、出荷までに入力してください</h2>
+            <p>これまでは<b>本申請の前</b>に入力が必要でした。今後は申請・承認の状況に関係なく、<b>起票（検査後）から出荷まで</b>の間に入力してください。</p>
             <div class="ba-grid">
                 <div class="ba-box before">
                     <span class="ba-tag">変更前</span>
@@ -421,7 +405,7 @@
                         <div class="lane-title">確定出荷日<br>の入力</div>
                         <div class="tl">
                             <div class="tl-end">検査後<br><b>起票</b></div>
-                            <div class="tl-band">✎ この間ならいつ入力してもOK<small>申請前・申請中・承認後のどれでも可</small></div>
+                            <div class="tl-band">✎ この期間に入力してください<small>申請前・申請中・承認後のいずれでも入力できます</small></div>
                             <div class="tl-end">🚚<br><b>出荷</b></div>
                         </div>
                     </div>
@@ -432,14 +416,14 @@
                 <li>入力・変更すると、品証・製管には確認のお知らせメールが自動で届きます</li>
             </ul>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">3 / 7</div>
+            <div class="slide-pageno">2 / 6</div>
         </section>
 
-        <!-- 4. 変更② 催促メールの頻度 -->
+        <!-- 3. 変更② 催促メールの頻度 -->
         <section class="slide" id="s4">
             <div class="slide-eyebrow">変更 ②</div>
             <h2>催促メールは「毎日」から「週1回」になりました</h2>
-            <p>起票時に1回目のお知らせ（入力依頼メール）が届いた後は、未入力のままでも<b>催促は7日ごと</b>（7日後・14日後・21日後…）だけです。</p>
+            <p>起票時に1回目のお知らせ（入力依頼メール）が届いた後は、未入力の場合は<b>7日ごと</b>（7日後・14日後・21日後…）に催促メールが届きます。</p>
             <div class="cal-wrap">
                 <div class="cal-row">
                     <div class="cal-label">変更前</div>
@@ -484,10 +468,10 @@
             <div class="note" style="margin-top:auto;"><b>宛先：</b> 起票時の1回目（入力依頼メール）は<b>営業担当者のみ</b>に届きます。週1回の催促は、担当者＋営業課長＋専務に届きます（担当者が営業課長の場合は担当者＋専務）。</div>
             <div class="note muted">入力が済めば催促は止まります。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">4 / 7</div>
+            <div class="slide-pageno">3 / 6</div>
         </section>
 
-        <!-- 5. 補足 梱包・工場の個別入力 -->
+        <!-- 4. 補足 梱包・工場の個別入力 -->
         <section class="slide" id="s5">
             <div class="slide-eyebrow">補足</div>
             <h2>梱包出荷確定日と工場出荷確定日を別々に入力できます</h2>
@@ -504,12 +488,12 @@
                             <div class="date-field">
                                 <span class="fl">梱包出荷確定日</span>
                                 <span class="fi">2026/10/05</span>
-                                <span class="fs" style="color:#2ba55d;">✓ 先に決まったので保存済み</span>
+                                <span class="fs" style="color:#2ba55d;">✓ 保存済み</span>
                             </div>
                             <div class="date-field">
                                 <span class="fl">工場出荷確定日</span>
                                 <span class="fi" style="color:#aab4c3;">年 / 月 / 日</span>
-                                <span class="fs" style="color:#b9770e;">✎ 決まってから入力すればOK</span>
+                                <span class="fs" style="color:#b9770e;">✎ 決まった時点で入力</span>
                             </div>
                         </div>
                         <div class="panel-btns"><span class="btn-close">閉じる</span><span class="btn-save">保存する</span></div>
@@ -518,10 +502,10 @@
                 </div>
             </div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">5 / 7</div>
+            <div class="slide-pageno">4 / 6</div>
         </section>
 
-        <!-- 6. 入力手順 -->
+        <!-- 5. 入力手順 -->
         <section class="slide" id="s6">
             <div class="slide-eyebrow">操作手順</div>
             <h2>確定出荷日の入力・変更のしかた</h2>
@@ -548,10 +532,10 @@
                 </div>
             </div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">6 / 7</div>
+            <div class="slide-pageno">5 / 6</div>
         </section>
 
-        <!-- 7. 困ったときは -->
+        <!-- 6. 困ったときは -->
         <section class="slide" id="s7">
             <div class="slide-eyebrow">困ったときは</div>
             <h2>困ったときは</h2>
@@ -561,9 +545,9 @@
                 <li>アプリ全体の操作方法は、アプリ内の「運用ガイド」からいつでも見返せます</li>
             </ul>
             <div class="note warn" style="margin-top:1em; padding:1em 1.2em;">通知メールが届いていない場合は、まず迷惑メールフォルダをご確認ください。送信元が黒崎個人のGmailアドレス（kemco.kurosaki@gmail.com）になっているため、環境によっては迷惑メールに自動振り分けされることがあります。心当たりがあれば、迷惑メール設定（ブロック）の解除をお願いします。</div>
-            <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日の入力は本申請の必須条件ではなくなりました。出荷確定フローの起票（検査後）から出荷までの間に、決まった項目から入力してください。入力・変更しても再承認は不要です。</div>
+            <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日は、出荷確定フローの起票（検査後）から出荷までの間に、決まった項目から入力してください。承認後に入力・変更しても再承認は不要です。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
-            <div class="slide-pageno">7 / 7</div>
+            <div class="slide-pageno">6 / 6</div>
         </section>
 
     </div>
