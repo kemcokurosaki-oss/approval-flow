@@ -241,7 +241,6 @@
     .note.cover-note { font-size: 1em; }
     #s3 .ba-grid { gap: 2.5%; margin-top: .7em; }
     #s3 .ba-box { padding: 1em 1.2em 1.1em; }
-    #s3 .ba-box.after { flex: 1.25; }
     #s3 .ba-tag { font-size: .95em; }
     #s3 .chip { font-size: .98em; }
     #s3 .chip-arrow { font-size: 1.05em; }
@@ -253,12 +252,14 @@
     #s3 .mini-list li::before { top: .7em; }
     #s3 .mini-list li:first-child { padding-top: 0; }
     #s3 .mini-list li:first-child::before { top: 0; }
-    #s3 .ba-grid { margin-top: 1.3em; }
-    #s3 .ba-box { padding: 1.4em 1.4em 1.5em; }
-    #s3 .lane { margin: 1.1em 0; }
+    #s3 h2 { display: flex; align-items: center; gap: .5em; }
+    .h-tag { font-size: .5em; font-weight: 800; letter-spacing: .1em; color: #fff; background: #2f6fb0; border-radius: 6px; padding: .3em .7em; flex-shrink: 0; }
+    #s3 .ba-grid { margin-top: 1em; flex-direction: column; gap: .8em; }
+    #s3 .ba-box { padding: .8em 1.4em .9em; }
+    #s3 .lane { margin: .5em 0; }
     #s3 .tl-band { font-size: 1.15em; padding: .8em .6em; }
     #s3 .tl-end { font-size: .95em; }
-    #s3 .mini-list { margin-top: 1.6em !important; }
+    #s3 .mini-list { margin-top: 1em !important; }
     #s3 .lane-note { font-size: .9em; font-weight: 700; color: #1e5c37; margin-left: .6em; white-space: nowrap; }
     /* 起票〜出荷の入力可能期間 */
     .tl { display: flex; align-items: stretch; flex: 1; min-width: 0; gap: .4em; }
@@ -373,8 +374,7 @@
 
         <!-- 2. 変更① 入力期限を出荷までに変更 -->
         <section class="slide" id="s3">
-            <div class="slide-eyebrow">変更 ①</div>
-            <h2>確定出荷日は、出荷までに入力してください</h2>
+            <h2><span class="h-tag">変更 ①</span>確定出荷日は、出荷までに入力してください</h2>
             <p>これまでは<b>本申請の前</b>に入力が必要でした。今後は申請・承認の状況に関係なく、<b>起票（検査後）から出荷まで</b>の間に入力してください。</p>
             <div class="ba-grid">
                 <div class="ba-box before">
@@ -385,9 +385,9 @@
                             <span class="chip sales">営業が入力（必須）</span><span class="chip-arrow">→</span>
                             <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
                             <span class="chip">常務が承認</span>
+                            <span class="chip block">⚠ 未入力のため本申請できません</span>
                         </div>
                     </div>
-                    <div class="lane"><div class="lane-steps"><span class="chip block">⚠ 未入力のため本申請できません</span></div></div>
                     <p>営業が入力するまで本申請に進めず、出荷確定フロー全体が止まっていました。</p>
                 </div>
                 <div class="ba-box after">
