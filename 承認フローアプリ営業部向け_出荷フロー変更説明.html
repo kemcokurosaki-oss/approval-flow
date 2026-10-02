@@ -44,8 +44,9 @@
         position: absolute; inset: 0;
         display: none;
         flex-direction: column;
-        padding: 4.4% 6%;
+        padding: 3% 4%;
         overflow: hidden;
+        font-size: 1.05em;
     }
     .slide.is-active { display: flex; }
 
@@ -72,11 +73,11 @@
     .slide .lead { font-size: 1.2em; font-weight: 700; color: #16233a; margin-bottom: .6em; max-width: 96%; }
 
     .slide-pageno {
-        position: absolute; right: 5%; bottom: 3.5%;
+        position: absolute; right: 4%; bottom: 2.6%;
         font-size: 1em; font-weight: 700; color: #b6c1d2;
     }
     .slide-brand {
-        position: absolute; left: 5%; bottom: 3.5%;
+        position: absolute; left: 4%; bottom: 2.6%;
         font-size: .85em; font-weight: 700; color: #c7cfdc;
         letter-spacing: .08em;
         display: flex; align-items: center; gap: 8px;
@@ -230,14 +231,14 @@
     /* ---------- スライド別の文字サイズ調整 ---------- */
     #s1 h1 { font-size: 2.6em; margin-top: .25em; margin-bottom: .3em; }
     #s1 .lead { margin-bottom: 0; }
-    #s1 .todo-grid { flex: none; margin: 1.6em 3% 1.4em; }
+    #s1 .todo-grid { flex: none; margin: 1.6em 3% 2.6em; }
     #s1 .todo-card { padding: 2em 2.2em; }
     #s1 .todo-card h4 { font-size: 1.6em; display: flex; align-items: flex-start; gap: .5em; }
     #s1 .todo-card h4 .todo-num { flex-shrink: 0; font-size: .8em; margin: .05em 0 0; }
     #s1 .todo-card p { font-size: 1.18em; line-height: 1.6; }
     #s1 .note, #s3 .note { font-size: 1.05em; margin: .3em 0; }
     #s3 .ba-grid + .note { margin-top: .7em; }
-    #s1 .slide-eyebrow { font-size: 1.4em; }
+    #s1 .slide-eyebrow { font-size: 1.4em; margin-top: 2.6em; }
     #s1 .cover-badge { font-size: 1.12em; }
     .note.cover-note { font-size: 1em; }
     #s3 .ba-grid { gap: 2.5%; margin-top: .7em; }
@@ -295,11 +296,12 @@
     .cal-legend .lg.first { background: #e8f1fb; border-color: #4f9ddb; color: #2f6fb0; }
     .cal-legend .lg.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
     #s4 .note { font-size: 1.05em; margin: .3em 0; }
+    #s4 .cal-wrap + .note { margin-top: 1.6em; }
 
 
-    #s7 .note { font-size: 1em; }
+    #s7 .note { font-size: 1.05em; }
     /* ---------- 4枚目：手順＋実際の画面 ---------- */
-    #s6 h2, #s7 h2 { font-size: 2.2em; }
+    #s3 h2, #s4 h2, #s6 h2, #s7 h2 { font-size: 2.1em; }
     .flow { display: grid; grid-template-columns: 1fr 3.4em 1fr 3.4em 1fr 3.4em 1fr; row-gap: .5em; margin: .5em 0 1em; }
     .flow-step { padding: .2em .2em 0; }
     .flow-step b { display: block; font-size: 1.25em; color: #16233a; margin-bottom: .3em; }
@@ -312,7 +314,7 @@
         margin-right: .45em; vertical-align: .1em;
     }
     .flow-shot { justify-self: center; align-self: start; }
-    .flow-shot.s1 { grid-column: 1; }
+    .flow-shot.s1 { grid-column: 1; justify-self: start; }
     .flow-shot.s2 { grid-column: 3 / 7; }
     .flow-shot.s1.step-shot img { width: auto; height: 15em; }
     .flow-shot.s2 { justify-self: stretch; align-self: center; }
@@ -376,8 +378,7 @@
         <!-- 1. 表紙・変更点 -->
         <section class="slide is-active" id="s1">
             <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
-            <div class="cover-badge">営業部向け 変更のお知らせ</div>
-            <h1>確定出荷日の入力を変更しました</h1>
+            <h1>営業部向け 変更のお知らせ</h1>
             <p class="lead">出荷確定フローの「確定出荷日の入力」について、次の2点を変更しました。</p>
             <div class="todo-grid">
                 <div class="todo-card">
@@ -532,7 +533,7 @@
                 <li>アプリの不具合・表示がおかしい場合や、担当者の変更が必要な場合は製造管理課の森村・黒崎までご連絡ください</li>
                 <li>アプリ全体の操作方法は、アプリ内の「運用ガイド」からいつでも見返せます</li>
             </ul>
-            <div class="note warn" style="margin-top:1em; padding:1em 1.2em;">通知メールが届いていない場合は、まず迷惑メールフォルダをご確認ください。送信元が黒崎個人のGmailアドレス（kemco.kurosaki@gmail.com）になっているため、環境によっては迷惑メールに自動振り分けされることがあります。心当たりがあれば、迷惑メール設定（ブロック）の解除をお願いします。</div>
+            <div class="note warn" style="margin-top:1em; padding:1em 1.2em;">通知メールが届かない場合は、迷惑メールフォルダをご確認ください。送信元が黒崎個人のGmail（kemco.kurosaki@gmail.com）のため、迷惑メールに振り分けられることがあります。その場合は迷惑メール設定（ブロック）の解除をお願いします。</div>
             <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日は、出荷確定フローの起票（検査後）から出荷までの間に、決まった項目から入力してください。承認後に入力・変更しても再承認は不要です。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">5 / 5</div>
