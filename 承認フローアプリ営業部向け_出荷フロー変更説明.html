@@ -252,15 +252,39 @@
     #s3 .mini-list li::before { top: .7em; }
     #s3 .mini-list li:first-child { padding-top: 0; }
     #s3 .mini-list li:first-child::before { top: 0; }
-    #s5 .two-col .col:last-child { flex: 1.25; }
-    #s5 .ba-box p { font-size: 1.12em; }
-    #s5 .ba-tag { font-size: .95em; }
-    #s5 .mini-list li { font-size: 1.08em; }
-    #s5 .mockup { font-size: 1.25em; }
-    #s5 h3 { font-size: 1.1em !important; }
-    .shot { width: 30em; border: 1px solid #d7dee9; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 16px rgba(20,36,63,.10); background: #fff; }
-    .shot-crop { aspect-ratio: 480 / 406; overflow: hidden; }
-    .shot-crop img { width: 100%; display: block; }
+    #s3 .lane-note { font-size: .9em; font-weight: 700; color: #1e5c37; margin-left: .6em; white-space: nowrap; }
+    /* 起票〜出荷の入力可能期間 */
+    .tl { display: flex; align-items: stretch; flex: 1; min-width: 0; gap: .4em; }
+    .tl-end { flex-shrink: 0; text-align: center; font-size: .85em; color: #5b6b80; line-height: 1.3; align-self: center; }
+    .tl-end b { color: #16233a; font-size: 1.1em; }
+    .tl-band {
+        flex: 1; text-align: center; font-size: 1em; font-weight: 800; color: #7a4a00;
+        background: #fff4e0; border: 2px solid #f0b35a; border-radius: 10px; padding: .45em .6em; line-height: 1.4;
+    }
+    .tl-band small { display: block; font-size: .8em; font-weight: 700; color: #9a6a20; }
+
+    /* 4枚目：催促メールのカレンダー */
+    .cal-wrap { margin: .9em 0 .6em; display: flex; flex-direction: column; gap: .7em; }
+    .cal-row { display: flex; align-items: stretch; gap: .3em; }
+    .cal-label { flex-shrink: 0; width: 4.6em; align-self: center; font-size: 1em; font-weight: 800; color: #fff; background: #8a94a6; border-radius: 12px; text-align: center; padding: .25em 0; }
+    .cal-label.after { background: #2ba55d; }
+    .cal-day { flex: 1; min-width: 0; text-align: center; background: #fff; border: 1px solid #e5e9f1; border-radius: 6px; padding: .35em 0 .3em; }
+    .cal-day .d { display: block; font-size: .78em; color: #8a94a6; font-weight: 700; white-space: nowrap; }
+    .cal-day .m { display: block; height: 1.5em; line-height: 1.5em; font-size: 1.35em; }
+    .cal-day.first { background: #e8f1fb; border-color: #4f9ddb; color: #2f6fb0; }
+    .cal-day.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
+    .cal-day.ok  { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
+    .cal-more { flex-shrink: 0; width: 4.6em; align-self: center; font-size: .95em; font-weight: 800; color: #a13a2b; text-align: center; }
+    .cal-more.after { color: #1e5c37; }
+    .cal-legend { font-size: .88em; color: #6a7890; padding-left: 4.9em; }
+    .cal-legend .lg { display: inline-block; padding: 0 .4em; border-radius: 4px; margin-right: .3em; border: 1px solid; }
+    .cal-legend .lg.first { background: #e8f1fb; border-color: #4f9ddb; color: #2f6fb0; }
+    .cal-legend .lg.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
+    #s4 .note { font-size: 1em; }
+
+    /* 5枚目：補足（入力画面のイラストを主役にする） */
+    .s5-mock { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .s5-mock .mockup { width: 70%; font-size: 1.45em; }
 
     #s7 .note { font-size: 1em; }
     /* ---------- 6枚目：手順＋実際の画面 ---------- */
@@ -325,13 +349,13 @@
         <section class="slide is-active" id="s1">
             <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
             <div class="cover-badge">営業部向け 変更のお知らせ</div>
-            <h1 style="margin-top: .5em;">出荷確定フローの<br>確定出荷日入力が変わりました</h1>
-            <p class="lead">出荷確定フローで営業部の皆さんにお願いしている「確定出荷日の入力」について、入力のタイミングと入力方法を見直しました。今回の変更点は次の2つです。</p>
+            <h1 style="margin-top: .5em;">確定出荷日の入力ルールが<br>ゆるやかになりました</h1>
+            <p class="lead">出荷確定フローで営業部の皆さんにお願いしている「確定出荷日の入力」について、制限をゆるめました。今回の変更点は次の2つです。</p>
             <ul class="footer-list">
-                <li>確定出荷日の入力が、品証の本申請・常務の承認と<b>別々に進む</b>ようになりました</li>
-                <li>梱包出荷確定日と工場出荷確定日を<b>別々に入力・保存</b>できるようになりました</li>
+                <li>確定出荷日を入力しなくても、品証が<b>本申請できる</b>ようになりました（入力は本申請の必須条件ではなくなりました）</li>
+                <li>未入力のときの催促メールを<b>毎日 → 週1回</b>に減らしました</li>
             </ul>
-            <div class="note cover-note">営業部がすること（確定出荷日を入力する）自体は変わりません。「いつ入力できるか」と「どう入力するか」が変わります。</div>
+            <div class="note cover-note">確定出荷日は、<b>検査後に出荷確定フローが起票されてから、出荷までの間</b>に入力していただければOKです。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">1 / 7</div>
         </section>
@@ -341,156 +365,152 @@
             <div class="slide-eyebrow"><span class="eyebrow-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12.5V7M6 12.5V3.5M10 12.5V9M14 12.5V5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>承認フローアプリ</div>
             <div class="cover-badge">営業部向け 変更のお知らせ</div>
             <h1>変更点は、この2つです</h1>
-            <p class="lead">どちらも「営業の入力が済むまで、他の作業が止まってしまう」「日付が決まっていない項目のせいで、決まっている日付も入力できない」という状況をなくすための変更です。</p>
+            <p class="lead">どちらも、営業部の確定出荷日の入力に関する制限をゆるめる変更です。</p>
             <div class="todo-grid">
                 <div class="todo-card">
                     <div class="todo-num">1</div>
-                    <h4>🔀 確定出荷日の入力と、<br>申請・承認を別々に進める</h4>
-                    <p>確定出荷日が未入力でも、品証の本申請・常務の承認が進められるようになりました。確定出荷日は承認の前でも後でも、いつでも入力・変更できます。</p>
+                    <h4>🔓 入力しなくても<br>本申請できるようになりました</h4>
+                    <p>これまでは確定出荷日を入力しないと本申請できませんでした。今後は未入力でも本申請・承認が進みます。</p>
                 </div>
                 <div class="todo-card">
                     <div class="todo-num">2</div>
-                    <h4>📅 梱包出荷確定日と工場出荷確定日を<br>別々に入力する</h4>
-                    <p>梱包出荷がある機械では、これまで2つの日付をそろえて入力する必要がありました。今後は決まった方から1つずつ入力・保存できます。</p>
+                    <h4>📉 催促メールを<br>毎日 → 週1回に減らしました</h4>
+                    <p>起票時に1回目のお知らせが届いた後は、未入力のままでも催促は7日ごとだけになります。</p>
                 </div>
             </div>
-            <div class="note cover-note" style="margin-top:auto;"><b>あわせて変わったこと：</b> 未入力時の催促メールの頻度・宛先と、マイページの表示場所（「承認」欄 → 新しい「入力」欄）も変わりました（4枚目で説明）。</div>
+            <div class="note cover-note" style="margin-top:auto;"><b>補足：</b> 梱包出荷がある機械では、梱包出荷確定日と工場出荷確定日を別々に入力できるようになりました（5枚目）。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">2 / 7</div>
         </section>
 
-        <!-- 3. 変更① 申請・承認と入力の分離 -->
+        <!-- 3. 変更① 入力が本申請の必須条件ではなくなった -->
         <section class="slide" id="s3">
             <div class="slide-eyebrow">変更 ①</div>
-            <h2>確定出荷日の入力と、申請・承認を別々に進める</h2>
-            <p>これまでは営業が工場出荷確定日を入力するまで、品証は本申請できませんでした。今後は2つの作業が<b>並行して</b>進みます。</p>
+            <h2>確定出荷日が未入力でも、本申請できるようになりました</h2>
+            <p>これまでは確定出荷日の入力が本申請の<b>必須条件</b>でした。今後は<b>必須ではありません</b>。</p>
             <div class="ba-grid">
                 <div class="ba-box before">
                     <span class="ba-tag">変更前</span>
                     <div class="lane">
                         <div class="lane-steps">
                             <span class="chip">起票</span><span class="chip-arrow">→</span>
-                            <span class="chip sales">営業が入力</span><span class="chip-arrow">→</span>
+                            <span class="chip sales">営業が入力（必須）</span><span class="chip-arrow">→</span>
                             <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
                             <span class="chip">常務が承認</span>
                         </div>
                     </div>
-                    <div class="lane"><div class="lane-steps"><span class="chip block">⚠ 未入力のため申請できません</span></div></div>
-                    <p>営業の入力が終わるまで本申請に進めず、出荷確定フロー全体が止まっていました。</p>
+                    <div class="lane"><div class="lane-steps"><span class="chip block">⚠ 未入力のため本申請できません</span></div></div>
+                    <p>営業が入力するまで本申請に進めず、出荷確定フロー全体が止まっていました。</p>
                 </div>
                 <div class="ba-box after">
                     <span class="ba-tag">変更後</span>
                     <div class="lane">
                         <div class="lane-title">申請・承認</div>
                         <div class="lane-steps">
-                            <span class="chip">起票</span><span class="chip-arrow">→</span>
                             <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
                             <span class="chip">常務が承認</span>
+                            <span class="lane-note">入力を待たずに進みます</span>
                         </div>
                     </div>
                     <div class="lane-divider"></div>
                     <div class="lane">
                         <div class="lane-title">確定出荷日<br>の入力</div>
-                        <div class="lane-steps">
-                            <span class="chip">入力依頼メール</span><span class="chip-arrow">→</span>
-                            <span class="chip sales">営業が入力</span><span class="chip-arrow">→</span>
-                            <span class="chip">品証・製管へ通知</span>
+                        <div class="tl">
+                            <div class="tl-end">検査後<br><b>起票</b></div>
+                            <div class="tl-band">✎ この間ならいつ入力してもOK<small>申請前・申請中・承認後のどれでも可</small></div>
+                            <div class="tl-end">🚚<br><b>出荷</b></div>
                         </div>
                     </div>
-                    <p>お互いを待たずに進められます。</p>
                 </div>
             </div>
             <ul class="mini-list" style="margin-top:.6em;">
-                <li>確定出荷日は<b>申請前・申請中・承認後のいつでも</b>入力・変更できます（出荷確定フローの起票時に「工場出荷確定日入力依頼」メールが届く点は従来どおり）</li>
-                <li>入力・変更しても<b>品証の本申請のやり直しや常務の再承認は不要</b>です。品証・製管には確認のお知らせメールが自動で届きます</li>
-                <li>未入力のまま承認された場合、承認完了メールには「工場出荷確定日: 未入力」と記載されます。確定したら速やかに入力をお願いします</li>
+                <li>入力・変更しても、<b>品証の本申請のやり直しや常務の再承認は不要</b>です</li>
+                <li>入力・変更すると、品証・製管には確認のお知らせメールが自動で届きます</li>
             </ul>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">3 / 7</div>
         </section>
 
-        <!-- 4. 変更①に伴う変更：催促メール・マイページ -->
+        <!-- 4. 変更② 催促メールの頻度 -->
         <section class="slide" id="s4">
-            <div class="slide-eyebrow">変更 ① に伴う変更</div>
-            <h2>催促メールとマイページの表示</h2>
-            <p>入力が承認の前提ではなくなったため、未入力時の催促を「毎日」から「7日ごと」に見直しました。<b>1回目の通知（入力依頼メール）は、これまでどおり出荷確定フローの起票時に届きます。</b></p>
-            <div class="two-col">
-                <div class="col">
-                    <table class="spec s4-table" style="margin-top:.2em;">
-                        <tr><th></th><th>変更前</th><th>変更後</th></tr>
-                        <tr><th>1回目</th><td class="old">起票時に入力依頼メール</td><td class="new">変更なし（起票時に入力依頼メール）</td></tr>
-                        <tr><th>催促の頻度</th><td class="old">毎日</td><td class="new">起票から7日ごと<br>（7日後・14日後・21日後…）</td></tr>
-                        <tr><th>催促の宛先</th><td class="old">担当者に毎日<br>3営業日後から課長を追加<br>5営業日後から専務を追加</td><td class="new">担当者＋営業課長＋専務<br>（担当者が課長の場合は担当者＋専務）</td></tr>
-                        <tr><th>対象</th><td class="old">工場出荷確定日の未入力</td><td class="new">梱包出荷確定日（梱包出荷がある機械）・工場出荷確定日のどちらかが未入力</td></tr>
-                    </table>
-                    <div class="mockup" style="font-size:.8em; margin-top:.3em;">
-                        <div class="mail-meta">
-                            <div class="mail-row"><span class="mail-label">件名</span><span class="mail-subject">【工場出荷確定日 未入力】3181 MC</span></div>
-                            <div class="mail-row"><span class="mail-label">宛先</span><span>営業担当者 様</span></div>
-                        </div>
-                        <div class="mail-body">3181 MC の「出荷確定申請」について、工場出荷確定日がまだ入力されていません（起票から7日経過）。
-承認フロー管理システムにログインしてご確認ください。</div>
-                        <div class="mockup-caption">催促メールの例（担当者あて）。件名・本文には未入力の項目名が入ります。課長・専務あてには「担当者による入力が完了していない」旨の文面で届きます</div>
-                    </div>
+            <div class="slide-eyebrow">変更 ②</div>
+            <h2>催促メールは「毎日」から「週1回」になりました</h2>
+            <p>起票時に1回目のお知らせ（入力依頼メール）が届いた後は、未入力のままでも<b>催促は7日ごと</b>（7日後・14日後・21日後…）だけです。</p>
+            <div class="cal-wrap">
+                <div class="cal-row">
+                    <div class="cal-label">変更前</div>
+                    <div class="cal-day first"><span class="d">起票</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">1日後</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">2</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">3</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">4</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">5</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">6</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">7</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">8</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">9</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">10</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">11</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">12</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">13</span><span class="m">✉</span></div>
+                    <div class="cal-day hit"><span class="d">14</span><span class="m">✉</span></div>
+                    <div class="cal-more">毎日…</div>
                 </div>
-                <div class="col" style="flex:none; width:30em;">
-                    <h3 style="font-size:1em; color:#7c8798; margin-bottom:.5em;">マイページの表示場所（実際の画面）</h3>
-                    <div class="shot"><div class="shot-crop"><img src="data:image/png;base64,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ADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADA+oDGEteiVAAAAuA+UoAEAgKEgoAEAgKEgoAEAgKEgoAEAgKEgoAEAgNkBjWHQhAMAAJgFStAAAMBQENAAAMDggIb6DQAAYCAoQQMAAENBQAMAAEOxoH4DAACYCUrQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAADAUBDQAACAmOn/C2vbURUAyP8AAAAASUVORK5CYII=" alt="マイページの「入力」欄"></div>
-                        <div class="mockup-caption">これまで「承認」欄に出ていた入力待ちカードは、新しい「入力」欄に表示されます。カードには未入力の項目名が表示されます</div>
-                    </div>
+                <div class="cal-row">
+                    <div class="cal-label after">変更後</div>
+                    <div class="cal-day first"><span class="d">起票</span><span class="m">✉</span></div>
+                    <div class="cal-day"><span class="d">1日後</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">2</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">3</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">4</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">5</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">6</span><span class="m"></span></div>
+                    <div class="cal-day ok"><span class="d">7</span><span class="m">✉</span></div>
+                    <div class="cal-day"><span class="d">8</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">9</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">10</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">11</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">12</span><span class="m"></span></div>
+                    <div class="cal-day"><span class="d">13</span><span class="m"></span></div>
+                    <div class="cal-day ok"><span class="d">14</span><span class="m">✉</span></div>
+                    <div class="cal-more after">週1回…</div>
                 </div>
+                <div class="cal-legend"><span class="lg first">✉</span>起票時の入力依頼メール（1回目）　<span class="lg hit">✉</span>催促メール</div>
             </div>
+            <div class="note" style="margin-top:auto;"><b>宛先：</b> 起票時の1回目（入力依頼メール）は<b>営業担当者のみ</b>に届きます。週1回の催促は、担当者＋営業課長＋専務に届きます（担当者が営業課長の場合は担当者＋専務）。</div>
+            <div class="note muted">入力が済めば催促は止まります。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">4 / 7</div>
         </section>
 
-        <!-- 5. 変更② 梱包・工場の個別入力 -->
+        <!-- 5. 補足 梱包・工場の個別入力 -->
         <section class="slide" id="s5">
-            <div class="slide-eyebrow">変更 ②</div>
-            <h2>梱包出荷確定日と工場出荷確定日を別々に入力する</h2>
-            <p>梱包出荷がある機械では、入力欄が「梱包出荷確定日」「工場出荷確定日」の2つになります。<b>決まった方だけを先に保存</b>できます。</p>
-            <div class="two-col">
-                <div class="col">
-                    <div class="ba-box before" style="flex:none; margin-bottom:.7em;">
-                        <span class="ba-tag">変更前</span>
-                        <p>2つとも「必須」で、両方を入力しないと「入力する」ボタンが押せませんでした。梱包出荷日だけ先に決まっていても入力できませんでした。</p>
-                    </div>
-                    <div class="ba-box after" style="flex:none;">
-                        <span class="ba-tag">変更後</span>
-                        <p>それぞれ単独で入力・保存できます。保存するたびに、保存した項目の内容が品証・製管へメールで通知されます。</p>
-                    </div>
-                    <ul class="mini-list" style="margin-top:.8em;">
-                        <li>未入力の項目が残っている間は、マイページの「入力」欄に表示され、催促の対象にもなります</li>
-                        <li>入力済みの日付は変更できますが、空に戻すことはできません</li>
-                        <li>梱包出荷がない機械は、これまでどおり工場出荷確定日のみです</li>
-                    </ul>
-                </div>
-                <div class="col">
-                    <h3 style="font-size:1em; color:#7c8798; margin-bottom:.5em;">入力画面の例（梱包出荷確定日のみ入力済み）</h3>
-                    <div class="mockup">
-                        <div class="panel-head"><span>出荷確定申請　3181 MC</span><span>✕</span></div>
-                        <div class="panel-body">
-                            <div class="date-status">
-                                <span>梱包出荷確定日: 2026/10/5</span>
-                                <span>工場出荷確定日: <span class="missing">未入力</span></span>
-                            </div>
-                            <div style="text-align:center; color:#c3ccd9; font-size:.85em; padding:.2em 0 .5em;">︙（申請・承認状況など）</div>
-                            <div class="date-area">
-                                <div class="date-field">
-                                    <span class="fl">梱包出荷確定日</span>
-                                    <span class="fi">2026/10/05</span>
-                                    <span class="fs" style="color:#2ba55d;">✓ 入力済み</span>
-                                </div>
-                                <div class="date-field">
-                                    <span class="fl">工場出荷確定日</span>
-                                    <span class="fi">2026/10/09</span>
-                                    <span class="fs" style="color:#b9770e;">✎ 入力します</span>
-                                </div>
-                            </div>
-                            <div class="panel-btns"><span class="btn-close">閉じる</span><span class="btn-save">保存する</span></div>
+            <div class="slide-eyebrow">補足</div>
+            <h2>梱包出荷確定日と工場出荷確定日を別々に入力できます</h2>
+            <p>梱包出荷がある機械では、<b>決まった方から1つずつ</b>入力・保存できるようになりました。</p>
+            <div class="s5-mock">
+                <div class="mockup">
+                    <div class="panel-head"><span>出荷確定申請　3181 MC</span><span>✕</span></div>
+                    <div class="panel-body">
+                        <div class="date-status">
+                            <span>梱包出荷確定日: 2026/10/5</span>
+                            <span>工場出荷確定日: <span class="missing">未入力</span></span>
                         </div>
-                        <div class="mockup-caption">入力済みの項目は日付が入った状態で表示されます。入力・変更した項目があると「保存する」が押せるようになります</div>
+                        <div class="date-area">
+                            <div class="date-field">
+                                <span class="fl">梱包出荷確定日</span>
+                                <span class="fi">2026/10/05</span>
+                                <span class="fs" style="color:#2ba55d;">✓ 先に決まったので保存済み</span>
+                            </div>
+                            <div class="date-field">
+                                <span class="fl">工場出荷確定日</span>
+                                <span class="fi" style="color:#aab4c3;">年 / 月 / 日</span>
+                                <span class="fs" style="color:#b9770e;">✎ 決まってから入力すればOK</span>
+                            </div>
+                        </div>
+                        <div class="panel-btns"><span class="btn-close">閉じる</span><span class="btn-save">保存する</span></div>
                     </div>
+                    <div class="mockup-caption">例：梱包出荷確定日だけ先に入力・保存した状態</div>
                 </div>
             </div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
