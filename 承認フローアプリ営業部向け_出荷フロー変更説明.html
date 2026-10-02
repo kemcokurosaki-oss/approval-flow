@@ -252,6 +252,12 @@
     #s3 .mini-list li::before { top: .7em; }
     #s3 .mini-list li:first-child { padding-top: 0; }
     #s3 .mini-list li:first-child::before { top: 0; }
+    #s3 .ba-grid { margin-top: 1.3em; }
+    #s3 .ba-box { padding: 1.4em 1.4em 1.5em; }
+    #s3 .lane { margin: 1.1em 0; }
+    #s3 .tl-band { font-size: 1.15em; padding: .8em .6em; }
+    #s3 .tl-end { font-size: .95em; }
+    #s3 .mini-list { margin-top: 1.6em !important; }
     #s3 .lane-note { font-size: .9em; font-weight: 700; color: #1e5c37; margin-left: .6em; white-space: nowrap; }
     /* 起票〜出荷の入力可能期間 */
     .tl { display: flex; align-items: stretch; flex: 1; min-width: 0; gap: .4em; }
@@ -264,19 +270,19 @@
     .tl-band small { display: block; font-size: .8em; font-weight: 700; color: #9a6a20; }
 
     /* 4枚目：催促メールのカレンダー */
-    .cal-wrap { margin: .9em 0 .6em; display: flex; flex-direction: column; gap: .7em; }
+    .cal-wrap { margin: 1.8em 0 .6em; display: flex; flex-direction: column; gap: 1.1em; }
     .cal-row { display: flex; align-items: stretch; gap: .3em; }
-    .cal-label { flex-shrink: 0; width: 4.6em; align-self: center; font-size: 1em; font-weight: 800; color: #fff; background: #8a94a6; border-radius: 12px; text-align: center; padding: .25em 0; }
+    .cal-label { flex-shrink: 0; width: 4.6em; align-self: center; font-size: 1.1em; font-weight: 800; color: #fff; background: #8a94a6; border-radius: 12px; text-align: center; padding: .25em 0; }
     .cal-label.after { background: #2ba55d; }
-    .cal-day { flex: 1; min-width: 0; text-align: center; background: #fff; border: 1px solid #e5e9f1; border-radius: 6px; padding: .35em 0 .3em; }
-    .cal-day .d { display: block; font-size: .78em; color: #8a94a6; font-weight: 700; white-space: nowrap; }
-    .cal-day .m { display: block; height: 1.5em; line-height: 1.5em; font-size: 1.35em; }
+    .cal-day { flex: 1; min-width: 0; text-align: center; background: #fff; border: 1px solid #e5e9f1; border-radius: 6px; padding: .7em 0 .6em; }
+    .cal-day .d { display: block; font-size: .9em; color: #8a94a6; font-weight: 700; white-space: nowrap; }
+    .cal-day .m { display: block; height: 1.6em; line-height: 1.6em; font-size: 1.9em; }
     .cal-day.first { background: #e8f1fb; border-color: #4f9ddb; color: #2f6fb0; }
     .cal-day.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
     .cal-day.ok  { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
     .cal-more { flex-shrink: 0; width: 4.6em; align-self: center; font-size: .95em; font-weight: 800; color: #a13a2b; text-align: center; }
     .cal-more.after { color: #1e5c37; }
-    .cal-legend { font-size: .88em; color: #6a7890; padding-left: 4.9em; }
+    .cal-legend { font-size: 1em; color: #6a7890; padding-left: 4.9em; }
     .cal-legend .lg { display: inline-block; padding: 0 .4em; border-radius: 4px; margin-right: .3em; border: 1px solid; }
     .cal-legend .lg.first { background: #e8f1fb; border-color: #4f9ddb; color: #2f6fb0; }
     .cal-legend .lg.hit { background: #fdecea; border-color: #e7a79c; color: #a13a2b; }
@@ -304,8 +310,6 @@
     table.spec { border-collapse: collapse; width: 100%; margin: .6em 0; font-size: .9em; }
     table.spec th, table.spec td { border: 1px solid #dde3ee; padding: .55em .8em; text-align: left; vertical-align: top; }
     table.spec th { background: #f3f6fb; color: #1e3a5f; font-weight: 700; white-space: nowrap; }
-    table.spec.s4-table { font-size: .98em; }
-    table.spec.s4-table th, table.spec.s4-table td { padding: .38em .6em; line-height: 1.4; }
     table.spec td.old { color: #6a7890; }
     table.spec td.new { color: #1e5c37; font-weight: 700; background: #f5fcf7; }
 
@@ -352,8 +356,8 @@
             <h1 style="margin-top: .5em;">確定出荷日の入力ルールが<br>ゆるやかになりました</h1>
             <p class="lead">出荷確定フローで営業部の皆さんにお願いしている「確定出荷日の入力」について、制限をゆるめました。今回の変更点は次の2つです。</p>
             <ul class="footer-list">
-                <li>確定出荷日を入力しなくても、品証が<b>本申請できる</b>ようになりました（入力は本申請の必須条件ではなくなりました）</li>
-                <li>未入力のときの催促メールを<b>毎日 → 週1回</b>に減らしました</li>
+                <li><span>確定出荷日を入力しなくても、品証が<b>本申請できる</b>ようになりました（入力は本申請の必須条件ではなくなりました）</span></li>
+                <li><span>未入力のときの催促メールを<b>毎日 → 週1回</b>に減らしました</span></li>
             </ul>
             <div class="note cover-note">確定出荷日は、<b>検査後に出荷確定フローが起票されてから、出荷までの間</b>に入力していただければOKです。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
@@ -557,7 +561,7 @@
                 <li>アプリ全体の操作方法は、アプリ内の「運用ガイド」からいつでも見返せます</li>
             </ul>
             <div class="note warn" style="margin-top:1em; padding:1em 1.2em;">通知メールが届いていない場合は、まず迷惑メールフォルダをご確認ください。送信元が黒崎個人のGmailアドレス（kemco.kurosaki@gmail.com）になっているため、環境によっては迷惑メールに自動振り分けされることがあります。心当たりがあれば、迷惑メール設定（ブロック）の解除をお願いします。</div>
-            <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日は、承認を待たずに「決まった日付から」「決まった項目から」入力してください。入力・変更しても再承認は不要です。</div>
+            <div class="note action" style="margin-top:1em; padding:1em 1.2em;">まとめ：確定出荷日の入力は本申請の必須条件ではなくなりました。出荷確定フローの起票（検査後）から出荷までの間に、決まった項目から入力してください。入力・変更しても再承認は不要です。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">7 / 7</div>
         </section>
