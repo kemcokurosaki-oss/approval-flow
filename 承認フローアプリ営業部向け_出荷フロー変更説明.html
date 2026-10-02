@@ -248,28 +248,31 @@
     #s3 .lane-title { font-size: 1em; width: 5.6em; }
     #s3 .lane-divider { margin-left: 6.2em; }
     #s3 .ba-box p { font-size: 1.1em; }
-    #s3 .mini-list li { font-size: 1.12em; padding: .7em 0 .7em 1.5em; }
-    #s3 .mini-list li::before { top: .7em; }
+    #s3 .mini-list li { font-size: 1.08em; padding: .45em 0 .45em 1.5em; }
+    #s3 .mini-list li::before { top: .45em; }
     #s3 .mini-list li:first-child { padding-top: 0; }
     #s3 .mini-list li:first-child::before { top: 0; }
     #s3 h2 { display: flex; align-items: center; gap: .5em; }
-    .h-tag { font-size: .5em; font-weight: 800; letter-spacing: .1em; color: #fff; background: #2f6fb0; border-radius: 6px; padding: .3em .7em; flex-shrink: 0; }
-    #s3 .ba-grid { margin-top: 1em; flex-direction: column; gap: .8em; }
-    #s3 .ba-box { padding: .8em 1.4em .9em; }
-    #s3 .lane { margin: .5em 0; }
-    #s3 .tl-band { font-size: 1.15em; padding: .8em .6em; }
-    #s3 .tl-end { font-size: .95em; }
-    #s3 .mini-list { margin-top: 1em !important; }
-    #s3 .lane-note { font-size: .9em; font-weight: 700; color: #1e5c37; margin-left: .6em; white-space: nowrap; }
-    /* 起票〜出荷の入力可能期間 */
-    .tl { display: flex; align-items: stretch; flex: 1; min-width: 0; gap: .4em; }
-    .tl-end { flex-shrink: 0; text-align: center; font-size: .85em; color: #5b6b80; line-height: 1.3; align-self: center; }
-    .tl-end b { color: #16233a; font-size: 1.1em; }
-    .tl-band {
-        flex: 1; text-align: center; font-size: 1em; font-weight: 800; color: #7a4a00;
-        background: #fff4e0; border: 2px solid #f0b35a; border-radius: 10px; padding: .45em .6em; line-height: 1.4;
-    }
-    .tl-band small { display: block; font-size: .8em; font-weight: 700; color: #9a6a20; }
+    .h-tag { font-size: 1em; font-weight: 800; color: #2f6fb0; background: #fff; border: 2px solid #2f6fb0; border-radius: 8px; padding: .05em .4em; flex-shrink: 0; }
+    #s3 .ba-grid { margin-top: .7em; flex-direction: column; gap: .6em; }
+    #s3 .ba-box { padding: .6em 1.4em .7em; }
+    #s3 .lane { margin: .35em 0; }
+    #s3 .mini-list { margin-top: .6em !important; }
+    /* 変更後：起票〜出荷の時間軸に2レーンを並べる */
+    .pt { display: grid; grid-template-columns: 6.6em 1fr; column-gap: .8em; row-gap: .3em; align-items: center; margin-top: 0; }
+    .pt-label { font-size: 1em; font-weight: 800; color: #1e3a5f; line-height: 1.35; }
+    .pt-axis { display: flex; justify-content: space-between; align-items: flex-end; font-size: .95em; color: #5b6b80; border-bottom: 3px solid #2f6fb0; padding: 0 .2em .25em; position: relative; }
+    .pt-axis b { color: #16233a; font-size: 1.15em; margin: 0 .2em; }
+    .pt-axis::before, .pt-axis::after { content: ''; position: absolute; bottom: -.5em; width: .7em; height: .7em; border-radius: 50%; background: #2f6fb0; }
+    .pt-axis::before { left: -.35em; }
+    .pt-axis::after { right: -.35em; }
+    .pt-track { border-left: 2px dashed #9fb8d6; border-right: 2px dashed #9fb8d6; padding: .3em .5em; }
+    .pt-bar { border-radius: 10px; padding: .45em .7em; display: flex; align-items: center; gap: .4em; }
+    .pt-bar.approve { background: #e8f1fb; border: 1px solid #bcd4ec; width: max-content; }
+    .pt-bar.input { justify-content: center; flex-direction: column; gap: .1em; background: #fff4e0; border: 2px solid #f0b35a; font-size: 1.15em; font-weight: 800; color: #7a4a00; text-align: center; }
+    .pt-bar.input small { font-size: .75em; font-weight: 700; color: #9a6a20; }
+    .pt-sep { font-size: .95em; font-weight: 800; color: #1e5c37; text-align: center; padding: .1em .5em; }
+    .chip.block.plain { background: none; border: none; padding-left: .3em; }
 
     /* 3枚目：催促メールのカレンダー */
     .cal-wrap { margin: 1.8em 0 .6em; display: flex; flex-direction: column; gap: 1.1em; }
@@ -385,28 +388,25 @@
                             <span class="chip sales">営業が入力（必須）</span><span class="chip-arrow">→</span>
                             <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
                             <span class="chip">常務が承認</span>
-                            <span class="chip block">⚠ 未入力のため本申請できません</span>
+                            <span class="chip block plain">⚠ 未入力のため本申請できません</span>
                         </div>
                     </div>
                     <p>営業が入力するまで本申請に進めず、出荷確定フロー全体が止まっていました。</p>
                 </div>
                 <div class="ba-box after">
                     <span class="ba-tag">変更後</span>
-                    <div class="lane">
-                        <div class="lane-title">申請・承認</div>
-                        <div class="lane-steps">
-                            <span class="chip">品証が本申請</span><span class="chip-arrow">→</span>
-                            <span class="chip">常務が承認</span>
-                            <span class="lane-note">入力を待たずに進みます</span>
+                    <div class="pt">
+                        <div></div>
+                        <div class="pt-axis"><span>検査後に<b>起票</b></span><span><b>出荷</b> 🚚</span></div>
+                        <div class="pt-label">申請・承認</div>
+                        <div class="pt-track">
+                            <div class="pt-bar approve"><span class="chip">品証が本申請</span><span class="chip-arrow">→</span><span class="chip">常務が承認</span></div>
                         </div>
-                    </div>
-                    <div class="lane-divider"></div>
-                    <div class="lane">
-                        <div class="lane-title">確定出荷日<br>の入力</div>
-                        <div class="tl">
-                            <div class="tl-end">検査後<br><b>起票</b></div>
-                            <div class="tl-band">✎ この期間に入力してください<small>申請前・申請中・承認後のいずれでも入力できます</small></div>
-                            <div class="tl-end">🚚<br><b>出荷</b></div>
+                        <div></div>
+                        <div class="pt-track pt-sep">↕ 申請・承認と確定出荷日の入力は、別々に進みます（お互いを待ちません）</div>
+                        <div class="pt-label">確定出荷日<br>の入力</div>
+                        <div class="pt-track">
+                            <div class="pt-bar input">✎ 起票から出荷までの間に入力してください<small>申請前・申請中・承認後のいずれでも入力できます</small></div>
                         </div>
                     </div>
                 </div>
