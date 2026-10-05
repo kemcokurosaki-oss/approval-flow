@@ -2191,16 +2191,11 @@ function renderProgressCards() {
                     const connector = i < fullChain.length - 1
                         ? `<div class="flow-connector ${isEffectivelyApproved ? 'fc-line-done' : 'fc-line-pending'}"></div>`
                         : '';
-                    // 2000番以外は1工番=1申請のため、承認済みかつペンディング未完了が無ければクリックで詳細画面を経由せず直接完了報告書を開く
-                    // （ペンディングが残っている場合・電装統合表示時は詳細モーダル経由に統一し、モーダル内で完了操作できるようにする）
-                    const approvedReq = (!isMachineRow && assemblyStatus === 'approved' && !hasElectrical && assemblyPendingCount === 0)
-                        ? ((assemblyReqsByProject || {})[num] || []).find(r => r.status === 'approved')
-                        : null;
-                    const clickHandler = approvedReq
-                        ? `window.open('${SHEET_FLOW_META.assembly.file}?view=1&id=${approvedReq.id}', '_blank')`
-                        : isMachineRow
-                            ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
-                            : `openAssemblyFlowDetailModal('${esc(num)}')`;
+                    // 承認済みでも完了報告書へ直接飛ばさず、常に詳細モーダルを開く
+                    // （電装の有無に関わらず、詳細モーダルで承認者・承認日時を確認できるようにするため）
+                    const clickHandler = isMachineRow
+                        ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
+                        : `openAssemblyFlowDetailModal('${esc(num)}')`;
 
                     if (!hasElectrical) {
                         return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
@@ -2306,12 +2301,8 @@ function renderProgressCards() {
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (f.type === 'test_run') {
                     // 試運転(2000番以外)は組立と同様、状態に関わらず工番全体の機械一覧モーダルを開く。
-                    // 試運転は完了操作自体を廃止しているため、承認済みなら常に直接完了報告書を開く
-                    // （countUnresolvedPendingItemsは試運転に対して常に0を返す）
-                    const hasUnresolvedTestRunPending = countUnresolvedPendingItems(req) > 0;
-                    clickAttr = (req && req.status === 'approved' && !hasUnresolvedTestRunPending)
-                        ? `onclick="event.stopPropagation(); window.open('${SHEET_FLOW_META.test_run.file}?view=1&id=${req.id}', '_blank')"`
-                        : `onclick="event.stopPropagation(); openTestRunFlowDetailModal('${esc(num)}')"`;
+                    // 承認済みでも完了報告書へ直接飛ばさず、モーダルで承認者・承認日時を確認できるようにする
+                    clickAttr = `onclick="event.stopPropagation(); openTestRunFlowDetailModal('${esc(num)}')"`;
                     const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (!req && canApply && !progressFilterCompleted) {
@@ -2710,7 +2701,12 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
     if (activeReq) {
         const requesterName = requesterNames[activeReq.requester_id] || '—';
         const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
-        metaLine = `申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}`;
+        // 申請者・申請日と承認者・承認日の先頭を揃えるため2列グリッドにする
+        metaLine = `<div style="display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:10px;">
+                <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div>
+                <div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>
+                ${buildApprovalInfoMetaHtml(activeReq, requesterNames, 1)}
+            </div>`;
 
         const isApproved = activeReq.status === 'approved';
         const canEditRejected = activeReq.status === 'rejected' && (activeReq.requester_id === currentUser.id || canApply);
@@ -2836,7 +2832,7 @@ async function renderAssembly2000FlowDetailBody(projectNum) {
 // 直接取得する（組立の機械一覧とは完全に独立。単位が食い違っても構わない）
 async function renderTestRun2000FlowDetailBody(projectNum) {
     const { data: reqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'test_run');
 
     const { data: taskRows } = await db.from('tasks')
@@ -2866,8 +2862,8 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         return a.localeCompare(b);
     });
 
-    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    // 申請者・承認者名をまとめて取得（一覧に申請者・申請日・承認者・承認日時を直接表示するため）
+    const requesterIds = collectRequesterAndApproverIds(reqs || []);
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
@@ -2901,6 +2897,29 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">${detailModalCloseButtonLabel()}</button>
     `;
+}
+
+// 詳細モーダルの申請行で、申請者に加えて承認者の名前も引けるよう、両方のIDをまとめて返す
+function collectRequesterAndApproverIds(reqs) {
+    const ids = reqs.flatMap(r => [r.requester_id, ...(r.approval_steps || []).map(s => s.approver_id)]);
+    return [...new Set(ids.filter(Boolean))];
+}
+
+// 承認完了した申請について「承認者・承認日時」の行を返す（承認ステップが複数ある場合は最後に承認した人）。
+// 承認完了以外の申請では何も表示しない
+// startCol: 呼び出し側グリッドで「申請者」セルがある列番号。通常は「機械名｜申請者｜申請日」なので2、
+// 機械名の列が無いグリッド（2000番台 試運転の機械一覧行）では1を渡す
+function buildApprovalInfoMetaHtml(req, names, startCol = 2) {
+    if (req.status !== 'approved') return '';
+    const lastStep = (req.approval_steps || [])
+        .filter(s => s.status === 'approved' && s.decided_at)
+        .sort((a, b) => (a.decided_at < b.decided_at ? -1 : 1))
+        .pop();
+    if (!lastStep) return '';
+    const approverName = names[lastStep.approver_id] || '—';
+    // 申請者・申請日と同じ列に置いて先頭を揃える
+    return `<div class="unit-list-meta" style="margin-top:2px;grid-column:${startCol};">承認者: ${esc(approverName)}</div>`
+         + `<div class="unit-list-meta" style="margin-top:2px;grid-column:${startCol + 1};">承認日: ${esc(fmtDateTime(lastStep.decided_at))}</div>`;
 }
 
 // ===== 組立(assembly) 詳細モーダル =====
@@ -2943,13 +2962,13 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         return;
     }
     const { data: reqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
     // 電気艤装タスクがある機械は、この画面内に「電装」セクションも合わせて表示する
     const { data: elecReqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'electrical')
         .order('created_at', { ascending: true });
 
@@ -2977,8 +2996,8 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const pInfo = projectsMap[projectNum] || {};
 
-    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set([...(reqs || []), ...(elecReqs || [])].map(r => r.requester_id).filter(Boolean))];
+    // 申請者・承認者名をまとめて取得（一覧に申請者・申請日・承認者・承認日時を直接表示するため）
+    const requesterIds = collectRequesterAndApproverIds([...(reqs || []), ...(elecReqs || [])]);
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
@@ -3089,9 +3108,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
             return `<div class="unit-list-row">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div style="display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;column-gap:10px;">
                         <div class="unit-list-name">${esc(machineLabel)}</div>
-                        <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                        <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div><div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>
+                        ${buildApprovalInfoMetaHtml(g.req, requesterNames)}
                     </div>
                     <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
                 </div>
@@ -3183,9 +3203,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <div style="display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;column-gap:10px;">
                     <div class="unit-list-name">${esc(machineLabel)}</div>
-                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div><div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>
+                    ${buildApprovalInfoMetaHtml(req, requesterNames)}
                 </div>
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
@@ -3529,7 +3550,9 @@ function buildMachineUnitRowsHtml(opts) {
             // 承認済み→完了報告書へ、それ以外→チェックシート（自分の却下分なら修正モード）へ直接飛ぶ
             const requesterName = requesterNames[activeReq.requester_id] || '—';
             const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
-            metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
+            metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div>`
+                     + `<div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>`
+                     + buildApprovalInfoMetaHtml(activeReq, requesterNames);
 
             const isApproved = activeReq.status === 'approved';
             const canEditRejected = activeReq.status === 'rejected' && (activeReq.requester_id === currentUser.id || canApply);
@@ -3591,7 +3614,7 @@ function buildMachineUnitRowsHtml(opts) {
 
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <div style="display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;column-gap:10px;">
                     <div class="unit-list-name">${esc(unitLabel)}</div>
                     ${metaHtml}
                 </div>
@@ -3609,13 +3632,13 @@ function buildMachineUnitRowsHtml(opts) {
 
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
 
     // 電装(electrical)も2000番台はユニット単位申請のため、組立と同じ構成でユニット一覧を右列に表示する
     const { data: elecReqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'electrical')
         .order('created_at', { ascending: true });
 
@@ -3637,8 +3660,8 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
     const canApply     = canApplyFlow('assembly');
     const canApplyElec = canApplyFlow('electrical');
 
-    // 申請者名をまとめて取得（組立・電装合算、一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set([...(reqs || []), ...(elecReqs || [])].map(r => r.requester_id).filter(Boolean))];
+    // 申請者・承認者名をまとめて取得（組立・電装合算、一覧に申請者・申請日・承認者・承認日時を直接表示するため）
+    const requesterIds = collectRequesterAndApproverIds([...(reqs || []), ...(elecReqs || [])]);
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
@@ -3933,7 +3956,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
         return;
     }
     const { data: reqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'test_run')
         .order('created_at', { ascending: true });
 
@@ -3947,8 +3970,8 @@ async function renderTestRunFlowDetailBody(projectNum) {
     const myRole = getEffectiveRole();
     const canApply = canApplyFlow('test_run');
 
-    // 申請者名をまとめて取得（一覧に申請者・申請日を直接表示するため）
-    const requesterIds = [...new Set((reqs || []).map(r => r.requester_id).filter(Boolean))];
+    // 申請者・承認者名をまとめて取得（一覧に申請者・申請日・承認者・承認日時を直接表示するため）
+    const requesterIds = collectRequesterAndApproverIds(reqs || []);
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
@@ -4025,9 +4048,10 @@ async function renderTestRunFlowDetailBody(projectNum) {
 
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <div style="display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;column-gap:10px;">
                     <div class="unit-list-name">${esc(machineLabel)}</div>
-                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>
+                    <div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div><div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>
+                    ${buildApprovalInfoMetaHtml(req, requesterNames)}
                 </div>
                 <div class="unit-list-status"><span class="status-badge ${cls}">${esc(label)}</span></div>
             </div>
@@ -4071,7 +4095,7 @@ async function openTestRunMachineDetailModal(projectNum, machine) {
 
 async function renderTestRunMachineDetailBody(projectNum, machine) {
     const { data: reqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status)')
+        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'test_run').eq('machine_name', machine)
         .order('created_at', { ascending: true });
 
@@ -4091,13 +4115,18 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
     let metaHtml = '', linkHtml = '', approvalHtml = '', bottomRightHtml = '';
 
     if (activeReq) {
-        let requesterName = '—';
-        if (activeReq.requester_id) {
-            const { data: pr } = await db.from('profiles').select('name').eq('id', activeReq.requester_id).maybeSingle();
-            requesterName = pr?.name || '—';
+        // 申請者・承認者名をまとめて取得
+        const names = {};
+        const ids = collectRequesterAndApproverIds([activeReq]);
+        if (ids.length > 0) {
+            const { data: prs } = await db.from('profiles').select('id, name').in('id', ids);
+            (prs || []).forEach(p => { names[p.id] = p.name; });
         }
+        const requesterName = names[activeReq.requester_id] || '—';
         const submittedDate = activeReq.created_at ? fmtDateTime(activeReq.created_at) : '—';
-        metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}　申請日: ${esc(submittedDate)}</div>`;
+        metaHtml = `<div class="unit-list-meta" style="margin-top:0;">申請者: ${esc(requesterName)}</div>`
+                 + `<div class="unit-list-meta" style="margin-top:0;">申請日: ${esc(submittedDate)}</div>`
+                 + buildApprovalInfoMetaHtml(activeReq, names);
 
         const isApproved = activeReq.status === 'approved';
         const canEditRejected = activeReq.status === 'rejected' && (activeReq.requester_id === currentUser.id || canApply);
@@ -4141,7 +4170,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         <div class="unit-list-wrap unit-list-wrap-wide">
             <div class="unit-list-row">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                    <div style="display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;column-gap:10px;">
                         <div class="unit-list-name">${esc(machine)}</div>
                         ${metaHtml}
                     </div>
