@@ -3568,12 +3568,14 @@ function buildMachineUnitRowsHtml(opts) {
             const unresolvedPendingCount = countUnresolvedPendingItems(activeReq);
             const hasUnresolvedPending = isApproved && unresolvedPendingCount > 0;
             const sheetUrl = canEditRejected ? `${meta.file}?draft_id=${activeReq.id}` : `${meta.file}?view=1&id=${activeReq.id}`;
-            const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
-                : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
-            const sheetLinkOnclick = hasUnresolvedPending
-                ? `viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')`
-                : `window.open('${sheetUrl}', '_blank')`;
-            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</span>`;
+            // 承認完了はペンディングの有無に関わらず「完了報告書を見る」に統一し、ペンディングがある場合は
+            // 右側（承認後は「不要にする」スイッチが出ず空いている位置）にバッジを出して、押すと詳細画面を開く
+            const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
+            if (hasUnresolvedPending) {
+                bottomRightHtml = `<span class="p2k-warn is-pending" style="cursor:pointer;" title="ペンディング項目の詳細を見る"
+                    onclick="viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')">⚠ ペンディング ${unresolvedPendingCount}件</span>`;
+            }
 
             const myStep = (activeReq.approval_steps || []).find(s =>
                 (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && activeReq.status === 'submitted');
