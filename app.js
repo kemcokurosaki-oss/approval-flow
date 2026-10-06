@@ -2547,9 +2547,9 @@ function aggregate2000FlowStatus(statuses) {
     return 'empty';
 }
 
-// 一覧カードのタイル1枚分。{ kind:'assembly'|'test_run', statuses, pendingCount, overdueCount, onclick, withArrow }
-function build2000FlowTileHtml({ kind, statuses, pendingCount, overdueCount, onclick, withArrow }) {
-    const isAssembly = kind === 'assembly';
+// 一覧カードのタイル1枚分。{ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }
+// stepLabel を空にすると STEP 表記を出さない（STEP1枠内の組立・電装サブタイル用）
+function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }) {
     const agg   = aggregate2000FlowStatus(statuses);
     const total = statuses.length;
     const done  = statuses.filter(s => s === 'approved').length;
