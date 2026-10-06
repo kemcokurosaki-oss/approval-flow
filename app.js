@@ -2933,7 +2933,9 @@ function buildApprovalInfoMetaHtml(req, names, startCol = 2) {
 // ===== 組立(assembly) 詳細モーダル =====
 // 丸クリック→詳細画面表示→チェックシートを入力する→機械・ユニットを入力→詳細画面に戻る→
 // 申請するボタンを押す→（承認後）完了ボタン表示→押すと組立フローを完了にできる、という流れをこのモーダル内で完結させる
-async function openAssemblyFlowDetailModal(projectNum) {
+// kind（2000番台のみ使用）: 'assembly' | 'electrical'。省略時は直前の種別を引き継ぐ（個別申請の詳細から一覧に戻る場合など）
+async function openAssemblyFlowDetailModal(projectNum, kind) {
+    if (kind) currentAssemblyFlowKind = kind;
     document.getElementById('detail_modal').classList.add('open');
     // 機械詳細（wide-machine-detail、2000番台のみ）から一覧に戻るケースがあるため、幅を通常サイズに戻す
     document.querySelector('#detail_modal .modal')?.classList.remove('wide-machine-detail');
