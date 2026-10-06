@@ -2097,14 +2097,25 @@ function renderProgressCards() {
                     return 'active';
                 });
                 tiles.push({
-                    kind: 'test_run', statuses, pendingCount: 0, overdueCount,
+                    stepLabel: 'STEP 2', title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
                     onclick: `openTestRunFlowDetailModal('${esc(num)}')`
                 });
             }
 
             if (tiles.length === 0) return '';
-            return '<div class="p2k-tiles' + (tiles.length === 1 ? ' is-single' : '') + '">'
-                + tiles.map((t, i) => build2000FlowTileHtml({ ...t, withArrow: i === 0 && tiles.length > 1 })).join('')
+            const hasGroup = !!tiles[0].group;
+            const cls = 'p2k-tiles' + (hasGroup ? ' has-group' : '') + (tiles.length === 1 ? (hasGroup ? ' is-group-only' : ' is-single') : '');
+            return `<div class="${cls}">`
+                + tiles.map((t, i) => {
+                    const withArrow = i === 0 && tiles.length > 1;
+                    if (!t.group) return build2000FlowTileHtml({ ...t, withArrow });
+                    // STEP1枠：組立・電装のサブタイルを左右に並べ、枠の右側に試運転への矢印を置く
+                    return `<div class="p2k-group">
+                        ${withArrow ? '<div class="p2k-tile-arrow"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M8.5 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>' : ''}
+                        <div class="p2k-group-head"><span class="p2k-tile-step">STEP 1</span><span class="p2k-group-title">組立・電装完了申請</span></div>
+                        <div class="p2k-group-tiles">${t.group.map(sub => build2000FlowTileHtml({ ...sub, withArrow: false })).join('')}</div>
+                    </div>`;
+                }).join('')
                 + '</div>';
         };
 
