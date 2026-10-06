@@ -2900,6 +2900,14 @@
 .p2k-warns { display: flex; gap: 6px; flex-wrap: wrap; }
 .p2k-warn { font-size: 12px; border-radius: 20px; padding: 2px 9px; background: #fdecec; color: #c0392b; }
 .p2k-warn.is-pending { background: #f6edfa; color: #8e44ad; }
+/* ユニット一覧：押すとペンディング詳細を開くボタン（押せない表示用の p2k-warn と見分けられるよう枠線＋矢印を付ける） */
+.pending-detail-btn {
+    font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1.4;
+    padding: 3px 10px; border-radius: 6px; cursor: pointer;
+    background: #f6edfa; color: #8e44ad; border: 1px solid #c39bd3;
+    transition: background .12s, border-color .12s;
+}
+.pending-detail-btn:hover { background: #ead7f3; border-color: #8e44ad; }
 .p2k-open-btn {
     flex-shrink: 0; display: flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 14px;
