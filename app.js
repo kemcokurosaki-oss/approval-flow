@@ -8040,6 +8040,25 @@ async function syncTaskCompletionOnFlowApproval(req) {
     }
 }
 
+// 検査・会議の開催案内送信・日程変更時に、開催日を工程表の該当タスク(start_date・end_date)へ書き戻す（承認フロー→工程表の一方向反映）
+// 検査・会議タスクは単日のため、開始日・終了日を開催日に揃える
+async function syncInspectionDateToTasks(req) {
+    if (!FLOW_TASK_SYNC_ENABLED) return;
+    if (!QA_MEETING_FLOWS.includes(req?.flow_type)) return;
+    const taskText = FLOW_APPROVAL_TASK_TEXT[req.flow_type];
+    if (!taskText || !req.project_number || !req.machine_name || !req.inspection_date) return;
+    try {
+        let q = db.from('tasks').update({ start_date: req.inspection_date, end_date: req.inspection_date })
+            .eq('project_number', req.project_number)
+            .eq('machine', req.machine_name)
+            .eq('text', taskText);
+        if (req.unit_name) q = q.eq('unit', req.unit_name);
+        await q;
+    } catch (e) {
+        console.warn('工程表への開催日書き戻しに失敗:', e);
+    }
+}
+
 // 出荷日（仮/確定、工場出荷/梱包出荷）を工程表(tasksテーブル)のstart_date・end_dateへ書き戻す（承認フロー→工程表の一方向反映）
 // 承認フロー対象（2000番台以外）の出荷タスクは単日のため、開始日・終了日を同じ日付に揃える
 // FLOW_TASK_SYNC_ENABLED（完了フラグ連携用）とは独立したフラグ
