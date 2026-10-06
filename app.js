@@ -2781,30 +2781,25 @@ function build2000TestRunRowHtml(num, machine, activeReq, myDraft, shipDate, isO
 
 // 2000番台：組立フロー「機械一覧」モーダルの中身（工番レベル）。一覧カードから常に最新の状態で開けるよう、
 // 個別モーダル群（renderAssemblyMachineDetailBody等）と同様にここでも都度DBから取得し直す
+// 組立・電装は一覧カードで別々のタイルから開くため、currentAssemblyFlowKind の種別だけを表示する
 async function renderAssembly2000FlowDetailBody(projectNum) {
+    const kind = currentAssemblyFlowKind;
+    const isElec = kind === 'electrical';
     const { data: reqs } = await db.from('approval_requests')
-        .select('*').eq('project_number', projectNum).eq('flow_type', 'assembly');
-    const assemblyReqsByProject = { [projectNum]: reqs || [] };
+        .select('*').eq('project_number', projectNum).eq('flow_type', kind);
+    const reqsByProject = { [projectNum]: reqs || [] };
 
-    const { data: elecReqs } = await db.from('approval_requests')
-        .select('*').eq('project_number', projectNum).eq('flow_type', 'electrical');
-    const electricalReqsByProject = { [projectNum]: elecReqs || [] };
-
-    const { data: notReqRows } = await db.from('assembly_unit_not_required')
+    const { data: notReqRows } = await db.from(isElec ? 'electrical_unit_not_required' : 'assembly_unit_not_required')
         .select('machine, unit').eq('project_number', projectNum);
-    const assemblyNotRequiredSet = new Set((notReqRows || []).map(r => `${projectNum}__${r.machine}__${r.unit || ''}`));
+    const notRequiredSet = new Set((notReqRows || []).map(r => `${projectNum}__${r.machine}__${r.unit || ''}`));
 
-    const { data: elecNotReqRows } = await db.from('electrical_unit_not_required')
-        .select('machine, unit').eq('project_number', projectNum);
-    const electricalNotRequiredSet = new Set((elecNotReqRows || []).map(r => `${projectNum}__${r.machine}__${r.unit || ''}`));
-
+    const taskName = isElec ? '電気艤装' : '機械組立';
     const { data: taskRows } = await db.from('tasks')
         .select('machine, text, end_date')
         .eq('project_number', projectNum)
-        .in('text', ['機械組立', '電気艤装', '工場出荷'])
+        .in('text', [taskName, '工場出荷'])
         .not('machine', 'is', null);
-    const machines = [...new Set((taskRows || []).filter(t => t.text === '機械組立').map(t => t.machine))];
-    const elecMachineSet = new Set((taskRows || []).filter(t => t.text === '電気艤装').map(t => t.machine));
+    const machines = [...new Set((taskRows || []).filter(t => t.text === taskName).map(t => t.machine))];
     const shipDateByMachine = {};
     (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
         if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
