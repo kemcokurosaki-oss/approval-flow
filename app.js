@@ -2571,8 +2571,8 @@ function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overd
         <div class="p2k-tile-head">
             <div class="p2k-tile-circle st-${agg}">${ICONS[agg]}</div>
             <div class="p2k-tile-titles">
-                <span class="p2k-tile-step">${isAssembly ? 'STEP 1' : 'STEP 2'}</span>
-                <span class="p2k-tile-title">${isAssembly ? '組立完了申請' : '試運転完了申請'}</span>
+                ${stepLabel ? `<span class="p2k-tile-step">${stepLabel}</span>` : ''}
+                <span class="p2k-tile-title">${title}</span>
             </div>
             <span class="p2k-pill st-${agg}">${PILLS[agg]}</span>
         </div>
