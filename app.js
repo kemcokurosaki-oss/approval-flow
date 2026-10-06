@@ -2080,8 +2080,8 @@ function renderProgressCards() {
         const showAssemblyNode   = hasAnyAssemblyTask || hasAssemblyReq;
 
         // ===== 2000番台：一覧カードには「STEP1（組立・電装）」「STEP2（試運転）」のタイル（進捗＋機械一覧を開くボタン）を並べる =====
-        // 申請は機械・ユニット単位のため、カード上には機械ごとの操作を置かず、〇台中〇台完了の進捗と注意バッジのみ表示する。
-        // 組立と電装は並行して進めるため、STEP1の枠内に左右2枚のサブタイルとして分けて表示し、台数・状態・機械一覧もそれぞれ別にする。
+        // 申請は機械・ユニット単位のため、カード上には機械ごとの操作を置かず、〇件中〇件完了の進捗と注意バッジのみ表示する。
+        // 組立と電装は並行して進めるため、STEP1の枠内に左右2枚のサブタイルとして分けて表示し、件数・状態・機械一覧もそれぞれ別にする。
         // タイル（または「機械一覧を見る」）を押すと、機械一覧モーダル（renderAssembly2000FlowDetailBody / renderTestRun2000FlowDetailBody）を開く。
         // 組立・電装：機械一覧 → 機械選択 → ユニット一覧 → 申請　／　試運転：機械一覧 → 機械選択 → 申請
         const build2000FlowButtons = () => {
@@ -2135,7 +2135,7 @@ function renderProgressCards() {
                     return 'active';
                 });
                 tiles.push({
-                    title: '試運転完了申請', statuses, pendingCount: 0, overdueCount, countUnit: '件',
+                    title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
                     onclick: `openTestRunFlowDetailModal('${esc(num)}')`
                 });
             }
@@ -2639,10 +2639,9 @@ function aggregate2000FlowStatus(statuses) {
     return 'empty';
 }
 
-// 一覧カードのタイル1枚分。{ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow, countUnit }
-// countUnit: 件数の単位（組立・電装は機械単位なので「台」、試運転はタスクの機械・ユニット単位なので「件」）
+// 一覧カードのタイル1枚分。{ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }
 // stepLabel を空にすると STEP 表記を出さない（STEP1枠内の組立・電装サブタイル用）
-function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow, countUnit = '台' }) {
+function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }) {
     const agg   = aggregate2000FlowStatus(statuses);
     const total = statuses.length;
     const done  = statuses.filter(s => s === 'approved').length;
@@ -2652,7 +2651,7 @@ function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overd
 
     const warns = [];
     if (agg === 'rejected')  warns.push('<span class="p2k-warn">⚠ 却下あり</span>');
-    if (overdueCount > 0)    warns.push(`<span class="p2k-warn">⚠ 未申請・未承認 ${overdueCount}${countUnit}</span>`);
+    if (overdueCount > 0)    warns.push(`<span class="p2k-warn">⚠ 未申請・未承認 ${overdueCount}件</span>`);
     if (pendingCount > 0)    warns.push(`<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`);
 
     const arrowHtml = withArrow
@@ -2671,7 +2670,7 @@ function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overd
         </div>
         <div class="p2k-progress">
             <div class="p2k-bar"><i style="width:${pct}%;"></i></div>
-            <span class="p2k-count">${total}${countUnit}中 ${done}${countUnit}完了</span>
+            <span class="p2k-count">${total}件中 ${done}件完了</span>
         </div>
         <div class="p2k-foot">
             <div class="p2k-warns">${warns.join('')}</div>
