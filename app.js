@@ -2657,37 +2657,29 @@ function build2000MachineListRowHtml({ machine, shipDate, badgesHtml, warningHtm
     </div>`;
 }
 
-// 組立（電気艤装タスクがある機械は電装の状況も統合して2つのバッジで表示）の行を1つ組み立てる
-function build2000AssemblyRowHtml(num, machine, hasElectrical, shipDate, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet) {
-    const assemblyStatus = computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject, assemblyNotRequiredSet);
-    const electricalStatus = hasElectrical
-        ? computeAssemblyAggStatusForMachine(num, machine, electricalReqsByProject, electricalNotRequiredSet)
-        : null;
+// 組立 or 電装（kind）の機械一覧の行を1つ組み立てる。組立・電装は別々の機械一覧で開くため、行の中身もその種別だけで判定する
+function build2000AssemblyRowHtml(num, machine, kind, shipDate, reqsByProject, notRequiredSet) {
+    const status = computeAssemblyAggStatusForMachine(num, machine, reqsByProject, notRequiredSet);
+    const badgesHtml = build2000StatusBadgeHtml('', status);
 
-    let badgesHtml = build2000StatusBadgeHtml(hasElectrical ? '組立' : '', assemblyStatus);
-    if (hasElectrical) badgesHtml += build2000StatusBadgeHtml('電装', electricalStatus);
-
-    const assemblyPendingCount = sumUnresolvedPendingItems((assemblyReqsByProject[num] || [])
+    const reqs = (reqsByProject || {})[num] || [];
+    const pendingCount = sumUnresolvedPendingItems(reqs
         .filter(r => r.status !== 'draft' && getAssemblyItemsForReq(r).some(it => it && it.machine === machine)));
-    const electricalPendingCount = hasElectrical
-        ? sumUnresolvedPendingItems((electricalReqsByProject[num] || [])
-            .filter(r => r.status !== 'draft' && getAssemblyItemsForReq(r).some(it => it && it.machine === machine)))
-        : 0;
-    const pendingCount = assemblyPendingCount + electricalPendingCount;
     const warningHtml = pendingCount > 0
         ? `<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`
         : '';
 
-    // ユニット区分がある機械は、一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する（組立ユニット基準）
-    const unitReqs  = (assemblyReqsByProject || {})[num] || [];
-    const unitList  = getAssemblyUnitListForMachine(machine, unitReqs).filter(u => u && u !== '-');
+    // ユニット区分がある機械は、一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する。
+    // 不要マークのユニットは分母から除く（全ユニットが不要なら「対象ユニットなし」）
+    const unitList = getAssemblyUnitListForMachine(machine, reqs).filter(u => u && u !== '-');
+    const targetUnits = unitList.filter(u => !(notRequiredSet || new Set()).has(`${num}__${machine}__${u}`));
     const unitProgress = unitList.length > 0
-        ? { total: unitList.length, done: unitList.filter(u => computeAssemblyUnitStatus(num, machine, u, unitReqs, assemblyNotRequiredSet) === 'done').length }
+        ? { total: targetUnits.length, done: targetUnits.filter(u => computeAssemblyUnitStatus(num, machine, u, reqs, notRequiredSet) === 'done').length }
         : null;
 
     return build2000MachineListRowHtml({
         machine, shipDate, badgesHtml, warningHtml, unitProgress,
-        linkOnclick: `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
+        linkOnclick: `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}', '${kind}')`
     });
 }
 
