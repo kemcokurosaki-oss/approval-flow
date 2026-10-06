@@ -1597,6 +1597,25 @@ async function loadProgress() {
         testRunMachinesByProject[num].add(t.machine);
     });
 
+    // 2000番台：試運転フローの申請単位（機械・ユニット）一覧。工程表の「試運転」タスクの機械・ユニットの
+    // 組み合わせをそのまま使う（組立のような固定マスタは使わず、工程表の実データに従う）
+    const testRunUnitsByProject = {};   // num -> [{machine, unit}]（出現順、重複無し）
+    const testRunTaskInfoByPair = {};   // `${num}__${machine}__${unit}` -> {end_date, is_completed}（同一組み合わせが複数あれば最短end_date）
+    (machineTasks || []).filter(t => t.text === '試運転').forEach(t => {
+        const num = (t.project_number || '').toString().trim();
+        if (!num || !t.machine) return;
+        const unit = normalizeTestRunUnit(t.unit);
+        if (!testRunUnitsByProject[num]) testRunUnitsByProject[num] = [];
+        if (!testRunUnitsByProject[num].some(p => p.machine === t.machine && p.unit === unit)) {
+            testRunUnitsByProject[num].push({ machine: t.machine, unit });
+        }
+        const key = `${num}__${t.machine}__${unit}`;
+        const existing = testRunTaskInfoByPair[key];
+        if (!existing || (t.end_date && (!existing.end_date || t.end_date < existing.end_date))) {
+            testRunTaskInfoByPair[key] = { end_date: t.end_date, is_completed: t.is_completed };
+        }
+    });
+
     // 申請レコードを反映。組立(assembly)は機械・ユニットが工程表と紐づかないため、machine_nameをキーにせず
     // 工番ごとの申請リストとして別管理する（assemblyReqsByProject）。他フローは従来通りmachine_nameをキーにする
     // 電装(electrical)も2000番台に限りユニット単位申請（assembly_items、machine_nameは確定時のみ設定）のため、
