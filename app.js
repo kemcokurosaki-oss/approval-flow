@@ -2085,7 +2085,7 @@ function renderProgressCards() {
         // タイル（または「機械一覧を見る」）を押すと、機械一覧モーダル（renderAssembly2000FlowDetailBody / renderTestRun2000FlowDetailBody）を開く。
         // 組立・電装：機械一覧 → 機械選択 → ユニット一覧 → 申請　／　試運転：機械一覧 → 機械選択 → 申請
         const build2000FlowButtons = () => {
-            const testRunMachines = [...(testRunMachinesByProject[num] || new Set())].sort();
+            const testRunPairs = testRunUnitsByProject[num] || [];
             const step1Tiles = [];
 
             if (showAssemblyNode) {
