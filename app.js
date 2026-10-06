@@ -1620,8 +1620,11 @@ async function loadProgress() {
     // 工番ごとの申請リストとして別管理する（assemblyReqsByProject）。他フローは従来通りmachine_nameをキーにする
     // 電装(electrical)も2000番台に限りユニット単位申請（assembly_items、machine_nameは確定時のみ設定）のため、
     // 組立と同じ理由でelectricalReqsByProjectに退避する。2000番以外の電装は従来通りmachine_nameキーのまま
+    // 試運転(test_run)も2000番台に限り機械・ユニット単位申請（machine_name+unit_name）のため、
+    // 同じ理由でtestRunReqsByProjectに退避する。2000番以外の試運転は従来通りmachine_nameキーのまま
     const assemblyReqsByProject = {};
     const electricalReqsByProject = {};
+    const testRunReqsByProject = {};
     (allReqs || []).forEach(req => {
         if (req.flow_type === 'assembly') {
             const num = req.project_number;
