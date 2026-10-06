@@ -2669,13 +2669,11 @@ function build2000AssemblyRowHtml(num, machine, kind, shipDate, reqsByProject, n
         ? `<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`
         : '';
 
-    // ユニット区分がある機械は、一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する。
+    // 一覧カードのタイルと同じ進捗バーで「ユニット〇件中〇件完了」を表示する（ユニット区分が無い機械は機械自体を1件として数える）。
     // 不要マークのユニットは分母から除く（全ユニットが不要なら「対象ユニットなし」）
-    const unitList = getAssemblyUnitListForMachine(machine, reqs).filter(u => u && u !== '-');
+    const unitList = getAssemblyUnitListForMachine(machine, reqs);
     const targetUnits = unitList.filter(u => !(notRequiredSet || new Set()).has(`${num}__${machine}__${u}`));
-    const unitProgress = unitList.length > 0
-        ? { total: targetUnits.length, done: targetUnits.filter(u => computeAssemblyUnitStatus(num, machine, u, reqs, notRequiredSet) === 'done').length }
-        : null;
+    const unitProgress = { total: targetUnits.length, done: targetUnits.filter(u => computeAssemblyUnitStatus(num, machine, u, reqs, notRequiredSet) === 'done').length };
 
     return build2000MachineListRowHtml({
         machine, shipDate, badgesHtml, warningHtml, unitProgress,
