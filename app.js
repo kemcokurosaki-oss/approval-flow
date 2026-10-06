@@ -1684,7 +1684,7 @@ async function loadProgress() {
         return;
     }
 
-    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet, testRunMachinesByProject };
+    progressCachedData = { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet, testRunMachinesByProject, testRunUnitsByProject, testRunTaskInfoByPair, testRunReqsByProject };
 
     el.innerHTML = '<div id="progress_cards_wrap"></div>';
     _syncProgressControls();
@@ -1831,7 +1831,7 @@ function renderProgressCards() {
         return;
     }
 
-    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet, testRunMachinesByProject } = progressCachedData;
+    const { baseNums, projectData, machineTaskSet, projectFlowSet, shippingApproverNameMap, taskInfoMap, projectFlowInfoMap, shippingTasksMap, assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet, testRunMachinesByProject, testRunUnitsByProject, testRunTaskInfoByPair, testRunReqsByProject } = progressCachedData;
     const hasTask        = (num, machine, taskText) => machineTaskSet.has(`${num}__${machine}__${taskText}`);
     const hasProjectFlow = (num, text) => (projectFlowSet || new Set()).has(`${num}__${text}`);
     // 梱包出荷の有無を設定できるのは営業・品証・製管のみ
@@ -1925,9 +1925,16 @@ function renderProgressCards() {
     };
 
     const projectHasOverdueFlow = (num) => {
+        // 2000番台の試運転は機械・ユニット単位の申請のため、試運転タスクの機械・ユニットごとに判定する
+        const is2000s = is2000sSeries(num);
+        if (is2000s && (testRunUnitsByProject[num] || []).some(({ machine, unit }) =>
+            isTestRunPairOverdue(num, machine, unit, findTestRunReq(testRunReqsByProject[num], machine, unit), testRunTaskInfoByPair))) {
+            return true;
+        }
         return Object.keys(projectData[num] || {}).some(machine => {
             const flows = projectData[num][machine].flows || {};
-            const mainOverdue = Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType => isFlowOverdue(num, machine, flowType, flows[flowType]));
+            const mainOverdue = Object.keys(OVERDUE_FLOW_TASK_TEXT).some(flowType =>
+                !(is2000s && flowType === 'test_run') && isFlowOverdue(num, machine, flowType, flows[flowType]));
             if (mainOverdue) return true;
             return QA_MEETING_FLOWS.some(flowType => isInviteFlowOverdue(num, machine, flowType, flows[flowType]));
         });
