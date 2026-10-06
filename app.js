@@ -3697,7 +3697,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         : '';
     const kindLabel = isElec ? '電装' : '組立';
 
-    document.getElementById('detail_title').textContent = `${kindLabel}フロー（${machine}）`;
+    document.getElementById('detail_title').textContent = `${kindLabel}フロー`;
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
