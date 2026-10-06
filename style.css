@@ -2894,7 +2894,8 @@
 .p2k-bar { flex: 1; height: 6px; border-radius: 3px; background: #e6ebf3; overflow: hidden; }
 .p2k-bar > i { display: block; height: 100%; border-radius: 3px; background: #2ba55d; }
 .p2k-count { font-size: 13px; color: #5b6b80; font-weight: 700; white-space: nowrap; }
-.p2k-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+.p2k-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; flex-wrap: wrap; }
+.p2k-foot .p2k-open-btn { margin-left: auto; }
 .p2k-warns { display: flex; gap: 6px; flex-wrap: wrap; }
 .p2k-warn { font-size: 12px; border-radius: 20px; padding: 2px 9px; background: #fdecec; color: #c0392b; }
 .p2k-warn.is-pending { background: #f6edfa; color: #8e44ad; }
