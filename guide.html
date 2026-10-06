@@ -159,6 +159,23 @@
     .g2k-warn { font-size: 12px; border-radius: 20px; padding: 2px 9px; background: #f6edfa; color: #8e44ad; white-space: nowrap; }
     .g2k-btn { margin-left: auto; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 14px; background: #2f6fb0; color: #fff; white-space: nowrap; }
 
+    /* 2000番完了報告：申請の単位（工事番号 → 機械 → ユニット）の構成図 */
+    .g2k-tree { display: grid; grid-template-columns: 130px 24px 130px 24px minmax(0,1fr); gap: 10px 0; align-items: center; padding: 20px 22px; background: #fff; }
+    .g2k-tree-h { font-size: 12px; font-weight: 700; color: #8a94a6; text-align: center; }
+    .g2k-tree-h.is-left { text-align: left; }
+    .g2k-tree-arrow { text-align: center; color: #9fb0c6; font-weight: 700; }
+    .g2k-node { border: 1px solid #cdd8e8; border-radius: 10px; padding: 9px 10px; font-size: 14px; font-weight: 700; color: #16233a; background: #f6f8fb; text-align: center; }
+    .g2k-node.is-project { grid-row: span 3; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+    .g2k-node small { display: block; font-size: 11px; font-weight: 600; color: #8a94a6; }
+    .g2k-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .g2k-chip { border: 1px solid #d7dee9; border-radius: 8px; padding: 4px 10px; font-size: 12.5px; font-weight: 700; color: #3d4a5d; background: #fff; }
+    .g2k-chip.is-self { border-style: dashed; color: #5b6b80; }
+    .g2k-chip-note { font-size: 11.5px; color: #8a94a6; }
+    .g2k-apply { display: inline-block; margin-top: 4px; font-size: 11.5px; font-weight: 700; border-radius: 20px; padding: 2px 10px; }
+    .g2k-apply.is-testrun { background: #dbeafe; color: #1e40af; }
+    .g2k-apply.is-unit    { background: #fff3cd; color: #856404; }
+    .g2k-apply.is-unit b  { color: #6f2fa8; }
+
     /* 2000番完了報告：機械一覧・ユニット一覧モーダル */
     .g2k-modal { width: 780px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgba(20,36,63,.18); }
     .g2k-modal-head { background: #16233a; color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; display: flex; justify-content: space-between; }
@@ -895,16 +912,16 @@
             <div class="section-eyebrow">Chapter 7</div>
             <h2>2000番 完了報告</h2>
             <p>2000番台の工事番号は、組立・電装・試運転のみが承認フローの対象です。この専用画面では、工事番号ごとのカードに「組立」「電装」「試運転」の進み具合を台数で表示し、そこから機械一覧・ユニット一覧を開いて確認・申請します。</p>
-            <div class="flowline">
-                <div class="flow-step"><div class="flow-dot">1</div><span class="label">一覧カード</span><span class="sub">種類を選ぶ</span></div>
-                <div class="flow-arrow"></div>
-                <div class="flow-step"><div class="flow-dot">2</div><span class="label">機械一覧</span><span class="sub">機械を選ぶ</span></div>
-                <div class="flow-arrow"></div>
-                <div class="flow-step"><div class="flow-dot">3</div><span class="label">ユニット一覧</span><span class="sub">ユニットを選ぶ</span></div>
-                <div class="flow-arrow"></div>
-                <div class="flow-step"><div class="flow-dot">4</div><span class="label">申請</span><span class="sub">チェックシート</span></div>
-            </div>
-            <div class="note">試運転はユニットの区分がないため、機械一覧から直接申請します（ユニット一覧はありません）。</div>
+            <h3>基本ルール</h3>
+            <ul>
+                <li><b>申請の単位</b>：組立・電装は<b>ユニット単位</b>、試運転は<b>機械単位</b>で申請します（試運転にはユニット一覧はなく、機械一覧から直接申請します）。</li>
+                <li><b>組立と電装は並行して進める</b>：組立と電装はそれぞれ別に申請・承認し、画面上の状態・台数・機械一覧も別々に表示されます。電装は、工程表に「電気艤装」タスクがある機械だけが対象です。</li>
+                <li><b>機械の完了</b>：その機械の全ユニットが「承認済み」または「不要」になると、その機械は完了です（組立・電装それぞれで判定）。</li>
+                <li><b>作業がないユニットは「不要」にする</b>：標準のユニット一覧のうち作業がないユニットは、ユニット一覧で「不要」にします。「不要」は完了扱いになり、完了件数の対象からも外れます。</li>
+                <li><b>標準の一覧にないユニット</b>：ユニット一覧の「＋ 一覧にないユニットを申請する」から申請します。申請した側（組立または電装）にだけ追加されます。</li>
+                <li><b>試運転準備</b>：試運転がある機械では、ユニットごとに組立・電装（電気艤装タスクがある場合）の両方の「試運転準備」にチェックが入ると、試運転担当者へ通知が届きます。</li>
+                <li><b>2000番台はこの画面から</b>：通常の「承認ステータス」画面には2000番台は表示されません。確認・申請はこの「2000番 完了報告」画面から行います。</li>
+            </ul>
 
             <h3>一覧カード</h3>
             <div class="compare">
@@ -1049,7 +1066,6 @@
             </div>
             </div>
             <div class="note">電装の機械一覧・ユニット一覧も、組立と同じ見方・操作です（モーダルのタイトルが「電装フロー」、ユニット一覧の見出しが「電装」になります）。</div>
-            <div class="note">通常の「承認ステータス」画面には2000番台は表示されません。2000番台の案件はこの画面から確認・申請してください。</div>
         </section>
 
         <section id="s8">
