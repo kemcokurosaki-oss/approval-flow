@@ -137,6 +137,25 @@
     .fc-line-pending { background: #e6ebf3; }
     .fc-line-rejected { background: #f3c6c8; }
 
+    /* 2000番完了報告：一覧カードのタイル（組立・電装の枠 → 試運転） */
+    .g2k-tiles { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 26px; margin-top: 12px; }
+    .g2k-group { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; padding: 10px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
+    .g2k-tile { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
+    .g2k-group .g2k-tile { background: #fff; border: 1px dashed #b8c4d6; }
+    .g2k-arrow { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); color: #9fb0c6; font-weight: 700; }
+    .g2k-head { display: flex; align-items: center; gap: 8px; }
+    .g2k-circle { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid transparent; }
+    .g2k-title { flex: 1; font-size: 13px; font-weight: 700; color: #16233a; white-space: nowrap; }
+    .g2k-pill { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
+    .g2k-pill.is-active { background: #fff3cd; color: #856404; }
+    .g2k-pill.is-empty  { background: #e9ecef; color: #6c757d; }
+    .g2k-progress { display: flex; align-items: center; gap: 8px; }
+    .g2k-bar { flex: 1; height: 5px; border-radius: 3px; background: #e6ebf3; overflow: hidden; }
+    .g2k-bar > i { display: block; height: 100%; border-radius: 3px; background: #2ba55d; }
+    .g2k-count { font-size: 11.5px; color: #5b6b80; font-weight: 700; white-space: nowrap; }
+    .g2k-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 26px; }
+    .g2k-btn { margin-left: auto; font-size: 11.5px; font-weight: 700; border-radius: 7px; padding: 5px 10px; background: #2f6fb0; color: #fff; white-space: nowrap; }
+
     /* マイページ（サイドパネル） */
     .side-panel-header { height: 52px; padding: 0 16px; background: #16233a; display: flex; align-items: center; justify-content: space-between; }
     .side-panel-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
