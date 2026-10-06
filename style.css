@@ -2843,10 +2843,21 @@
          ／機械一覧モーダルのステップ表示
    ========================================================= */
 
-.main-layout.assembly-report-mode .prog-card { width: min(820px, 100%); }
+.main-layout.assembly-report-mode .prog-card { width: min(1200px, 100%); }
 
 .p2k-tiles { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 28px; margin-top: 12px; }
 .p2k-tiles.is-single { grid-template-columns: minmax(0,1fr); max-width: 50%; }
+/* STEP1枠（組立・電装）がある場合：STEP1枠を2、試運転を1の比率で並べる */
+.p2k-tiles.has-group { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+.p2k-tiles.is-group-only { grid-template-columns: minmax(0,1fr); max-width: 67%; }
+.p2k-group {
+    position: relative; display: flex; flex-direction: column; gap: 10px;
+    padding: 10px 12px 12px; border-radius: 14px; border: 1px dashed #cdd8e8; background: #fbfcfe;
+}
+.p2k-group-head { display: flex; align-items: baseline; gap: 10px; padding: 0 4px; }
+.p2k-group-title { font-size: 13px; font-weight: 700; color: #3d4a5d; }
+.p2k-group-tiles { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; flex: 1; }
+.p2k-group .p2k-tile-arrow { right: -25px; }
 .p2k-tile {
     position: relative; display: flex; flex-direction: column; gap: 12px;
     padding: 14px 16px; border-radius: 12px; background: #f6f8fb; border: 1px solid #e5e9f1;
