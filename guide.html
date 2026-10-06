@@ -160,7 +160,7 @@
     .g2k-btn { margin-left: auto; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 14px; background: #2f6fb0; color: #fff; white-space: nowrap; }
 
     /* 2000番完了報告：機械一覧・ユニット一覧モーダル */
-    .g2k-modal { width: 640px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgba(20,36,63,.18); }
+    .g2k-modal { width: 780px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgba(20,36,63,.18); }
     .g2k-modal-head { background: #16233a; color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; display: flex; justify-content: space-between; }
     .g2k-modal-body { padding: 16px 18px 18px; }
     .g2k-modal-title { font-size: 17px; font-weight: 700; color: #1e3a5f; }
@@ -895,9 +895,21 @@
             <div class="section-eyebrow">Chapter 7</div>
             <h2>2000番 完了報告</h2>
             <p>2000番台の工事番号は、組立・電装・試運転のみが承認フローの対象です。この専用画面では、工事番号ごとのカードに「組立」「電装」「試運転」の進み具合を台数で表示し、そこから機械一覧・ユニット一覧を開いて確認・申請します。</p>
+            <div class="flowline">
+                <div class="flow-step"><div class="flow-dot">1</div><span class="label">一覧カード</span><span class="sub">種類を選ぶ</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">2</div><span class="label">機械一覧</span><span class="sub">機械を選ぶ</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">3</div><span class="label">ユニット一覧</span><span class="sub">ユニットを選ぶ</span></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step"><div class="flow-dot">4</div><span class="label">申請</span><span class="sub">チェックシート</span></div>
+            </div>
+            <div class="note">試運転はユニットの区分がないため、機械一覧から直接申請します（ユニット一覧はありません）。</div>
+
+            <h3>一覧カード</h3>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup" style="width:720px;">
+            <div class="mockup" style="max-width:none; width:980px;">
                 <div class="mockup-bg">
                     <div class="prog-card">
                         <div class="prog-card-header">
@@ -908,46 +920,135 @@
                             <div class="g2k-group">
                                 <span class="g2k-arrow">→</span>
                                 <div class="g2k-tile">
-                                    <div class="g2k-head"><div class="g2k-circle fc-active">▶</div><span class="g2k-title">組立完了申請<span class="callout">2</span></span><span class="g2k-pill is-active">申請中</span></div>
-                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:38%;"></i></div><span class="g2k-count">8台中 3台完了<span class="callout">4</span></span></div>
-                                    <div class="g2k-foot"><span class="flow-pending-badge">⚠ ペンディング 1件<span class="callout">5</span></span><span class="g2k-btn">機械一覧を見る ›<span class="callout">6</span></span></div>
+                                    <div class="g2k-head"><div class="g2k-circle st-empty">○</div><span class="g2k-title">組立完了申請<span class="callout">2</span></span><span class="g2k-pill is-empty">未申請</span></div>
+                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:0%;"></i></div><span class="g2k-count">8台中 0台完了<span class="callout">4</span></span></div>
+                                    <div class="g2k-foot"><span class="g2k-warn">⚠ ペンディング 1件<span class="callout">5</span></span><span class="g2k-btn">機械一覧を見る ›<span class="callout">6</span></span></div>
                                 </div>
                                 <div class="g2k-tile">
-                                    <div class="g2k-head"><div class="g2k-circle fc-active">▶</div><span class="g2k-title">電装完了申請<span class="callout">3</span></span><span class="g2k-pill is-active">申請中</span></div>
+                                    <div class="g2k-head"><div class="g2k-circle st-active">▶</div><span class="g2k-title">電装完了申請<span class="callout">3</span></span><span class="g2k-pill is-active">申請中</span></div>
                                     <div class="g2k-progress"><div class="g2k-bar"><i style="width:33%;"></i></div><span class="g2k-count">6台中 2台完了</span></div>
                                     <div class="g2k-foot"><span class="g2k-btn">機械一覧を見る ›</span></div>
                                 </div>
                             </div>
                             <div class="g2k-tile">
-                                <div class="g2k-head"><div class="g2k-circle fc-empty">○</div><span class="g2k-title">試運転完了申請<span class="callout">7</span></span><span class="g2k-pill is-empty">未申請</span></div>
-                                <div class="g2k-progress"><div class="g2k-bar"><i style="width:0%;"></i></div><span class="g2k-count">8台中 0台完了</span></div>
+                                <div class="g2k-head"><div class="g2k-circle st-active">▶</div><span class="g2k-title">試運転完了申請<span class="callout">7</span></span><span class="g2k-pill is-active">申請中</span></div>
+                                <div class="g2k-progress"><div class="g2k-bar"><i style="width:25%;"></i></div><span class="g2k-count">8台中 2台完了</span></div>
                                 <div class="g2k-foot"><span class="g2k-btn">機械一覧を見る ›</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mockup-caption">2000番 完了報告画面：組立と電装は並行して進めるため1つの枠の中に左右に並べ、そのあとに試運転が続く</div>
             </div>
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
                 <li><span class="callout">1</span><span><b>工事番号・工事名</b>と、機械の中で最も早い工場出荷予定日</span></li>
                 <li><span class="callout">2</span><span><b>組立</b>：工程表に「機械組立」タスクがある機械が対象</span></li>
-                <li><span class="callout">3</span><span><b>電装</b>：工程表に「電気艤装」タスクがある機械が対象。電気艤装タスクがない工事番号では表示されない</span></li>
+                <li><span class="callout">3</span><span><b>電装</b>：工程表に「電気艤装」タスクがある機械が対象。電気艤装タスクがない工事番号では表示されない。組立と並行して進めるため、組立と同じ枠の中に並べて表示</span></li>
                 <li><span class="callout">4</span><span><b>完了台数</b>：その機械の全ユニットが「承認済み」または「不要」になると1台完了</span></li>
                 <li><span class="callout">5</span><span><b>ペンディング</b>：完了報告にまだ解決していないペンディング項目がある場合の件数</span></li>
-                <li><span class="callout">6</span><span><b>機械一覧を見る</b>：組立・電装はそれぞれ別の機械一覧が開く</span></li>
-                <li><span class="callout">7</span><span><b>試運転</b>：機械単位で申請する（ユニットの区分なし）</span></li>
+                <li><span class="callout">6</span><span><b>機械一覧を見る</b>：組立・電装・試運転それぞれの機械一覧が開く</span></li>
+                <li><span class="callout">7</span><span><b>試運転</b>：機械単位で申請する</span></li>
             </ol>
             </div>
             </div>
-            <h3>機械一覧・ユニット一覧</h3>
-            <ul>
-                <li><b>機械一覧</b>：機械ごとに状態（未申請・申請中・完了など）、「ユニット〇件中〇件完了」、工場出荷予定日、ペンディング件数を表示します。「不要」にしたユニットは件数に含みません。ユニットの区分がない機械は、機械そのものを1件として数えます。</li>
-                <li><b>ユニット一覧</b>：機械の「ユニット一覧を見る」から開きます。ユニットごとに申請、「不要にする」の切り替え、試運転準備のチェックを行います。標準のユニット一覧にないユニットは、下の「＋ 一覧にないユニットを申請する」から申請できます（組立・電装それぞれ、申請した側にだけ追加されます）。</li>
-                <li><b>承認完了したユニット</b>：「完了報告書を見る →」から完了報告書を開けます。ペンディング項目がある場合は右側に「⚠ ペンディング 〇件 →」ボタンが表示され、押すとペンディングの詳細を確認できます。</li>
-            </ul>
-            <div class="note">組立と電装の状態・台数はそれぞれ別に表示されます。試運転準備の通知は、ユニットごとに組立・電装（電気艤装タスクがある場合）の両方の試運転準備にチェックが入った時点で送られます。</div>
+
+            <h3>機械一覧</h3>
+            <div class="compare">
+            <div class="compare-visual">
+            <div class="mockup" style="max-width:none; width:auto;">
+                <div class="mockup-panel-wrap">
+                    <div class="g2k-modal">
+                        <div class="g2k-modal-head"><span>組立フロー<span class="callout">1</span></span><span>×</span></div>
+                        <div class="g2k-modal-body">
+                            <div class="g2k-modal-title">2810　三五</div>
+                            <div class="g2k-modal-sub">高張力ドアビーム対応造管ライン</div>
+                            <div class="g2k-steps">
+                                <span class="g2k-step is-current"><span class="g2k-step-num">1</span>機械一覧</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step"><span class="g2k-step-num">2</span>機械を選択</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step"><span class="g2k-step-num">3</span>ユニット一覧</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step"><span class="g2k-step-num">4</span>申請</span>
+                            </div>
+                            <div class="g2k-grid">
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top"><span class="g2k-card-name">【FS】<span class="callout">2</span></span><span class="g2k-badge yellow">申請中<span class="callout">3</span></span></div>
+                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:29%;"></i></div><span class="g2k-count">ユニット 7件中 2件完了<span class="callout">4</span></span></div>
+                                    <div class="g2k-meta">工場出荷予定日 2026/11/20</div>
+                                    <div class="g2k-card-row"><span class="g2k-warn">⚠ ペンディング 1件</span><span class="g2k-open">ユニット一覧を見る ›<span class="callout">5</span></span></div>
+                                </div>
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top"><span class="g2k-card-name">【FL】</span><span class="g2k-badge green">完了</span></div>
+                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:100%;"></i></div><span class="g2k-count">ユニット 1件中 1件完了</span></div>
+                                    <div class="g2k-meta">工場出荷予定日 2026/10/30</div>
+                                    <div class="g2k-card-row"><span></span><span class="g2k-open">ユニット一覧を見る ›</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="compare-notes">
+            <ol class="callout-list">
+                <li><span class="callout">1</span><span><b>組立フロー／電装フロー</b>：一覧カードで押したほうの機械一覧が開く</span></li>
+                <li><span class="callout">2</span><span><b>機械名</b>：工場出荷予定日の早い順に並ぶ</span></li>
+                <li><span class="callout">3</span><span><b>状態</b>：未申請・入力中・申請中・却下・完了</span></li>
+                <li><span class="callout">4</span><span><b>ユニットの完了件数</b>：「不要」にしたユニットは件数に含まない。ユニットの区分がない機械は、機械そのものを1件として数える</span></li>
+                <li><span class="callout">5</span><span><b>ユニット一覧を見る</b>：その機械のユニット一覧が開く</span></li>
+            </ol>
+            </div>
+            </div>
+
+            <h3>ユニット一覧</h3>
+            <div class="compare">
+            <div class="compare-visual">
+            <div class="mockup" style="max-width:none; width:auto;">
+                <div class="mockup-panel-wrap">
+                    <div class="g2k-modal">
+                        <div class="g2k-modal-head"><span>組立フロー</span><span>×</span></div>
+                        <div class="g2k-modal-body">
+                            <div class="g2k-modal-title">2810【FS】　三五</div>
+                            <div class="g2k-modal-sub">高張力ドアビーム対応造管ライン</div>
+                            <div class="g2k-steps">
+                                <span class="g2k-step is-done"><span class="g2k-step-num">✓</span>機械一覧</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step is-done"><span class="g2k-step-num">✓</span>【FS】</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step is-current"><span class="g2k-step-num">3</span>ユニット一覧</span><span class="g2k-step-sep">›</span>
+                                <span class="g2k-step"><span class="g2k-step-num">4</span>申請</span>
+                            </div>
+                            <div class="g2k-section-title"><span class="g2k-kind">組立</span>ユニット別 申請状況</div>
+                            <div class="g2k-grid">
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top"><span class="g2k-card-name">EG</span><span class="g2k-badge gray">未申請</span></div>
+                                    <div class="g2k-card-row"><span class="g2k-link">申請する →<span class="callout">1</span></span><span class="g2k-toggle"><i></i>ON<span class="callout">2</span></span></div>
+                                    <div class="g2k-check">☐ 試運転準備: <b>未完了</b><span class="callout">3</span></div>
+                                </div>
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top">
+                                        <div><span class="g2k-card-name">TH</span><div class="g2k-meta">申請者: 森村　申請日: 2026/9/24<br>承認者: 常務　承認日: 2026/10/5</div></div>
+                                        <span class="g2k-badge green">承認完了</span>
+                                    </div>
+                                    <div class="g2k-card-row"><span class="g2k-link">完了報告書を見る →<span class="callout">4</span></span><span class="g2k-pending-btn">⚠ ペンディング 1件 →<span class="callout">5</span></span></div>
+                                    <div class="g2k-check">☐ 試運転準備: <b>未完了</b></div>
+                                </div>
+                            </div>
+                            <div class="g2k-add">＋ 一覧にないユニットを申請する<span class="callout">6</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="compare-notes">
+            <ol class="callout-list">
+                <li><span class="callout">1</span><span><b>申請する</b>：そのユニットのチェックシートを入力して申請する</span></li>
+                <li><span class="callout">2</span><span><b>不要にする</b>：そのユニットの作業がない場合はOFFにする。「不要」は完了扱いになり、機械一覧の件数からも外れる</span></li>
+                <li><span class="callout">3</span><span><b>試運転準備</b>：試運転がある機械のみ表示。ユニットごとに組立・電装（電気艤装タスクがある場合）の両方にチェックが入ると、試運転担当者へ通知が届く</span></li>
+                <li><span class="callout">4</span><span><b>完了報告書を見る</b>：承認完了したユニットの完了報告書を開く</span></li>
+                <li><span class="callout">5</span><span><b>ペンディング</b>：まだ解決していないペンディング項目がある場合に表示。押すとペンディングの詳細を確認できる</span></li>
+                <li><span class="callout">6</span><span><b>一覧にないユニットを申請する</b>：標準のユニット一覧にないユニットを申請する。申請した側（組立または電装）にだけ追加される</span></li>
+            </ol>
+            </div>
+            </div>
+            <div class="note">電装の機械一覧・ユニット一覧も、組立と同じ見方・操作です（モーダルのタイトルが「電装フロー」、ユニット一覧の見出しが「電装」になります）。</div>
             <div class="note">通常の「承認ステータス」画面には2000番台は表示されません。2000番台の案件はこの画面から確認・申請してください。</div>
         </section>
 
