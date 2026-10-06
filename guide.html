@@ -855,54 +855,60 @@
         <section id="s7">
             <div class="section-eyebrow">Chapter 7</div>
             <h2>2000番 完了報告</h2>
-            <p>2000番台の工事番号は、組立・試運転のみが承認フローの対象です。この専用画面では、1つの工事番号の中にある複数の機械（FL・FS・LE・PC など）ごとの進捗を並べて確認できます。</p>
+            <p>2000番台の工事番号は、組立・電装・試運転のみが承認フローの対象です。この専用画面では、工事番号ごとのカードに「組立」「電装」「試運転」の進み具合を台数で表示し、そこから機械一覧・ユニット一覧を開いて確認・申請します。</p>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup">
+            <div class="mockup" style="width:720px;">
                 <div class="mockup-bg">
                     <div class="prog-card">
                         <div class="prog-card-header">
                             <div class="prog-card-header-left"><span class="prog-card-num">2810<span class="callout">1</span></span><span class="prog-card-label">三五　高張力ドアビーム対応造管ライン</span></div>
+                            <span class="prog-card-date"><span class="prog-card-date-label">工場出荷予定日(最短)</span><span class="prog-card-date-value">2026/10/30</span></span>
                         </div>
-                        <div class="prog-machine-row">
-                            <div class="prog-machine-row-header"><span class="prog-machine-label">【FL】<span class="callout">2</span></span><span class="prog-card-date"><span class="prog-card-date-label">工場出荷予定日</span><span class="prog-card-date-value">2026/10/16</span><span class="callout">3</span></span></div>
-                            <div class="flow-steps">
-                                <div class="flow-node"><div class="flow-circle fc-draft">✏</div><div class="flow-label">組立<span class="callout">4</span></div><div class="flow-date">入力中</div></div>
-                                <div class="flow-connector fc-line-pending"></div>
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div><div class="flow-overdue-badge">⚠ 未申請<span class="callout">5</span></div></div>
+                        <div class="g2k-tiles">
+                            <div class="g2k-group">
+                                <span class="g2k-arrow">→</span>
+                                <div class="g2k-tile">
+                                    <div class="g2k-head"><div class="g2k-circle fc-active">▶</div><span class="g2k-title">組立完了申請<span class="callout">2</span></span><span class="g2k-pill is-active">申請中</span></div>
+                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:38%;"></i></div><span class="g2k-count">8台中 3台完了<span class="callout">4</span></span></div>
+                                    <div class="g2k-foot"><span class="flow-pending-badge">⚠ ペンディング 1件<span class="callout">5</span></span><span class="g2k-btn">機械一覧を見る ›<span class="callout">6</span></span></div>
+                                </div>
+                                <div class="g2k-tile">
+                                    <div class="g2k-head"><div class="g2k-circle fc-active">▶</div><span class="g2k-title">電装完了申請<span class="callout">3</span></span><span class="g2k-pill is-active">申請中</span></div>
+                                    <div class="g2k-progress"><div class="g2k-bar"><i style="width:33%;"></i></div><span class="g2k-count">6台中 2台完了</span></div>
+                                    <div class="g2k-foot"><span class="g2k-btn">機械一覧を見る ›</span></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="prog-machine-row">
-                            <div class="prog-machine-row-header"><span class="prog-machine-label">【FS】</span><span class="prog-card-date"><span class="prog-card-date-label">工場出荷予定日</span><span class="prog-card-date-value">2026/10/2</span></span></div>
-                            <div class="flow-steps">
-                                <div class="flow-node"><div class="flow-circle fc-draft">✏</div><div class="flow-label">組立</div><div class="flow-date">入力中</div><div class="flow-overdue-badge">⚠ 未申請</div></div>
-                                <div class="flow-connector fc-line-pending"></div>
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
-                            </div>
-                        </div>
-                        <div class="prog-machine-row">
-                            <div class="prog-machine-row-header"><span class="prog-machine-label">【LE】</span><span class="prog-card-date"><span class="prog-card-date-label">工場出荷予定日</span><span class="prog-card-date-value">2026/10/2</span></span></div>
-                            <div class="flow-steps">
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">組立</div></div>
-                                <div class="flow-connector fc-line-pending"></div>
-                                <div class="flow-node"><div class="flow-circle fc-empty">○</div><div class="flow-label">試運転</div></div>
+                            <div class="g2k-tile">
+                                <div class="g2k-head"><div class="g2k-circle fc-empty">○</div><span class="g2k-title">試運転完了申請<span class="callout">7</span></span><span class="g2k-pill is-empty">未申請</span></div>
+                                <div class="g2k-progress"><div class="g2k-bar"><i style="width:0%;"></i></div><span class="g2k-count">8台中 0台完了</span></div>
+                                <div class="g2k-foot"><span class="g2k-btn">機械一覧を見る ›</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mockup-caption">2000番 完了報告画面：機械ごとに組立・試運転の進捗と工場出荷予定日を表示。未申請の機械には警告が表示される</div>
+                <div class="mockup-caption">2000番 完了報告画面：組立と電装は並行して進めるため1つの枠の中に左右に並べ、そのあとに試運転が続く</div>
             </div>
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span><b>工事番号・工事名</b></span></li>
-                <li><span class="callout">2</span><span><b>機械名</b>：1つの工事番号の中にある機械ごとに行が分かれる</span></li>
-                <li><span class="callout">3</span><span>機械ごとの<b>工場出荷予定日</b></span></li>
-                <li><span class="callout">4</span><span>組立・試運転の工程アイコン（承認ステータス画面と同じ見方）</span></li>
-                <li><span class="callout">5</span><span><b>未申請の警告</b>：予定日を過ぎても申請がない機械に表示される</span></li>
+                <li><span class="callout">1</span><span><b>工事番号・工事名</b>と、機械の中で最も早い工場出荷予定日</span></li>
+                <li><span class="callout">2</span><span><b>組立</b>：工程表に「機械組立」タスクがある機械が対象</span></li>
+                <li><span class="callout">3</span><span><b>電装</b>：工程表に「電気艤装」タスクがある機械が対象。電気艤装タスクがない工事番号では表示されない</span></li>
+                <li><span class="callout">4</span><span><b>完了台数</b>：その機械の全ユニットが「承認済み」または「不要」になると1台完了</span></li>
+                <li><span class="callout">5</span><span><b>ペンディング</b>：完了報告にまだ解決していないペンディング項目がある場合の件数</span></li>
+                <li><span class="callout">6</span><span><b>機械一覧を見る</b>：組立・電装はそれぞれ別の機械一覧が開く</span></li>
+                <li><span class="callout">7</span><span><b>試運転</b>：機械単位で申請する（ユニットの区分なし）</span></li>
             </ol>
             </div>
             </div>
+            <h3>機械一覧・ユニット一覧</h3>
+            <ul>
+                <li><b>機械一覧</b>：機械ごとに状態（未申請・申請中・完了など）、「ユニット〇件中〇件完了」、工場出荷予定日、ペンディング件数を表示します。「不要」にしたユニットは件数に含みません。ユニットの区分がない機械は、機械そのものを1件として数えます。</li>
+                <li><b>ユニット一覧</b>：機械の「ユニット一覧を見る」から開きます。ユニットごとに申請、「不要にする」の切り替え、試運転準備のチェックを行います。標準のユニット一覧にないユニットは、下の「＋ 一覧にないユニットを申請する」から申請できます（組立・電装それぞれ、申請した側にだけ追加されます）。</li>
+                <li><b>承認完了したユニット</b>：「完了報告書を見る →」から完了報告書を開けます。ペンディング項目がある場合は右側に「⚠ ペンディング 〇件 →」ボタンが表示され、押すとペンディングの詳細を確認できます。</li>
+            </ul>
+            <div class="note">組立と電装の状態・台数はそれぞれ別に表示されます。試運転準備の通知は、ユニットごとに組立・電装（電気艤装タスクがある場合）の両方の試運転準備にチェックが入った時点で送られます。</div>
             <div class="note">通常の「承認ステータス」画面には2000番台は表示されません。2000番台の案件はこの画面から確認・申請してください。</div>
         </section>
 
