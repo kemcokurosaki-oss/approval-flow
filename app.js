@@ -7649,11 +7649,14 @@ async function finalizeQaMeeting(requestId) {
     showLoading('処理中...');
     try {
         const { data: reqRow } = await db.from('approval_requests')
-            .select('project_number, machine_name').eq('id', requestId).single();
+            .select('project_number, machine_name, unit_name, flow_type').eq('id', requestId).single();
 
         await db.from('approval_requests')
             .update({ status: 'approved', updated_at: new Date().toISOString() })
             .eq('id', requestId);
+
+        // 検査・会議フローは承認ステップを持たないため、ここで工程表の該当タスクに完了チェックを入れる
+        await syncTaskCompletionOnFlowApproval(reqRow);
 
         // 外観検査/簡易検査/出荷品確認検査のいずれか＋（あれば）出荷確認会議が揃って完了したら、出荷フローを自動起票する
         if (reqRow?.project_number && reqRow?.machine_name) {
