@@ -2079,7 +2079,7 @@ function renderProgressCards() {
 
             const tiles = [];
             if (step1Tiles.length === 1) {
-                tiles.push({ ...step1Tiles[0], stepLabel: 'STEP 1' });
+                tiles.push(step1Tiles[0]);
             } else if (step1Tiles.length > 1) {
                 tiles.push({ group: step1Tiles });
             }
