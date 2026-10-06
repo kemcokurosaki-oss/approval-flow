@@ -6242,6 +6242,7 @@ function closeDetailModal() {
     document.querySelector('#detail_modal .modal').classList.remove('wide-machine-detail');
     currentAssemblyDetailProjectNum = null;
     currentAssemblyMachineDetail = null;
+    currentAssemblyFlowKind = 'assembly';
     currentTestRunMachineDetail = null;
     currentTestRunDetailProjectNum = null;
     ui.send('CLOSE');
