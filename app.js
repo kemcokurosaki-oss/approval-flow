@@ -2647,7 +2647,7 @@ function build2000MachineListRowHtml({ machine, shipDate, badgesHtml, warningHtm
                 <div class="unit-list-name">${nameHtml}</div>
                 <div class="unit-list-status" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">${badgesHtml}</div>
             </div>
-            ${unitProgress ? `<div class="p2k-progress p2k-mrow-progress"><div class="p2k-bar"><i style="width:${unitProgress.total > 0 ? Math.round(unitProgress.done / unitProgress.total * 100) : 0}%;"></i></div><span class="p2k-count">ユニット ${unitProgress.total}件中 ${unitProgress.done}件完了</span></div>` : ''}
+            ${unitProgress ? `<div class="p2k-progress p2k-mrow-progress"><div class="p2k-bar"><i style="width:${unitProgress.total > 0 ? Math.round(unitProgress.done / unitProgress.total * 100) : 0}%;"></i></div><span class="p2k-count">${unitProgress.total > 0 ? `ユニット ${unitProgress.total}件中 ${unitProgress.done}件完了` : '対象ユニットなし'}</span></div>` : ''}
             <div class="unit-list-meta">${shipMeta || '&nbsp;'}</div>
         </div>
         <div class="unit-list-row-actions p2k-foot">
