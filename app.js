@@ -2586,6 +2586,40 @@ function computeAssemblyAggStatusForMachine(num, machine, assemblyReqsByProject,
     return 'empty';
 }
 
+// 2000番台：試運転タスクのunit列を正規化する。「ALL」はユニット区別が無いことを表す
+// 工程表側の入力慣習のため、ユニット無し（空文字）として扱う（機械名のみ表示にする）
+function normalizeTestRunUnit(unit) {
+    const u = (unit || '').trim();
+    return u === 'ALL' ? '' : u;
+}
+
+// 2000番台：試運転の申請1件がこの機械・ユニットに該当するか判定する。unit_nameが無い申請
+// （ユニット単位化前に作られた機械単位の申請）のうち、承認済み・申請中・却下など既に確定した
+// ものは、その機械の全ユニットに一致するとみなす（過去の機械単位の承認をそのまま有効に扱うため）。
+// 一方、unit_nameが無い「下書きのまま放置された申請」は対象ユニットを1つに絞れないため、
+// 新しいユニット行では拾わない（拾うと、古い機械単位の下書き1件が全ユニットの「申請する」を
+// 乗っ取ってしまい、ユニットごとに新規申請できなくなるため）
+function testRunReqMatchesUnit(req, machine, unit) {
+    if (req.machine_name !== machine) return false;
+    if (req.unit_name != null) return req.unit_name === (unit || null);
+    if (req.status === 'draft') return !unit;
+    return true;
+}
+
+// 2000番台：機械・ユニットに対応する試運転申請を1件返す（申請中・承認済み・却下を優先、無ければ下書き）
+function findTestRunReq(reqsForProject, machine, unit) {
+    const matching = (reqsForProject || []).filter(req => testRunReqMatchesUnit(req, machine, unit));
+    return matching.find(r => r.status !== 'draft') || matching.find(r => r.status === 'draft') || null;
+}
+
+// 2000番台：機械・ユニット単位の試運転タスクが期日超過（未申請 or 未承認）か判定する
+function isTestRunPairOverdue(num, machine, unit, activeReq, taskInfoByPair) {
+    if (activeReq && activeReq.status !== 'draft') return activeReq.status === 'submitted' || activeReq.status === 'in_review';
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    const info = (taskInfoByPair || {})[`${num}__${machine}__${unit || ''}`];
+    return !!(info && !info.is_completed && info.end_date && info.end_date < todayStr);
+}
+
 // ===== 2000番台：組立・試運転それぞれの「機械一覧」モーダルの行を組み立てる共通部品 =====
 // 一覧カードの「組立申請はこちら→」「試運転申請はこちら→」ボタンから開くモーダルの中身。
 // 機械ごとに大きな丸を並べる形式だと余白が大きくなるため、他の一覧モーダル（機械詳細画面の
@@ -2604,9 +2638,10 @@ function aggregate2000FlowStatus(statuses) {
     return 'empty';
 }
 
-// 一覧カードのタイル1枚分。{ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }
+// 一覧カードのタイル1枚分。{ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow, countUnit }
+// countUnit: 件数の単位（組立・電装は機械単位なので「台」、試運転はタスクの機械・ユニット単位なので「件」）
 // stepLabel を空にすると STEP 表記を出さない（STEP1枠内の組立・電装サブタイル用）
-function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow }) {
+function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overdueCount, onclick, withArrow, countUnit = '台' }) {
     const agg   = aggregate2000FlowStatus(statuses);
     const total = statuses.length;
     const done  = statuses.filter(s => s === 'approved').length;
@@ -2616,7 +2651,7 @@ function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overd
 
     const warns = [];
     if (agg === 'rejected')  warns.push('<span class="p2k-warn">⚠ 却下あり</span>');
-    if (overdueCount > 0)    warns.push(`<span class="p2k-warn">⚠ 未申請・未承認 ${overdueCount}台</span>`);
+    if (overdueCount > 0)    warns.push(`<span class="p2k-warn">⚠ 未申請・未承認 ${overdueCount}${countUnit}</span>`);
     if (pendingCount > 0)    warns.push(`<span class="p2k-warn is-pending">⚠ ペンディング ${pendingCount}件</span>`);
 
     const arrowHtml = withArrow
@@ -2635,7 +2670,7 @@ function build2000FlowTileHtml({ stepLabel, title, statuses, pendingCount, overd
         </div>
         <div class="p2k-progress">
             <div class="p2k-bar"><i style="width:${pct}%;"></i></div>
-            <span class="p2k-count">${total}台中 ${done}台完了</span>
+            <span class="p2k-count">${total}${countUnit}中 ${done}${countUnit}完了</span>
         </div>
         <div class="p2k-foot">
             <div class="p2k-warns">${warns.join('')}</div>
