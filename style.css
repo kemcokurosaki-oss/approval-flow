@@ -2939,7 +2939,11 @@
 .p2k-step-sep { color: #c3ccd9; font-weight: 700; }
 
 @media (max-width: 900px) {
-    .p2k-tiles { grid-template-columns: minmax(0,1fr); gap: 12px; }
-    .p2k-tiles.is-single { max-width: none; }
+    .p2k-tiles, .p2k-tiles.has-group { grid-template-columns: minmax(0,1fr); gap: 12px; }
+    .p2k-tiles.is-single, .p2k-tiles.is-group-only { max-width: none; }
     .p2k-tile-arrow { display: none; }
+    .unit-list-wrap.p2k-unit-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+    .p2k-group-tiles { grid-template-columns: minmax(0,1fr); }
 }
