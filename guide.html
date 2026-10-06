@@ -168,7 +168,8 @@
     @media (max-width: 1100px) { .g2k-rules { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 
     /* 2000番完了報告：申請の単位（工事番号 → 機械 → ユニット）の構成図 */
-    .g2k-tree { display: grid; grid-template-columns: 130px 24px 130px 24px minmax(0,1fr); gap: 10px 0; align-items: center; padding: 20px 22px; background: #fff; }
+    .g2k-tree { position: relative; display: grid; grid-template-columns: 130px 24px 130px 24px minmax(0,1fr); gap: 10px 0; align-items: center; padding: 20px 22px; background: #fff; }
+    .g2k-example { position: absolute; top: 10px; left: 12px; font-size: 11.5px; font-weight: 700; color: #5b6b80; background: #eef1f6; border-radius: 6px; padding: 2px 8px; }
     .g2k-tree-h { font-size: 12px; font-weight: 700; color: #8a94a6; text-align: center; }
     .g2k-tree-h.is-left { text-align: left; }
     .g2k-tree-arrow { text-align: center; color: #9fb0c6; font-weight: 700; }
@@ -218,6 +219,14 @@
     .g2k-check b { color: #999; }
     .g2k-open { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 5px 11px; background: #2f6fb0; color: #fff; white-space: nowrap; }
     .g2k-pending-btn { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f6edfa; color: #8e44ad; border: 1px solid #c39bd3; white-space: nowrap; }
+    .g2k-circle.st-rejected { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px rgba(229,72,77,.16); }
+    .g2k-pill.is-rejected { background: #f8d7da; color: #721c24; }
+    .g2k-warn.is-red { background: #fdecec; color: #c0392b; }
+    .g2k-badge.red { background: #f8d7da; color: #721c24; }
+    .g2k-approve { display: flex; justify-content: flex-end; gap: 6px; }
+    .g2k-approve span { font-size: 12px; font-weight: 700; border-radius: 6px; padding: 4px 12px; color: #fff; }
+    .g2k-approve .ng { background: #e5484d; }
+    .g2k-approve .ok { background: #2ba55d; }
     .g2k-add { margin-top: 10px; border: 1px dashed #b8c8de; border-radius: 8px; background: #f5f8fc; color: #2f6fb0; font-size: 12.5px; font-weight: 700; text-align: center; padding: 8px; }
 
     /* マイページ（サイドパネル） */
@@ -919,19 +928,21 @@
         <section id="s7">
             <div class="section-eyebrow">Chapter 7</div>
             <h2>2000番 完了報告</h2>
-            <p>2000番台の工事番号は、組立・電装・試運転のみが承認フローの対象です。この専用画面では、工事番号ごとのカードに「組立」「電装」「試運転」の進み具合を台数で表示し、そこから機械一覧・ユニット一覧を開いて確認・申請します。</p>
+            <p>2000番台の工事番号は、この画面から申請・承認を行います（承認はマイページからも可能です）。組立・電装・試運転のみが申請の対象です。通常の「承認ステータス」画面には2000番台は表示されません。</p>
             <h3>基本ルール</h3>
-            <ul>
-                <li><b>申請の単位</b>：組立・電装は<b>ユニット単位</b>、試運転は<b>機械単位</b>で申請します（試運転にはユニット一覧はなく、機械一覧から直接申請します）。</li>
-                <li><b>組立と電装は並行して進める</b>：組立と電装はそれぞれ別に申請・承認し、画面上の状態・台数・機械一覧も別々に表示されます。電装は、工程表に「電気艤装」タスクがある機械だけが対象です。</li>
-                <li><b>機械の完了</b>：その機械の全ユニットが「承認済み」または「不要」になると、その機械は完了です（組立・電装それぞれで判定）。</li>
-                <li><b>作業がないユニットは「不要」にする</b>：標準のユニット一覧のうち作業がないユニットは、ユニット一覧で「不要」にします。「不要」は完了扱いになり、完了件数の対象からも外れます。</li>
-                <li><b>標準の一覧にないユニット</b>：ユニット一覧の「＋ 一覧にないユニットを申請する」から申請します。申請した側（組立または電装）にだけ追加されます。</li>
-                <li><b>試運転準備</b>：試運転がある機械では、ユニットごとに組立・電装（電気艤装タスクがある場合）の両方の「試運転準備」にチェックが入ると、試運転担当者へ通知が届きます。</li>
-                <li><b>2000番台はこの画面から</b>：通常の「承認ステータス」画面には2000番台は表示されません。確認・申請はこの「2000番 完了報告」画面から行います。</li>
-            </ul>
+            <div class="g2k-rules">
+                <div class="g2k-rule"><div class="g2k-rule-icon">🔩</div><div class="g2k-rule-title">組立・電装は<br>ユニットごとに申請</div><div class="g2k-rule-desc">ユニット一覧から申請する</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">▶</div><div class="g2k-rule-title">試運転は<br>機械ごとに申請</div><div class="g2k-rule-desc">機械一覧から直接申請する</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">⇄</div><div class="g2k-rule-title">組立と電装は<br>別々に進む</div><div class="g2k-rule-desc">申請・承認・台数・一覧はすべて別</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">⚡</div><div class="g2k-rule-title">電装は電気艤装タスクが<br>ある機械だけ</div><div class="g2k-rule-desc">工程表の「電気艤装」タスクで判断</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">✓</div><div class="g2k-rule-title">全ユニット完了で<br>機械が完了</div><div class="g2k-rule-desc">「承認済み」か「不要」になれば完了</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">⊘</div><div class="g2k-rule-title">作業がないユニットは<br>「不要」にする</div><div class="g2k-rule-desc">完了扱いになり、件数から外れる</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">＋</div><div class="g2k-rule-title">一覧にないユニットも<br>申請できる</div><div class="g2k-rule-desc">申請した側（組立／電装）にだけ追加</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">🔔</div><div class="g2k-rule-title">試運転準備は<br>両方のチェックで通知</div><div class="g2k-rule-desc">組立・電装の両方で試運転担当へ通知</div></div>
+            </div>
             <div class="mockup" style="max-width:none; width:760px;">
                 <div class="g2k-tree">
+                    <span class="g2k-example">例</span>
                     <div class="g2k-tree-h">工事番号</div><div></div>
                     <div class="g2k-tree-h">機械<br><span class="g2k-apply is-testrun">試運転はここで申請</span></div><div></div>
                     <div class="g2k-tree-h is-left">ユニット<br><span class="g2k-apply is-unit">組立・<b>電装</b>はここで申請</span></div>
@@ -957,7 +968,7 @@
             <h3>一覧カード</h3>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup" style="max-width:none; width:980px;">
+            <div class="mockup" style="max-width:none; width:980px; zoom:0.85;">
                 <div class="mockup-bg">
                     <div class="prog-card">
                         <div class="prog-card-header">
@@ -990,13 +1001,13 @@
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span><b>工事番号・工事名</b>と、機械の中で最も早い工場出荷予定日</span></li>
-                <li><span class="callout">2</span><span><b>組立</b>：工程表に「機械組立」タスクがある機械が対象</span></li>
-                <li><span class="callout">3</span><span><b>電装</b>：工程表に「電気艤装」タスクがある機械が対象。電気艤装タスクがない工事番号では表示されない。組立と並行して進めるため、組立と同じ枠の中に並べて表示</span></li>
-                <li><span class="callout">4</span><span><b>完了台数</b>：その機械の全ユニットが「承認済み」または「不要」になると1台完了</span></li>
-                <li><span class="callout">5</span><span><b>ペンディング</b>：完了報告にまだ解決していないペンディング項目がある場合の件数</span></li>
-                <li><span class="callout">6</span><span><b>機械一覧を見る</b>：組立・電装・試運転それぞれの機械一覧が開く</span></li>
-                <li><span class="callout">7</span><span><b>試運転</b>：機械単位で申請する</span></li>
+                <li><span class="callout">1</span><span><b>工事番号</b>と最短の工場出荷予定日</span></li>
+                <li><span class="callout">2</span><span><b>組立</b>の進み具合</span></li>
+                <li><span class="callout">3</span><span><b>電装</b>の進み具合（電装なしは非表示）</span></li>
+                <li><span class="callout">4</span><span><b>完了した機械の台数</b></span></li>
+                <li><span class="callout">5</span><span>未解決の<b>ペンディング</b>件数</span></li>
+                <li><span class="callout">6</span><span><b>機械一覧</b>を開く</span></li>
+                <li><span class="callout">7</span><span><b>試運転</b>の進み具合</span></li>
             </ol>
             </div>
             </div>
@@ -1038,11 +1049,11 @@
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span><b>組立フロー／電装フロー</b>：一覧カードで押したほうの機械一覧が開く</span></li>
-                <li><span class="callout">2</span><span><b>機械名</b>：工場出荷予定日の早い順に並ぶ</span></li>
-                <li><span class="callout">3</span><span><b>状態</b>：未申請・入力中・申請中・却下・完了</span></li>
-                <li><span class="callout">4</span><span><b>ユニットの完了件数</b>：「不要」にしたユニットは件数に含まない。ユニットの区分がない機械は、機械そのものを1件として数える</span></li>
-                <li><span class="callout">5</span><span><b>ユニット一覧を見る</b>：その機械のユニット一覧が開く</span></li>
+                <li><span class="callout">1</span><span>押したほう（<b>組立／電装</b>）の機械一覧</span></li>
+                <li><span class="callout">2</span><span><b>機械名</b>（出荷予定日が早い順）</span></li>
+                <li><span class="callout">3</span><span>機械の<b>状態</b></span></li>
+                <li><span class="callout">4</span><span>完了した<b>ユニット数</b>（不要は除く）</span></li>
+                <li><span class="callout">5</span><span><b>ユニット一覧</b>を開く</span></li>
             </ol>
             </div>
             </div>
@@ -1087,16 +1098,16 @@
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span><b>申請する</b>：そのユニットのチェックシートを入力して申請する</span></li>
-                <li><span class="callout">2</span><span><b>不要にする</b>：そのユニットの作業がない場合はOFFにする。「不要」は完了扱いになり、機械一覧の件数からも外れる</span></li>
-                <li><span class="callout">3</span><span><b>試運転準備</b>：試運転がある機械のみ表示。ユニットごとに組立・電装（電気艤装タスクがある場合）の両方にチェックが入ると、試運転担当者へ通知が届く</span></li>
-                <li><span class="callout">4</span><span><b>完了報告書を見る</b>：承認完了したユニットの完了報告書を開く</span></li>
-                <li><span class="callout">5</span><span><b>ペンディング</b>：まだ解決していないペンディング項目がある場合に表示。押すとペンディングの詳細を確認できる</span></li>
-                <li><span class="callout">6</span><span><b>一覧にないユニットを申請する</b>：標準のユニット一覧にないユニットを申請する。申請した側（組立または電装）にだけ追加される</span></li>
+                <li><span class="callout">1</span><span>チェックシートを入力して<b>申請</b></span></li>
+                <li><span class="callout">2</span><span>作業がなければOFF（<b>不要</b>）</span></li>
+                <li><span class="callout">3</span><span><b>試運転準備</b>のチェック</span></li>
+                <li><span class="callout">4</span><span><b>完了報告書</b>を開く</span></li>
+                <li><span class="callout">5</span><span><b>ペンディング</b>の詳細を開く</span></li>
+                <li><span class="callout">6</span><span>標準の一覧にない<b>ユニットを追加</b>して申請</span></li>
             </ol>
             </div>
             </div>
-            <div class="note">電装の機械一覧・ユニット一覧も、組立と同じ見方・操作です（モーダルのタイトルが「電装フロー」、ユニット一覧の見出しが「電装」になります）。</div>
+            <div class="note">電装の機械一覧・ユニット一覧も、組立と同じ見方・操作です。</div>
         </section>
 
         <section id="s8">
