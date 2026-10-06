@@ -2902,8 +2902,9 @@
 .unit-list-row.p2k-mrow:hover .p2k-open-btn { background: #255d97; }
 .p2k-mrow-progress { margin-top: 8px; }
 
-/* 組立・電装ユニット一覧：高さを揃えたカード内で、操作行・試運転準備を上詰めのまま配置 */
-.assembly-elec-split .unit-list-wrap > .unit-list-row { justify-content: flex-start; }
+/* 組立 or 電装のユニット一覧：2列グリッド（同じ段のカードは高さが揃う）。操作行・試運転準備は上詰めのまま配置 */
+.unit-list-wrap.p2k-unit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.unit-list-wrap.p2k-unit-grid > .unit-list-row { justify-content: flex-start; }
 
 /* 機械一覧モーダル上部のステップ表示 */
 .p2k-steps {
