@@ -1640,6 +1640,13 @@ async function loadProgress() {
             electricalReqsByProject[num].push(req);
             return;
         }
+        if (req.flow_type === 'test_run' && is2000sSeries(req.project_number)) {
+            const num = req.project_number;
+            if (!num) return;
+            if (!testRunReqsByProject[num]) testRunReqsByProject[num] = [];
+            testRunReqsByProject[num].push(req);
+            return;
+        }
         const num     = req.project_number;
         const machine = req.machine_name;
         if (!num || !machine) return;
