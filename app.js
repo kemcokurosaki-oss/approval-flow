@@ -3572,8 +3572,8 @@ function buildMachineUnitRowsHtml(opts) {
             const sheetLinkLabel = isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
             linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
             if (hasUnresolvedPending) {
-                bottomRightHtml = `<span class="p2k-warn is-pending" style="cursor:pointer;" title="ペンディング項目の詳細を見る"
-                    onclick="viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')">⚠ ペンディング ${unresolvedPendingCount}件</span>`;
+                bottomRightHtml = `<button type="button" class="pending-detail-btn" title="ペンディング項目の詳細を見る"
+                    onclick="viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')">⚠ ペンディング ${unresolvedPendingCount}件 →</button>`;
             }
 
             const myStep = (activeReq.approval_steps || []).find(s =>

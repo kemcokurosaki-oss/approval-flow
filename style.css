@@ -2853,10 +2853,8 @@
 /* 外枠は試運転タイルと同じ実線、中の組立・電装タイルは点線にする */
 .p2k-group {
     position: relative; display: flex; flex-direction: column; gap: 10px;
-    padding: 10px 12px 12px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb;
+    padding: 12px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb;
 }
-.p2k-group-head { display: flex; align-items: baseline; gap: 10px; padding: 0 4px; }
-.p2k-group-title { font-size: 13px; font-weight: 700; color: #3d4a5d; }
 .p2k-group-tiles { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; flex: 1; }
 .p2k-group .p2k-tile { background: #fff; border: 1px dashed #b8c4d6; }
 .p2k-group .p2k-tile:hover { border-color: #7f93ad; }
