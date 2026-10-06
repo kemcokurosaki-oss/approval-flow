@@ -7836,6 +7836,8 @@ async function saveReschedule() {
             updated_at:          new Date().toISOString()
         }).eq('id', requestId);
 
+        if (newDate !== oldDate) await syncInspectionDateToTasks({ ...currentDetailReq, inspection_date: newDate });
+
         // 日時変更でも既存参加者の出欠回答はリセットしない。回答を変え直したい人だけ
         // アウトルック上で回答し直せばよく、そのメール（REPLY）を check-rsvp.js が拾って
         // invitation_rsvp を上書き更新する（新規追加された参加者は下の通知処理で
@@ -8042,13 +8044,14 @@ async function syncTaskCompletionOnFlowApproval(req) {
 
 // 検査・会議の開催案内送信・日程変更時に、開催日を工程表の該当タスク(start_date・end_date)へ書き戻す（承認フロー→工程表の一方向反映）
 // 検査・会議タスクは単日のため、開始日・終了日を開催日に揃える
+// あわせて invite_date_locked を立て、全体工程表からの日程変更を禁止する（変更は承認フローの「詳細変更」経由のみ）
 async function syncInspectionDateToTasks(req) {
     if (!FLOW_TASK_SYNC_ENABLED) return;
     if (!QA_MEETING_FLOWS.includes(req?.flow_type)) return;
     const taskText = FLOW_APPROVAL_TASK_TEXT[req.flow_type];
     if (!taskText || !req.project_number || !req.machine_name || !req.inspection_date) return;
     try {
-        let q = db.from('tasks').update({ start_date: req.inspection_date, end_date: req.inspection_date })
+        let q = db.from('tasks').update({ start_date: req.inspection_date, end_date: req.inspection_date, invite_date_locked: true })
             .eq('project_number', req.project_number)
             .eq('machine', req.machine_name)
             .eq('text', taskText);
@@ -8056,6 +8059,33 @@ async function syncInspectionDateToTasks(req) {
         await q;
     } catch (e) {
         console.warn('工程表への開催日書き戻しに失敗:', e);
+    }
+}
+
+// 開催案内キャンセル時に、全体工程表からの日程変更ロック(invite_date_locked)を解除する
+// 同じ工番・機械・種類で送付済みの開催案内が他に残っている場合はロックを維持する
+async function unlockInspectionDateOnCancel(requestId) {
+    try {
+        const { data: req } = await db.from('approval_requests')
+            .select('id, project_number, machine_name, unit_name, flow_type').eq('id', requestId).single();
+        const taskText = FLOW_APPROVAL_TASK_TEXT[req?.flow_type];
+        if (!QA_MEETING_FLOWS.includes(req?.flow_type) || !taskText || !req.project_number || !req.machine_name) return;
+        const { data: others } = await db.from('approval_requests').select('id')
+            .eq('project_number', req.project_number)
+            .eq('machine_name', req.machine_name)
+            .eq('flow_type', req.flow_type)
+            .in('status', ['submitted', 'approved'])
+            .neq('id', requestId)
+            .limit(1);
+        if (others?.length) return;
+        let q = db.from('tasks').update({ invite_date_locked: false })
+            .eq('project_number', req.project_number)
+            .eq('machine', req.machine_name)
+            .eq('text', taskText);
+        if (req.unit_name) q = q.eq('unit', req.unit_name);
+        await q;
+    } catch (e) {
+        console.warn('工程表の日程変更ロック解除に失敗:', e);
     }
 }
 
@@ -9281,6 +9311,7 @@ async function submitSimpleInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
+            await syncInspectionDateToTasks(req);
             await recordFlowNotifications(req.id, 'simple_inspection', recipientOptionalKeys.si);
             if (extraRecipients.si.length > 0) {
                 await db.from('approval_notifications').insert(
@@ -9381,6 +9412,7 @@ async function submitInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
+            await syncInspectionDateToTasks(req);
             await recordFlowNotifications(req.id, 'inspection', recipientOptionalKeys.inspection);
             // 追加宛先を挿入
             if (extraRecipients.inspection.length > 0) {
@@ -9481,6 +9513,7 @@ async function submitShippingCheckInspection() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
+            await syncInspectionDateToTasks(req);
             await recordFlowNotifications(req.id, 'shipping_check_inspection', recipientOptionalKeys.sci);
             if (extraRecipients.sci.length > 0) {
                 await db.from('approval_notifications').insert(
@@ -9577,6 +9610,7 @@ async function submitShippingMeeting() {
                 inspection_date: dateVal, inspection_time: timeVal || null, inspection_location: location || null
             }).select().single();
             if (error) throw error;
+            await syncInspectionDateToTasks(req);
             await recordFlowNotifications(req.id, 'shipping_meeting', recipientOptionalKeys.sm);
             if (extraRecipients.sm.length > 0) {
                 await db.from('approval_notifications').insert(
