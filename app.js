@@ -2594,14 +2594,15 @@ function normalizeTestRunUnit(unit) {
 }
 
 // 2000番台：試運転の申請1件がこの機械・ユニットに該当するか判定する。unit_nameが無い申請
-// （ユニット単位化前に作られた機械単位の申請）のうち、承認済み・申請中・却下など既に確定した
+// （ユニット単位化前に作られた機械単位の申請。unit_nameがnull）のうち、承認済み・申請中・却下など既に確定した
 // ものは、その機械の全ユニットに一致するとみなす（過去の機械単位の承認をそのまま有効に扱うため）。
 // 一方、unit_nameが無い「下書きのまま放置された申請」は対象ユニットを1つに絞れないため、
 // 新しいユニット行では拾わない（拾うと、古い機械単位の下書き1件が全ユニットの「申請する」を
 // 乗っ取ってしまい、ユニットごとに新規申請できなくなるため）
 function testRunReqMatchesUnit(req, machine, unit) {
     if (req.machine_name !== machine) return false;
-    if (req.unit_name != null) return req.unit_name === (unit || null);
+    // unit_nameが空文字の申請は「ユニット無しの行（工程表のunit列が「ALL」）」の申請として、その行にだけ一致させる
+    if (req.unit_name != null) return req.unit_name === (unit || '');
     if (req.status === 'draft') return !unit;
     return true;
 }
@@ -4229,7 +4230,9 @@ async function startNewTestRunSheetFromDetail(projectNum, machine, unit = '') {
     const { data: newDraft, error } = await db.from('approval_requests').insert({
         project_number: projectNum,
         machine_name:   machine,
-        unit_name:      unit || null,
+        // ユニット無し（工程表のunit列が「ALL」）の行は空文字で保存する。null はユニット単位化前の
+        // 機械単位の申請を表し「その機械の全ユニットに有効」と扱うため、新しい申請では使わない
+        unit_name:      unit || '',
         flow_type:      'test_run',
         status:         'draft',
         requester_id:   currentUser.id
@@ -4265,7 +4268,7 @@ async function submitTestRunDraftFromDetail(draftId, projectNum, machine, unit =
         const submitterRole = getEffectiveRole();
         const { data: req, error: e1 } = await db.from('approval_requests').update({
             status:         'submitted',
-            unit_name:      unit || null,
+            unit_name:      unit || '',
             test_run:       mNames.includes('試運転'),
             has_inspection: mNames.includes('外観検査')
         }).eq('id', draftId).select().single();

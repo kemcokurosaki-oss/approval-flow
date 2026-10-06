@@ -350,7 +350,7 @@ async function runSubmissionReminders() {
   // 申請済みリクエストのセット（rejected以外）。shipping_prep/shipping/electricalはmachine_name一致で判定
   const submitted = await supabaseFetch(
     `approval_requests?flow_type=in.(test_run,shipping_prep,shipping,electrical)&status=neq.rejected` +
-    `&select=project_number,machine_name,unit_name,flow_type`
+    `&select=project_number,machine_name,unit_name,flow_type,status`
   );
   const submittedSet = new Set(
     (submitted || []).map(r => `${r.project_number}__${r.machine_name}__${r.flow_type}`)
@@ -361,7 +361,10 @@ async function runSubmissionReminders() {
   const testRunSubmittedExact = new Set();
   const testRunSubmittedMachineWildcard = new Set();
   (submitted || []).filter(r => r.flow_type === 'test_run').forEach(r => {
-    if (r.unit_name) testRunSubmittedExact.add(`${r.project_number}__${r.machine_name}__${r.unit_name}`);
+    // unit_nameが空文字＝ユニット無し（ALL）の行の申請。nullのみ「ユニット単位化前の機械単位の申請」として全ユニットに一致させる
+    // （app.jsのtestRunReqMatchesUnitと同じ判定。ユニット無しの下書きは対象ユニットを絞れないため、ユニット無しの行にだけ一致させる）
+    if (r.unit_name != null) testRunSubmittedExact.add(`${r.project_number}__${r.machine_name}__${r.unit_name}`);
+    else if (r.status === 'draft') testRunSubmittedExact.add(`${r.project_number}__${r.machine_name}__`);
     else testRunSubmittedMachineWildcard.add(`${r.project_number}__${r.machine_name}`);
   });
 
