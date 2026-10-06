@@ -137,24 +137,63 @@
     .fc-line-pending { background: #e6ebf3; }
     .fc-line-rejected { background: #f3c6c8; }
 
-    /* 2000番完了報告：一覧カードのタイル（組立・電装の枠 → 試運転） */
-    .g2k-tiles { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 26px; margin-top: 12px; }
-    .g2k-group { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; padding: 10px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
-    .g2k-tile { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
+    /* 2000番完了報告：一覧カードのタイル（組立・電装の枠 → 試運転）。実画面と同じ寸法で描く */
+    .g2k-tiles { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 28px; margin-top: 12px; }
+    .g2k-group { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; padding: 12px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
+    .g2k-tile { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e9f1; background: #f6f8fb; }
     .g2k-group .g2k-tile { background: #fff; border: 1px dashed #b8c4d6; }
-    .g2k-arrow { position: absolute; right: -20px; top: 50%; transform: translateY(-50%); color: #9fb0c6; font-weight: 700; }
-    .g2k-head { display: flex; align-items: center; gap: 8px; }
-    .g2k-circle { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid transparent; }
-    .g2k-title { flex: 1; font-size: 13px; font-weight: 700; color: #16233a; white-space: nowrap; }
-    .g2k-pill { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
+    .g2k-arrow { position: absolute; right: -24px; top: 50%; transform: translateY(-50%); color: #9fb0c6; font-weight: 700; }
+    .g2k-head { display: flex; align-items: center; gap: 12px; }
+    .g2k-circle { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; border: 2px solid transparent; }
+    .g2k-circle.st-active { background: #f0a020; border-color: #f0a020; color: #fff; box-shadow: 0 0 0 4px rgba(240,160,32,.18); }
+    .g2k-circle.st-empty  { background: #fff; color: #c3ccd9; border: 2px dashed #9fb0c6; }
+    .g2k-title { flex: 1; font-size: 15px; font-weight: 700; color: #16233a; white-space: nowrap; }
+    .g2k-pill { font-size: 12px; font-weight: 700; border-radius: 20px; padding: 3px 11px; white-space: nowrap; }
     .g2k-pill.is-active { background: #fff3cd; color: #856404; }
     .g2k-pill.is-empty  { background: #e9ecef; color: #6c757d; }
-    .g2k-progress { display: flex; align-items: center; gap: 8px; }
-    .g2k-bar { flex: 1; height: 5px; border-radius: 3px; background: #e6ebf3; overflow: hidden; }
+    .g2k-progress { display: flex; align-items: center; gap: 10px; }
+    .g2k-bar { flex: 1; height: 6px; border-radius: 3px; background: #e6ebf3; overflow: hidden; }
     .g2k-bar > i { display: block; height: 100%; border-radius: 3px; background: #2ba55d; }
-    .g2k-count { font-size: 11.5px; color: #5b6b80; font-weight: 700; white-space: nowrap; }
-    .g2k-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 26px; }
-    .g2k-btn { margin-left: auto; font-size: 11.5px; font-weight: 700; border-radius: 7px; padding: 5px 10px; background: #2f6fb0; color: #fff; white-space: nowrap; }
+    .g2k-count { font-size: 13px; color: #5b6b80; font-weight: 700; white-space: nowrap; }
+    .g2k-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 32px; }
+    .g2k-warn { font-size: 12px; border-radius: 20px; padding: 2px 9px; background: #f6edfa; color: #8e44ad; white-space: nowrap; }
+    .g2k-btn { margin-left: auto; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 14px; background: #2f6fb0; color: #fff; white-space: nowrap; }
+
+    /* 2000番完了報告：機械一覧・ユニット一覧モーダル */
+    .g2k-modal { width: 640px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgba(20,36,63,.18); }
+    .g2k-modal-head { background: #16233a; color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; display: flex; justify-content: space-between; }
+    .g2k-modal-body { padding: 16px 18px 18px; }
+    .g2k-modal-title { font-size: 17px; font-weight: 700; color: #1e3a5f; }
+    .g2k-modal-sub { font-size: 13px; color: #666; margin-top: 2px; }
+    .g2k-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; background: #f6f8fb; border: 1px solid #eef1f6; border-radius: 10px; font-size: 12px; color: #9aa5b6; }
+    .g2k-step { display: inline-flex; align-items: center; gap: 5px; }
+    .g2k-step-num { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 1.5px solid #cdd8e8; background: #fff; color: #9aa5b6; }
+    .g2k-step.is-done { color: #3d4a5d; }
+    .g2k-step.is-done .g2k-step-num { background: #2ba55d; border-color: #2ba55d; color: #fff; }
+    .g2k-step.is-current { color: #16233a; font-weight: 700; }
+    .g2k-step.is-current .g2k-step-num { background: #2f6fb0; border-color: #2f6fb0; color: #fff; }
+    .g2k-step-sep { color: #c3ccd9; font-weight: 700; }
+    .g2k-section-title { margin-top: 14px; font-size: 13px; font-weight: 700; color: #8a94a6; display: flex; align-items: center; gap: 6px; }
+    .g2k-kind { font-size: 12px; font-weight: 700; border-radius: 20px; padding: 2px 9px; background: #fff3cd; color: #856404; }
+    .g2k-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; margin-top: 10px; }
+    .g2k-card { border: 1px solid #e5e9f1; border-radius: 10px; padding: 10px 12px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+    .g2k-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .g2k-card-name { font-size: 15px; font-weight: 700; color: #16233a; }
+    .g2k-card-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .g2k-badge { font-size: 11.5px; font-weight: 700; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+    .g2k-badge.gray   { background: #e9ecef; color: #6c757d; }
+    .g2k-badge.green  { background: #d4edda; color: #155724; }
+    .g2k-badge.yellow { background: #fff3cd; color: #856404; }
+    .g2k-meta { font-size: 11.5px; color: #8a94a6; line-height: 1.5; }
+    .g2k-link { font-size: 13px; font-weight: 700; color: #2f6fb0; white-space: nowrap; }
+    .g2k-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #2f6fb0; }
+    .g2k-toggle i { position: relative; display: inline-block; width: 28px; height: 15px; border-radius: 999px; background: #2f6fb0; }
+    .g2k-toggle i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px; border-radius: 50%; background: #fff; }
+    .g2k-check { font-size: 12px; font-weight: 600; color: #3d4a5d; }
+    .g2k-check b { color: #999; }
+    .g2k-open { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 5px 11px; background: #2f6fb0; color: #fff; white-space: nowrap; }
+    .g2k-pending-btn { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f6edfa; color: #8e44ad; border: 1px solid #c39bd3; white-space: nowrap; }
+    .g2k-add { margin-top: 10px; border: 1px dashed #b8c8de; border-radius: 8px; background: #f5f8fc; color: #2f6fb0; font-size: 12.5px; font-weight: 700; text-align: center; padding: 8px; }
 
     /* マイページ（サイドパネル） */
     .side-panel-header { height: 52px; padding: 0 16px; background: #16233a; display: flex; align-items: center; justify-content: space-between; }
