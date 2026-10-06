@@ -2929,18 +2929,23 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
             taskInfoByPair[key] = { end_date: t.end_date, is_completed: t.is_completed };
         }
     });
-    // 表示する「工場出荷予定日」は試運転タスクの終了日ではなく、同一工番・同一機械名の
-    // 「工場出荷」タスクの終了日を使う（工場出荷タスクが無ければ不明扱い）
+    // 表示する「工場出荷予定日」は試運転タスクの終了日ではなく、同一工番の「工場出荷」タスクの終了日を使う。
+    // 同じ機械・ユニットの工場出荷タスクがあればその終了日、無ければ同じ機械の工場出荷タスクの終了日
+    // （いずれも複数あれば最も早い日。どちらも無ければ不明扱い）。ユニット「ALL」はユニット無しとして突き合わせる
     const shipDateByMachine = {};
-    (taskRows || []).filter(t => t.text === '工場出荷').forEach(t => {
-        if (t.end_date && (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine])) {
+    const shipDateByPair = {};
+    (taskRows || []).filter(t => t.text === '工場出荷' && t.end_date).forEach(t => {
+        if (!shipDateByMachine[t.machine] || t.end_date < shipDateByMachine[t.machine]) {
             shipDateByMachine[t.machine] = t.end_date;
         }
+        const key = `${t.machine}__${normalizeTestRunUnit(t.unit)}`;
+        if (!shipDateByPair[key] || t.end_date < shipDateByPair[key]) shipDateByPair[key] = t.end_date;
     });
+    const shipDateFor = (machine, unit) => shipDateByPair[`${machine}__${unit}`] || shipDateByMachine[machine] || null;
     // 表示順は工場出荷予定日の昇順（不明は末尾）。同じ出荷日・出荷日不明同士は機械名・ユニット名順で安定させる
     pairs.sort((a, b) => {
-        const da = shipDateByMachine[a.machine] || '9999-99-99';
-        const db_ = shipDateByMachine[b.machine] || '9999-99-99';
+        const da = shipDateFor(a.machine, a.unit) || '9999-99-99';
+        const db_ = shipDateFor(b.machine, b.unit) || '9999-99-99';
         if (da !== db_) return da < db_ ? -1 : 1;
         return a.machine === b.machine ? a.unit.localeCompare(b.unit) : a.machine.localeCompare(b.machine);
     });
@@ -2965,7 +2970,7 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
         const pairReqs = (reqs || []).filter(r => testRunReqMatchesUnit(r, machine, unit));
         const myDraft = pairReqs.find(r => r.status === 'draft' && r.requester_id === currentUser.id);
         const activeReq = pairReqs.find(r => r.status !== 'draft');
-        return build2000TestRunRowHtml(projectNum, machine, unit, activeReq, myDraft, shipDateByMachine[machine], isOverdue(machine, unit, activeReq), ctx);
+        return build2000TestRunRowHtml(projectNum, machine, unit, activeReq, myDraft, shipDateFor(machine, unit), isOverdue(machine, unit, activeReq), ctx);
     }).join('') || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転タスクが工程表にありません</div>';
 
     const pInfo = projectsMap[projectNum] || {};
@@ -8021,6 +8026,9 @@ async function syncTaskCompletionOnFlowApproval(req) {
             .eq('machine', req.machine_name)
             .eq('text', taskText);
         if (req.unit_name) q = q.eq('unit', req.unit_name); // ユニット単位申請の場合は対象ユニットのタスク行のみ更新する
+        // 2000番台の試運転は工程表の機械・ユニット単位の申請。ユニット無し（工程表のunit列が「ALL」/空）の申請で
+        // 同じ機械のBT1・BT2等のユニット別タスクまで完了にしないよう、ユニット無しのタスク行だけに絞る
+        else if (req.flow_type === 'test_run' && is2000sSeries(req.project_number)) q = q.or('unit.is.null,unit.eq.ALL,unit.eq.""');
         await q;
     } catch (e) {
         console.warn('全体工程表への完了連携に失敗:', e);
