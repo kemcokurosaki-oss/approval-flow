@@ -2120,20 +2120,22 @@ function renderProgressCards() {
                 tiles.push({ group: step1Tiles });
             }
 
-            if (testRunMachines.length > 0) {
+            // 試運転は工程表の「試運転」タスクの機械・ユニットの組み合わせ単位で数える（1組み合わせ＝1申請）
+            if (testRunPairs.length > 0) {
                 let overdueCount = 0;
-                const statuses = testRunMachines.map(m => {
-                    const req = projectData[num]?.[m]?.flows?.['test_run'] || null;
-                    if (isFlowOverdue(num, m, 'test_run', req)) overdueCount++;
-                    if (!req) return 'empty';
-                    if (req.status === 'approved') return 'approved';
-                    if (req.status === 'rejected') return 'rejected';
-                    if (isSavedDraft(req)) return 'draft';
-                    if (req.status === 'draft') return 'empty';
+                const testRunReqs = testRunReqsByProject[num] || [];
+                const statuses = testRunPairs.map(({ machine, unit }) => {
+                    const activeReq = findTestRunReq(testRunReqs, machine, unit);
+                    if (isTestRunPairOverdue(num, machine, unit, activeReq, testRunTaskInfoByPair)) overdueCount++;
+                    if (!activeReq) return 'empty';
+                    if (activeReq.status === 'approved') return 'approved';
+                    if (activeReq.status === 'rejected') return 'rejected';
+                    if (isSavedDraft(activeReq)) return 'draft';
+                    if (activeReq.status === 'draft') return 'empty';
                     return 'active';
                 });
                 tiles.push({
-                    title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
+                    title: '試運転完了申請', statuses, pendingCount: 0, overdueCount, countUnit: '件',
                     onclick: `openTestRunFlowDetailModal('${esc(num)}')`
                 });
             }
