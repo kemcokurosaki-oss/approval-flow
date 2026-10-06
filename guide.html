@@ -176,6 +176,8 @@
     .g2k-node { border: 1px solid #cdd8e8; border-radius: 10px; padding: 9px 10px; font-size: 14px; font-weight: 700; color: #16233a; background: #f6f8fb; text-align: center; }
     .g2k-node.is-project { grid-row: span 3; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
     .g2k-node small { display: block; font-size: 11px; font-weight: 600; color: #8a94a6; }
+    .g2k-tree-foot { grid-column: 1 / -1; margin-top: 8px; padding-top: 12px; border-top: 1px dashed #e0e6ef; font-size: 12.5px; color: #3d4a5d; display: flex; align-items: center; gap: 8px; }
+    .g2k-tree-foot .g2k-apply { margin-top: 0; }
     .g2k-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .g2k-chip { border: 1px solid #d7dee9; border-radius: 8px; padding: 4px 10px; font-size: 12.5px; font-weight: 700; color: #3d4a5d; background: #fff; }
     .g2k-chip.is-self { border-style: dashed; color: #5b6b80; }
@@ -184,6 +186,16 @@
     .g2k-apply.is-testrun { background: #dbeafe; color: #1e40af; }
     .g2k-apply.is-unit    { background: #fff3cd; color: #856404; }
     .g2k-apply.is-unit b  { color: #6f2fa8; }
+
+    /* 2000番完了報告：組立・電装／試運転／共通 の区切り帯 */
+    .g2k-part { display: flex; align-items: center; gap: 8px; max-width: 980px; margin: 44px 0 4px; padding: 12px 18px; background: #fff; border: 1px solid #e5e9f1; border-left: 6px solid #9fb0c6; border-radius: 12px; }
+    .g2k-part.is-ae { border-left-color: #f0a020; }
+    .g2k-part.is-t  { border-left-color: #2f6fb0; }
+    .g2k-part.is-c  { border-left-color: #8a94a6; }
+    .g2k-part-tag { font-size: 12.5px; font-weight: 700; border-radius: 20px; padding: 3px 11px; }
+    .g2k-part-tag.is-c { background: #eef1f6; color: #5b6b80; }
+    .g2k-part-title { font-size: 18px; font-weight: 700; color: #16233a; }
+    .g2k-part-desc { margin-left: auto; font-size: 13px; font-weight: 600; color: #6a7890; }
 
     /* 2000番完了報告：機械一覧・ユニット一覧モーダル */
     .g2k-modal { width: 780px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgba(20,36,63,.18); }
@@ -221,7 +233,7 @@
     .g2k-pending-btn { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f6edfa; color: #8e44ad; border: 1px solid #c39bd3; white-space: nowrap; }
     .g2k-badge-samples { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: #fff; border: 1px dashed #cdd8e8; border-radius: 10px; }
     .g2k-badge-samples-label { font-size: 14px; font-weight: 700; color: #5b6b80; margin-right: 4px; }
-    .g2k-badge-samples .g2k-warn { font-size: 15px; font-weight: 700; padding: 5px 14px; }
+    .g2k-badge-samples .g2k-warn { font-size: 14px; font-weight: 700; padding: 3px 12px; }
     /* 一覧カードのイラストは縮小表示するため、文字を一回り大きくして読みやすくする */
     .g2k-card-mockup .prog-card-num { font-size: 24px; }
     .g2k-card-mockup .prog-card-label { font-size: 16px; }
@@ -231,8 +243,8 @@
     .g2k-card-mockup .g2k-title { font-size: 16.5px; }
     .g2k-card-mockup .g2k-pill { font-size: 13px; padding: 3px 10px; }
     .g2k-card-mockup .g2k-count { font-size: 15.5px; }
-    .g2k-card-mockup .g2k-btn { font-size: 15px; padding: 8px 15px; }
-    .g2k-card-mockup .g2k-warn { font-size: 15px; font-weight: 700; padding: 5px 14px; }
+    .g2k-card-mockup .g2k-btn { font-size: 14px; padding: 6px 13px; }
+    .g2k-card-mockup .g2k-warn { font-size: 14px; font-weight: 700; padding: 3px 12px; }
     .g2k-card-mockup .g2k-badge-samples-label { font-size: 15px; }
     .g2k-circle.st-rejected { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px rgba(229,72,77,.16); }
     .g2k-pill.is-rejected { background: #f8d7da; color: #721c24; }
@@ -947,7 +959,7 @@
             <h3>基本ルール</h3>
             <div class="g2k-rules">
                 <div class="g2k-rule"><div class="g2k-rule-icon">🔩</div><div class="g2k-rule-title">組立・電装は<br>ユニットごとに申請</div><div class="g2k-rule-desc">ユニット一覧から申請する</div></div>
-                <div class="g2k-rule"><div class="g2k-rule-icon">▶</div><div class="g2k-rule-title">試運転は<br>機械ごとに申請</div><div class="g2k-rule-desc">機械一覧から直接申請する</div></div>
+                <div class="g2k-rule"><div class="g2k-rule-icon">▶</div><div class="g2k-rule-title">試運転は<br>工程表のタスクごとに申請</div><div class="g2k-rule-desc">機械・ユニットごとに一覧から申請</div></div>
                 <div class="g2k-rule"><div class="g2k-rule-icon">⇄</div><div class="g2k-rule-title">組立と電装は<br>別々に進む</div><div class="g2k-rule-desc">申請・承認・台数・一覧はすべて別</div></div>
                 <div class="g2k-rule"><div class="g2k-rule-icon">⚡</div><div class="g2k-rule-title">電装は電気艤装タスクが<br>ある機械だけ</div><div class="g2k-rule-desc">工程表の「電気艤装」タスクで判断</div></div>
                 <div class="g2k-rule"><div class="g2k-rule-icon">✓</div><div class="g2k-rule-title">全ユニット完了で<br>機械が完了</div><div class="g2k-rule-desc">「承認済み」か「不要」になれば完了</div></div>
@@ -955,32 +967,8 @@
                 <div class="g2k-rule"><div class="g2k-rule-icon">＋</div><div class="g2k-rule-title">一覧にないユニットも<br>申請できる</div><div class="g2k-rule-desc">申請した側（組立／電装）にだけ追加</div></div>
                 <div class="g2k-rule"><div class="g2k-rule-icon">🔔</div><div class="g2k-rule-title">試運転準備は<br>両方のチェックで通知</div><div class="g2k-rule-desc">組立・電装の両方で試運転担当へ通知</div></div>
             </div>
-            <div class="mockup" style="max-width:none; width:760px;">
-                <div class="g2k-tree">
-                    <span class="g2k-example">例</span>
-                    <div class="g2k-tree-h">工事番号</div><div></div>
-                    <div class="g2k-tree-h">機械<br><span class="g2k-apply is-testrun">試運転はここで申請</span></div><div></div>
-                    <div class="g2k-tree-h is-left">ユニット<br><span class="g2k-apply is-unit">組立・<b>電装</b>はここで申請</span></div>
 
-                    <div class="g2k-node is-project">2810<small>三五</small></div>
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-node">FS</div>
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-chips"><span class="g2k-chip">EG</span><span class="g2k-chip">RS</span><span class="g2k-chip">SR</span><span class="g2k-chip">TW</span><span class="g2k-chip">TH</span><span class="g2k-chip">…</span></div>
-
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-node">PC</div>
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-chips"><span class="g2k-chip">MU</span><span class="g2k-chip">DS</span></div>
-
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-node">FL</div>
-                    <div class="g2k-tree-arrow">›</div>
-                    <div class="g2k-chips"><span class="g2k-chip is-self">FL</span><span class="g2k-chip-note">ユニット区分なし：機械そのものを1件として申請</span></div>
-                </div>
-            </div>
-
-            <h3>一覧カード</h3>
+            <h3>工事番号一覧</h3>
             <div class="compare">
             <div class="compare-visual">
             <div class="mockup g2k-card-mockup" style="max-width:none; width:980px; zoom:0.85;">
@@ -1006,12 +994,12 @@
                             </div>
                             <div class="g2k-tile">
                                 <div class="g2k-head"><div class="g2k-circle st-active">▶</div><span class="g2k-title">試運転完了申請<span class="callout">7</span></span><span class="g2k-pill is-active">申請中</span></div>
-                                <div class="g2k-progress"><div class="g2k-bar"><i style="width:25%;"></i></div><span class="g2k-count">8台中 2台完了</span></div>
+                                <div class="g2k-progress"><div class="g2k-bar"><i style="width:25%;"></i></div><span class="g2k-count">10件中 3件完了</span></div>
                                 <div class="g2k-foot"><span class="g2k-btn">機械一覧を見る ›</span></div>
                             </div>
                         </div>
                     </div>
-                    <div class="g2k-badge-samples"><span class="g2k-badge-samples-label">状況により表示されるバッジ</span><span class="g2k-warn is-red">⚠ 却下あり<span class="callout">8</span></span><span class="g2k-warn is-red">⚠ 未申請・未承認 2台<span class="callout">9</span></span></div>
+                    <div class="g2k-badge-samples"><span class="g2k-badge-samples-label">状況により表示されるバッジ</span><span class="g2k-warn is-red">⚠ 却下あり<span class="callout">8</span></span><span class="g2k-warn is-red">⚠ 未申請・未承認 2件<span class="callout">9</span></span></div>
                 </div>
             </div>
             </div>
@@ -1023,14 +1011,15 @@
                 <li><span class="callout">4</span><span><b>完了した機械の台数</b></span></li>
                 <li><span class="callout">5</span><span>未解決の<b>ペンディング</b>件数</span></li>
                 <li><span class="callout">6</span><span><b>機械一覧</b>を開く</span></li>
-                <li><span class="callout">7</span><span><b>試運転</b>の進み具合</span></li>
+                <li><span class="callout">7</span><span><b>試運転</b>の進み具合（タスク単位の件数）</span></li>
                 <li><span class="callout">8</span><span><b>却下あり</b>：却下された申請がある（丸とバッジも赤になる）</span></li>
-                <li><span class="callout">9</span><span><b>未申請・未承認</b>：試運転の予定日を過ぎても申請がない機械と、承認待ちの機械の台数</span></li>
+                <li><span class="callout">9</span><span><b>未申請・未承認</b>：試運転の予定日を過ぎても申請がないものと、承認待ちのものの件数</span></li>
             </ol>
             </div>
             </div>
 
-            <h3>機械一覧（組立・電装）</h3>
+            <div class="g2k-part is-ae"><span class="g2k-part-title">組立・電装フロー</span><span class="g2k-part-desc">機械一覧 → ユニット一覧 → 申請</span></div>
+            <h3>機械一覧</h3>
             <div class="compare">
             <div class="compare-visual">
             <div class="mockup" style="max-width:none; width:auto;">
@@ -1076,7 +1065,7 @@
             </div>
             </div>
 
-            <h3>ユニット一覧（組立・電装）</h3>
+            <h3>ユニット一覧</h3>
             <div class="compare">
             <div class="compare-visual">
             <div class="mockup" style="max-width:none; width:auto;">
@@ -1136,7 +1125,8 @@
             </div>
             <div class="note">電装の機械一覧・ユニット一覧も、組立と同じ見方・操作です。</div>
 
-            <h3>機械一覧（試運転）</h3>
+            <div class="g2k-part is-t"><span class="g2k-part-title">試運転フロー</span><span class="g2k-part-desc">機械一覧 → 申請</span></div>
+            <h3>機械一覧</h3>
             <div class="compare">
             <div class="compare-visual">
             <div class="mockup" style="max-width:none; width:auto;">
@@ -1153,26 +1143,26 @@
                             </div>
                             <div class="g2k-grid">
                                 <div class="g2k-card">
-                                    <div class="g2k-card-top"><span class="g2k-card-name">【RT】</span><span class="g2k-badge gray">未申請</span></div>
-                                    <div class="g2k-meta">工場出荷予定日 2026/11/20</div>
-                                    <div class="g2k-card-row"><span class="g2k-link">申請する →<span class="callout">1</span></span><span class="g2k-warn is-red">⚠ 未申請<span class="callout">2</span></span></div>
-                                </div>
-                                <div class="g2k-card">
-                                    <div class="g2k-card-top">
-                                        <div><span class="g2k-card-name">【FS】</span><div class="g2k-meta">申請者: 浅田　申請日: 2026/10/2</div></div>
-                                        <span class="g2k-badge yellow">申請中</span>
-                                    </div>
-                                    <div class="g2k-meta">工場出荷予定日 2026/11/20</div>
-                                    <div class="g2k-card-row"><span class="g2k-link">チェックシートを見る →</span><span class="g2k-warn is-red">⚠ 未承認</span></div>
-                                    <div class="g2k-approve"><span class="ng">却下する</span><span class="ok">承認する<span class="callout">3</span></span></div>
-                                </div>
-                                <div class="g2k-card">
                                     <div class="g2k-card-top">
                                         <div><span class="g2k-card-name">【FL】</span><div class="g2k-meta">申請者: 浅田　申請日: 2026/9/30<br>承認者: 野口　承認日: 2026/10/1</div></div>
                                         <span class="g2k-badge green">承認完了</span>
                                     </div>
                                     <div class="g2k-meta">工場出荷予定日 2026/10/30</div>
                                     <div class="g2k-card-row"><span class="g2k-link">完了報告書を見る →<span class="callout">4</span></span><span></span></div>
+                                </div>
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top"><span class="g2k-card-name">【FSBT2】</span><span class="g2k-badge gray">未申請</span></div>
+                                    <div class="g2k-meta">工場出荷予定日 2026/12/28</div>
+                                    <div class="g2k-card-row"><span class="g2k-link">申請する →<span class="callout">1</span></span><span class="g2k-warn is-red">⚠ 未申請<span class="callout">2</span></span></div>
+                                </div>
+                                <div class="g2k-card">
+                                    <div class="g2k-card-top">
+                                        <div><span class="g2k-card-name">【FSBT1】</span><div class="g2k-meta">申請者: 浅田　申請日: 2026/10/2</div></div>
+                                        <span class="g2k-badge yellow">申請中</span>
+                                    </div>
+                                    <div class="g2k-meta">工場出荷予定日 2027/2/5</div>
+                                    <div class="g2k-card-row"><span class="g2k-link">チェックシートを見る →</span><span class="g2k-warn is-red">⚠ 未承認</span></div>
+                                    <div class="g2k-approve"><span class="ng">却下する</span><span class="ok">承認する<span class="callout">3</span></span></div>
                                 </div>
                             </div>
                         </div>
@@ -1182,16 +1172,16 @@
             </div>
             <div class="compare-notes">
             <ol class="callout-list">
-                <li><span class="callout">1</span><span>機械一覧から直接<b>申請</b>（ユニット一覧はない）</span></li>
+                <li><span class="callout">1</span><span>工程表の試運転タスクの<b>機械・ユニット</b>ごとに直接申請</span></li>
                 <li><span class="callout">2</span><span>予定日を過ぎた<b>未申請</b>・承認待ちの警告</span></li>
                 <li><span class="callout">3</span><span>承認者には<b>承認・却下</b>ボタンが出る</span></li>
                 <li><span class="callout">4</span><span><b>完了報告書</b>を開く</span></li>
             </ol>
             </div>
             </div>
-            <div class="note">試運転の機械一覧には、工程表の「試運転」タスクがある機械が並びます。</div>
+            <div class="note">試運転の機械一覧には、工程表の「試運転」タスクが機械・ユニットごとに並びます（ユニットが「ALL」のタスクは機械名だけで表示）。</div>
 
-            <h3>承認のしかた</h3>
+            <div class="g2k-part is-c"><span class="g2k-part-title">承認のしかた</span><span class="g2k-part-tag is-c">共通</span><span class="g2k-part-desc">組立・電装・試運転 共通</span></div>
             <div class="flowline">
                 <div class="flow-step"><div class="flow-dot">✉️</div><span class="label">承認依頼</span><span class="sub">メールが届く</span></div>
                 <div class="flow-arrow"></div>
