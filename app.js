@@ -2951,7 +2951,8 @@ async function openAssemblyFlowDetailModal(projectNum, kind) {
 
 // 2000番台：機械ごとのユニット申請状況一覧モーダル。標準リスト由来の固定ユニット＋自由入力で追加されたユニットを
 // 1つの画面にまとめ、ユニットごとの申請状況・申請操作・「不要にする」操作をここで行う
-async function openAssemblyMachineDetailModal(projectNum, machine) {
+async function openAssemblyMachineDetailModal(projectNum, machine, kind) {
+    if (kind) currentAssemblyFlowKind = kind;
     document.getElementById('detail_modal').classList.add('open');
     document.querySelector('#detail_modal .modal')?.classList.add('wide-machine-detail');
     document.getElementById('detail_body').innerHTML   = '<div class="loading-indicator">読み込み中...</div>';
