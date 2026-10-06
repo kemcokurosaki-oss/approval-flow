@@ -3641,38 +3641,28 @@ function buildMachineUnitRowsHtml(opts) {
     }).join('');
 }
 
+// 2000番台：機械ごとのユニット一覧。組立・電装は一覧カードで別々に開くため、currentAssemblyFlowKind の種別だけを表示する
 async function renderAssemblyMachineDetailBody(projectNum, machine) {
+    const kind   = currentAssemblyFlowKind;
+    const isElec = kind === 'electrical';
     const { data: reqs } = await db.from('approval_requests')
         .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
-        .eq('project_number', projectNum).eq('flow_type', 'assembly')
+        .eq('project_number', projectNum).eq('flow_type', kind)
         .order('created_at', { ascending: true });
 
-    // 電装(electrical)も2000番台はユニット単位申請のため、組立と同じ構成でユニット一覧を右列に表示する
-    const { data: elecReqs } = await db.from('approval_requests')
-        .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
-        .eq('project_number', projectNum).eq('flow_type', 'electrical')
-        .order('created_at', { ascending: true });
-
-    const { data: notReqRows } = await db.from('assembly_unit_not_required')
+    // 「不要にする」は組立(assembly_unit_not_required)と電装(electrical_unit_not_required)で別テーブルに独立管理する
+    const { data: notReqRows } = await db.from(isElec ? 'electrical_unit_not_required' : 'assembly_unit_not_required')
         .select('unit').eq('project_number', projectNum).eq('machine', machine);
     const notRequiredUnits = new Set((notReqRows || []).map(r => r.unit || ''));
 
-    // 電装の「不要にする」は組立と別テーブルで独立管理する
-    const { data: elecNotReqRows } = await db.from('electrical_unit_not_required')
-        .select('unit').eq('project_number', projectNum).eq('machine', machine);
-    const elecNotRequiredUnits = new Set((elecNotReqRows || []).map(r => r.unit || ''));
+    const units    = getAssemblyUnitListForMachine(machine, reqs || []);
+    const pInfo    = projectsMap[projectNum] || {};
+    const meta     = SHEET_FLOW_META[kind];
+    const myRole   = getEffectiveRole();
+    const canApply = canApplyFlow(kind);
 
-    const units     = getAssemblyUnitListForMachine(machine, reqs || []);
-    const elecUnits = getAssemblyUnitListForMachine(machine, elecReqs || []);
-    const pInfo = projectsMap[projectNum] || {};
-    const meta     = SHEET_FLOW_META['assembly'];
-    const elecMeta = SHEET_FLOW_META['electrical'];
-    const myRole = getEffectiveRole();
-    const canApply     = canApplyFlow('assembly');
-    const canApplyElec = canApplyFlow('electrical');
-
-    // 申請者・承認者名をまとめて取得（組立・電装合算、一覧に申請者・申請日・承認者・承認日時を直接表示するため）
-    const requesterIds = collectRequesterAndApproverIds([...(reqs || []), ...(elecReqs || [])]);
+    // 申請者・承認者名をまとめて取得（一覧に申請者・申請日・承認者・承認日時を直接表示するため）
+    const requesterIds = collectRequesterAndApproverIds(reqs || []);
     const requesterNames = {};
     if (requesterIds.length > 0) {
         const { data: prs } = await db.from('profiles').select('id, name').in('id', requesterIds);
@@ -3682,93 +3672,46 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
     // 試運転準備完了チェック（試運転タスクがある機械のみ表示。ユニット単位でチェック、機械単位で通知判定する）
     const hasTestRunTask = !!progressCachedData?.machineTaskSet?.has(`${projectNum}__${machine}__試運転`);
     let readinessMap = new Map();
-    let kumitateOwnerByUnit = new Map();
-    let denkiOwnerByUnit = new Map();
+    let ownerByUnit = new Map();
     if (hasTestRunTask) {
         const { data: readinessRows } = await db.from('test_run_readiness')
             .select('unit, kind, is_ready').eq('project_number', projectNum).eq('machine', machine);
         readinessMap = new Map((readinessRows || []).map(r => [`${r.unit || ''}__${r.kind}`, r.is_ready]));
 
-        const { data: ownerTaskRows } = await db.from('tasks').select('unit, owner, text')
-            .eq('project_number', projectNum).eq('machine', machine).in('text', ['機械組立', '電気艤装']);
-        kumitateOwnerByUnit = buildOwnerNamesByUnit((ownerTaskRows || []).filter(t => t.text === '機械組立'));
-        denkiOwnerByUnit    = buildOwnerNamesByUnit((ownerTaskRows || []).filter(t => t.text === '電気艤装'));
+        const { data: ownerTaskRows } = await db.from('tasks').select('unit, owner')
+            .eq('project_number', projectNum).eq('machine', machine).eq('text', isElec ? '電気艤装' : '機械組立');
+        ownerByUnit = buildOwnerNamesByUnit(ownerTaskRows || []);
     }
 
     const rowsHtml = buildMachineUnitRowsHtml({
         projectNum, machine, units, reqs, notRequiredUnits, meta, myRole, canApply, requesterNames,
-        startUnitFnName: 'startNewAssemblyUnitSheetFromDetail',
-        submitFnName:    'submitAssemblyDraftFromDetail',
-        deleteFnName:    'deleteAssemblyDraftFromDetail',
-        toggleFnName:    'toggleAssemblyUnitNotRequired',
-        reopenFnName:    'reopenAssemblySheetFromDetail',
-        hasTestRunTask, readinessKind: 'assembly', readinessMap, ownerByUnit: kumitateOwnerByUnit
-    });
-    const elecRowsHtml = buildMachineUnitRowsHtml({
-        projectNum, machine, units: elecUnits, reqs: elecReqs, notRequiredUnits: elecNotRequiredUnits,
-        meta: elecMeta, myRole, canApply: canApplyElec, requesterNames,
-        startUnitFnName: 'startNewElectricalUnitSheetFromDetail',
-        submitFnName:    'submitElectricalDraftFromDetail',
-        deleteFnName:    'deleteElectricalDraftFromDetail',
-        toggleFnName:    'toggleElectricalUnitNotRequired',
-        reopenFnName:    'reopenElectricalSheetFromDetail',
-        hasTestRunTask, readinessKind: 'electrical', readinessMap, ownerByUnit: denkiOwnerByUnit
+        startUnitFnName: isElec ? 'startNewElectricalUnitSheetFromDetail' : 'startNewAssemblyUnitSheetFromDetail',
+        submitFnName:    isElec ? 'submitElectricalDraftFromDetail'       : 'submitAssemblyDraftFromDetail',
+        deleteFnName:    isElec ? 'deleteElectricalDraftFromDetail'       : 'deleteAssemblyDraftFromDetail',
+        toggleFnName:    isElec ? 'toggleElectricalUnitNotRequired'       : 'toggleAssemblyUnitNotRequired',
+        reopenFnName:    isElec ? 'reopenElectricalSheetFromDetail'       : 'reopenAssemblySheetFromDetail',
+        hasTestRunTask, readinessKind: kind, readinessMap, ownerByUnit
     });
 
+    const freeUnitFnName = isElec ? 'startNewElectricalFreeUnitSheetFromDetail' : 'startNewAssemblyFreeUnitSheetFromDetail';
     const addNewUnitHtml = canApply
-        ? `<button class="btn-add-new" onclick="startNewAssemblyFreeUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
+        ? `<button class="btn-add-new" onclick="${freeUnitFnName}('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
         : '';
-    const elecAddNewUnitHtml = canApplyElec
-        ? `<button class="btn-add-new" onclick="startNewElectricalFreeUnitSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
-        : '';
+    const kindLabel = isElec ? '電装' : '組立';
 
-    document.getElementById('detail_title').textContent = `組立・電装フロー（${esc(machine)}）`;
+    document.getElementById('detail_title').textContent = `${kindLabel}フロー（${machine}）`;
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         ${build2000FlowStepsHtml('assembly', 2, projectNum, machine)}
         <hr class="section-divider">
-        <div class="assembly-elec-split">
-            <div class="detail-col">
-                <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS.assembly}">組立</span> ユニット別 申請状況</div>
-                <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
-                ${addNewUnitHtml}
-            </div>
-            <div class="detail-col">
-                <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS.electrical}">電装</span> ユニット別 申請状況</div>
-                <div class="unit-list-wrap unit-list-wrap-wide">${elecRowsHtml}</div>
-                ${elecAddNewUnitHtml}
-            </div>
-        </div>
+        <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS[kind]}">${kindLabel}</span> ユニット別 申請状況</div>
+        <div class="unit-list-wrap p2k-unit-grid">${rowsHtml}</div>
+        ${addNewUnitHtml}
     `;
     document.getElementById('detail_footer').innerHTML = `
         <button class="btn btn-secondary" onclick="closeDetailModal()">閉じる</button>
     `;
-    equalizeAssemblyElecRowHeights();
-}
-
-// 組立・電装のユニット一覧（左右2列）で、同じ段のカードの高さを揃える。
-// 不要マークの行は「試運転準備」欄が無い等で高さが変わり、左右で段がずれて見えるため、描画後に各段の最大高さに合わせる。
-function equalizeAssemblyElecRowHeights() {
-    const apply = () => {
-        const cols = [...document.querySelectorAll('#detail_body .assembly-elec-split .unit-list-wrap')];
-        if (cols.length < 2) return;
-        const rowsByCol = cols.map(c => [...c.querySelectorAll(':scope > .unit-list-row')]);
-        rowsByCol.flat().forEach(r => { r.style.minHeight = ''; });
-        // 1列表示（狭い画面）のときは揃えない
-        if (Math.abs(cols[0].getBoundingClientRect().top - cols[1].getBoundingClientRect().top) > 2) return;
-        const maxLen = Math.max(...rowsByCol.map(r => r.length));
-        for (let i = 0; i < maxLen; i++) {
-            const rows = rowsByCol.map(r => r[i]).filter(Boolean);
-            const h = Math.max(...rows.map(r => r.getBoundingClientRect().height));
-            rows.forEach(r => { r.style.minHeight = h + 'px'; });
-        }
-    };
-    requestAnimationFrame(apply);
-    if (!window.__assemblyElecEqualizeBound) {
-        window.__assemblyElecEqualizeBound = true;
-        window.addEventListener('resize', () => requestAnimationFrame(apply));
-    }
 }
 
 async function toggleAssemblyUnitNotRequired(projectNum, machine, unit, checked) {
