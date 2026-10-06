@@ -4376,7 +4376,7 @@ async function approveTestRunRequestFromDetail(requestId, stepId, stepOrder, pro
 }
 
 // 却下ボタンを押した時だけ、理由入力欄を別モーダルで表示する（組立と共通のオーバーレイ要素を再利用）
-function showTestRunRejectPrompt(requestId, stepId, projectNum, machine) {
+function showTestRunRejectPrompt(requestId, stepId, projectNum, machine, unit = '') {
     document.getElementById('assembly_reject_prompt')?.remove();
     const overlay = document.createElement('div');
     overlay.id = 'assembly_reject_prompt';
@@ -4388,20 +4388,20 @@ function showTestRunRejectPrompt(requestId, stepId, projectNum, machine) {
                 style="width:100%;min-height:80px;font-size:14px;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
                 <button class="btn btn-secondary" onclick="document.getElementById('assembly_reject_prompt').remove()">キャンセル</button>
-                <button class="btn btn-danger" onclick="confirmTestRunReject('${requestId}', '${stepId}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
+                <button class="btn btn-danger" onclick="confirmTestRunReject('${requestId}', '${stepId}', '${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">却下する</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
 }
 
-async function confirmTestRunReject(requestId, stepId, projectNum, machine) {
+async function confirmTestRunReject(requestId, stepId, projectNum, machine, unit = '') {
     const reason = (document.getElementById('assembly_reject_reason')?.value || '').trim();
     if (!reason) { showToast('却下する場合は理由を入力してください。', 'error'); return; }
     document.getElementById('assembly_reject_prompt')?.remove();
-    await rejectTestRunRequestFromDetail(requestId, stepId, projectNum, reason, machine);
+    await rejectTestRunRequestFromDetail(requestId, stepId, projectNum, reason, machine, unit);
 }
 
-async function rejectTestRunRequestFromDetail(requestId, stepId, projectNum, comment, machine) {
+async function rejectTestRunRequestFromDetail(requestId, stepId, projectNum, comment, machine, unit = '') {
     if (requireLogin()) return;
     if (!comment) { showToast('却下する場合はコメントを入力してください。', 'error'); return; }
 
@@ -5327,9 +5327,10 @@ async function submitRequest() {
         } else {
             // 機械ごとに申請レコードを作成（複数機械対応。assembly以外は現状通り機械単位）
             for (const machineNum of machineNums) {
-                // 機械ごとにタスクフラグを取得
-                const { data: mTasks } = await db.from('tasks')
-                    .select('text').eq('project_number', projectNum).eq('machine', machineNum);
+                // 機械ごとにタスクフラグを取得（2000番台の試運転はユニット単位申請のため、ユニットがあれば絞り込む）
+                let mTaskQuery = db.from('tasks').select('text').eq('project_number', projectNum).eq('machine', machineNum);
+                if (currentFlowType === 'test_run' && currentUnitName) mTaskQuery = mTaskQuery.eq('unit', currentUnitName);
+                const { data: mTasks } = await mTaskQuery;
                 const mNames = (mTasks || []).map(t => t.text);
 
                 // shipping_prep は承認不要。申請＝完了のため、最初から completed 相当の approved で作成する
