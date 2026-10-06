@@ -7953,6 +7953,8 @@ async function cancelMeeting(requestId, flowType) {
             .update({ status: 'cancelled', updated_at: new Date().toISOString() })
             .eq('id', requestId);
 
+        await unlockInspectionDateOnCancel(requestId);
+
         // まだ送信されていない開催案内が残っていれば削除する（キャンセル済みの会議への招待が後から届くのを防ぐ）
         const inviteType = flowType === 'shipping_meeting'
             ? 'shipping_meeting_invite'
