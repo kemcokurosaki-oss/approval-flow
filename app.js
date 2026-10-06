@@ -2043,36 +2043,45 @@ function renderProgressCards() {
         const hasAssemblyReq     = (assemblyReqsByProject[num] || []).length > 0;
         const showAssemblyNode   = hasAnyAssemblyTask || hasAssemblyReq;
 
-        // ===== 2000番台：一覧カードには「組立」「試運転」の2枚のタイル（進捗＋機械一覧を開くボタン）を並べる =====
+        // ===== 2000番台：一覧カードには「STEP1（組立・電装）」「STEP2（試運転）」のタイル（進捗＋機械一覧を開くボタン）を並べる =====
         // 申請は機械・ユニット単位のため、カード上には機械ごとの操作を置かず、〇台中〇台完了の進捗と注意バッジのみ表示する。
+        // 組立と電装は並行して進めるため、STEP1の枠内に左右2枚のサブタイルとして分けて表示し、台数・状態・機械一覧もそれぞれ別にする。
         // タイル（または「機械一覧を見る」）を押すと、機械一覧モーダル（renderAssembly2000FlowDetailBody / renderTestRun2000FlowDetailBody）を開く。
-        // 組立：機械一覧 → 機械選択 → ユニット一覧 → 申請　／　試運転：機械一覧 → 機械選択 → 申請
+        // 組立・電装：機械一覧 → 機械選択 → ユニット一覧 → 申請　／　試運転：機械一覧 → 機械選択 → 申請
         const build2000FlowButtons = () => {
             const testRunMachines = [...(testRunMachinesByProject[num] || new Set())].sort();
-            const tiles = [];
+            const step1Tiles = [];
 
             if (showAssemblyNode) {
                 const assemblyMachines = machines.filter(m => hasTask(num, m, '機械組立'));
-                // 電気艤装タスクがある機械は、組立・電装の両方が承認されて初めて完了扱い（機械行の丸と同じ判定）
                 const statuses = assemblyMachines.length > 0
-                    ? assemblyMachines.map(m => {
-                        const a = computeAssemblyAggStatusForMachine(num, m, assemblyReqsByProject, assemblyNotRequiredSet);
-                        if (!hasTask(num, m, '電気艤装')) return a;
-                        const e = computeAssemblyAggStatusForMachine(num, m, electricalReqsByProject, electricalNotRequiredSet);
-                        return (a === 'rejected' || e === 'rejected') ? 'rejected'
-                            : (a === 'approved' && e === 'approved') ? 'approved'
-                            : (a === 'empty' && e === 'empty') ? 'empty'
-                            : ((a === 'draft' || a === 'empty') && (e === 'draft' || e === 'empty')) ? 'draft'
-                            : 'active';
-                    })
+                    ? assemblyMachines.map(m => computeAssemblyAggStatusForMachine(num, m, assemblyReqsByProject, assemblyNotRequiredSet))
                     : [computeAssemblyAggStatus(num, assemblyReqsByProject)];
-                const assemblyPendingCount   = sumUnresolvedPendingItems((assemblyReqsByProject[num] || []).filter(r => r.status !== 'draft'));
-                const electricalPendingCount = sumUnresolvedPendingItems((electricalReqsByProject[num] || []).filter(r => r.status !== 'draft'));
-                tiles.push({
-                    kind: 'assembly', statuses,
-                    pendingCount: assemblyPendingCount + electricalPendingCount, overdueCount: 0,
-                    onclick: `openAssemblyFlowDetailModal('${esc(num)}')`
+                step1Tiles.push({
+                    title: '組立完了申請', statuses,
+                    pendingCount: sumUnresolvedPendingItems((assemblyReqsByProject[num] || []).filter(r => r.status !== 'draft')),
+                    overdueCount: 0,
+                    onclick: `openAssemblyFlowDetailModal('${esc(num)}', 'assembly')`
                 });
+            }
+
+            // 電装は電気艤装タスクがある機械だけを対象に、組立とは独立して数える
+            const electricalMachines = machines.filter(m => hasTask(num, m, '電気艤装'));
+            if (electricalMachines.length > 0) {
+                step1Tiles.push({
+                    title: '電装完了申請',
+                    statuses: electricalMachines.map(m => computeAssemblyAggStatusForMachine(num, m, electricalReqsByProject, electricalNotRequiredSet)),
+                    pendingCount: sumUnresolvedPendingItems((electricalReqsByProject[num] || []).filter(r => r.status !== 'draft')),
+                    overdueCount: 0,
+                    onclick: `openAssemblyFlowDetailModal('${esc(num)}', 'electrical')`
+                });
+            }
+
+            const tiles = [];
+            if (step1Tiles.length === 1) {
+                tiles.push({ ...step1Tiles[0], stepLabel: 'STEP 1' });
+            } else if (step1Tiles.length > 1) {
+                tiles.push({ group: step1Tiles });
             }
 
             if (testRunMachines.length > 0) {
