@@ -2097,7 +2097,7 @@ function renderProgressCards() {
                     return 'active';
                 });
                 tiles.push({
-                    stepLabel: 'STEP 2', title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
+                    title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
                     onclick: `openTestRunFlowDetailModal('${esc(num)}')`
                 });
             }
