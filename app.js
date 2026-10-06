@@ -2112,7 +2112,6 @@ function renderProgressCards() {
                     // 組立・電装の枠：2枚のサブタイルを左右に並べ、枠の右側に試運転への矢印を置く
                     return `<div class="p2k-group">
                         ${withArrow ? '<div class="p2k-tile-arrow"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M8.5 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>' : ''}
-                        <div class="p2k-group-head"><span class="p2k-group-title">組立・電装完了申請</span></div>
                         <div class="p2k-group-tiles">${t.group.map(sub => build2000FlowTileHtml({ ...sub, withArrow: false })).join('')}</div>
                     </div>`;
                 }).join('')
