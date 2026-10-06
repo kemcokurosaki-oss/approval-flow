@@ -2816,13 +2816,14 @@ async function renderAssembly2000FlowDetailBody(projectNum) {
 
     const rowsHtml = machines.length > 0
         ? machines.map(machine => build2000AssemblyRowHtml(
-              projectNum, machine, elecMachineSet.has(machine), shipDateByMachine[machine],
-              assemblyReqsByProject, assemblyNotRequiredSet, electricalReqsByProject, electricalNotRequiredSet
+              projectNum, machine, kind, shipDateByMachine[machine], reqsByProject, notRequiredSet
           )).join('')
-        : build2000AssemblyProjectAggRowHtml(projectNum, assemblyReqsByProject);
+        : isElec
+            ? '<div style="padding:8px 0;color:#999;font-size:14px;">電気艤装タスクが工程表にありません</div>'
+            : build2000AssemblyProjectAggRowHtml(projectNum, reqsByProject);
 
     const pInfo = projectsMap[projectNum] || {};
-    document.getElementById('detail_title').textContent = '組立フロー';
+    document.getElementById('detail_title').textContent = isElec ? '電装フロー' : '組立フロー';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
