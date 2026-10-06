@@ -222,6 +222,18 @@
     .g2k-badge-samples { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: #fff; border: 1px dashed #cdd8e8; border-radius: 10px; }
     .g2k-badge-samples-label { font-size: 14px; font-weight: 700; color: #5b6b80; margin-right: 4px; }
     .g2k-badge-samples .g2k-warn { font-size: 15px; font-weight: 700; padding: 5px 14px; }
+    /* 一覧カードのイラストは縮小表示するため、文字を一回り大きくして読みやすくする */
+    .g2k-card-mockup .prog-card-num { font-size: 24px; }
+    .g2k-card-mockup .prog-card-label { font-size: 16px; }
+    .g2k-card-mockup .prog-card-date-label { font-size: 13.5px; }
+    .g2k-card-mockup .prog-card-date-value { font-size: 17px; }
+    .g2k-card-mockup .g2k-head { gap: 8px; }
+    .g2k-card-mockup .g2k-title { font-size: 16.5px; }
+    .g2k-card-mockup .g2k-pill { font-size: 13px; padding: 3px 10px; }
+    .g2k-card-mockup .g2k-count { font-size: 15.5px; }
+    .g2k-card-mockup .g2k-btn { font-size: 15px; padding: 8px 15px; }
+    .g2k-card-mockup .g2k-warn { font-size: 15px; font-weight: 700; padding: 5px 14px; }
+    .g2k-card-mockup .g2k-badge-samples-label { font-size: 15px; }
     .g2k-circle.st-rejected { background: #e5484d; border-color: #e5484d; color: #fff; box-shadow: 0 0 0 4px rgba(229,72,77,.16); }
     .g2k-pill.is-rejected { background: #f8d7da; color: #721c24; }
     .g2k-warn.is-red { background: #fdecec; color: #c0392b; }
@@ -971,7 +983,7 @@
             <h3>一覧カード</h3>
             <div class="compare">
             <div class="compare-visual">
-            <div class="mockup" style="max-width:none; width:980px; zoom:0.85;">
+            <div class="mockup g2k-card-mockup" style="max-width:none; width:980px; zoom:0.85;">
                 <div class="mockup-bg">
                     <div class="prog-card">
                         <div class="prog-card-header">
