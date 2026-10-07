@@ -5369,7 +5369,8 @@ async function submitRequest() {
                 if (e1) throw e1;
 
                 if (currentFlowType === 'shipping_prep') {
-                    // 承認ステップは作らず、関係者へ完了通知のみ記録する
+                    // 承認ステップは作らず、関係者へ完了通知のみ記録する。申請＝完了のため工程表の完了チェックもここで連携する
+                    await syncTaskCompletionOnFlowApproval(req);
                     await recordFlowNotifications(req.id, 'shipping_prep');
                     continue;
                 }
