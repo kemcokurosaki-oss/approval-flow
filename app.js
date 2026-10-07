@@ -8049,9 +8049,9 @@ async function syncTaskCompletionOnFlowApproval(req) {
                 .eq('machine', t.machine)
                 .eq('text', taskText);
             if (t.unit) q = q.eq('unit', t.unit); // ユニット単位申請の場合は対象ユニットのタスク行のみ更新する
-            // 2000番台はユニット無し（工程表のunit列が「ALL」/空）の申請で、同じ機械のBT1・BT2等の
-            // ユニット別タスクまで完了にしないよう、ユニット無しのタスク行だけに絞る
-            else if (is2000sSeries(req.project_number)) q = q.or('unit.is.null,unit.eq.ALL,unit.eq.""');
+            // 2000番台の試運転は工程表の機械・ユニット単位の申請。ユニット無し（工程表のunit列が「ALL」/空）の申請で
+            // 同じ機械のBT1・BT2等のユニット別タスクまで完了にしないよう、ユニット無しのタスク行だけに絞る
+            else if (req.flow_type === 'test_run' && is2000sSeries(req.project_number)) q = q.or('unit.is.null,unit.eq.ALL,unit.eq.""');
             await q;
         }
     } catch (e) {
