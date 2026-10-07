@@ -8022,23 +8022,38 @@ const FLOW_APPROVAL_TASK_TEXT = {
     simple_inspection:         '簡易検査',
     inspection:                '外観検査',
     shipping_check_inspection: '出荷品確認検査',
-    shipping_meeting:          '出荷確認会議'
+    shipping_meeting:          '出荷確認会議',
+    // 2026-10-07 出荷準備を追加（申請＝完了のため申請時に連携）。「出荷準備(組立)」「出荷準備(電装)」は完全一致しないため対象外
+    shipping_prep:             '出荷準備'
 };
 
 async function syncTaskCompletionOnFlowApproval(req) {
     if (!FLOW_TASK_SYNC_ENABLED) return;
     const taskText = FLOW_APPROVAL_TASK_TEXT[req?.flow_type];
-    if (!taskText || !req.project_number || !req.machine_name) return;
+    if (!taskText || !req.project_number) return;
     try {
-        let q = db.from('tasks').update({ is_completed: true })
-            .eq('project_number', req.project_number)
-            .eq('machine', req.machine_name)
-            .eq('text', taskText);
-        if (req.unit_name) q = q.eq('unit', req.unit_name); // ユニット単位申請の場合は対象ユニットのタスク行のみ更新する
-        // 2000番台の試運転は工程表の機械・ユニット単位の申請。ユニット無し（工程表のunit列が「ALL」/空）の申請で
-        // 同じ機械のBT1・BT2等のユニット別タスクまで完了にしないよう、ユニット無しのタスク行だけに絞る
-        else if (req.flow_type === 'test_run' && is2000sSeries(req.project_number)) q = q.or('unit.is.null,unit.eq.ALL,unit.eq.""');
-        await q;
+        // 呼び出し元によっては assembly_items を取得していないため、その場合はDBから補完する
+        let items = req.assembly_items;
+        if (items === undefined && req.id) {
+            const { data } = await db.from('approval_requests').select('assembly_items').eq('id', req.id).single();
+            items = data?.assembly_items;
+        }
+        // ユニット単位の組立・電装申請は machine_name に「MCAR」のような機械＋ユニットの表示名が入っており
+        // 工程表の machine 列と一致しないため、assembly_items の機械・ユニットごとに対象タスクを特定する
+        const targets = (Array.isArray(items) && items.length > 0)
+            ? items.filter(it => it?.machine).map(it => ({ machine: it.machine, unit: it.unit || null }))
+            : (req.machine_name ? [{ machine: req.machine_name, unit: req.unit_name || null }] : []);
+        for (const t of targets) {
+            let q = db.from('tasks').update({ is_completed: true })
+                .eq('project_number', req.project_number)
+                .eq('machine', t.machine)
+                .eq('text', taskText);
+            if (t.unit) q = q.eq('unit', t.unit); // ユニット単位申請の場合は対象ユニットのタスク行のみ更新する
+            // 2000番台はユニット無し（工程表のunit列が「ALL」/空）の申請で、同じ機械のBT1・BT2等の
+            // ユニット別タスクまで完了にしないよう、ユニット無しのタスク行だけに絞る
+            else if (is2000sSeries(req.project_number)) q = q.or('unit.is.null,unit.eq.ALL,unit.eq.""');
+            await q;
+        }
     } catch (e) {
         console.warn('全体工程表への完了連携に失敗:', e);
     }
