@@ -9808,7 +9808,7 @@ async function submitShipping() {
         }
         closeShippingModal();
         await refreshAll();
-        showToast(`${machines.length}機械の申請をしました。\n営業担当者に工場出荷確定日の入力を依頼します。`, 'success');
+        showToast(`${machines.length}機械の申請をしました。`, 'success');
     } catch (e) {
         showToast('申請に失敗しました: ' + e.message, 'error');
     } finally {
