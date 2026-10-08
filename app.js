@@ -9680,7 +9680,7 @@ async function onShippingMachineChange() {
     const machine = machines[0];
     showLoading('読み込み中...');
     try {
-    // フロー状況（外観検査or簡易検査＋あれば出荷確認会議を動的判定し、未完了があれば申請不可にする。出荷準備の完了は問わない）
+    // フロー状況（外観検査or簡易検査＋あれば出荷確認会議＋出荷準備を動的判定し、未完了があれば申請不可にする）
     const doneFlows = await _getMachineDoneFlows(num, machine);
     const required  = await _getShippingIssueRequiredFlows(num, machine);
 
