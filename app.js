@@ -1874,18 +1874,6 @@ function renderProgressCards() {
         return entry;
     };
 
-    // 梱包出荷日表示: 確定梱包出荷日が未入力の間は工程表（梱包出荷タスク終了日）をそのまま表示する
-    const getEffectivePackingShippingDate = (num) => {
-        let confirmed = null;
-        Object.values(projectData[num] || {}).forEach(mData => {
-            const shipReq = mData.flows['shipping'];
-            if (shipReq?.packing_confirmed_shipping_date && (!confirmed || shipReq.packing_confirmed_shipping_date < confirmed)) {
-                confirmed = shipReq.packing_confirmed_shipping_date;
-            }
-        });
-        return { date: confirmed || projectsMap[num]?.packing_shipping_date || null, isConfirmed: !!confirmed };
-    };
-
     // 未申請・未承認判定（組立・試運転・出荷確定）
     // 組立(assembly)は機械・ユニットが工程表と紐づかなくなったため、機械単位の未申請催促は一時的に無効化（TBD: 別途再設計）
     const OVERDUE_FLOW_TASK_TEXT = { test_run: '試運転', shipping: '工場出荷', electrical: '電気艤装' };
@@ -2053,13 +2041,14 @@ function renderProgressCards() {
 
         let packingDateLabel = '';
         if (hasAnyPacking) {
-            const { date: effectivePackingDate, isConfirmed: packingDateConfirmed } = getEffectivePackingShippingDate(num);
-            // 「あり」確定後、工程表にも承認フローにも日付がまだ無い間は「あり（未入力）」を表示する。
+            // 梱包出荷確定日の入力は廃止したため、工程表（梱包出荷タスク終了日）の予定日のみ表示する
+            const effectivePackingDate = projectsMap[num]?.packing_shipping_date || null;
+            // 「あり」確定後、工程表に日付がまだ無い間は「あり（未入力）」を表示する。
             // 「梱包出荷：未定」（有無不明・オレンジの警告バッジ）と紛らわしくならないよう、
             // 文言に「未定」を使わず、色も警告色ではないニュートラルな prog-card-date のままにする
             // （工程表の梱包出荷タスクには触れず、承認フロー側の表示のみ切り替える）
             packingDateLabel = effectivePackingDate
-                ? `<span class="prog-card-date${packingDateConfirmed ? ' is-confirmed' : ''}"><span class="prog-card-date-label">${packingDateConfirmed ? '梱包出荷確定日' : '梱包出荷予定日'}</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
+                ? `<span class="prog-card-date"><span class="prog-card-date-label">梱包出荷予定日</span> <span class="prog-card-date-value">${fmtDate(effectivePackingDate)}</span></span>`
                 : `<span class="prog-card-date"><span class="prog-card-date-label">梱包出荷</span> <span class="prog-card-date-value">あり（未入力）</span></span>`;
         } else if (packingState === 'unknown') {
             // 梱包出荷「未定」表示・あり／なし選択は4000番台・4C番の工番のみが対象（getPackingDisplayState内で判定）
@@ -5372,6 +5361,8 @@ async function submitRequest() {
                     // 承認ステップは作らず、関係者へ完了通知のみ記録する。申請＝完了のため工程表の完了チェックもここで連携する
                     await syncTaskCompletionOnFlowApproval(req);
                     await recordFlowNotifications(req.id, 'shipping_prep');
+                    // 検査/会議が完了済みなら、ここで出荷フロー（確定出荷申請）を自動起票する
+                    await _autoIssueShippingIfReady(projectNum, machineNum);
                     continue;
                 }
 
@@ -5719,7 +5710,7 @@ async function openDetailModal(requestId, returnTo = null) {
     const pInfo  = projectsMap[pNum]  || {};
     const cls    = STATUS_CLASSES[req.status] || 's-pending';
 
-    // 梱包出荷タスクの有無判定（工程表に梱包出荷タスクがあれば梱包出荷日の入力欄も表示する）
+    // 梱包出荷タスクの有無判定（梱包出荷の有無が未定の警告表示に使う。梱包出荷確定日の入力は廃止済み）
     // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
     // あわせて工程表側のタスク日付を取得し、承認フロー側の日付とのズレを検知する
     let hasPackingShipping = false;
@@ -5743,15 +5734,10 @@ async function openDetailModal(requestId, returnTo = null) {
         packingState = getPackingDisplayState(pNum, hasPackingShipping);
 
         const factoryTaskDate = factoryTasks?.[0]?.end_date || null;
-        const packingTaskDate = packingTasks?.[0]?.end_date || null;
         const approvalFactoryDate = req.confirmed_shipping_date;
-        const approvalPackingDate = req.packing_confirmed_shipping_date;
 
         if (approvalFactoryDate && factoryTaskDate && approvalFactoryDate !== factoryTaskDate) {
             shippingDateMismatches.push(`工場出荷: 承認フロー ${fmtDate(approvalFactoryDate)} / 工程表 ${fmtDate(factoryTaskDate)}`);
-        }
-        if (approvalPackingDate && packingTaskDate && approvalPackingDate !== packingTaskDate) {
-            shippingDateMismatches.push(`梱包出荷: 承認フロー ${fmtDate(approvalPackingDate)} / 工程表 ${fmtDate(packingTaskDate)}`);
         }
         if (packingState === 'yes' && !hasPackingShipping) {
             shippingDateMismatches.push('梱包出荷が「あり」に設定されていますが、工程表に梱包出荷タスクが未登録です');
@@ -5778,15 +5764,14 @@ async function openDetailModal(requestId, returnTo = null) {
 
     // 出荷日の入力・変更リンク（確定出荷日の入力は品証の本申請・常務の承認とは別扱いのため、承認状況に関係なく入力・変更できる）
     const isSales = (getEffectiveRole() === 'staff' && getEffectiveDept() === '営業') || isSuperAdmin();
-    // 梱包出荷確定日・工場出荷確定日は別々に入力できるため、どちらか一方でも未入力なら「入力待ち」扱いにする
+    // 工場出荷確定日（分割出荷は①②）が未入力なら「入力待ち」扱いにする（梱包出荷確定日の入力は廃止）
     const hasMissingShippingDate = !req.confirmed_shipping_date
-        || (currentDetailShippingTaskCount >= 2 && !req.confirmed_shipping_date_2)
-        || (hasPackingShipping && !req.packing_confirmed_shipping_date);
+        || (currentDetailShippingTaskCount >= 2 && !req.confirmed_shipping_date_2);
     const canChangeConfirmedDate = req.flow_type === 'shipping' && req.status !== 'cancelled'
         && (isSales || isQualityOrSeikan) && !myStep;
     const changeDateOnclick = `showChangeConfirmedDateFooter('${req.id}')`;
     const changeDateVerb  = hasMissingShippingDate ? '入力する' : '変更する';
-    const changeDateLabel = hasPackingShipping ? `梱包出荷確定日・工場出荷確定日を${changeDateVerb}` : `工場出荷確定日を${changeDateVerb}`;
+    const changeDateLabel = `工場出荷確定日を${changeDateVerb}`;
     // ズレ警告バナー内に変更ボタンを表示する場合は、フッター側には重複して表示しない
     const changeDateBannerButtonHtml = canChangeConfirmedDate
         ? `<button type="button" class="btn btn-outline" onclick="${changeDateOnclick}">${changeDateLabel}</button>`
@@ -5978,9 +5963,6 @@ async function openDetailModal(requestId, returnTo = null) {
     // 確定出荷日は申請・承認とは別に入力されるため、未入力の間は「未入力」と明示する（常務の承認時にも分かるように）
     const shippingInfoParts = [];
     const missingDateHtml = '<span style="color:#c0392b;font-weight:bold;">未入力</span>';
-    if (req.flow_type === 'shipping' && (req.packing_confirmed_shipping_date || hasPackingShipping)) {
-        shippingInfoParts.push(`梱包出荷確定日: ${req.packing_confirmed_shipping_date ? fmtDate(req.packing_confirmed_shipping_date) : missingDateHtml}`);
-    }
     if (req.flow_type === 'shipping') {
         const factoryDateLabel = '工場出荷確定日';
         const isSplitShipping  = currentDetailShippingTaskCount >= 2;
@@ -5990,22 +5972,23 @@ async function openDetailModal(requestId, returnTo = null) {
         }
     }
 
-    // 確定出荷日の変更履歴（入力済みの日付を変更した場合に記録される）
-    const shippingDateHistoryHtml = shippingDateHistory.length > 0 ? `
+    // 確定出荷日の変更履歴（入力済みの日付を変更した場合に記録される）。
+    // 梱包出荷確定日は廃止したため表示せず、梱包出荷確定日だけを変更した過去の履歴は件数からも除く
+    const shippingDateHistoryEntries = shippingDateHistory.map(h => {
+        const lines = [];
+        if (h.old_confirmed_shipping_date !== h.new_confirmed_shipping_date) {
+            lines.push(`工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date) || '未定'}`);
+        }
+        if ((h.old_confirmed_shipping_date_2 || h.new_confirmed_shipping_date_2) && h.old_confirmed_shipping_date_2 !== h.new_confirmed_shipping_date_2) {
+            lines.push(`②工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date_2) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date_2) || '未定'}`);
+        }
+        return { h, lines };
+    }).filter(e => e.lines.length > 0);
+    const shippingDateHistoryHtml = shippingDateHistoryEntries.length > 0 ? `
         <details style="margin-top:4px;">
-            <summary style="cursor:pointer;font-size:14px;color:#888;">出荷確定日の変更履歴（${shippingDateHistory.length}件）</summary>
+            <summary style="cursor:pointer;font-size:14px;color:#888;">出荷確定日の変更履歴（${shippingDateHistoryEntries.length}件）</summary>
             <div style="font-size:13px;color:#666;margin-top:4px;padding-left:12px;border-left:2px solid #eee;">
-                ${shippingDateHistory.map(h => {
-                    const lines = [];
-                    if (h.old_confirmed_shipping_date !== h.new_confirmed_shipping_date) {
-                        lines.push(`工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date) || '未定'}`);
-                    }
-                    if ((h.old_confirmed_shipping_date_2 || h.new_confirmed_shipping_date_2) && h.old_confirmed_shipping_date_2 !== h.new_confirmed_shipping_date_2) {
-                        lines.push(`②工場出荷確定日: ${fmtDate(h.old_confirmed_shipping_date_2) || '未定'} → ${fmtDate(h.new_confirmed_shipping_date_2) || '未定'}`);
-                    }
-                    if ((h.old_packing_confirmed_shipping_date || h.new_packing_confirmed_shipping_date) && h.old_packing_confirmed_shipping_date !== h.new_packing_confirmed_shipping_date) {
-                        lines.push(`梱包出荷確定日: ${fmtDate(h.old_packing_confirmed_shipping_date) || '未定'} → ${fmtDate(h.new_packing_confirmed_shipping_date) || '未定'}`);
-                    }
+                ${shippingDateHistoryEntries.map(({ h, lines }) => {
                     const who = approverNames[h.changed_by] || '';
                     return `<div style="margin-bottom:4px;">${esc(fmtDateTime(h.changed_at))}${who ? '　' + esc(who) + ' が変更' : ''}<br>${lines.map(esc).join('<br>')}</div>`;
                 }).join('')}
@@ -6109,7 +6092,7 @@ async function openDetailModal(requestId, returnTo = null) {
             <button class="btn btn-success" ${canSubmitShippingConfirm ? '' : 'disabled title="前フローの完了・残件の解消後に申請できます"'} onclick="confirmAndSubmitShipping('${req.id}')">申請する</button>
         `;
     } else if (req.flow_type === 'shipping' && hasMissingShippingDate && canChangeConfirmedDate) {
-        // 営業: 梱包出荷・工場出荷のどちらかが未入力なら、承認状況に関係なく最初から入力欄を表示する
+        // 営業: 工場出荷確定日が未入力なら、承認状況に関係なく最初から入力欄を表示する
         footer.innerHTML = buildShippingDateFooterInner(req, hasPackingShipping, packingState);
         updateSalesDateSubmitButtonState();
     } else if (canReschedule) {
@@ -6123,15 +6106,13 @@ async function openDetailModal(requestId, returnTo = null) {
 }
 
 // ===== 確定出荷日の入力・変更フッター =====
-// 梱包出荷確定日と工場出荷確定日（分割出荷の①②はまとめて1項目）はそれぞれ単独で入力・保存できる。
+// 工場出荷確定日（分割出荷の①②はまとめて1項目）を入力・保存する（梱包出荷確定日の入力は廃止）。
 // 入力済みの項目は現在値をプリフィルし、そのまま変更もできる。
-// hasPackingShipping=true の場合のみ梱包出荷確定日の入力欄を表示する。
 // packingState==='unknown' の場合、梱包出荷の有無が未定である旨の警告を出す（進行はブロックしない）
 function buildShippingDateFooterInner(req, hasPackingShipping, packingState) {
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const dateLabel = '工場出荷確定日';
     const fields = [];
-    if (hasPackingShipping) fields.push(_salesDateFieldHtml('packing_sales_date_input', '梱包出荷確定日', req.packing_confirmed_shipping_date));
     fields.push(_salesDateFieldHtml('sales_date_input', `${isSplitShipping ? '①' : ''}${dateLabel}`, req.confirmed_shipping_date));
     if (isSplitShipping) fields.push(_salesDateFieldHtml('sales_date_input_2', `②${dateLabel}`, req.confirmed_shipping_date_2));
     const packingWarningBox = (!hasPackingShipping && packingState === 'unknown') ? `
@@ -6161,7 +6142,7 @@ function _salesDateFieldHtml(id, label, value) {
         </div>`;
 }
 
-// 入力フォームの値を項目（梱包出荷／工場出荷）ごとにまとめ、保存済みの値からの変化を判定する
+// 入力フォームの値を項目ごとにまとめ、保存済みの値からの変化を判定する
 // 工場出荷の分割出荷①②は1項目として扱い、どちらかを入力・変更する場合は両方の入力を必須にする
 function _collectShippingDateGroups() {
     const read = id => {
@@ -6169,15 +6150,6 @@ function _collectShippingDateGroups() {
         return el ? { value: el.value || null, original: el.dataset.original || null } : null;
     };
     const groups = [];
-    const packing = read('packing_sales_date_input');
-    if (packing) {
-        groups.push({
-            key: 'packing', label: '梱包出荷確定日', inputs: ['packing_sales_date_input'],
-            changed: packing.value !== packing.original,
-            complete: !!packing.value,
-            cleared: !!packing.original && !packing.value
-        });
-    }
     const f1 = read('sales_date_input');
     const f2 = read('sales_date_input_2');
     if (f1) {
@@ -6200,7 +6172,7 @@ function updateSalesDateSubmitButtonState() {
     const groups = _collectShippingDateGroups();
     const changedGroups = groups.filter(g => g.changed);
     btn.disabled = changedGroups.length === 0 || changedGroups.some(g => !g.complete || g.cleared);
-    ['packing_sales_date_input', 'sales_date_input', 'sales_date_input_2'].forEach(id => {
+    ['sales_date_input', 'sales_date_input_2'].forEach(id => {
         const el = document.getElementById(id);
         const st = document.getElementById(id + '_status');
         if (!el || !st) return;
@@ -7659,7 +7631,7 @@ async function finalizeQaMeeting(requestId) {
         // 検査・会議フローは承認ステップを持たないため、ここで工程表の該当タスクに完了チェックを入れる
         await syncTaskCompletionOnFlowApproval(reqRow);
 
-        // 外観検査/簡易検査/出荷品確認検査のいずれか＋（あれば）出荷確認会議が揃って完了したら、出荷フローを自動起票する
+        // 外観検査/簡易検査/出荷品確認検査のいずれか＋（あれば）出荷確認会議＋出荷準備が揃って完了したら、出荷フローを自動起票する
         if (reqRow?.project_number && reqRow?.machine_name) {
             await _autoIssueShippingIfReady(reqRow.project_number, reqRow.machine_name);
         }
@@ -8107,12 +8079,12 @@ async function unlockInspectionDateOnCancel(requestId) {
     }
 }
 
-// 出荷日（仮/確定、工場出荷/梱包出荷）を工程表(tasksテーブル)のstart_date・end_dateへ書き戻す（承認フロー→工程表の一方向反映）
+// 出荷日（仮/確定の工場出荷）を工程表(tasksテーブル)のstart_date・end_dateへ書き戻す（承認フロー→工程表の一方向反映）
 // 承認フロー対象（2000番台以外）の出荷タスクは単日のため、開始日・終了日を同じ日付に揃える
 // FLOW_TASK_SYNC_ENABLED（完了フラグ連携用）とは独立したフラグ
 const SHIPPING_DATE_TASK_SYNC_ENABLED = true;
 
-async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packingDate } = {}) {
+async function syncShippingDateToTasks(req, { factoryDate, factoryDate2 } = {}) {
     if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
     if (!req?.project_number) return;
     try {
@@ -8140,12 +8112,6 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2, packing
                     .eq('machine', req.machine_name)
                     .eq('text', '工場出荷');
             }
-        }
-        if (packingDate) {
-            // 梱包出荷は機械単位ではなく工事番号全体で1つの場合があるため machine では絞り込まない
-            await db.from('tasks').update({ start_date: packingDate, end_date: packingDate })
-                .eq('project_number', req.project_number)
-                .eq('text', '梱包出荷');
         }
     } catch (e) {
         console.warn('工程表への出荷日書き戻しに失敗:', e);
@@ -8553,18 +8519,19 @@ async function _getRequiredFlows(projectNum, machine) {
     return new Set(chain.filter(t => t !== 'shipping'));
 }
 
-// 出荷フロー「起票」の前提として完了しているべきフロー一覧（外観検査/簡易検査/出荷品確認検査のいずれか＋あれば出荷確認会議のみ。
-// 出荷準備・試運転等の完了は問わない。出荷準備を含む全前フロー完了は品証の確定出荷申請時に別途チェックする）
+// 出荷フロー「起票」の前提として完了しているべきフロー一覧（外観検査/簡易検査/出荷品確認検査のいずれか＋あれば出荷確認会議＋出荷準備）。
+// 試運転等の完了は問わない。全前フロー完了は品証の確定出荷申請時に別途チェックする
 async function _getShippingIssueRequiredFlows(projectNum, machine) {
     const middle = await _getMiddleFlowChain(projectNum, machine);
-    return new Set(middle.filter(t => QA_MEETING_FLOWS.includes(t)));
+    return new Set(middle.filter(t => QA_MEETING_FLOWS.includes(t) || t === 'shipping_prep'));
 }
 
-// 外観検査/簡易検査/出荷品確認検査のいずれか（＋あれば出荷確認会議）が完了したら出荷フローを自動起票し、営業へ確定出荷日入力を依頼する
-// （出荷準備フローの完了は待たない）。既に起票済みの場合は何もしない
+// 検査/会議と出荷準備がすべて完了したら出荷フローを自動起票する（通常は出荷準備完了時に起票される）。既に起票済みの場合は何もしない。
+// 営業への工場出荷確定日の入力依頼は出荷準備完了通知（notify-approval.js）にまとめて送るため、ここでは送らない。
+// ただし工程表に出荷準備タスクが無い機械は出荷準備完了通知が出ないため、従来どおりここで入力依頼を送る
 async function _autoIssueShippingIfReady(projectNum, machine) {
     const required = await _getShippingIssueRequiredFlows(projectNum, machine);
-    if (required.size === 0) return;
+    if (![...required].some(t => QA_MEETING_FLOWS.includes(t))) return;
 
     const doneFlows = await _getMachineDoneFlows(projectNum, machine);
     if (![...required].every(t => doneFlows.has(t))) return;
@@ -8576,14 +8543,22 @@ async function _autoIssueShippingIfReady(projectNum, machine) {
     const { data: sData } = await db.from('app_settings').select('value').eq('key', 'sales_person_map').single();
     const salesOwner = (sData?.value ? JSON.parse(sData.value) : {})[projectNum] || null;
 
+    // 起票者は直近に完了した検査/会議の申請者（品証）を引き継ぐ。出荷準備の申請者（組立等）を起票者にすると、
+    // その人に確定出荷申請のボタンが表示されてしまうため
+    const { data: qaReqs } = await db.from('approval_requests')
+        .select('requester_id').eq('project_number', projectNum).eq('machine_name', machine)
+        .in('flow_type', QA_MEETING_FLOWS).eq('status', 'approved')
+        .order('updated_at', { ascending: false }).limit(1);
+    const issuerId = qaReqs?.[0]?.requester_id || currentUser.id;
+
     const { data: req, error } = await db.from('approval_requests').insert({
         project_number: projectNum, machine_name: machine, flow_type: 'shipping',
-        status: 'awaiting_shipping_confirm', requester_id: currentUser.id, note: null,
+        status: 'awaiting_shipping_confirm', requester_id: issuerId, note: null,
         confirmed_shipping_date: null
     }).select().single();
     if (error) throw error;
 
-    if (salesOwner) {
+    if (salesOwner && !required.has('shipping_prep')) {
         const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
         if (pRows?.length > 0) {
             await db.from('approval_notifications').insert(
@@ -9787,7 +9762,8 @@ async function submitShipping() {
     showLoading('処理中...');
 
     try {
-        // 前フロー完了の再チェック（画面表示が古い場合の防御。出荷準備の完了は問わない）
+        // 前フロー完了の再チェック（画面表示が古い場合の防御）
+        const requiredByMachine = {};
         for (const machine of machines) {
             const [doneFlows, required] = await Promise.all([
                 _getMachineDoneFlows(num, machine),
@@ -9797,6 +9773,7 @@ async function submitShipping() {
             if (missing.length > 0) {
                 throw new Error(`${machine}: 前フローが未完了のため申請できません`);
             }
+            requiredByMachine[machine] = required;
         }
 
         // 営業担当者を解決（sales_person_map）
@@ -9842,8 +9819,7 @@ async function submitShipping() {
 
 // 営業・品証・製管: 確定出荷日を入力・変更する。確定出荷日は品証の本申請・常務の承認とは別扱いのため、
 // 承認状況（申請前・申請中・承認済み）に関係なくステータスは変えず、保存した時点で確定する。
-// 梱包出荷確定日と工場出荷確定日（分割出荷の①②はまとめて1項目）は別々に保存でき、品証・製管へは
-// 保存した項目分の内容を1通にまとめて通知する（別々に保存すれば、それぞれの保存ごとに通知が届く）
+// 工場出荷確定日（分割出荷の①②はまとめて1項目）を保存し、品証・製管へ通知する（梱包出荷確定日の入力は廃止）
 async function saveShippingDates(requestId) {
     if (requireLogin()) return;
     const groups = _collectShippingDateGroups().filter(g => g.changed);
@@ -9855,30 +9831,24 @@ async function saveShippingDates(requestId) {
     }
     const isSplitShipping = currentDetailShippingTaskCount >= 2;
     const val = id => document.getElementById(id)?.value || null;
-    const savePacking = groups.some(g => g.key === 'packing');
     const saveFactory = groups.some(g => g.key === 'factory');
 
     showLoading('処理中...');
     try {
         const { data: current, error: fetchErr } = await db.from('approval_requests')
-            .select('confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date').eq('id', requestId).single();
+            .select('confirmed_shipping_date, confirmed_shipping_date_2').eq('id', requestId).single();
         if (fetchErr) throw fetchErr;
         if (!current) { showToast('データが見つかりません', 'error'); return; }
 
         const next = {
             confirmed_shipping_date:         saveFactory ? val('sales_date_input') : current.confirmed_shipping_date,
-            confirmed_shipping_date_2:       saveFactory && isSplitShipping ? val('sales_date_input_2') : current.confirmed_shipping_date_2,
-            packing_confirmed_shipping_date: savePacking ? val('packing_sales_date_input') : current.packing_confirmed_shipping_date
+            confirmed_shipping_date_2:       saveFactory && isSplitShipping ? val('sales_date_input_2') : current.confirmed_shipping_date_2
         };
 
         // 通知本文の明細（初回入力は「項目: 日付」、変更は「項目: 旧 → 新」）
         const detailLine = (label, oldVal, newVal) => oldVal ? `${label}: ${oldVal} → ${newVal}` : `${label}: ${newVal}`;
         const lines = [];
         let isChange = false;
-        if (savePacking && current.packing_confirmed_shipping_date !== next.packing_confirmed_shipping_date) {
-            lines.push(detailLine('梱包出荷確定日', current.packing_confirmed_shipping_date, next.packing_confirmed_shipping_date));
-            if (current.packing_confirmed_shipping_date) isChange = true;
-        }
         if (saveFactory && current.confirmed_shipping_date !== next.confirmed_shipping_date) {
             lines.push(detailLine(`${isSplitShipping ? '①' : ''}工場出荷確定日`, current.confirmed_shipping_date, next.confirmed_shipping_date));
             if (current.confirmed_shipping_date) isChange = true;
@@ -9894,7 +9864,6 @@ async function saveShippingDates(requestId) {
             updatePayload.confirmed_shipping_date = next.confirmed_shipping_date;
             if (isSplitShipping) updatePayload.confirmed_shipping_date_2 = next.confirmed_shipping_date_2;
         }
-        if (savePacking) updatePayload.packing_confirmed_shipping_date = next.packing_confirmed_shipping_date;
 
         const { data: req, error } = await db.from('approval_requests')
             .update(updatePayload).eq('id', requestId).select().single();
@@ -9908,8 +9877,6 @@ async function saveShippingDates(requestId) {
                 new_confirmed_shipping_date: next.confirmed_shipping_date,
                 old_confirmed_shipping_date_2: current.confirmed_shipping_date_2,
                 new_confirmed_shipping_date_2: next.confirmed_shipping_date_2,
-                old_packing_confirmed_shipping_date: current.packing_confirmed_shipping_date,
-                new_packing_confirmed_shipping_date: next.packing_confirmed_shipping_date,
                 changed_by: currentUser.id
             });
         }
@@ -9929,8 +9896,7 @@ async function saveShippingDates(requestId) {
 
         await syncShippingDateToTasks(req, {
             factoryDate:  saveFactory ? next.confirmed_shipping_date : null,
-            factoryDate2: saveFactory && isSplitShipping ? next.confirmed_shipping_date_2 : null,
-            packingDate:  savePacking ? next.packing_confirmed_shipping_date : null
+            factoryDate2: saveFactory && isSplitShipping ? next.confirmed_shipping_date_2 : null
         });
 
         closeDetailModal();
