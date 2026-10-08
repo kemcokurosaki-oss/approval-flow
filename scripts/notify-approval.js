@@ -57,7 +57,7 @@ function photoUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
 }
 
-// ===== 出荷準備フロー: 品証宛メールへの追加CC（組立/操業/設計/営業/現地工事担当者） =====
+// ===== 出荷準備フロー: 完了通知メールの追加CC（組立/操業/設計/現地工事担当者） =====
 // app.js の splitOwnerNames / isBusinessTripTaskRow / isTripTaskExpired / tripTaskDurationDays と同じ判定をここでも再現する
 function splitOwnerNames(ownerStr) {
   return String(ownerStr || '').split(/[,、，]/).map(s => s.trim()).filter(Boolean);
@@ -107,7 +107,7 @@ async function resolveOwnerEmails(names, { profilesOnly = false } = {}) {
   return emails;
 }
 
-// 出荷準備完了通知（品証宛）に追加するCC先を、当該工番・機械の担当者から解決する
+// 出荷準備完了通知に追加するCC先を、当該工番・機械の担当者から解決する（営業担当者はToのためここには含めない）
 async function resolveShippingPrepCcEmails(req) {
   const emails = new Set();
   if (!req?.project_number) return emails;
@@ -131,14 +131,33 @@ async function resolveShippingPrepCcEmails(req) {
   if (isOn('sekkei_owner'))   (await resolveOwnerEmails(sekkeiNames)).forEach(e => emails.add(e));
   if (isOn('trip_owner'))     (await resolveOwnerEmails(tripNames)).forEach(e => emails.add(e));
 
-  if (isOn('sales')) {
-    const salesMapRow = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
-    const salesMap = salesMapRow?.[0]?.value ? JSON.parse(salesMapRow[0].value) : {};
-    const salesOwnerName = salesMap[req.project_number] || null;
-    if (salesOwnerName) (await resolveOwnerEmails([salesOwnerName])).forEach(e => emails.add(e));
-  }
-
   return emails;
+}
+
+// 出荷準備完了通知（品証・営業担当者宛）の件名・本文。
+// 品証には出荷確定申請を、営業担当者には出荷手配と工場出荷確定日の入力を依頼するため、本文を宛先ごとに分けて記載する
+function buildShippingPrepCompletedEmail(req, salesOwnerName) {
+  const pNum = req?.project_number || '—';
+  const pStr = req?.machine_name ? `${pNum} ${req.machine_name}${req.unit_name ? '・' + req.unit_name : ''}` : pNum;
+  const note = req?.note ? `\nコメント: ${req.note}` : '';
+  const salesLabel = salesOwnerName ? `営業担当者 ${salesOwnerName} 様` : '';
+  return {
+    from: `"工事工程 通知" <${GMAIL_USER}>`,
+    subject: salesOwnerName
+      ? `【出荷準備完了通知・工場出荷確定日入力依頼】${pStr}`
+      : `【出荷準備完了通知】${pStr}`,
+    text:
+      `品証ご担当者様` + (salesLabel ? `\n${salesLabel}` : '') + `\n\n` +
+      `${pStr} の出荷準備が完了しました。\n\n` +
+      `■品証ご担当者様へ\n` +
+      `出荷確定申請をしてください。` +
+      (salesLabel
+        ? `\n\n■${salesLabel}へ\n` +
+          `出荷準備が完了したので、出荷（梱包出荷・工場出荷）の手配を進めてください。\n` +
+          `あわせて、承認フロー管理システムにログインし、工場出荷確定日を入力してください。`
+        : '') +
+      `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+  };
 }
 
 // 完了予定日が3日以内(期限切れ含む)かどうか。アプリ側のpendingDueSoon()と同じ基準
@@ -312,8 +331,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
       // 出荷確定申請の承認と営業の確定出荷日入力は別扱いのため、承認時点で未入力の場合がある（未入力なら後日営業が入力する旨を表示）
       const shippingDateValue = v => v || '未入力（営業が別途入力します）';
       const shippingDate = isShipping
-        ? (req?.packing_confirmed_shipping_date ? `\n梱包出荷確定日: ${req.packing_confirmed_shipping_date}` : '') +
-          (req?.confirmed_shipping_date_2
+        ? (req?.confirmed_shipping_date_2
             ? `\n①工場出荷確定日: ${shippingDateValue(req?.confirmed_shipping_date)}\n②工場出荷確定日: ${req.confirmed_shipping_date_2}`
             : `\n工場出荷確定日: ${shippingDateValue(req?.confirmed_shipping_date)}`)
         : '';
@@ -393,14 +411,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
 
     case 'shipping_date_input_done': {
       // detail は保存した項目ごとの明細（初回入力は「項目: 日付」、変更は「項目: 旧 → 新」の行）。
-      // 梱包出荷確定日・工場出荷確定日は別々に保存できるため、件名・本文の項目名は明細から決める
-      // （detail が無いのは旧仕様の工場出荷確定日の初回入力通知）
+      // 梱包出荷確定日の入力は廃止したため、項目名は工場出荷確定日のみ（detail が無いのは旧仕様の初回入力通知）
       const detailLines = (extra?.detail || '').split('\n').filter(Boolean);
       const isDateChange = detailLines.some(l => l.includes('→'));
-      const hasPacking = detailLines.some(l => l.startsWith('梱包出荷確定日'));
-      const hasFactory = detailLines.length === 0 || detailLines.some(l => !l.startsWith('梱包出荷確定日'));
-      const dateName = hasPacking && hasFactory ? '梱包出荷確定日・工場出荷確定日'
-                     : hasPacking ? '梱包出荷確定日' : '工場出荷確定日';
+      const dateName = '工場出荷確定日';
       const changeDetailLine = detailLines.length ? `\n${detailLines.join('\n')}\n` : '';
       return {
         from,
@@ -720,7 +734,7 @@ async function main() {
   // 申請レコードを一括取得（test_run_ready通知はrequest_idを持たないため除外する）
   const reqIds = [...new Set(notifications.map(n => n.request_id).filter(Boolean))];
   const requests = reqIds.length > 0 ? await supabaseFetch(
-    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,requester_id,inspection_date,inspection_time,inspection_location,confirmed_shipping_date,confirmed_shipping_date_2,packing_confirmed_shipping_date,sheet_data`
+    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,requester_id,inspection_date,inspection_time,inspection_location,confirmed_shipping_date,confirmed_shipping_date_2,sheet_data`
   ) : [];
   const reqMap = Object.fromEntries(requests.map(r => [r.id, r]));
 
@@ -766,21 +780,10 @@ async function main() {
     profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
   }
 
-  // 出荷準備フロー: 品証宛の完了通知に製管をCCで追加するため、製管のメールアドレスを事前取得
-  // （出荷準備は承認不要のため、発生する通知は completed のみ）
-  const productionControlProfiles = await supabaseFetch(`profiles?role=eq.production_control&select=email`);
-  const productionControlEmails = (productionControlProfiles || []).map(p => p.email).filter(Boolean);
-  const SHIPPING_PREP_CC_TYPES = ['completed'];
-
-  // 出荷準備で品証宛の完了通知が同時に送られる申請ID。これらの申請の申請者（品証以外）は個別のToメールを送らず、
-  // 品証宛メールのCCに入れる（品証宛が無い場合は申請者へToで送る）。アプリ内通知用の行はそのまま残す
-  const shippingPrepQualityReqIds = new Set(
-    notifications.filter(n => !TEST_MODE
-      && reqMap[n.request_id]?.flow_type === 'shipping_prep'
-      && SHIPPING_PREP_CC_TYPES.includes(n.notification_type)
-      && n.recipient_id && profileMap[n.recipient_id]?.role === 'quality')
-      .map(n => n.request_id)
-  );
+  // 出荷準備フローの完了通知（承認不要のため発生する通知は completed のみ）は、下のループとは別に申請ごとに1通にまとめて送る
+  const shippingPrepNotifs = notifications.filter(n =>
+    reqMap[n.request_id]?.flow_type === 'shipping_prep' && n.notification_type === 'completed');
+  const shippingPrepNotifIds = new Set(shippingPrepNotifs.map(n => n.id));
 
   // notification_recipients の名前マップを取得（外部宛先の宛名に使用）
   const recipientEmails = [...new Set(notifications.map(n => n.recipient_email).filter(Boolean))];
@@ -827,7 +830,65 @@ async function main() {
   let skipCount    = 0;
   let errorCount   = 0;
 
+  // ===== 出荷準備完了通知: 申請ごとに1通にまとめ、品証と営業担当者をTo、製管・工番担当者・申請者等をCCにして送る =====
+  // 本文は品証向け（出荷確定申請の依頼）と営業向け（出荷手配・工場出荷確定日の入力依頼）に分けて記載する。
+  // 営業への工場出荷確定日の入力依頼は、この通知にまとめて送る（別途の入力依頼メールは送らない）
+  if (shippingPrepNotifs.length > 0) {
+    const productionControlProfiles = await supabaseFetch(`profiles?role=eq.production_control&select=email`);
+    const productionControlEmails = (productionControlProfiles || []).map(p => p.email).filter(Boolean);
+    const salesMapRow = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
+    const salesMap = salesMapRow?.[0]?.value ? JSON.parse(salesMapRow[0].value) : {};
+
+    for (const reqId of [...new Set(shippingPrepNotifs.map(n => n.request_id))]) {
+      const req  = reqMap[reqId];
+      const rows = shippingPrepNotifs.filter(n => n.request_id === reqId);
+      try {
+        const salesOwnerName = salesMap[req.project_number] || null;
+        const salesEmails = salesOwnerName ? await resolveOwnerEmails([salesOwnerName]) : new Set();
+        const rowEmail = n => n.recipient_email || (n.recipient_id ? profileMap[n.recipient_id]?.email : null);
+
+        const toSet = new Set(salesEmails);
+        rows.filter(n => n.recipient_id && profileMap[n.recipient_id]?.role === 'quality')
+          .forEach(n => { const e = rowEmail(n); if (e) toSet.add(e); });
+        const ccSet = new Set([...productionControlEmails, ...(await resolveShippingPrepCcEmails(req))]);
+        rows.forEach(n => { const e = rowEmail(n); if (e) ccSet.add(e); }); // 申請者本人・固定宛先（品証以外）
+        // 品証・営業担当者がいない場合は、CC予定の宛先をToにして送る
+        if (toSet.size === 0) { ccSet.forEach(e => toSet.add(e)); ccSet.clear(); }
+        toSet.forEach(e => ccSet.delete(e));
+        if (toSet.size === 0) {
+          console.log(`スキップ: 出荷準備完了通知 申請${reqId}（宛先なし）`);
+          skipCount++;
+          continue;
+        }
+
+        const mail = buildShippingPrepCompletedEmail(req, salesOwnerName);
+        const toList = [...toSet];
+        const ccList = [...ccSet];
+        await transporter.sendMail({
+          from:    mail.from,
+          to:      TEST_MODE ? TEST_EMAIL : toList.join(','),
+          cc:      !TEST_MODE && ccList.length > 0 ? ccList.join(',') : undefined,
+          subject: TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
+          text:    TEST_MODE
+            ? `【テスト送信】本来の宛先 To: ${toList.join(', ')} / CC: ${ccList.join(', ') || 'なし'}\n\n${mail.text}`
+            : mail.text,
+        });
+        console.log(`✓ 送信完了: 出荷準備完了通知 To: ${toList.join(', ')}${ccList.length ? ` CC: ${ccList.join(', ')}` : ''} (工番${req.project_number})`);
+
+        await supabaseFetch(`approval_notifications?id=in.(${rows.map(n => n.id).join(',')})`, {
+          method:  'PATCH',
+          body:    JSON.stringify({ emailed_at: new Date().toISOString() }),
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`✗ 送信エラー: 出荷準備完了通知 申請${reqId}`, err.message);
+        errorCount++;
+      }
+    }
+  }
+
   for (const notif of notifications) {
+    if (shippingPrepNotifIds.has(notif.id)) continue;
     const req = reqMap[notif.request_id];
 
     // 宛先メールアドレスと名前を決定
@@ -852,19 +913,6 @@ async function main() {
     }
 
     const toEmail = TEST_MODE ? TEST_EMAIL : actualEmail;
-
-    // 出荷準備の申請者（品証以外）は品証宛メールのCCで届くため、個別のToメールは送らず送信済み扱いにする
-    if (shippingPrepQualityReqIds.has(notif.request_id)
-      && SHIPPING_PREP_CC_TYPES.includes(notif.notification_type)
-      && notif.recipient_id === req?.requester_id
-      && profileMap[notif.recipient_id]?.role !== 'quality') {
-      await supabaseFetch(`approval_notifications?id=eq.${notif.id}`, {
-        method:  'PATCH',
-        body:    JSON.stringify({ emailed_at: new Date().toISOString() }),
-      });
-      console.log(`- 品証宛メールのCCで送信: ${actualEmail} (${notif.notification_type} / 工番${req?.project_number})`);
-      continue;
-    }
 
     try {
       const extra = {
@@ -916,27 +964,9 @@ async function main() {
         }
       }
 
-      // 出荷準備フロー: 品証宛の通知には製管・組立/操業/設計/営業/現地工事担当者をCCに追加
-      // （品証以外は全員To ではなくCCで届く。品証不在時の緊急対応の把握用に加え、各担当者への周知を兼ねる）
-      const recipientProfile = notif.recipient_id ? profileMap[notif.recipient_id] : null;
-      let ccEmails = [];
-      if (!TEST_MODE
-        && req?.flow_type === 'shipping_prep'
-        && SHIPPING_PREP_CC_TYPES.includes(notif.notification_type)
-        && recipientProfile?.role === 'quality') {
-        const ccSet = new Set(productionControlEmails);
-        (await resolveShippingPrepCcEmails(req)).forEach(e => ccSet.add(e));
-        // 申請者本人もCCに入れる（個別のToメールは上で送信済み扱いにしている）
-        const requesterEmail = req.requester_id ? profileMap[req.requester_id]?.email : null;
-        if (requesterEmail) ccSet.add(requesterEmail);
-        ccSet.delete(actualEmail);
-        ccEmails = [...ccSet];
-      }
-
       await transporter.sendMail({
         from:        mail.from,
         to:          toEmail,
-        cc:          ccEmails.length > 0 ? ccEmails.join(',') : undefined,
         subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
         text:        TEST_MODE
           ? `【テスト送信】本来の宛先: ${actualEmail}\n\n${mail.text}`
@@ -945,8 +975,7 @@ async function main() {
         attachments,
       });
 
-      const ccLog = ccEmails.length > 0 ? ` CC: ${ccEmails.join(', ')}` : '';
-      console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})${ccLog}`);
+      console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})`);
 
       // 送信済みマーク
       await supabaseFetch(`approval_notifications?id=eq.${notif.id}`, {
