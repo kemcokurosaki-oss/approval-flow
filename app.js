@@ -7969,7 +7969,7 @@ async function lockShippingDateOnApproval(req) {
     try {
         let q = db.from('tasks').update({ shipping_date_locked: true })
             .eq('project_number', req.project_number)
-            .in('text', ['工場出荷', '梱包出荷']);
+            .eq('text', '工場出荷');
         if (req.machine_name) q = q.eq('machine', req.machine_name);
         await q;
     } catch (e) {
@@ -7984,7 +7984,7 @@ async function markShippingOverlayConfirmed(req) {
     try {
         let q = db.from('tasks').select('id')
             .eq('project_number', req.project_number)
-            .in('text', ['工場出荷', '梱包出荷']);
+            .eq('text', '工場出荷');
         if (req.machine_name) q = q.eq('machine', req.machine_name);
         const { data: taskRows } = await q;
         if (!taskRows?.length) return;
