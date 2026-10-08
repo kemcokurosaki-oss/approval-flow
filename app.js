@@ -5685,14 +5685,16 @@ async function openDetailModal(requestId, returnTo = null) {
             </div>
         </div>`;
 
-        // 自動起票の場合は起票者名を表示せず日時のみ、手動起票（申請モーダルから）の場合は起票者名も表示する
+        // 自動起票の場合は起票者名の代わりに「自動起票」バッジを表示し、手動起票（申請モーダルから）の場合は起票者名を表示する
         const isAutoIssued = !!req.sheet_data?.meta?.auto_issued;
         const issuedHtml = `
         <div class="step-item">
             <div class="step-circle sc-applied"><span class="applied-dot"></span></div>
             <div class="step-detail">
                 <div class="step-label">起票</div>
-                ${isAutoIssued ? '' : `<div class="step-name">${esc(requesterName)}</div>`}
+                ${isAutoIssued
+                    ? '<div class="step-name"><span class="auto-issued-badge">自動起票</span></div>'
+                    : `<div class="step-name">${esc(requesterName)}</div>`}
                 <div class="step-date">${fmtDateTime(req.created_at)}</div>
             </div>
         </div>`;
