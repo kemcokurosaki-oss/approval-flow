@@ -134,28 +134,32 @@ async function resolveShippingPrepCcEmails(req) {
   return emails;
 }
 
-// 出荷準備完了通知（品証・営業担当者宛）の件名・本文。
+// 出荷準備完了通知（品証・営業担当者宛）の件名・本文。宛名は To の各人の「名前 様」。
 // 品証には出荷確定申請を、営業担当者には出荷手配と工場出荷確定日の入力を依頼するため、本文を宛先ごとに分けて記載する
-function buildShippingPrepCompletedEmail(req, salesOwnerName) {
+function buildShippingPrepCompletedEmail(req, qualityNames, salesOwnerName) {
   const pNum = req?.project_number || '—';
   const pStr = req?.machine_name ? `${pNum} ${req.machine_name}${req.unit_name ? '・' + req.unit_name : ''}` : pNum;
   const note = req?.note ? `\nコメント: ${req.note}` : '';
-  const salesLabel = salesOwnerName ? `営業担当者 ${salesOwnerName} 様` : '';
+  const sama = names => names.map(n => `${n} 様`);
+  const qualityLabel = qualityNames.length > 0 ? sama(qualityNames).join('・') : '';
+  const salesLabel   = salesOwnerName ? `${salesOwnerName} 様` : '';
+  const greeting = [...sama(qualityNames), ...(salesOwnerName ? [salesLabel] : [])];
+  const sections = [];
+  if (qualityLabel) sections.push(`■${qualityLabel}\n出荷確定申請をしてください。`);
+  if (salesLabel) {
+    sections.push(
+      `■${salesLabel}\n` +
+      `出荷準備が完了したので、出荷（梱包出荷・工場出荷）の手配を進めてください。\n` +
+      `あわせて、承認フロー管理システムにログインし、工場出荷確定日を入力してください。`
+    );
+  }
   return {
     from: `"工事工程 通知" <${GMAIL_USER}>`,
-    subject: salesOwnerName
-      ? `【出荷準備完了通知・工場出荷確定日入力依頼】${pStr}`
-      : `【出荷準備完了通知】${pStr}`,
+    subject: `【出荷準備完了通知】${pStr}`,
     text:
-      `品証ご担当者様` + (salesLabel ? `\n${salesLabel}` : '') + `\n\n` +
-      `${pStr} の出荷準備が完了しました。\n\n` +
-      `■品証ご担当者様へ\n` +
-      `出荷確定申請をしてください。` +
-      (salesLabel
-        ? `\n\n■${salesLabel}へ\n` +
-          `出荷準備が完了したので、出荷（梱包出荷・工場出荷）の手配を進めてください。\n` +
-          `あわせて、承認フロー管理システムにログインし、工場出荷確定日を入力してください。`
-        : '') +
+      (greeting.length > 0 ? `${greeting.join('\n')}\n\n` : '') +
+      `${pStr} の出荷準備が完了しました。` +
+      (sections.length > 0 ? `\n\n${sections.join('\n\n')}` : '') +
       `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
   };
 }
@@ -845,12 +849,16 @@ async function main() {
       try {
         const salesOwnerName = salesMap[req.project_number] || null;
         const salesEmails = salesOwnerName ? await resolveOwnerEmails([salesOwnerName]) : new Set();
-        const rowEmail = n => n.recipient_email || (n.recipient_id ? profileMap[n.recipient_id]?.email : null);
+        // 同じ人が複数の経路（品証の固定宛先・申請者・工番担当者など）で重なっても1回だけ届くよう、
+        // メールアドレスは小文字にそろえて重複を除き、Toに入った人はCCから外す
+        const norm = e => String(e || '').trim().toLowerCase();
+        const rowEmail = n => norm(n.recipient_email || (n.recipient_id ? profileMap[n.recipient_id]?.email : null));
+        const qualityRows = rows.filter(n => n.recipient_id && profileMap[n.recipient_id]?.role === 'quality' && rowEmail(n));
+        const qualityNames = [...new Set(qualityRows.map(n => profileMap[n.recipient_id]?.name).filter(Boolean))];
 
-        const toSet = new Set(salesEmails);
-        rows.filter(n => n.recipient_id && profileMap[n.recipient_id]?.role === 'quality')
-          .forEach(n => { const e = rowEmail(n); if (e) toSet.add(e); });
-        const ccSet = new Set([...productionControlEmails, ...(await resolveShippingPrepCcEmails(req))]);
+        const toSet = new Set([...salesEmails].map(norm).filter(Boolean));
+        qualityRows.forEach(n => toSet.add(rowEmail(n)));
+        const ccSet = new Set([...productionControlEmails, ...(await resolveShippingPrepCcEmails(req))].map(norm).filter(Boolean));
         rows.forEach(n => { const e = rowEmail(n); if (e) ccSet.add(e); }); // 申請者本人・固定宛先（品証以外）
         // 品証・営業担当者がいない場合は、CC予定の宛先をToにして送る
         if (toSet.size === 0) { ccSet.forEach(e => toSet.add(e)); ccSet.clear(); }
@@ -861,7 +869,7 @@ async function main() {
           continue;
         }
 
-        const mail = buildShippingPrepCompletedEmail(req, salesOwnerName);
+        const mail = buildShippingPrepCompletedEmail(req, qualityNames, salesEmails.size > 0 ? salesOwnerName : null);
         const toList = [...toSet];
         const ccList = [...ccSet];
         await transporter.sendMail({
