@@ -9,6 +9,11 @@ const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 
+// 検査・会議の開催案内・日程変更に添える注意書き（予定表の出欠返信は送信者にしか届かないため、他の参加者の状況はアプリで確認してもらう）。
+// 「▼ 承認フローを開く」リンクの直前に入れる
+const INVITE_ATTENDANCE_NOTE =
+  '\n\n※他の参加者の出欠状況は、承認フロー管理システムの該当案件の画面からご確認ください。';
+
 const ROOM_EMAILS = {
   '第1会議室': 'Room01@kusakabe.com',
   '第2会議室': 'Room02@kusakabe.com',
@@ -459,7 +464,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の出荷確認会議を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -475,7 +480,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の簡易検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -491,7 +496,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の出荷確認会議の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -507,7 +512,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の外観検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -562,7 +567,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の簡易検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -578,7 +583,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の外観検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -594,7 +599,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の出荷品確認検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
@@ -610,7 +615,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${pStr} の出荷品確認検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+          `${note}${INVITE_ATTENDANCE_NOTE}\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
     }
 
