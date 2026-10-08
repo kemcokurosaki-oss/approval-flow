@@ -153,6 +153,19 @@
         /* 左の工事番号一覧とステップ表示の間隔を広げる（末尾のカードを画面上部までスクロールできる分の余白はJS側で必要量だけ動的に付与する） */
         .main-layout.assembly-report-mode .main-content { padding-left: 36px; }
 
+        /* 自動起票バッジ（出荷フロー詳細の「起票」ステップ） */
+        .auto-issued-badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 13px;
+            padding: 1px 8px;
+            border-radius: 20px;
+            background: #e8f1fb;
+            color: #1e5a96;
+            border: 1px solid #9cc3e8;
+            font-weight: bold;
+        }
+
         /* 再申請バッジ */
         .resubmit-badge {
             display: inline-flex;
