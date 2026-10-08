@@ -223,6 +223,9 @@ let progressFilterCompleted = false; // 完了済み工番のみ表示するモ�
 let progressFilterOverdue = false; // 未申請・未承認（品証・製管のみ表示可能）のみ表示するモード
 let progressFilterShipAfter = false; // 出荷後対応の未完了ペンディングのみを横断表示するモード（完了済み工番も対象に含む）
 let completedProjectNums = new Set(); // completed_projectsに登録済みの工番
+// 承認フロー運用開始（最初の申請日）。これより前に工程表で完了済みになった工番は申請履歴がないため「完了済み」表示から除外する
+const FLOW_LAUNCH_AT = new Date('2026-09-09T00:00:00+09:00');
+let preLaunchCompletedNums = new Set(); // 運用開始前に完了済みになった工番（完了済み表示の対象外）
 let progressCachedData   = null;
 let currentDetailReq     = null;
 let currentDetailFlowType = '';
@@ -820,9 +823,14 @@ async function loadProjects() {
     // 完了済み工事番号を取得（進捗一覧には含めるが、通常表示では除外する）
     const { data: completed } = await db
         .from('completed_projects')
-        .select('project_number');
+        .select('project_number, created_at');
     completedProjectNums = new Set(
         (completed || []).map(c => (c.project_number || '').toString().trim())
+    );
+    preLaunchCompletedNums = new Set(
+        (completed || [])
+            .filter(c => c.created_at && new Date(c.created_at) < FLOW_LAUNCH_AT)
+            .map(c => (c.project_number || '').toString().trim())
     );
 
     // sort_order付きでタスクを取得（工程表と同じ並び順にするため）
@@ -1813,7 +1821,9 @@ function renderProgressCards() {
     };
 
     // 完了済みフィルタ（通常時は完了済みを除外、完了済みモード時は完了済みのみ）
-    let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted);
+    // 運用開始前に完了済みになった工番は承認フローの履歴がないため、完了済みモードでも表示しない
+    let nums = baseNums.filter(num => completedProjectNums.has(num) === progressFilterCompleted
+        && !preLaunchCompletedNums.has(num));
 
     // タブによる絞り込み（進捗一覧＝2000番台以外、組立・試運転 完了報告＝2000番台のみ）
     nums = nums.filter(num => is2000sSeries(num) === (progressTab === 'assembly_report'));
