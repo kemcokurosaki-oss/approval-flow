@@ -8387,7 +8387,9 @@ async function _autoIssueShippingIfReady(projectNum, machine) {
     const { data: req, error } = await db.from('approval_requests').insert({
         project_number: projectNum, machine_name: machine, flow_type: 'shipping',
         status: 'awaiting_shipping_confirm', requester_id: issuerId, note: null,
-        confirmed_shipping_date: null
+        confirmed_shipping_date: null,
+        // 自動起票の印（詳細画面の「起票」ステップで起票者名を出さない判定に使う。出荷フローはチェックシートを持たないため sheet_data を流用）
+        sheet_data: { meta: { auto_issued: true } }
     }).select().single();
     if (error) throw error;
 
