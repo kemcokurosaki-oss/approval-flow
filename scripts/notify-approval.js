@@ -149,7 +149,7 @@ function buildShippingPrepCompletedEmail(req, qualityNames, salesOwnerName) {
   if (salesLabel) {
     sections.push(
       `■${salesLabel}\n` +
-      `出荷準備が完了したので、出荷（梱包出荷・工場出荷）の手配を進めてください。\n` +
+      `出荷準備が完了したので、出荷の手配を進めてください。\n` +
       `あわせて、承認フロー管理システムにログインし、工場出荷確定日を入力してください。`
     );
   }
