@@ -9788,8 +9788,9 @@ async function submitShipping() {
             }).select().single();
             if (error) throw error;
 
-            // 営業へ確定出荷日の入力を依頼
-            if (salesOwner) {
+            // 営業への工場出荷確定日の入力依頼は出荷準備完了通知にまとめて送る。
+            // 工程表に出荷準備タスクが無い機械のみ、従来どおりここで入力依頼を送る
+            if (salesOwner && !requiredByMachine[machine].has('shipping_prep')) {
                 const { data: pRows } = await db.from('profiles').select('id').eq('name', salesOwner);
                 if (pRows?.length > 0) {
                     await db.from('approval_notifications').insert(
