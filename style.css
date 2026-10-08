@@ -1270,6 +1270,9 @@
 
         /* ===== 詳細モーダル: 本文フォントサイズを底上げ ===== */
         #detail_modal .section-title { font-size: 16px; }
+        .section-title:has(.notepm-link) { display: flex; align-items: center; gap: 8px; }
+        .notepm-link { margin-left: auto; font-size: 13px; font-weight: 600; color: #2f6fb0; text-decoration: none; border: 1px solid #c9d8ea; border-radius: 5px; padding: 3px 10px; background: #fff; }
+        .notepm-link:hover { background: #eef4fb; }
         #detail_modal .step-label  { font-size: 16px; }
         #detail_modal .step-name   { font-size: 17px; }
         #detail_modal .step-date   { font-size: 15px; }
