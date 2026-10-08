@@ -7936,29 +7936,18 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2 } = {}) 
         // ロックの有無に関係なく変更でき、かつ「一度承認された出荷日は次の承認完了までロックされ続ける」
         // 挙動（未承認のうちはfalseのまま、承認済みの再申請中はtrueのまま）を維持できる。
         if (factoryDate && req.machine_name) {
-            // 分割出荷（同一機械に工場出荷タスクが2件）の場合は、end_date昇順で①②それぞれのタスク行を個別に更新する
-            if (factoryDate2) {
-                const { data: factoryTasks } = await db.from('tasks')
-                    .select('id, end_date')
-                    .eq('project_number', req.project_number)
-                    .eq('machine', req.machine_name)
-                    .eq('text', '工場出荷')
-                    .order('end_date', { ascending: true });
-                if (factoryTasks?.[0]) {
-                    await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate }).eq('id', factoryTasks[0].id);
-                }
-                if (factoryTasks?.[1]) {
-                    await db.from('tasks').update({ start_date: factoryDate2, end_date: factoryDate2 }).eq('id', factoryTasks[1].id);
-                }
-            } else {
-                await db.from('tasks').update({ start_date: factoryDate, end_date: factoryDate })
-                    .eq('project_number', req.project_number)
-                    .eq('machine', req.machine_name)
-                    .eq('text', '工場出荷');
+            // tasksのUPDATEは工程表の編集者に限られ、営業・品証の権限では0件更新になるため、
+            // approval_requestsに保存済みの確定出荷日を工場出荷タスクへ書き戻すRPC（SECURITY DEFINER）経由で更新する。
+            // 分割出荷（同一機械に工場出荷タスクが2件）の①②の振り分けもRPC側で行う（_shipping_date_sync_rpc.sql）
+            const { data: updatedCount, error } = await db.rpc('sync_factory_shipping_date', { p_request_id: req.id });
+            if (error) throw error;
+            if (!updatedCount) {
+                showToast('工程表の工場出荷タスクが見つからず、確定出荷日を工程表に反映できませんでした。製管に連絡してください', 'error');
             }
         }
     } catch (e) {
         console.warn('工程表への出荷日書き戻しに失敗:', e);
+        showToast('工程表への確定出荷日の反映に失敗しました: ' + (e.message || e), 'error');
     }
 }
 
