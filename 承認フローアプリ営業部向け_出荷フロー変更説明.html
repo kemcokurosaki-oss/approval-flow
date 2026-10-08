@@ -370,9 +370,12 @@
     }
 
     /* ---------- 2枚目：出荷準備完了のメール ---------- */
-    #s2 h2 { display: flex; align-items: center; gap: .5em; font-size: 1.7em; }
-    .s2-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3%; align-items: start; margin-top: .4em; }
-    .s2-grid .mail-body { font-size: .9em; line-height: 1.55; }
+    #s2 h2 { display: flex; align-items: center; gap: .5em; }
+    #s2 .mockup { font-size: 1.05em; }
+    #s2 .mail-meta { padding: .7em 1.2em; }
+    #s2 .mail-row { padding: .1em 0; }
+    .s2-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 3%; align-items: start; margin-top: .4em; }
+    .s2-grid .mail-body { font-size: 1em; line-height: 1.5; padding: .7em 1.3em; }
     .mail-hl { display: block; background: #fff6d6; border-left: 4px solid #e0a800; margin: 0 -.4em; padding: .2em .4em; }
     .s2-actions { display: flex; flex-direction: column; gap: 1em; padding-top: .4em; }
     .s2-action { display: flex; gap: .8em; align-items: flex-start; background: #fff; border: 2px solid #2ba55d; border-radius: 12px; padding: .9em 1em; }
@@ -415,7 +418,7 @@
             <div class="todo-grid">
                 <div class="todo-card">
                     <h4><span class="todo-num">1</span><span>出荷準備完了のメールが<br>営業担当者にも届きます</span></h4>
-                    <p>このメールが届いたら、出荷の手配を進め、工場出荷確定日を入力してください。これまでの「入力依頼メール」はこのメールにまとめました。</p>
+                    <p>このメールが届いたら、出荷の手配を進め、工場出荷確定日を入力してください。</p>
                 </div>
                 <div class="todo-card">
                     <h4><span class="todo-num">2</span><span>梱包出荷確定日の入力は<br>不要になりました</span></h4>
@@ -429,8 +432,8 @@
 
         <!-- 2. 変更① 出荷準備完了のメール -->
         <section class="slide" id="s2">
-            <h2><span class="h-tag">変更 ①</span>出荷準備完了のメールが届いたら、出荷の手配と入力をお願いします</h2>
-            <p>出荷準備が完了すると、<b>品証と営業担当者の両方に</b>1通のメールが届きます。本文は宛先ごとに分かれているので、<b>自分の名前の欄</b>を確認してください。</p>
+            <h2><span class="h-tag">変更点</span>出荷準備完了のメールが営業担当者にも届きます</h2>
+            <p>出荷準備が完了すると、<b>品証と営業担当者宛</b>にメールが届きます。本文は宛先ごとに分かれているので、<b>自分の名前の欄</b>を確認してください。</p>
             <div class="s2-grid">
                 <div class="mockup">
                     <div class="mail-meta">
@@ -554,7 +557,7 @@
                 </div>
                 <div class="cal-legend"><span class="lg first">✉</span>1回目のお知らせ（現在は出荷準備完了のメール）　<span class="lg hit">✉</span>催促メール</div>
             </div>
-            <div class="note cover-note"><b>宛先：</b> 1回目（出荷準備完了のメール）は<b>品証と営業担当者</b>に届きます。週1回の催促は、担当者＋営業課長＋専務に届きます（担当者が営業課長の場合は担当者＋専務）。</div>
+            <div class="note cover-note"><b>宛先：</b> 週1回の催促は、担当者＋営業課長＋専務に届きます（担当者が営業課長の場合は担当者＋専務）。</div>
             <div class="note cover-note">入力が済めば催促は止まります。</div>
             <div class="slide-brand"><span class="slide-brand-dot"></span>KUSAKABE APPROVAL FLOW</div>
             <div class="slide-pageno">4 / 6</div>
@@ -566,7 +569,7 @@
             <div class="flow">
                 <div class="flow-step"><b><em class="num">1</em>対象を開く</b><span>マイページ「入力」欄のカード、または出荷準備完了・催促メールのリンクから開く。</span></div>
                 <div class="flow-arrow">→</div>
-                <div class="flow-step"><b><em class="num">2</em>日付を入力</b><span>工場出荷確定日を入力します。梱包出荷確定日の入力欄はありません。</span></div>
+                <div class="flow-step"><b><em class="num">2</em>日付を入力</b><span>工場出荷確定日を入力します。</span></div>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step"><b><em class="num">3</em>「保存する」を押す</b><span>保存した時点で確定。承認状況（申請前・申請中・承認済み）は関係ありません。</span></div>
                 <div class="flow-arrow">→</div>
