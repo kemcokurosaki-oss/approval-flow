@@ -1209,44 +1209,61 @@ async function loadPendingSide() {
     });
 }
 
-// マイページ「入力」: 確定出荷日（工場出荷、および梱包出荷がある工番は梱包出荷も）が未入力の出荷フローを表示
+// マイページ「入力」: 工場出荷確定日が未入力の出荷フローを表示（梱包出荷確定日の入力は廃止）
 // （品証の本申請・常務の承認とは別扱いのため、ステータスは問わない）。
+// 入力依頼は出荷準備完了時に出すため、出荷準備の完了後から表示し、エスカレーションの経過日数も出荷準備の完了日から数える
+// （工程表に出荷準備タスクが無い工番は出荷フローの起票日から）。scripts/notify-reminders.js の未入力催促と同じ判定。
 // 自分が担当する工番、および未入力のまま日数が経過してエスカレーション対象になった工番のみ表示（管理者は全件）。
 // 入力操作自体は出荷フローマークからの詳細画面で誰でも可能なため、担当者以外の入力権限は制限しない
 async function loadInputSide() {
     const el = document.getElementById('side_content_input');
     if (!el) return;
 
-    const { data: salesReqs, error } = await db.from('approval_requests')
-        .select('id, project_number, machine_name, created_at, confirmed_shipping_date, packing_confirmed_shipping_date')
-        .eq('flow_type', 'shipping').neq('status', 'cancelled')
-        .or('confirmed_shipping_date.is.null,packing_confirmed_shipping_date.is.null');
+    const [{ data: salesReqs, error }, { data: prepReqs }, { data: prepTasks }] = await Promise.all([
+        db.from('approval_requests')
+            .select('id, project_number, machine_name, created_at, confirmed_shipping_date')
+            .eq('flow_type', 'shipping').neq('status', 'cancelled')
+            .is('confirmed_shipping_date', null),
+        db.from('approval_requests')
+            .select('project_number, machine_name, created_at')
+            .eq('flow_type', 'shipping_prep').eq('status', 'approved'),
+        db.from('tasks').select('project_number').eq('text', '出荷準備')
+    ]);
 
     if (error) { el.innerHTML = '<div class="empty"><div class="empty-text">データ取得エラー</div></div>'; return; }
 
-    const missingLabels = r => {
-        const labels = [];
-        if (packingShippingProjectNums.has(r.project_number) && !r.packing_confirmed_shipping_date) labels.push('梱包出荷確定日');
-        if (!r.confirmed_shipping_date) labels.push('工場出荷確定日');
-        return labels;
+    const prepProjectSet = new Set((prepTasks || []).map(t => String(t.project_number || '').trim()));
+    const prepDoneAt = {};
+    (prepReqs || []).forEach(p => {
+        const key = `${p.project_number}__${p.machine_name}`;
+        if (!prepDoneAt[key] || p.created_at < prepDoneAt[key]) prepDoneAt[key] = p.created_at;
+    });
+    // 入力依頼の起点日時（出荷準備完了日。出荷準備タスクが無い工番は起票日）。出荷準備が未完了ならnull
+    const requestedAt = r => {
+        if (!prepProjectSet.has(String(r.project_number || '').trim())) return r.created_at;
+        const prepAt = prepDoneAt[`${r.project_number}__${r.machine_name}`];
+        if (!prepAt) return null;
+        return prepAt > r.created_at ? prepAt : r.created_at;
     };
+
     const myName = currentProfile?.name;
     const items = (salesReqs || [])
-        .filter(r => missingLabels(r).length > 0)
-        .filter(r => {
+        .map(r => ({ r, since: requestedAt(r) }))
+        .filter(({ since }) => !!since)
+        .filter(({ r, since }) => {
             if (isSuperAdmin()) return true;
             const pNum  = r.project_number || '—';
             const owner = projectsMap[pNum]?.salesOwner;
-            return computeShippingEscalationRecipients(pNum, owner, r.created_at).has(myName);
+            return computeShippingEscalationRecipients(pNum, owner, since).has(myName);
         })
-        .map(r => ({
+        .map(({ r, since }) => ({
             id:         r.id,
             pNum:       r.project_number || '—',
             machineName: r.machine_name || '',
             flowType:   'shipping',
             flowLabel:  '確定出荷日',
-            date:       r.created_at,
-            statusText: `🔴 ${missingLabels(r).join('・')} 入力待ち`,
+            date:       since,
+            statusText: '🔴 工場出荷確定日 入力待ち',
         }))
         .filter(item => matchesMypageFilterMode(item.pNum));
 
