@@ -185,7 +185,7 @@ function calendarDaysElapsedSinceJST(since) {
     const [ny, nm, nd] = nowStr.split('-').map(Number);
     return Math.round((Date.UTC(ny, nm - 1, nd) - Date.UTC(sy, sm - 1, sd)) / 86400000);
 }
-// 確定出荷日が未入力のまま起票から7日経過したら、担当者に加えて上長（課長＋専務）にも表示する（担当者からは消さない）。
+// 確定出荷日が未入力のまま入力依頼（出荷準備完了）から7日経過したら、担当者に加えて上長（課長＋専務）にも表示する（担当者からは消さない）。
 // 担当者本人が営業課長の場合は上長＝専務のみ
 function computeShippingEscalationRecipients(pNum, salesOwner, issuedAt) {
     const elapsedDays = calendarDaysElapsedSinceJST(issuedAt);
@@ -443,12 +443,13 @@ const DYNAMIC_RECIPIENT_GROUPS = {
     shipping:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
     electrical:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager'],
     // shipping_prep: 他フローと異なり To ではなく品証宛メールのCCに入る担当者のON/OFF。
-    // 宛先の解決は notify-approval.js（resolveShippingPrepCcEmails）がこの設定を読んで行う。製管全員のCCはON/OFF対象外
-    shipping_prep:     ['kumitate_owner', 'shiunten_owner', 'sekkei_owner', 'sales', 'trip_owner']
+    // 宛先の解決は notify-approval.js（resolveShippingPrepCcEmails）がこの設定を読んで行う。製管全員のCCはON/OFF対象外。
+    // 営業担当者は出荷手配と工場出荷確定日の入力を依頼するため、ON/OFFに関係なく常に品証と並んでToに入る
+    shipping_prep:     ['kumitate_owner', 'shiunten_owner', 'sekkei_owner', 'trip_owner']
 };
 // ON/OFFの対象が To ではなく CC になるフローの補足説明（設定画面に表示）
 const DYNAMIC_RECIPIENT_NOTES = {
-    shipping_prep: '出荷準備では、ここでONにした担当者は品証宛の完了通知メールのCCに入ります（Toではありません）。製管の全員は、この設定に関係なく常にCCに入ります。'
+    shipping_prep: '出荷準備では、ここでONにした担当者は完了通知メールのCCに入ります（Toではありません）。Toは品証と営業担当者（出荷手配・工場出荷確定日の入力依頼を兼ねる）で、製管の全員はこの設定に関係なく常にCCに入ります。'
 };
 const DYNAMIC_GROUP_LABELS = {
     kumitate_owner:   '組立担当者（本人）',
@@ -1511,7 +1512,7 @@ async function loadProgress() {
     // 全申請レコードを機械名付きで取得（shippingの承認者名表示のためapproval_stepsも含む）
     const { data: allReqs } = await db
         .from('approval_requests')
-        .select('id, project_number, machine_name, unit_name, assembly_items, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, confirmed_shipping_date_2, packing_confirmed_shipping_date, inspection_date, inspection_time, requester_id, sheet_data, sheet_saved_at, approval_steps(approver_id, status)')
+        .select('id, project_number, machine_name, unit_name, assembly_items, flow_type, status, has_inspection, test_run, created_at, updated_at, confirmed_shipping_date, confirmed_shipping_date_2, inspection_date, inspection_time, requester_id, sheet_data, sheet_saved_at, approval_steps(approver_id, status)')
         .order('updated_at', { ascending: true });
 
     // 2000番台：機械・ユニット単位で「申請不要」とマークされたものを取得する
@@ -10344,10 +10345,11 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
         }
 
         case 'shipping_prep':
-            // 固定宛先（設定画面で個人単位に選択）。工番担当者はここでは追加しない。
-            // 組立/操業/設計/営業/現地工事担当者（ON/OFF設定に従う）と製管は、メール送信時（notify-approval.js）に品証宛メールのCCとして届く。
-            // 申請者本人の行（アプリ内通知用）は下で共通追加されるが、メールは品証宛メールのCCで届く（品証宛が無い場合のみToで個別送信）
+            // 固定宛先（設定画面で個人単位に選択）＋営業担当者。メールは notify-approval.js で1通にまとめ、品証と営業担当者をTo、
+            // 組立/操業/設計/現地工事担当者（ON/OFF設定に従う）・製管・申請者本人をCCにして送る（本文は品証向け・営業向けに分けて記載）。
+            // 営業担当者への工場出荷確定日の入力依頼もこの通知にまとめる
             await addFixedRecipients();
+            await addOwnerByName(salesOwner);
             break;
 
         case 'shipping': {
