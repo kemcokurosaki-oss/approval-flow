@@ -142,6 +142,20 @@
             flex: 0 1 190px;
             line-height: 1.5;
         }
+        .sheet-ref-link {
+            display: table;
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2f6fb0;
+            text-decoration: none;
+            border: 1px solid #c9d8ea;
+            border-radius: 5px;
+            padding: 3px 8px;
+            white-space: nowrap;
+        }
+        .sheet-ref-link:hover { background: #eef4fb; }
+        @media print { .sheet-ref-link { display: none !important; } }
         .sheet-btns {
             display: flex;
             gap: 4px;
@@ -540,7 +554,7 @@
         <div class="sheet-group-label"><span data-i18n="group_7">シール・銘板</span><button type="button" class="sheet-bulk-btn" data-i18n="btn_all_ok" onclick="bulkSetGroupOK(this)">全て○</button></div>
         <div class="sheet-item"><span class="sheet-no">25</span><span class="sheet-text" data-i18n="item_25">グリスシールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('25','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('25','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('25','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_25" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_25"></span></span></div>
         <div class="sheet-item"><span class="sheet-no">26</span><span class="sheet-text" data-i18n="item_26">回転シールは全て貼り付けたか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('26','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('26','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('26','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_26" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_26"></span></span></div>
-        <div class="sheet-item"><span class="sheet-no">27</span><span class="sheet-text" data-i18n="item_27">社銘板・オーダー銘板は付いているか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('27','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('27','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('27','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_27" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_27"></span></span></div>
+        <div class="sheet-item"><span class="sheet-no">27</span><span class="sheet-text"><span data-i18n="item_27">社銘板・オーダー銘板は付いているか？</span><a class="sheet-ref-link" href="https://kusakabe.notepm.jp/page/a14a2825b8" target="_blank" rel="noopener" data-i18n="btn_nameplate_ref">銘板取付位置を確認 ↗</a></span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('27','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('27','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('27','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_27" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_27"></span></span></div>
         <div class="sheet-item"><span class="sheet-no">28</span><span class="sheet-text" data-i18n="item_28">空圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('28','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('28','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('28','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_28" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_28"></span></span></div>
         <div class="sheet-item"><span class="sheet-no">29</span><span class="sheet-text" data-i18n="item_29">油圧ゲージの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('29','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('29','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('29','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_29" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_29"></span></span></div>
         <div class="sheet-item"><span class="sheet-no">30</span><span class="sheet-text" data-i18n="item_30">センサーの銘板はあるか？</span><div class="sheet-btns"><button class="sheet-btn" onclick="setCheck('30','○',this,'maru')">○</button><button class="sheet-btn" onclick="setCheck('30','×',this,'batu')">×</button><button class="sheet-btn" onclick="setCheck('30','―',this,'dash')">―</button></div><span class="sheet-note-wrap"><input class="sheet-note" id="sn_30" data-i18n-ph="placeholder_remarks" placeholder="備考"><span class="sheet-note-print" id="snp_30"></span></span></div>
@@ -617,6 +631,7 @@ const I18N = {
     btn_add_machine:    { en: '+ Add Machine' },
     btn_add_unit:       { en: '+ Add Unit' },
     btn_all_ok:         { en: 'All ○' },
+    btn_nameplate_ref:  { en: 'Check nameplate positions ↗' },
     group_1: { en: 'Assembly Work Check' },
     group_2: { en: 'Interference Check' },
     group_3: { en: 'Operation Check' },

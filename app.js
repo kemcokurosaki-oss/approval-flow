@@ -475,6 +475,10 @@ function getDynamicRecipientPlan(flowType) {
 
 // チェックシートを伴うフロー種別 → シートファイル・表示ラベル（申請モーダル・詳細モーダルで共通利用）
 // 組立=黄色・電装=紫のバッジ配色（試運転準備チェックのラベル、ユニット別申請状況の見出しなどで共通利用）
+// 組立フロー画面から開くNotePMの参照ページ
+const ASSEMBLY_NOTEPM_URL = 'https://kusakabe.notepm.jp/page/a14a2825b8';
+const ASSEMBLY_NOTEPM_LINK_HTML = `<a class="notepm-link" href="${ASSEMBLY_NOTEPM_URL}" target="_blank" rel="noopener">銘板取付位置を確認 ↗</a>`;
+
 const ASSEMBLY_ELEC_BADGE_COLORS = {
     assembly:   'background:#fff3cd;color:#856404;',
     electrical: 'background:#e8d9f7;color:#6f2fa8;',
@@ -3204,7 +3208,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         <hr class="section-divider">
-        <div class="section-title">組立 申請状況</div>
+        <div class="section-title"><span>組立 申請状況</span>${ASSEMBLY_NOTEPM_LINK_HTML}</div>
         <div class="unit-list-wrap unit-list-wrap-wide">${rowsHtml}</div>
         ${actionHtml}
         ${elecSectionHtml}
@@ -3647,7 +3651,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
         ${build2000FlowStepsHtml('assembly', 2, projectNum, machine)}
         <hr class="section-divider">
-        <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS[kind]}">${kindLabel}</span> ユニット別 申請状況</div>
+        <div class="section-title"><span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS[kind]}">${kindLabel}</span> ユニット別 申請状況${isElec ? '' : ASSEMBLY_NOTEPM_LINK_HTML}</div>
         <div class="unit-list-wrap p2k-unit-grid">${rowsHtml}</div>
         ${addNewUnitHtml}
     `;
