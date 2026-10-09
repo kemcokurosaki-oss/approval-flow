@@ -764,14 +764,18 @@ async function runShippingListReminders() {
     (sentBefore || []).map(n => `${n.detail}__${n.recipient_id || n.recipient_email}`)
   );
 
-  // 簡易検査・外観検査：機械組立終了日の3日前を基準（案内催促と同じ）
-  const assemblyTasks = await supabaseFetch(
-    `tasks?text=eq.${encodeURIComponent('機械組立')}&end_date=lte.${threeDaysLater}` +
-    `&select=project_number,machine,end_date,is_completed`
-  );
-  const assemblyTargets = (assemblyTasks || [])
-    .filter(t => !t.is_completed)
-    .map(t => ({ project_number: t.project_number, machine: t.machine }));
+  // 簡易検査・外観検査：自身の終了日の3日前を基準（案内催促は機械組立終了日基準のため、ここは異なる）
+  const fetchOwnEndTargets = async (taskText) => {
+    const rows = await supabaseFetch(
+      `tasks?text=eq.${encodeURIComponent(taskText)}&end_date=lte.${threeDaysLater}` +
+      `&select=project_number,machine,end_date,is_completed`
+    );
+    return (rows || [])
+      .filter(t => !t.is_completed)
+      .map(t => ({ project_number: t.project_number, machine: t.machine }));
+  };
+  const simpleInspectionTargets = await fetchOwnEndTargets('簡易検査');
+  const inspectionTargets       = await fetchOwnEndTargets('外観検査');
 
   // 出荷確認会議：自身の開始日の3日前を基準（案内催促と同じ）
   const shippingMeetingTasks = await supabaseFetch(
