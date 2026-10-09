@@ -817,8 +817,8 @@ async function runShippingListReminders() {
   );
 
   const meetingFlows = [
-    { flowType: 'simple_inspection', label: '簡易検査',     hasTask: key => hasSimpleInspectionTask.has(key), targets: assemblyTargets },
-    { flowType: 'inspection',        label: '外観検査',     hasTask: key => hasInspectionTask.has(key),       targets: assemblyTargets },
+    { flowType: 'simple_inspection', label: '簡易検査',     hasTask: key => hasSimpleInspectionTask.has(key), targets: simpleInspectionTargets },
+    { flowType: 'inspection',        label: '外観検査',     hasTask: key => hasInspectionTask.has(key),       targets: inspectionTargets },
     { flowType: 'shipping_check_inspection', label: '出荷品確認検査', hasTask: key => hasShippingCheckInspectionTask.has(key), targets: shippingCheckInspectionTargets, noAssembly: true },
     { flowType: 'shipping_meeting',  label: '出荷確認会議', hasTask: key => hasShippingMeetingTask.has(key),  targets: shippingMeetingTargets },
   ];
