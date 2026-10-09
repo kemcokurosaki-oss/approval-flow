@@ -17,7 +17,7 @@ const PARTSTAT_TO_STATUS = {
 };
 
 // notify-approval.js の buildICS と同じUID生成式（対応表を作るために再現する）
-const FLOW_SUFFIX = { simple_inspection: 'si', inspection: 'insp', shipping_meeting: 'sm' };
+const FLOW_SUFFIX = { simple_inspection: 'si', inspection: 'insp', shipping_check_inspection: 'sci', shipping_meeting: 'sm' };
 
 async function supabaseFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -40,7 +40,7 @@ async function supabaseFetch(path, options = {}) {
 
 async function buildUidToRequestIdMap() {
   const requests = await supabaseFetch(
-    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_meeting)&select=id,project_number,machine_name,flow_type`
+    `approval_requests?flow_type=in.(simple_inspection,inspection,shipping_check_inspection,shipping_meeting)&select=id,project_number,machine_name,flow_type`
   );
   const map = {};
   (requests || []).forEach((req) => {
