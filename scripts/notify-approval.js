@@ -918,8 +918,114 @@ async function main() {
     }
   }
 
+  // ===== 検査・会議の開催案内・日程変更・キャンセル: 申請×通知種別ごとに1通にまとめて送る =====
+  // 宛先(To)は今回の通知対象者のみ（参加者を後から追加した場合は追加した人だけに届く）。
+  // ICSの出席者欄には参加者全員を載せるので、各自のOutlookで出欠ボタンが出て、全員に返信で関係者全員に届く。
+  // 会議室は人とは別に、従来どおり1通ずつ送る（会議室の予約処理のため）
+  const norm = e => String(e || '').trim().toLowerCase();
+  const resolveRow = n => {
+    if (n.recipient_email) return { email: n.recipient_email, name: recipientEmailNameMap[n.recipient_email] || null };
+    const p = n.recipient_id ? profileMap[n.recipient_id] : null;
+    return p?.email ? { email: p.email, name: p.name || null } : null;
+  };
+  const meetingGroups = new Map();
+  for (const n of meetingNotifs) {
+    const key = `${n.request_id}__${n.notification_type}`;
+    if (!meetingGroups.has(key)) meetingGroups.set(key, []);
+    meetingGroups.get(key).push(n);
+  }
+  for (const rows of meetingGroups.values()) {
+    const req          = reqMap[rows[0].request_id];
+    const type         = rows[0].notification_type;
+    const isCancel     = type.endsWith('_cancel');
+    const isReschedule = type.endsWith('_reschedule');
+    const icsMethod    = isCancel ? 'CANCEL' : 'REQUEST';
+    const icsSeq       = (isCancel || isReschedule) ? (icsSequenceMap[req.id] || 1) : 0;
+    const roomEmail    = req.flow_type === 'shipping_meeting' ? (ROOM_EMAILS[req.inspection_location] || null) : null;
+    const icsFilename  = `${ICS_FILENAMES[req.flow_type]}${isCancel ? 'キャンセル' : ''}.ics`;
+
+    // 参加者名簿（会議室を除く）。同じ人は1人にまとめ、必須/任意は今回の通知の値を優先する
+    const roster = new Map();
+    for (const n of [...rosterRows.filter(r => r.request_id === req.id), ...rows]) {
+      const r = resolveRow(n);
+      if (!r || roomEmailsSet.has(r.email)) continue;
+      roster.set(norm(r.email), { email: r.email, name: r.name, optional: !!n.optional });
+    }
+
+    const toMap = new Map();
+    const personRows = [];
+    const roomRows = [];
+    for (const n of rows) {
+      const r = resolveRow(n);
+      if (!r) {
+        console.log(`スキップ: id=${n.id} (メールアドレスなし)`);
+        skipCount++;
+        continue;
+      }
+      if (roomEmailsSet.has(r.email)) { roomRows.push({ n, r }); continue; }
+      toMap.set(norm(r.email), r);
+      personRows.push(n);
+    }
+
+    if (toMap.size > 0) {
+      const toList = [...toMap.values()];
+      const toLabel = toList.map(r => r.email).join(', ');
+      try {
+        const mail = buildEmail(type, req, toList[0].name || '担当者', { greeting: toList.length > 1 ? '関係者各位' : null });
+        const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, [...roster.values()]);
+        await transporter.sendMail({
+          from:        mail.from,
+          to:          TEST_MODE ? TEST_EMAIL : toList.map(r => ({ name: r.name || '', address: r.email })),
+          subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
+          text:        TEST_MODE ? `【テスト送信】本来の宛先: ${toLabel}\n\n${mail.text}` : mail.text,
+          html:        mail.html,
+          attachments: icsContent
+            ? [{ filename: icsFilename, content: icsContent, contentType: `text/calendar; charset=utf-8; method=${icsMethod}` }]
+            : [],
+        });
+        console.log(`✓ 送信完了: ${toLabel} (${type} / 工番${req.project_number} / 出席者${roster.size}名)`);
+        await supabaseFetch(`approval_notifications?id=in.(${personRows.map(n => n.id).join(',')})`, {
+          method: 'PATCH',
+          body:   JSON.stringify({ emailed_at: new Date().toISOString() }),
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`✗ 送信エラー: ${toLabel}`, err.message);
+        errorCount++;
+      }
+    }
+
+    for (const { n, r } of roomRows) {
+      const toEmail = TEST_MODE ? TEST_EMAIL : r.email;
+      try {
+        const mail = buildEmail(type, req, r.name || '担当者');
+        const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, []);
+        await transporter.sendMail({
+          from:        mail.from,
+          to:          toEmail,
+          subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
+          text:        TEST_MODE ? `【テスト送信】本来の宛先: ${r.email}\n\n${mail.text}` : mail.text,
+          html:        mail.html,
+          attachments: icsContent
+            ? [{ filename: icsFilename, content: icsContent, contentType: `text/calendar; charset=utf-8; method=${icsMethod}` }]
+            : [],
+        });
+        console.log(`✓ 送信完了: ${toEmail} (${type} / 工番${req.project_number} / 会議室)`);
+        await supabaseFetch(`approval_notifications?id=eq.${n.id}`, {
+          method: 'PATCH',
+          body:   JSON.stringify({ emailed_at: new Date().toISOString() }),
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`✗ 送信エラー: ${toEmail}`, err.message);
+        errorCount++;
+      }
+    }
+  }
+
   for (const notif of notifications) {
     if (shippingPrepNotifIds.has(notif.id)) continue;
+    if (meetingNotifIds.has(notif.id)) continue;
     const req = reqMap[notif.request_id];
 
     // 宛先メールアドレスと名前を決定
