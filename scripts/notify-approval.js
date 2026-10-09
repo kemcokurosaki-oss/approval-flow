@@ -803,7 +803,7 @@ async function main() {
   const shippingPrepNotifIds = new Set(shippingPrepNotifs.map(n => n.id));
 
   // notification_recipients の名前マップを取得（外部宛先の宛名に使用）
-  const recipientEmails = [...new Set(notifications.map(n => n.recipient_email).filter(Boolean))];
+  const recipientEmails = [...new Set([...notifications, ...rosterRows].map(n => n.recipient_email).filter(Boolean))];
   let recipientEmailNameMap = {};
   if (recipientEmails.length > 0) {
     const allRecipients = await supabaseFetch(`notification_recipients?active=eq.true&select=name,email`);
