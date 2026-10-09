@@ -479,7 +479,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷確認会議開催案内】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷確認会議を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -495,7 +495,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【簡易検査 日程変更】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の簡易検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -511,7 +511,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷確認会議 日程変更】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷確認会議の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -527,7 +527,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【外観検査 日程変更】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の外観検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -549,7 +549,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【外観検査 キャンセル】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の外観検査はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
@@ -559,7 +559,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【簡易検査 キャンセル】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の簡易検査はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
@@ -569,7 +569,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷確認会議 キャンセル】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷確認会議はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
@@ -582,7 +582,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【簡易検査開催案内】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の簡易検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -598,7 +598,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【外観検査開催案内】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の外観検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -614,7 +614,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷品確認検査開催案内】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷品確認検査を下記のとおり実施します。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -630,7 +630,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷品確認検査 日程変更】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷品確認検査の日程が変更されました。\n\n` +
           `日時: ${date}${time}\n` +
           `場所: ${location}` +
@@ -643,7 +643,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         from,
         subject: `【出荷品確認検査 キャンセル】${pStr}`,
         text:
-          `${recipientName} 様\n\n` +
+          `${greeting}\n\n` +
           `${pStr} の出荷品確認検査はキャンセルになりました。` +
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
@@ -773,9 +773,21 @@ async function main() {
 
   const roomEmailsSet = new Set(Object.values(ROOM_EMAILS));
 
+  // 検査・会議の開催案内・日程変更・キャンセルは、申請×通知種別ごとに1通にまとめて送る（全員に返信で関係者へ連絡できるようにするため）。
+  // ICSの出席者欄には、今回の宛先だけでなくその会議の参加者全員（過去に案内した人を含む）を載せる
+  const meetingNotifs = notifications.filter(n =>
+    MEETING_NOTIF_TYPES.has(n.notification_type) && reqMap[n.request_id]);
+  const meetingNotifIds = new Set(meetingNotifs.map(n => n.id));
+  const meetingReqIds = [...new Set(meetingNotifs.map(n => n.request_id))];
+  const rosterRows = meetingReqIds.length > 0 ? await supabaseFetch(
+    `approval_notifications?request_id=in.(${meetingReqIds.join(',')})` +
+    `&notification_type=in.(${[...MEETING_INVITE_TYPES].join(',')})` +
+    `&select=id,request_id,recipient_id,recipient_email,optional`
+  ) : [];
+
   // profiles のメールアドレスを一括取得（recipient_idがある場合のみ。申請者名解決のためrequester_idも含める）
   const recipientIds = [...new Set(
-    [...notifications.map(n => n.recipient_id), ...requests.map(r => r.requester_id)].filter(Boolean)
+    [...notifications.map(n => n.recipient_id), ...rosterRows.map(n => n.recipient_id), ...requests.map(r => r.requester_id)].filter(Boolean)
   )];
   let profileMap = {};
   if (recipientIds.length > 0) {
