@@ -37,6 +37,16 @@ const FLOW_LABELS = {
 // 簡易検査・外観検査・出荷品確認検査・出荷確認会議（このフローの「ペンディング」は画面上「タスク」表記に統一）
 const QA_MEETING_FLOWS = ['simple_inspection', 'inspection', 'shipping_meeting', 'shipping_check_inspection'];
 
+// 開催案内・日程変更（参加者名簿の元になる通知）と、それにキャンセルを加えた1通まとめ送信の対象
+const MEETING_INVITE_TYPES = new Set(QA_MEETING_FLOWS.flatMap(f => [`${f}_invite`, `${f}_reschedule`]));
+const MEETING_NOTIF_TYPES  = new Set([...MEETING_INVITE_TYPES, ...QA_MEETING_FLOWS.map(f => `${f}_cancel`)]);
+const ICS_FILENAMES = {
+  simple_inspection:         '簡易検査',
+  inspection:                '外観検査',
+  shipping_check_inspection: '出荷品確認検査',
+  shipping_meeting:          '出荷確認会議',
+};
+
 // ===== タスクリスト送信（fix_card_sent）用ヘルパー =====
 const PHOTO_BUCKET = 'pending-item-photos';
 const FLOW_SHORT_LABEL = {
