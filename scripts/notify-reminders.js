@@ -12,7 +12,7 @@
  *    未完了側の担当者へ毎日通知（チェックするまで継続。工番2000番台も対象）
  * 7. 出荷品リスト作成催促: 簡易検査・外観検査は自身の終了日の3日前、出荷品確認検査は自身の終了日の3日前、
  *    出荷確認会議は自身の開始日の3日前から、該当工事番号の
- *    設計担当者へ出荷品リストの作成を1回だけ通知（毎日ではない）。開催案内の申請が提出されるまでの
+ *    設計担当者・電気設計担当者（電技）へ出荷品リストの作成を1回だけ通知（毎日ではない）。開催案内の申請が提出されるまでの
  *    間は未送信の対象者に送られ続けるが、同一対象者には二度送らない。
  *    出荷確認会議がある工事番号では外観検査のタイミングでは送らない（1工事番号で二重送信しないため）。
  *    工番2000番台は案内催促と同様に対象外
@@ -736,7 +736,7 @@ async function runInvitationReminders() {
 }
 
 // ===== 出荷品リスト作成催促 =====
-// 各検査・会議タスク自身の日付（終了日、出荷確認会議のみ開始日）の3日前から、該当工事番号の設計担当者へ
+// 各検査・会議タスク自身の日付（終了日、出荷確認会議のみ開始日）の3日前から、該当工事番号の設計担当者・電気設計担当者へ
 // 出荷品リストの作成を1回だけ通知する（毎日ではない。approval_notificationsで送信済みを判定）。
 // 開催案内の申請が提出された対象は以後スキップされる。
 // 出荷確認会議がある工事番号では、外観検査のタイミングでは送らない（1工事番号で二重送信しないため）
@@ -844,13 +844,20 @@ async function runShippingListReminders() {
       const submitKey = `${taskKey}__${flow.flowType}`;
       if (submittedSet.has(submitKey)) continue;
 
-      // 工事番号単位の設計担当者（tasks: 出図 / 設計）。同一工事番号内で使い回してクエリ数を抑える
+      // 工事番号単位の設計担当者（tasks: 出図 / 設計）＋電気設計担当者（大項目「電技」の全タスク・タスク名「電気設計」。
+      // app.js の開催案内の送付先と同じ判定）。同一工事番号内で使い回してクエリ数を抑える
       if (!(projectStr in sekkeiOwnersCache)) {
-        const sekkeiTasks = await supabaseFetch(
-          `tasks?project_number=eq.${encodeURIComponent(target.project_number)}&text=eq.${encodeURIComponent('出図')}` +
-          `&major_item=eq.${encodeURIComponent('設計')}&select=owner`
-        );
-        sekkeiOwnersCache[projectStr] = [...new Set((sekkeiTasks || []).flatMap(t => splitOwnerNames(t.owner)))];
+        const [sekkeiTasks, denkiSekkeiTasks] = await Promise.all([
+          supabaseFetch(
+            `tasks?project_number=eq.${encodeURIComponent(target.project_number)}&text=eq.${encodeURIComponent('出図')}` +
+            `&major_item=eq.${encodeURIComponent('設計')}&select=owner`
+          ),
+          supabaseFetch(
+            `tasks?project_number=eq.${encodeURIComponent(target.project_number)}` +
+            `&or=${encodeURIComponent('(major_item.eq.電技,text.eq.電気設計)')}&select=owner`
+          ),
+        ]);
+        sekkeiOwnersCache[projectStr] = [...new Set([...(sekkeiTasks || []), ...(denkiSekkeiTasks || [])].flatMap(t => splitOwnerNames(t.owner)))];
       }
       const sekkeiOwnerNames = sekkeiOwnersCache[projectStr];
       if (sekkeiOwnerNames.length === 0) continue;
