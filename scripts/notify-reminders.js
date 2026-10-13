@@ -857,11 +857,13 @@ async function runShippingListReminders() {
 
       const pStr    = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
       const subject = `【出荷品リスト作成催促】${pStr}`;
-      const sendToLabel = flow.noAssembly ? '品質保証' : '組立担当者と品質保証';
+      // 送付は開催案内メールへの「全員に返信」で行う運用（案内は出席者全員に1通で届くため）
       const bodyCore =
         `${pStr}\n` +
         `${flow.label}の開催が近づいています。\n` +
-        `出荷品リストを作成し、${flow.label}の前までに${sendToLabel}へ送付してください。`;
+        `出荷品リストを作成し、${flow.label}の前までに関係者へ送付してください。\n` +
+        `送付は、${flow.label}の開催案内メールに「全員に返信」で、出荷品リストを添付してお送りください。\n` +
+        `※開催案内がまだ届いていない場合は、届いてから返信をお願いします。`;
 
       const recipients = [];
       const seen = new Set();
