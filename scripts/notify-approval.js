@@ -1,9 +1,7 @@
-const nodemailer = require('nodemailer');
+const { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
 
 const SUPABASE_URL  = process.env.SUPABASE_URL;
 const SUPABASE_KEY  = process.env.SUPABASE_SECRET_KEY;
-const GMAIL_USER    = process.env.GMAIL_USER;
-const GMAIL_PASS    = process.env.GMAIL_APP_PASSWORD;
 const TEST_MODE     = process.env.TEST_MODE === 'true';
 const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
@@ -164,7 +162,7 @@ function buildShippingPrepCompletedEmail(req, qualityNames, salesOwnerName) {
     );
   }
   return {
-    from: `"工事工程 通知" <${GMAIL_USER}>`,
+    from: formatFrom('工事工程 通知'),
     subject: `【出荷準備完了通知】${pStr}`,
     text:
       (greeting.length > 0 ? `${greeting.join('\n')}\n\n` : '') +
@@ -203,11 +201,6 @@ const FLOW_LABELS_REQUEST = {
   shipping_prep: '出荷準備完了申請',
   shipping:      '出荷確定申請',
 };
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: GMAIL_USER, pass: GMAIL_PASS },
-});
 
 // ===== Supabase REST API =====
 async function supabaseFetch(path, options = {}) {
@@ -269,7 +262,7 @@ function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence =
     dtEnd,
     `SUMMARY:${summary}`,
     `LOCATION:${location}`,
-    `ORGANIZER;CN=工事工程通知:mailto:${GMAIL_USER}`,
+    `ORGANIZER;CN=工事工程通知:mailto:${SENDER_ADDRESS}`,
   ];
   if (method === 'CANCEL') {
     lines.push('STATUS:CANCELLED');
@@ -301,7 +294,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
   const isQaFlow   = QA_MEETING_FLOWS.includes(req?.flow_type);
   const itemLabel  = isQaFlow ? 'タスク' : 'ペンディング項目';
   const detailLine = extra?.detail ? `\n${itemLabel}内容: ${extra.detail}` : '';
-  const from       = `"工事工程 通知" <${GMAIL_USER}>`;
+  const from       = formatFrom('工事工程 通知');
   const greeting   = extra?.greeting || `${recipientName} 様`; // 開催案内を複数人にまとめて送るときは「関係者各位」
   const parallelNote = req?.flow_type === 'assembly'
     ? '\n\n※組立課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
@@ -732,8 +725,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
 
 // ===== メイン処理 =====
 async function main() {
+  requireMailEnv();
   console.log(`====== 承認フロー通知 ======`);
   console.log(`テストモード: ${TEST_MODE}`);
+  console.log(`送信元: ${SENDER_ADDRESS}（${MAIL_PROVIDER}）`);
 
   // 未送信の通知を取得
   const notifications = await supabaseFetch(
@@ -895,7 +890,7 @@ async function main() {
         const mail = buildShippingPrepCompletedEmail(req, qualityNames, salesEmails.size > 0 ? salesOwnerName : null);
         const toList = [...toSet];
         const ccList = [...ccSet];
-        await transporter.sendMail({
+        await sendMail({
           from:    mail.from,
           to:      TEST_MODE ? TEST_EMAIL : toList.join(','),
           cc:      !TEST_MODE && ccList.length > 0 ? ccList.join(',') : undefined,
@@ -973,7 +968,7 @@ async function main() {
       try {
         const mail = buildEmail(type, req, toList[0].name || '担当者', { greeting: toList.length > 1 ? '関係者各位' : null });
         const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, [...roster.values()]);
-        await transporter.sendMail({
+        await sendMail({
           from:        mail.from,
           to:          TEST_MODE ? TEST_EMAIL : toList.map(r => ({ name: r.name || '', address: r.email })),
           subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
@@ -1000,7 +995,7 @@ async function main() {
       try {
         const mail = buildEmail(type, req, r.name || '担当者');
         const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, []);
-        await transporter.sendMail({
+        await sendMail({
           from:        mail.from,
           to:          toEmail,
           subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
@@ -1101,7 +1096,7 @@ async function main() {
         }
       }
 
-      await transporter.sendMail({
+      await sendMail({
         from:        mail.from,
         to:          toEmail,
         subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,

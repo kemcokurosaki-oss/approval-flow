@@ -17,15 +17,13 @@
  *    出荷確認会議がある工事番号では外観検査のタイミングでは送らない（1工事番号で二重送信しないため）。
  *    工番2000番台は案内催促と同様に対象外
  *
- * Secrets: SUPABASE_URL, SUPABASE_SECRET_KEY, GMAIL_USER, GMAIL_APP_PASSWORD
+ * Secrets: SUPABASE_URL, SUPABASE_SECRET_KEY, メール送信用（scripts/mailer.js 参照）
  */
 
-const nodemailer = require('nodemailer');
+const { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
-const GMAIL_USER   = process.env.GMAIL_USER;
-const GMAIL_PASS   = process.env.GMAIL_APP_PASSWORD;
 const TEST_MODE    = process.env.TEST_MODE === 'true';
 const APP_URL      = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 const TEST_EMAIL   = 'e-kurosaki@kusakabe.com';
@@ -212,11 +210,6 @@ async function supabaseInsert(table, body) {
   if (!res.ok) throw new Error(`Supabase insert error [${res.status}]: ${await res.text()}`);
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: GMAIL_USER, pass: GMAIL_PASS },
-});
-
 // 完了済み工番セット（main()でロード）
 let completedProjectsSet = new Set();
 
@@ -230,7 +223,7 @@ async function sendEmail(toEmail, toName, subject, body, ccEmails = []) {
   const actualTo = TEST_MODE ? TEST_EMAIL : toEmail;
   const actualCc = TEST_MODE ? [] : ccEmails.filter(Boolean);
   const mailOptions = {
-    from:    `"工事工程 通知" <${GMAIL_USER}>`,
+    from:    formatFrom('工事工程 通知'),
     to:      actualTo,
     subject: TEST_MODE ? `[TEST] ${subject}` : subject,
     text:    TEST_MODE
@@ -238,7 +231,7 @@ async function sendEmail(toEmail, toName, subject, body, ccEmails = []) {
       : body,
   };
   if (actualCc.length > 0) mailOptions.cc = actualCc.join(',');
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
   const ccLog = actualCc.length ? ` CC: ${actualCc.join(', ')}` : '';
   console.log(`✓ 送信完了: ${actualTo} (${toName} / ${subject})${ccLog}`);
 }
@@ -1242,11 +1235,11 @@ async function runSalesShippingDateReminders() {
 async function main() {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
-  requireEnv('GMAIL_USER', GMAIL_USER);
-  requireEnv('GMAIL_APP_PASSWORD', GMAIL_PASS);
+  requireMailEnv();
 
   console.log('====== リマインダー通知 ======');
   console.log(`テストモード: ${TEST_MODE}`);
+  console.log(`送信元: ${SENDER_ADDRESS}（${MAIL_PROVIDER}）`);
   console.log(`実行日 (JST): ${tokyoDateStr()}`);
 
   await loadCompletedProjects();
