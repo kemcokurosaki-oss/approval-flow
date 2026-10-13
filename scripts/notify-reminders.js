@@ -12,7 +12,7 @@
  *    未完了側の担当者へ毎日通知（チェックするまで継続。工番2000番台も対象）
  * 7. 出荷品リスト作成催促: 簡易検査・外観検査は自身の終了日の3日前、出荷品確認検査は自身の終了日の3日前、
  *    出荷確認会議は自身の開始日の3日前から、該当工事番号の
- *    設計担当者・電気設計担当者（電技）へ出荷品リストの作成を1回だけ通知（毎日ではない）。開催案内の申請が提出されるまでの
+ *    設計担当者・電気設計担当者（電技）へ出荷品リストの作成を1回だけ通知（毎日ではない。全員をToに並べた1通にまとめる）。開催案内の申請が提出されるまでの
  *    間は未送信の対象者に送られ続けるが、同一対象者には二度送らない。
  *    出荷確認会議がある工事番号では外観検査のタイミングでは送らない（1工事番号で二重送信しないため）。
  *    工番2000番台は案内催促と同様に対象外
@@ -857,48 +857,52 @@ async function runShippingListReminders() {
             `&or=${encodeURIComponent('(major_item.eq.電技,text.eq.電気設計)')}&select=owner`
           ),
         ]);
-        sekkeiOwnersCache[projectStr] = [...new Set([...(sekkeiTasks || []), ...(denkiSekkeiTasks || [])].flatMap(t => splitOwnerNames(t.owner)))];
+        const ownerNamesOf = rows => [...new Set((rows || []).flatMap(t => splitOwnerNames(t.owner)))];
+        sekkeiOwnersCache[projectStr] = { sekkei: ownerNamesOf(sekkeiTasks), denki: ownerNamesOf(denkiSekkeiTasks) };
       }
-      const sekkeiOwnerNames = sekkeiOwnersCache[projectStr];
-      if (sekkeiOwnerNames.length === 0) continue;
+      const { sekkei: sekkeiOwnerNames, denki: denkiOwnerNames } = sekkeiOwnersCache[projectStr];
+      if (sekkeiOwnerNames.length === 0 && denkiOwnerNames.length === 0) continue;
 
-      const pStr    = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
-      const subject = `【出荷品リスト作成催促】${pStr}`;
-      // 送付は開催案内メールへの「全員に返信」で行う運用（案内は出席者全員に1通で届くため）
-      const bodyCore =
-        `${pStr}\n` +
-        `${flow.label}の開催が近づいています。\n` +
-        `出荷品リストを作成し、${flow.label}の前までに関係者へ送付してください。\n` +
-        `送付は、${flow.label}の開催案内メールに「全員に返信」で、出荷品リストを添付してお送りください。\n` +
-        `※開催案内がまだ届いていない場合は、届いてから返信をお願いします。`;
-
+      // 設計担当者・電気設計担当者を全員Toに並べた1通にまとめる（品証・製管のCCが担当者の人数分重複しないように）。
+      // 「1回だけ」の判定は従来通り担当者ごとに行い、未送信の担当者だけを宛先にする
       const recipients = [];
       const seen = new Set();
-      for (const ownerName of sekkeiOwnerNames) {
+      for (const ownerName of [...sekkeiOwnerNames, ...denkiOwnerNames]) {
         const owners = await resolveOwnerRecipients(ownerName);
         for (const owner of owners) {
           const key = owner.id || owner.email;
           if (seen.has(key)) continue;
           seen.add(key);
-          recipients.push(owner);
+          const dedupKey = `${submitKey}__${key}`;
+          if (sentThisRun.has(dedupKey) || sentBeforeSet.has(dedupKey)) continue;
+          recipients.push({ ...owner, dedupKey });
         }
       }
+      if (recipients.length === 0) continue;
 
-      for (const recipient of recipients) {
-        const dedupKey = `${submitKey}__${recipient.id || recipient.email}`;
-        if (sentThisRun.has(dedupKey)) continue;
-        if (sentBeforeSet.has(dedupKey)) continue;
+      const pStr    = target.machine ? `${target.project_number} ${target.machine}` : String(target.project_number);
+      const subject = `【出荷品リスト作成催促】${pStr}`;
+      const ownerLines = [
+        sekkeiOwnerNames.length > 0 ? `設計担当：${sekkeiOwnerNames.map(n => `${n} 様`).join('、')}` : null,
+        denkiOwnerNames.length  > 0 ? `電気設計担当：${denkiOwnerNames.map(n => `${n} 様`).join('、')}` : null,
+      ].filter(Boolean).join('\n');
+      // 送付は開催案内メールへの「全員に返信」で行う運用（案内は出席者全員に1通で届くため）
+      const text =
+        `${ownerLines}\n\n` +
+        `${pStr}\n` +
+        `${flow.label}の開催が近づいています。\n` +
+        `出荷品リストを作成し、${flow.label}の前までに関係者へ送付してください。\n` +
+        `送付は、${flow.label}の開催案内メールに「全員に返信」で、出荷品リストを添付してお送りください。\n` +
+        `※開催案内がまだ届いていない場合は、届いてから返信をお願いします。\n\n` +
+        `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
 
-        const text =
-          `${recipient.name} 様\n\n` +
-          `${bodyCore}\n\n` +
-          `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+      const toEmails = recipients.map(r => r.email);
+      const ccEmails = REMINDER_CC_EMAILS.shipping_list_reminder.filter(email => !toEmails.includes(email));
 
-        const ccEmails = REMINDER_CC_EMAILS.shipping_list_reminder.filter(email => email !== recipient.email);
-
-        try {
-          // 送信記録を先に残してから送信する（メール送信後に記録すると、記録の保存が
-          // 何らかの理由で失敗した場合に「1回だけ」の判定が効かず翌日以降も再送されてしまうため）
+      try {
+        // 送信記録を先に残してから送信する（メール送信後に記録すると、記録の保存が
+        // 何らかの理由で失敗した場合に「1回だけ」の判定が効かず翌日以降も再送されてしまうため）
+        for (const recipient of recipients) {
           await supabaseInsert('approval_notifications', {
             request_id:         null,
             recipient_id:       recipient.id || null,
@@ -907,13 +911,13 @@ async function runShippingListReminders() {
             detail:             submitKey,
             emailed_at:         new Date().toISOString(),
           });
-          sentThisRun.add(dedupKey);
-          sentBeforeSet.add(dedupKey);
-          await sendEmail(recipient.email, recipient.name, subject, text, ccEmails);
-          count++;
-        } catch (e) {
-          console.error(`✗ 送信エラー: ${recipient.email}`, e.message);
+          sentThisRun.add(recipient.dedupKey);
+          sentBeforeSet.add(recipient.dedupKey);
         }
+        await sendEmail(toEmails.join(','), recipients.map(r => r.name).join('・'), subject, text, ccEmails);
+        count++;
+      } catch (e) {
+        console.error(`✗ 送信エラー: ${toEmails.join(', ')}`, e.message);
       }
     }
   }
