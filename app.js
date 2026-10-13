@@ -8298,10 +8298,16 @@ async function _getInspectionFlowLabel(projectNum, machine) {
     return QA_DETAIL_TITLE_LABELS[t] || '検査';
 }
 
-// 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）
+// 組立(先頭)〜出荷(末尾)を含む、その機械のフロー全体の並び（工程表の実タスクに基づく動的判定）。
+// 工程表に「機械組立」タスクが無い機械（部品出荷のみの工事等）は組立フローが存在しないため先頭の組立を飛ばす
 async function _getMachineFlowChain(projectNum, machine) {
-    const middle = await _getMiddleFlowChain(projectNum, machine);
-    return ['assembly', ...middle, 'shipping'];
+    const [middle, { data: asmRows }] = await Promise.all([
+        _getMiddleFlowChain(projectNum, machine),
+        db.from('tasks').select('id')
+            .eq('project_number', projectNum).eq('machine', machine).eq('text', '機械組立').limit(1)
+    ]);
+    const head = (asmRows || []).length > 0 ? ['assembly'] : [];
+    return [...head, ...middle, 'shipping'];
 }
 
 // 複数機械選択時: 各機械のフロー構成を、工程順を保ったまま合成する
