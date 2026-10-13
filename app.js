@@ -438,10 +438,10 @@ function getFixedRecipientPlan(flowType) {
 const DYNAMIC_RECIPIENT_GROUPS = {
     assembly:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'denki_owner'],
     test_run:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
-    shipping_meeting:  ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'denki_owner'],
-    simple_inspection: ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'denki_owner'],
-    inspection:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'denki_owner'],
-    shipping_check_inspection: ['sales', 'sekkei_owner'],
+    shipping_meeting:  ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'denki_owner', 'denki_sekkei_owner'],
+    simple_inspection: ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'denki_owner', 'denki_sekkei_owner'],
+    inspection:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager', 'denki_owner', 'denki_sekkei_owner'],
+    shipping_check_inspection: ['sales', 'sekkei_owner', 'denki_sekkei_owner'],
     shipping:          ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'kumitate_manager', 'shiunten_owner', 'shiunten_manager'],
     electrical:        ['sales', 'sekkei_owner', 'sekkei_manager', 'kumitate_owner', 'shiunten_owner', 'shiunten_manager'],
     // shipping_prep: 他フローと異なり To ではなく品証宛メールのCCに入る担当者のON/OFF。
@@ -462,6 +462,7 @@ const DYNAMIC_GROUP_LABELS = {
     sekkei_owner:     '設計担当者（本人）',
     sekkei_manager:   '設計担当者の上長',
     denki_owner:      '電装担当者（本人）',
+    denki_sekkei_owner: '電気設計担当者（電技）',
     trip_owner:       '出張予定の担当者'
 };
 // フロー種別ごとの動的宛先ON/OFF設定（未設定のグループはON扱い＝従来通りの動作）
@@ -568,7 +569,7 @@ const APPROVER_ROLE_FLOWS = {
     operations_director: ['test_run']
 };
 // 名簿一覧の部署表示順（未知の部署は末尾に五十音順で追加）
-const DEPARTMENT_ORDER = ['組立', '電装', '操業', '設計', '営業', '技戦', '物流', '品証', '製管'];
+const DEPARTMENT_ORDER = ['組立', '電装', '操業', '電技', '設計', '営業', '技戦', '物流', '品証', '製管'];
 function sortDepartments(depts) {
     return [...depts].sort((a, b) => {
         const ia = DEPARTMENT_ORDER.indexOf(a), ib = DEPARTMENT_ORDER.indexOf(b);
@@ -8530,7 +8531,7 @@ const recipientOptionalKeys = { inspection: new Set(), sm: new Set(), si: new Se
 const existingRecipientEmails = { inspection: new Set(), sm: new Set(), si: new Set(), sci: new Set(), reschedule: new Set() };
 let allProfilesForRecipientSelect = null;
 // プルダウン内の部署グループの並び順（未指定の部署は末尾に五十音順で表示）
-const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '電装', '物流', '操業', '技戦', '品証', '製管'];
+const RECIPIENT_PICKER_DEPARTMENT_ORDER = ['営業', '設計', '組立', '電装', '物流', '操業', '電技', '技戦', '品証', '製管'];
 function sortRecipientPickerDepartments(keys) {
     return keys.sort((a, b) => {
         const ia = RECIPIENT_PICKER_DEPARTMENT_ORDER.indexOf(a);
@@ -8659,6 +8660,16 @@ function showFormStep(prefix) {
     document.getElementById(`${prefix}_recipients_step`).style.display = 'none';
     document.getElementById(`${prefix}_footer_step1`).style.display    = '';
     document.getElementById(`${prefix}_footer_step2`).style.display    = 'none';
+}
+
+// 電気設計（電気技術課）の担当者: 大項目「電技」の全タスク＋タスク名「電気設計」のタスクのオーナー。
+// 電技のタスクは機械を指定せず工番全体で登録されることがあるため、機械で絞った tasks に無ければ工番全体から再検索する
+const isDenkiSekkeiTask = t => String(t.major_item || '').trim() === '電技' || t.text === '電気設計';
+async function getDenkiSekkeiOwnerNames(projectNum, tasks) {
+    const found = [...new Set((tasks || []).filter(isDenkiSekkeiTask).flatMap(t => splitOwnerNames(t.owner)))];
+    if (found.length > 0) return found;
+    const { data } = await db.from('tasks').select('text, owner, major_item').eq('project_number', projectNum).not('owner', 'is', null);
+    return [...new Set((data || []).filter(isDenkiSekkeiTask).flatMap(t => splitOwnerNames(t.owner)))];
 }
 
 async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
@@ -8805,6 +8816,8 @@ async function _fetchFlowRecipients(projectNum, machineNames, flowType) {
     if (dyn.sekkei_manager) await addSekkeiSupervisors();
     // 電気艤装タスクがある場合のみ電装担当者も追加
     if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+    // 電気設計タスク（大項目「電技」・タスク名「電気設計」）がある場合のみ電気設計担当者も追加（電技はアカウント無しのため名簿も検索）
+    if (dyn.denki_sekkei_owner) for (const o of await getDenkiSekkeiOwnerNames(projectNum, tasks)) await addOwnerByName(o);
 
     // 全開催案内共通: 組立課長（機械組立あり）・操業課長/部長（試運転あり）
     if (dyn.kumitate_manager && kumitateOwners.length > 0) {
@@ -8845,6 +8858,7 @@ const DEPARTMENT_BADGE_COLORS = {
     '操業': { bg: '#fde8e8', color: '#c0392b' },
     '営業': { bg: '#ffe8cc', color: '#b35c00' },
     '電装': { bg: '#f3e5f5', color: '#6a1b9a' },
+    '電技': { bg: '#e8eaf6', color: '#283593' },
     '技戦': { bg: '#f1f8e9', color: '#558b2f' },
     '物流': { bg: '#efebe9', color: '#6d4c41' },
     '品証': { bg: '#e8f5e9', color: '#2e7d32' },
@@ -10120,6 +10134,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             }
             // 電気艤装タスクがある場合のみ電装担当者も追加
             if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+            // 電気設計タスクがある場合のみ電気設計担当者（電技）も追加
+            if (dyn.denki_sekkei_owner) for (const o of await getDenkiSekkeiOwnerNames(projectNum, tasks)) await addOwnerByName(o);
             // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
             for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
             break;
@@ -10139,6 +10155,8 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             }
             // 電気艤装タスクがある場合のみ電装担当者も追加
             if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+            // 電気設計タスクがある場合のみ電気設計担当者（電技）も追加
+            if (dyn.denki_sekkei_owner) for (const o of await getDenkiSekkeiOwnerNames(projectNum, tasks)) await addOwnerByName(o);
             // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
             for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
             break;
@@ -10163,19 +10181,23 @@ async function recordFlowNotifications(requestId, flowType, optionalKeys = null)
             }
             // 電気艤装タスクがある場合のみ電装担当者も追加
             if (dyn.denki_owner) for (const o of denkiOwners) await addPbyName(o);
+            // 電気設計タスクがある場合のみ電気設計担当者（電技）も追加
+            if (dyn.denki_sekkei_owner) for (const o of await getDenkiSekkeiOwnerNames(projectNum, tasks)) await addOwnerByName(o);
             // 全体工程表の出張予定シートに当該工番のタスクがあれば、その担当者も宛先に追加（タスク名は問わない）
             for (const o of await getBusinessTripOwnerNames(projectNum)) await addOwnerByName(o);
             break;
         }
 
         case 'shipping_check_inspection': {
-            // 機械組立が無い工番向けの検査フロー（簡易検査・外観検査の代わり）。宛先は設計担当者・営業担当者・品証・製管のみ
+            // 機械組立が無い工番向けの検査フロー（簡易検査・外観検査の代わり）。宛先は設計担当者・電気設計担当者・営業担当者・品証・製管のみ
             const dyn = getDynamicRecipientPlan('shipping_check_inspection');
             notifType = 'shipping_check_inspection_invite';
             profileIds.add(req.requester_id); // 開催者は宛先候補として自分にも追加する（必須/任意は宛先確認画面のチェックボックスに従う）
             await addFixedRecipients();                                         // 品証・製管（設定画面で個人単位に選択）
             if (dyn.sales)        await addOwnerByName(salesOwner);             // 営業担当者
             if (dyn.sekkei_owner) for (const o of sekkeiOwners) await addOwnerByName(o); // 設計担当者
+            // 電気設計タスクがある場合のみ電気設計担当者（電技）も追加
+            if (dyn.denki_sekkei_owner) for (const o of await getDenkiSekkeiOwnerNames(projectNum, tasks)) await addOwnerByName(o);
             break;
         }
 
