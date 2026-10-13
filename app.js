@@ -7951,9 +7951,8 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2 } = {}) 
     if (!SHIPPING_DATE_TASK_SYNC_ENABLED) return;
     if (!req?.project_number) return;
     try {
-        // ロック(shipping_date_locked)はここでは一切触れない。承認フロー自身は常に書き込めるため
-        // ロックの有無に関係なく変更でき、かつ「一度承認された出荷日は次の承認完了までロックされ続ける」
-        // 挙動（未承認のうちはfalseのまま、承認済みの再申請中はtrueのまま）を維持できる。
+        // ロック(shipping_date_locked)はRPC側で日付の書き戻しと同時に立てる。確定出荷日を一度でも入力したら、
+        // 全体工程表・入出荷予定一覧表からの出荷日変更を禁止する（承認状況には関係しない。変更は承認フローからのみ）
         if (factoryDate && req.machine_name) {
             // tasksのUPDATEは工程表の編集者に限られ、営業・品証の権限では0件更新になるため、
             // approval_requestsに保存済みの確定出荷日を工場出荷タスクへ書き戻すRPC（SECURITY DEFINER）経由で更新する。
@@ -7967,21 +7966,6 @@ async function syncShippingDateToTasks(req, { factoryDate, factoryDate2 } = {}) 
     } catch (e) {
         console.warn('工程表への出荷日書き戻しに失敗:', e);
         showToast('工程表への確定出荷日の反映に失敗しました: ' + (e.message || e), 'error');
-    }
-}
-
-// 出荷フローが常務承認で完了した時点で、全体工程表・入出荷予定一覧表からの
-// 出荷日直接変更を禁止するロックをかける（変更は承認フロー[saveShippingDates]経由のみ許可）
-async function lockShippingDateOnApproval(req) {
-    if (!req?.project_number) return;
-    try {
-        let q = db.from('tasks').update({ shipping_date_locked: true })
-            .eq('project_number', req.project_number)
-            .eq('text', '工場出荷');
-        if (req.machine_name) q = q.eq('machine', req.machine_name);
-        await q;
-    } catch (e) {
-        console.warn('出荷日ロックの設定に失敗:', e);
     }
 }
 
@@ -8092,7 +8076,6 @@ async function approveStep(requestId, stepId, stepOrder) {
         if (nextStatus === 'approved') {
             await syncTaskCompletionOnFlowApproval(currentDetailReq);
             if (currentDetailFlowType === 'shipping') {
-                await lockShippingDateOnApproval(currentDetailReq);
                 await markShippingOverlayConfirmed(currentDetailReq);
             }
             await recordNotifications(requestId);

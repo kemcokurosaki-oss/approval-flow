@@ -3,7 +3,8 @@
 -- 保存しても工程表へ反映されなかった（RLSで0件更新になり無言で失敗）ための対策。
 -- 日付は引数で受け取らず approval_requests に保存済みの値を使うため、呼び出し側が任意の日付を書き込むことはできない。
 -- 分割出荷（同一機械に工場出荷タスク2件）は end_date 昇順で①②をそれぞれ更新する（app.js の syncShippingDateToTasks と同じ判定）。
--- shipping_date_locked には触れない。戻り値は更新した工場出荷タスクの件数。
+-- あわせて shipping_date_locked を立て、全体工程表・入出荷予定一覧表からの出荷日変更を禁止する
+-- （確定出荷日を一度でも入力したらロック。確定出荷日は空に戻せないため解除はしない）。戻り値は更新した工場出荷タスクの件数。
 
 CREATE OR REPLACE FUNCTION public.sync_factory_shipping_date(p_request_id uuid)
 RETURNS integer
@@ -35,14 +36,14 @@ BEGIN
           FROM public.tasks
          WHERE project_number = r.project_number AND machine = r.machine_name AND text = '工場出荷';
         IF t_ids IS NULL THEN RETURN 0; END IF;
-        UPDATE public.tasks SET start_date = r.d1, end_date = r.d1 WHERE id = t_ids[1];
+        UPDATE public.tasks SET start_date = r.d1, end_date = r.d1, shipping_date_locked = true WHERE id = t_ids[1];
         GET DIAGNOSTICS cnt = ROW_COUNT; n := n + cnt;
         IF array_length(t_ids, 1) >= 2 THEN
-            UPDATE public.tasks SET start_date = r.d2, end_date = r.d2 WHERE id = t_ids[2];
+            UPDATE public.tasks SET start_date = r.d2, end_date = r.d2, shipping_date_locked = true WHERE id = t_ids[2];
             GET DIAGNOSTICS cnt = ROW_COUNT; n := n + cnt;
         END IF;
     ELSE
-        UPDATE public.tasks SET start_date = r.d1, end_date = r.d1
+        UPDATE public.tasks SET start_date = r.d1, end_date = r.d1, shipping_date_locked = true
          WHERE project_number = r.project_number AND machine = r.machine_name AND text = '工場出荷';
         GET DIAGNOSTICS n = ROW_COUNT;
     END IF;
