@@ -1,6 +1,8 @@
 const { ImapFlow } = require('imapflow');
 const { simpleParser } = require('mailparser');
 const ical = require('node-ical');
+const { IS_GRAPH, requireMailEnv } = require('./mailer');
+const calendar = require('./calendar');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
@@ -72,13 +74,79 @@ function extractAttendeeResponse(icsText) {
   return null;
 }
 
+// 予定表方式（MAIL_PROVIDER=graph）で作成した会議: 予定の出席者ごとの回答を読み取って記録する。
+// 対象は、キャンセルされておらず、開催日が7日前以降の会議
+const CALENDAR_RESPONSE_TO_STATUS = {
+  accepted:            'accepted',
+  declined:            'declined',
+  tentativelyAccepted: 'tentative',
+};
+
+async function checkCalendarResponses() {
+  console.log('\n--- 予定表の出欠 ---');
+  const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const requests = await supabaseFetch(
+    `approval_requests?calendar_event_id=not.is.null&status=neq.cancelled&inspection_date=gte.${since}` +
+    `&select=id,project_number,calendar_event_id`
+  );
+  if (!requests || requests.length === 0) {
+    console.log('対象の会議はありません');
+    return;
+  }
+
+  const existing = await supabaseFetch(
+    `invitation_rsvp?request_id=in.(${requests.map(r => r.id).join(',')})&select=request_id,email,status`
+  );
+  const existingStatus = new Map((existing || []).map(r => [`${r.request_id}__${r.email}`, r.status]));
+
+  let recorded = 0;
+  for (const req of requests) {
+    try {
+      const responses = await calendar.getAttendeeResponses(req.calendar_event_id);
+      for (const a of responses) {
+        const status = CALENDAR_RESPONSE_TO_STATUS[a.response];
+        if (!status || !a.email) continue; // 未回答は記録しない（アプリでは「未回答」と表示される）
+        if (existingStatus.get(`${req.id}__${a.email}`) === status) continue;
+        await supabaseFetch('invitation_rsvp?on_conflict=request_id,email', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({
+            request_id:   req.id,
+            email:        a.email,
+            name:         a.name,
+            status,
+            is_follow:    false,
+            responded_at: a.time && !a.time.startsWith('0001') ? a.time : new Date().toISOString(),
+            updated_at:   new Date().toISOString(),
+          }),
+        });
+        recorded++;
+        console.log(`✓ 記録: ${a.email} → ${status} (工番${req.project_number} / request_id=${req.id})`);
+      }
+    } catch (err) {
+      console.error(`✗ 予定の出欠取得エラー: request_id=${req.id}`, err.message);
+    }
+  }
+  console.log(`予定表: 会議${requests.length}件 / 記録${recorded}件`);
+}
+
 async function main() {
   console.log('====== 出欠状況（RSVP）確認 ======');
 
-  if (!GMAIL_USER || !GMAIL_PASS) {
+  const hasGmail = !!(GMAIL_USER && GMAIL_PASS);
+  if (!hasGmail && !IS_GRAPH) {
     throw new Error('GMAIL_USER / GMAIL_APP_PASSWORD が設定されていません');
   }
+  if (IS_GRAPH) {
+    requireMailEnv();
+    await checkCalendarResponses();
+  }
+  // 旧方式（.ics 添付メール）で案内した会議の返信は、Gmail の受信箱から読み取る
+  if (hasGmail) await checkGmailReplies();
+}
 
+async function checkGmailReplies() {
+  console.log('\n--- Gmail の返信メール ---');
   const uidToRequestId = await buildUidToRequestIdMap();
 
   const client = new ImapFlow({
@@ -168,8 +236,7 @@ async function main() {
     await client.logout();
   }
 
-  console.log(`\n====== 完了 ======`);
-  console.log(`処理: ${processedCount}件 / 記録: ${matchedCount}件`);
+  console.log(`Gmail: 処理${processedCount}件 / 記録${matchedCount}件`);
 }
 
 main().catch((err) => {

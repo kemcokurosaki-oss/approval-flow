@@ -1,9 +1,15 @@
-const { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
+const { MAIL_PROVIDER, IS_GRAPH, SENDER_ADDRESS, GMAIL_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
+const calendar = require('./calendar');
 
 const SUPABASE_URL  = process.env.SUPABASE_URL;
 const SUPABASE_KEY  = process.env.SUPABASE_SECRET_KEY;
 const TEST_MODE     = process.env.TEST_MODE === 'true';
 const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
+
+// 旧方式（.ics 添付メール）で案内済みの会議の変更・キャンセルは、案内したときと同じ送信元から送る
+// （主催者が変わると、受信者の Outlook が元の予定と結び付けられないため）。graph 切り替え後は Gmail
+const LEGACY_PROVIDER = IS_GRAPH ? 'gmail' : MAIL_PROVIDER;
+const LEGACY_ADDRESS  = IS_GRAPH ? GMAIL_ADDRESS : SENDER_ADDRESS;
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 
@@ -223,7 +229,7 @@ async function supabaseFetch(path, options = {}) {
 }
 
 // ===== .ics 生成（簡易検査・外観検査・出荷確認会議） =====
-function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence = 0, attendees = []) {
+function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence = 0, attendees = [], organizerEmail = LEGACY_ADDRESS) {
   if (!req.inspection_date) return null;
 
   const dateStr = req.inspection_date.replace(/-/g, ''); // YYYYMMDD
@@ -262,7 +268,7 @@ function buildICS(req, summary, roomEmail = null, method = 'REQUEST', sequence =
     dtEnd,
     `SUMMARY:${summary}`,
     `LOCATION:${location}`,
-    `ORGANIZER;CN=工事工程通知:mailto:${SENDER_ADDRESS}`,
+    `ORGANIZER;CN=工事工程通知:mailto:${organizerEmail}`,
   ];
   if (method === 'CANCEL') {
     lines.push('STATUS:CANCELLED');
@@ -744,7 +750,7 @@ async function main() {
   // 申請レコードを一括取得（test_run_ready通知はrequest_idを持たないため除外する）
   const reqIds = [...new Set(notifications.map(n => n.request_id).filter(Boolean))];
   const requests = reqIds.length > 0 ? await supabaseFetch(
-    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,requester_id,inspection_date,inspection_time,inspection_location,confirmed_shipping_date,confirmed_shipping_date_2,sheet_data`
+    `approval_requests?id=in.(${reqIds.join(',')})&select=id,project_number,machine_name,unit_name,flow_type,status,note,requester_id,inspection_date,inspection_time,inspection_location,confirmed_shipping_date,confirmed_shipping_date_2,sheet_data,calendar_event_id`
   ) : [];
   const reqMap = Object.fromEntries(requests.map(r => [r.id, r]));
 
@@ -787,8 +793,11 @@ async function main() {
   const rosterRows = meetingReqIds.length > 0 ? await supabaseFetch(
     `approval_notifications?request_id=in.(${meetingReqIds.join(',')})` +
     `&notification_type=in.(${[...MEETING_INVITE_TYPES].join(',')})` +
-    `&select=id,request_id,recipient_id,recipient_email,optional`
+    `&select=id,request_id,recipient_id,recipient_email,optional,emailed_at`
   ) : [];
+  // 予定表に未作成で、すでに案内メールを送った会議 = 旧方式（.ics 添付メール）で案内した会議
+  const legacyReqIds = new Set(meetingReqIds.filter(id =>
+    !reqMap[id].calendar_event_id && rosterRows.some(r => r.request_id === id && r.emailed_at)));
 
   // profiles のメールアドレスを一括取得（recipient_idがある場合のみ。申請者名解決のためrequester_idも含める）
   const recipientIds = [...new Set(
@@ -962,6 +971,77 @@ async function main() {
       personRows.push(n);
     }
 
+    // ----- 予定表方式（MAIL_PROVIDER=graph）: 共有メールボックスの予定表に会議を作成・更新・キャンセルする -----
+    // 招待・変更・キャンセルのメールは Exchange が自動で送り、会議室の予約・解除も自動で行われる。
+    // 旧方式で案内済みの会議は、変更・キャンセルも下の旧方式のまま送る
+    if (IS_GRAPH && (req.calendar_event_id || (!isCancel && !isReschedule && !legacyReqIds.has(req.id)))) {
+      const rowIds = [...personRows, ...roomRows.map(x => x.n)].map(n => n.id);
+      if (rowIds.length === 0) continue;
+      const label = `${type} / 工番${req.project_number}`;
+      try {
+        const allPeople = [...roster.values()];
+        const people    = TEST_MODE ? [{ email: TEST_EMAIL, name: 'テスト', optional: false }] : allPeople;
+        const calRoom   = TEST_MODE ? null : roomEmail; // テストモードでは会議室を予約しない
+        const testNote  = list => `【テスト送信】本来の出席者: ${list.map(p => p.email).join(', ') || 'なし'}${roomEmail ? ` / 会議室: ${roomEmail}` : ''}
+
+`;
+        const subjectOf = mail => TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject;
+
+        // テストモードでは、本番で作成した予定（テスト用アドレス以外の出席者がいる予定）には手を付けない
+        // （変更・キャンセルすると本来の参加者に通知が届くため）。通知は未送信のまま残す
+        if (TEST_MODE && req.calendar_event_id) {
+          const current = await calendar.getAttendeeResponses(req.calendar_event_id);
+          const realAttendees = current.filter(a => a.email !== TEST_EMAIL.toLowerCase());
+          if (realAttendees.length > 0) {
+            console.log(`スキップ: ${label}（本番の予定のため、テストモードでは変更しません）`);
+            skipCount++;
+            continue;
+          }
+        }
+
+        if (!req.calendar_event_id) {
+          const mail = buildEmail(type, req, allPeople[0]?.name || '担当者', { greeting: allPeople.length > 1 ? '関係者各位' : null });
+          const eventId = await calendar.createMeeting({
+            req, subject: subjectOf(mail), text: (TEST_MODE ? testNote(allPeople) : '') + mail.text,
+            people, roomEmail: calRoom, transactionId: `approval-${req.id}-${rows[0].id}`,
+          });
+          await supabaseFetch(`approval_requests?id=eq.${req.id}`, {
+            method: 'PATCH',
+            body:   JSON.stringify({ calendar_event_id: eventId }),
+          });
+          console.log(`✓ 予定作成: ${label} / 出席者${allPeople.length}名${calRoom ? ` / 会議室 ${calRoom}` : ''}`);
+        } else if (isCancel) {
+          const mail = buildEmail(type, req, '関係者', { greeting: '関係者各位' });
+          await calendar.cancelMeeting(req.calendar_event_id, mail.text);
+          console.log(`✓ 予定キャンセル: ${label}`);
+        } else if (isReschedule) {
+          const mail = buildEmail(type, req, allPeople[0]?.name || '担当者', { greeting: allPeople.length > 1 ? '関係者各位' : null });
+          await calendar.updateMeeting(req.calendar_event_id, {
+            req, subject: subjectOf(mail), text: (TEST_MODE ? testNote(allPeople) : '') + mail.text,
+            people, roomEmail: calRoom,
+          });
+          console.log(`✓ 予定更新: ${label} / 出席者${allPeople.length}名`);
+        } else if (toMap.size > 0) {
+          // 後から追加した参加者: 主催者から転送して、追加した人にだけ招待を届ける
+          const added = [...toMap.values()];
+          const mail = buildEmail(type, req, added[0].name || '担当者', { greeting: added.length > 1 ? '関係者各位' : null });
+          await calendar.forwardMeeting(req.calendar_event_id,
+            TEST_MODE ? people : added, (TEST_MODE ? testNote(added) : '') + mail.text);
+          console.log(`✓ 予定転送（参加者追加）: ${label} / ${added.map(r => r.email).join(', ')}`);
+        }
+
+        await supabaseFetch(`approval_notifications?id=in.(${rowIds.join(',')})`, {
+          method: 'PATCH',
+          body:   JSON.stringify({ emailed_at: new Date().toISOString() }),
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`✗ 予定表の処理エラー: ${label}`, err.message);
+        errorCount++;
+      }
+      continue;
+    }
+
     if (toMap.size > 0) {
       const toList = [...toMap.values()];
       const toLabel = toList.map(r => r.email).join(', ');
@@ -969,7 +1049,7 @@ async function main() {
         const mail = buildEmail(type, req, toList[0].name || '担当者', { greeting: toList.length > 1 ? '関係者各位' : null });
         const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, [...roster.values()]);
         await sendMail({
-          from:        mail.from,
+          from:        formatFrom('工事工程 通知', LEGACY_ADDRESS),
           to:          TEST_MODE ? TEST_EMAIL : toList.map(r => ({ name: r.name || '', address: r.email })),
           subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
           text:        TEST_MODE ? `【テスト送信】本来の宛先: ${toLabel}\n\n${mail.text}` : mail.text,
@@ -977,7 +1057,7 @@ async function main() {
           attachments: icsContent
             ? [{ filename: icsFilename, content: icsContent, contentType: `text/calendar; charset=utf-8; method=${icsMethod}` }]
             : [],
-        });
+        }, LEGACY_PROVIDER);
         console.log(`✓ 送信完了: ${toLabel} (${type} / 工番${req.project_number} / 出席者${roster.size}名)`);
         await supabaseFetch(`approval_notifications?id=in.(${personRows.map(n => n.id).join(',')})`, {
           method: 'PATCH',
@@ -996,7 +1076,7 @@ async function main() {
         const mail = buildEmail(type, req, r.name || '担当者');
         const icsContent = buildICS(req, mail.subject, roomEmail, icsMethod, icsSeq, []);
         await sendMail({
-          from:        mail.from,
+          from:        formatFrom('工事工程 通知', LEGACY_ADDRESS),
           to:          toEmail,
           subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
           text:        TEST_MODE ? `【テスト送信】本来の宛先: ${r.email}\n\n${mail.text}` : mail.text,
@@ -1004,7 +1084,7 @@ async function main() {
           attachments: icsContent
             ? [{ filename: icsFilename, content: icsContent, contentType: `text/calendar; charset=utf-8; method=${icsMethod}` }]
             : [],
-        });
+        }, LEGACY_PROVIDER);
         console.log(`✓ 送信完了: ${toEmail} (${type} / 工番${req.project_number} / 会議室)`);
         await supabaseFetch(`approval_notifications?id=eq.${n.id}`, {
           method: 'PATCH',
@@ -1022,6 +1102,16 @@ async function main() {
     if (shippingPrepNotifIds.has(notif.id)) continue;
     if (meetingNotifIds.has(notif.id)) continue;
     const req = reqMap[notif.request_id];
+
+    // 予定表方式の会議では、会議室を替えると Exchange が旧会議室の予約を自動で解除するので、旧会議室への通知は送らない
+    if (notif.notification_type === 'shipping_meeting_room_change_cancel' && IS_GRAPH && req?.calendar_event_id) {
+      await supabaseFetch(`approval_notifications?id=eq.${notif.id}`, {
+        method: 'PATCH',
+        body:   JSON.stringify({ emailed_at: new Date().toISOString() }),
+      });
+      console.log(`- 送信不要: 旧会議室の予約解除は予定表で自動処理 (工番${req.project_number})`);
+      continue;
+    }
 
     // 宛先メールアドレスと名前を決定
     // recipient_email がある場合はそちらを優先（notification_recipients の外部宛先）
@@ -1096,8 +1186,10 @@ async function main() {
         }
       }
 
+      // .ics 付き（旧方式で案内した会議の旧会議室キャンセル）は、案内したときと同じ送信元から送る
+      const isLegacyIcs = attachments.length > 0;
       await sendMail({
-        from:        mail.from,
+        from:        isLegacyIcs ? formatFrom('工事工程 通知', LEGACY_ADDRESS) : mail.from,
         to:          toEmail,
         subject:     TEST_MODE ? `[TEST] ${mail.subject}` : mail.subject,
         text:        TEST_MODE
@@ -1105,7 +1197,7 @@ async function main() {
           : mail.text,
         html:        mail.html,
         attachments,
-      });
+      }, isLegacyIcs ? LEGACY_PROVIDER : MAIL_PROVIDER);
 
       console.log(`✓ 送信完了: ${toEmail} (${notif.notification_type} / 工番${req?.project_number})`);
 

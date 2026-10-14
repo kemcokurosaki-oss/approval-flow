@@ -13,6 +13,7 @@ const nodemailer = require('nodemailer');
 const MAIL_PROVIDER  = (process.env.MAIL_PROVIDER || 'gmail').trim().toLowerCase();
 const IS_GRAPH       = MAIL_PROVIDER === 'graph';
 const SENDER_ADDRESS = IS_GRAPH ? process.env.M365_SENDER : process.env.GMAIL_USER;
+const GMAIL_ADDRESS  = process.env.GMAIL_USER; // graph 切り替え後も、旧方式で案内済みの会議の変更・キャンセルは Gmail から送る
 
 const REQUIRED_ENV = IS_GRAPH
   ? ['M365_TENANT_ID', 'M365_CLIENT_ID', 'M365_CLIENT_SECRET', 'M365_SENDER']
@@ -26,8 +27,8 @@ function requireMailEnv() {
 }
 
 // "表示名" <送信元アドレス>
-function formatFrom(displayName) {
-  return `"${displayName}" <${SENDER_ADDRESS}>`;
+function formatFrom(displayName, address = SENDER_ADDRESS) {
+  return `"${displayName}" <${address}>`;
 }
 
 // ===== Gmail =====
@@ -68,34 +69,42 @@ async function getGraphToken() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function sendViaGraph(mailOptions) {
-  if (!mimeBuilder) {
-    mimeBuilder = nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'windows' });
-  }
-  const { message } = await mimeBuilder.sendMail(mailOptions);
-  const body = message.toString('base64');
-  const url  = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(SENDER_ADDRESS)}/sendMail`;
+// 共有メールボックス（/users/{M365_SENDER}）配下の Graph API を呼ぶ。
+// body が文字列ならそのまま、オブジェクトなら JSON にして送る。応答が JSON なら解析して返す
+async function graphRequest(method, path, body = null, contentType = 'application/json') {
+  const url = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(SENDER_ADDRESS)}${path}`;
+  const payload = body == null ? undefined : (typeof body === 'string' ? body : JSON.stringify(body));
 
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(url, {
-      method:  'POST',
-      headers: { 'Authorization': `Bearer ${await getGraphToken()}`, 'Content-Type': 'text/plain' },
-      body,
-    });
-    if (res.status === 202) return;
+    const headers = { 'Authorization': `Bearer ${await getGraphToken()}` };
+    if (payload !== undefined) headers['Content-Type'] = contentType;
+    const res = await fetch(url, { method, headers, body: payload });
+    if (res.ok) {
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
     // 送信数の制限(429)や一時的な障害(5xx)は、少し待って2回まで再試行する
     if ((res.status === 429 || res.status >= 500) && attempt < 3) {
       const retryAfter = Number(res.headers.get('retry-after')) || 5 * attempt;
       await sleep(retryAfter * 1000);
       continue;
     }
-    throw new Error(`Graph 送信エラー [${res.status}]: ${await res.text()}`);
+    throw new Error(`Graph エラー [${res.status}] ${method} ${path}: ${await res.text()}`);
   }
 }
 
-// nodemailer の sendMail と同じ引数（from / to / cc / subject / text / html / attachments）を受け取る
-function sendMail(mailOptions) {
-  return IS_GRAPH ? sendViaGraph(mailOptions) : sendViaGmail(mailOptions);
+async function sendViaGraph(mailOptions) {
+  if (!mimeBuilder) {
+    mimeBuilder = nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'windows' });
+  }
+  const { message } = await mimeBuilder.sendMail(mailOptions);
+  await graphRequest('POST', '/sendMail', message.toString('base64'), 'text/plain');
 }
 
-module.exports = { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail };
+// nodemailer の sendMail と同じ引数（from / to / cc / subject / text / html / attachments）を受け取る。
+// provider に 'gmail' を渡すと、MAIL_PROVIDER に関係なく Gmail から送る
+function sendMail(mailOptions, provider = MAIL_PROVIDER) {
+  return provider === 'graph' ? sendViaGraph(mailOptions) : sendViaGmail(mailOptions);
+}
+
+module.exports = { MAIL_PROVIDER, IS_GRAPH, SENDER_ADDRESS, GMAIL_ADDRESS, requireMailEnv, formatFrom, sendMail, graphRequest };
