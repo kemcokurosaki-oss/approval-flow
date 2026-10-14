@@ -1962,7 +1962,7 @@ function renderProgressCards() {
                     title: '組立完了申請', statuses,
                     pendingCount: sumUnresolvedPendingItems((assemblyReqsByProject[num] || []).filter(r => r.status !== 'draft')),
                     overdueCount: 0,
-                    onclick: `openAssemblyFlowDetailModal('${esc(num)}', 'assembly')`
+                    onclick: `openAssemblyFlowDetailModal(${jsArg(num)}, 'assembly')`
                 });
             }
 
@@ -1974,7 +1974,7 @@ function renderProgressCards() {
                     statuses: electricalMachines.map(m => computeAssemblyAggStatusForMachine(num, m, electricalReqsByProject, electricalNotRequiredSet)),
                     pendingCount: sumUnresolvedPendingItems((electricalReqsByProject[num] || []).filter(r => r.status !== 'draft')),
                     overdueCount: 0,
-                    onclick: `openAssemblyFlowDetailModal('${esc(num)}', 'electrical')`
+                    onclick: `openAssemblyFlowDetailModal(${jsArg(num)}, 'electrical')`
                 });
             }
 
@@ -2001,7 +2001,7 @@ function renderProgressCards() {
                 });
                 tiles.push({
                     title: '試運転完了申請', statuses, pendingCount: 0, overdueCount,
-                    onclick: `openTestRunFlowDetailModal('${esc(num)}')`
+                    onclick: `openTestRunFlowDetailModal(${jsArg(num)})`
                 });
             }
 
@@ -2116,8 +2116,8 @@ function renderProgressCards() {
                     // 承認済みでも完了報告書へ直接飛ばさず、常に詳細モーダルを開く
                     // （電装の有無に関わらず、詳細モーダルで承認者・承認日時を確認できるようにするため）
                     const clickHandler = isMachineRow
-                        ? `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}')`
-                        : `openAssemblyFlowDetailModal('${esc(num)}')`;
+                        ? `openAssemblyMachineDetailModal(${jsArg(num)}, ${jsArg(machine)})`
+                        : `openAssemblyFlowDetailModal(${jsArg(num)})`;
 
                     if (!hasElectrical) {
                         return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
@@ -2218,13 +2218,13 @@ function renderProgressCards() {
 
                 if (f.type === 'test_run' && is2000sSeries(num) && machine) {
                     // 2000番台の試運転は機械単位の申請のため、組立と同様に機械詳細画面（インラインで申請・承認まで完結）を開く
-                    clickAttr = `onclick="event.stopPropagation(); openTestRunMachineDetailModal('${esc(num)}', '${esc(machine)}')"`;
+                    clickAttr = `onclick="event.stopPropagation(); openTestRunMachineDetailModal(${jsArg(num)}, ${jsArg(machine)})"`;
                     const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (f.type === 'test_run') {
                     // 試運転(2000番以外)は組立と同様、状態に関わらず工番全体の機械一覧モーダルを開く。
                     // 承認済みでも完了報告書へ直接飛ばさず、モーダルで承認者・承認日時を確認できるようにする
-                    clickAttr = `onclick="event.stopPropagation(); openTestRunFlowDetailModal('${esc(num)}')"`;
+                    clickAttr = `onclick="event.stopPropagation(); openTestRunFlowDetailModal(${jsArg(num)})"`;
                     const canApplyNow = canApply && !progressFilterCompleted && (!req || req.status === 'draft');
                     clickable = canApplyNow ? ' clickable can-apply' : ' clickable';
                 } else if (!req && canApply && !progressFilterCompleted) {
@@ -2558,7 +2558,7 @@ function build2000FlowStepsHtml(kind, current, projectNum, machine) {
         const isLink    = i === 0 && current > 0;
         const text      = (i === 1 && machine) ? `【${esc(machine)}】` : label;
         const cls       = 'p2k-step' + (isDone ? ' is-done' : '') + (isCurrent ? ' is-current' : '') + (isLink ? ' is-link' : '');
-        const onclick   = isLink ? ` onclick="${backFn}('${esc(projectNum)}')"` : '';
+        const onclick   = isLink ? ` onclick="${backFn}(${jsArg(projectNum)})"` : '';
         const sep       = i < labels.length - 1 ? '<span class="p2k-step-sep">›</span>' : '';
         return `<span class="${cls}"${onclick}><span class="p2k-step-num">${isDone ? '✓' : i + 1}</span>${text}</span>${sep}`;
     }).join('') + '</div>';
@@ -2614,7 +2614,7 @@ function build2000AssemblyRowHtml(num, machine, kind, shipDate, reqsByProject, n
 
     return build2000MachineListRowHtml({
         machine, shipDate, badgesHtml, warningHtml, unitProgress,
-        linkOnclick: `openAssemblyMachineDetailModal('${esc(num)}', '${esc(machine)}', '${kind}')`
+        linkOnclick: `openAssemblyMachineDetailModal(${jsArg(num)}, ${jsArg(machine)}, '${kind}')`
     });
 }
 
@@ -2625,7 +2625,7 @@ function build2000AssemblyProjectAggRowHtml(num, assemblyReqsByProject) {
     const badgesHtml = build2000StatusBadgeHtml('', assemblyAggStatus);
     return build2000MachineListRowHtml({
         machine: null, shipDate: null, badgesHtml, warningHtml: '',
-        linkOnclick: `openAssemblyFlowDetailModal('${esc(num)}')`
+        linkOnclick: `openAssemblyFlowDetailModal(${jsArg(num)})`
     });
 }
 
@@ -2663,7 +2663,7 @@ function build2000TestRunRowHtml(num, machine, unit, activeReq, myDraft, shipDat
             : isApproved ? '完了報告書を見る' : (canEditRejected ? 'チェックシートを修正する' : 'チェックシートを見る');
         // 戻り先は一覧モーダル自体（machineを渡さない＝testRunDetailReturnProjectNum経由でここに戻る）
         const linkOnclick = hasUnresolvedPending
-            ? `viewTestRunRequestDetail('${activeReq.id}', '${esc(num)}')`
+            ? `viewTestRunRequestDetail('${activeReq.id}', ${jsArg(num)})`
             : `window.open('${sheetUrl}', '_blank')`;
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="event.stopPropagation(); ${linkOnclick}">${linkLabel} →</span>`;
 
@@ -2671,8 +2671,8 @@ function build2000TestRunRowHtml(num, machine, unit, activeReq, myDraft, shipDat
             (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && activeReq.status === 'submitted');
         approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
-                <button class="btn btn-danger"  style="font-size:12px;padding:4px 10px;" onclick="event.stopPropagation(); showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(num)}', '${esc(machine)}', '${esc(unit)}')">却下する</button>
-                <button class="btn btn-success" style="font-size:12px;padding:4px 10px;" onclick="event.stopPropagation(); approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(num)}', '${esc(machine)}', '${esc(unit)}')">承認する</button>
+                <button class="btn btn-danger"  style="font-size:12px;padding:4px 10px;" onclick="event.stopPropagation(); showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', ${jsArg(num)}, ${jsArg(machine)}, ${jsArg(unit)})">却下する</button>
+                <button class="btn btn-success" style="font-size:12px;padding:4px 10px;" onclick="event.stopPropagation(); approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(num)}, ${jsArg(machine)}, ${jsArg(unit)})">承認する</button>
             </div>` : '';
     } else if (myDraft) {
         // 一時保存（sheet_saved_at）前は中身が空の可能性が高いため、申請・削除ボタンは
@@ -2681,12 +2681,12 @@ function build2000TestRunRowHtml(num, machine, unit, activeReq, myDraft, shipDat
         const reopenLabel = savedOnce ? '続きを入力する' : '申請する';
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="event.stopPropagation(); reopenTestRunSheetFromDetail('${myDraft.id}')">${reopenLabel} →</span>`;
         extraActionsHtml = savedOnce ? `
-            <button class="btn-apply-xs" onclick="event.stopPropagation(); submitTestRunDraftFromDetail('${myDraft.id}', '${esc(num)}', '${esc(machine)}', '${esc(unit)}')">申請する</button>
-            <button class="btn-delete-xs" title="削除" onclick="event.stopPropagation(); deleteTestRunDraftFromDetail('${myDraft.id}', '${esc(num)}', '${esc(machine)}', '${esc(unit)}')">
+            <button class="btn-apply-xs" onclick="event.stopPropagation(); submitTestRunDraftFromDetail('${myDraft.id}', ${jsArg(num)}, ${jsArg(machine)}, ${jsArg(unit)})">申請する</button>
+            <button class="btn-delete-xs" title="削除" onclick="event.stopPropagation(); deleteTestRunDraftFromDetail('${myDraft.id}', ${jsArg(num)}, ${jsArg(machine)}, ${jsArg(unit)})">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>` : '';
     } else if (canApply) {
-        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="event.stopPropagation(); startNewTestRunSheetFromDetail('${esc(num)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="event.stopPropagation(); startNewTestRunSheetFromDetail(${jsArg(num)}, ${jsArg(machine)}, ${jsArg(unit)})">申請する →</span>`;
     }
 
     const warningHtml = isOverdue
@@ -2981,7 +2981,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
     const unappliedRowsHtml = unappliedPairs.map(p => {
         const label = p.unit ? `${p.machine}${p.unit}` : p.machine;
         const linkHtml = canApply
-            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyPairSheetFromDetail('${esc(projectNum)}', '${esc(p.machine)}', '${esc(p.unit || '')}')">申請する →</span>`
+            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewAssemblyPairSheetFromDetail(${jsArg(projectNum)}, ${jsArg(p.machine)}, ${jsArg(p.unit || '')})">申請する →</span>`
             : '';
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -3010,10 +3010,10 @@ async function renderAssemblyFlowDetailBody(projectNum) {
                 // 一時保存済み（isSavedDraft）になって初めて表示する。未保存の間はリンクのみ（同じ下書きを開き直す）
                 const savedOnce = isSavedDraft(g.req);
                 const submitBtn = (savedOnce && g.items.length > 0)
-                    ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">申請する</button>`
+                    ? `<button class="btn-apply-xs" onclick="submitAssemblyDraftFromDetail('${g.req.id}', ${jsArg(projectNum)})">申請する</button>`
                     : '';
                 const deleteBtn = savedOnce
-                    ? `<button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${g.req.id}', '${esc(projectNum)}')">
+                    ? `<button class="btn-delete-xs" title="削除" onclick="deleteAssemblyDraftFromDetail('${g.req.id}', ${jsArg(projectNum)})">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     </button>`
                     : '';
@@ -3048,7 +3048,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
                 : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
             const sheetLinkOnclick = hasUnresolvedPending
-                ? `viewAssemblyRequestDetail('${g.req.id}', '${esc(projectNum)}')`
+                ? `viewAssemblyRequestDetail('${g.req.id}', ${jsArg(projectNum)})`
                 : `window.open('${sheetUrl}', '_blank')`;
 
             // 自分が承認できる保留中ステップがあれば、その場で承認・却下できるようにする
@@ -3058,8 +3058,8 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
             const approvalHtml = myStep ? `
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${g.req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
-                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
+                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${g.req.id}', '${myStep.id}', ${jsArg(projectNum)})">却下する</button>
+                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${g.req.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(projectNum)}, ${jsArg(machineLabel)})">承認する</button>
                 </div>` : '';
 
             return `<div class="unit-list-row">
@@ -3092,7 +3092,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 
     const elecUnappliedRowsHtml = elecUnappliedMachines.map(m => {
         const linkHtml2 = canApplyElec
-            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewElectricalSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>`
+            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewElectricalSheetFromDetail(${jsArg(projectNum)}, ${jsArg(m)})">申請する →</span>`
             : '';
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -3116,8 +3116,8 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             const savedOnce = isSavedDraft(req);
             const reopenLinkLabel = savedOnce ? '続きを入力する →' : '申請する →';
             const actionBtnsHtml = savedOnce ? `
-                        <button class="btn-apply-xs" onclick="submitElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">申請する</button>
-                        <button class="btn-delete-xs" title="削除" onclick="deleteElectricalDraftFromDetail('${req.id}', '${esc(projectNum)}')">
+                        <button class="btn-apply-xs" onclick="submitElectricalDraftFromDetail('${req.id}', ${jsArg(projectNum)})">申請する</button>
+                        <button class="btn-delete-xs" title="削除" onclick="deleteElectricalDraftFromDetail('${req.id}', ${jsArg(projectNum)})">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>` : '';
             return `<div class="unit-list-row">
@@ -3144,7 +3144,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         const sheetLinkLabel = hasUnresolvedPending ? `⚠ ペンディング項目あり(${unresolvedPendingCount}件) →`
             : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
         const sheetLinkOnclick = hasUnresolvedPending
-            ? `viewAssemblyRequestDetail('${req.id}', '${esc(projectNum)}')`
+            ? `viewAssemblyRequestDetail('${req.id}', ${jsArg(projectNum)})`
             : `window.open('${sheetUrl}', '_blank')`;
 
         // 承認・却下ボタンは組立と共通の処理（approveAssemblyRequestFromList等）をそのまま流用する。
@@ -3153,8 +3153,8 @@ async function renderAssemblyFlowDetailBody(projectNum) {
             (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && req.status === 'submitted');
         const approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}')">却下する</button>
-                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${req.id}', '${myStep.id}', ${jsArg(projectNum)})">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${req.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(projectNum)}, ${jsArg(machineLabel)})">承認する</button>
             </div>` : '';
 
         return `<div class="unit-list-row">
@@ -3491,7 +3491,7 @@ function buildMachineUnitRowsHtml(opts) {
         if (canApply && !(activeReq && activeReq.status === 'approved')) {
             toggleHtml = `
                 <label class="unit-toggle" title="不要にする">
-                    <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="${toggleFnName}('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', this.checked)">
+                    <input type="checkbox" ${isNotRequired ? 'checked' : ''} onchange="${toggleFnName}(${jsArg(projectNum)}, ${jsArg(machine)}, ${jsArg(unit)}, this.checked)">
                     <span class="unit-toggle-slider"></span>
                     <span class="unit-toggle-text">${isNotRequired ? 'OFF' : 'ON'}</span>
                 </label>`;
@@ -3521,7 +3521,7 @@ function buildMachineUnitRowsHtml(opts) {
             linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="window.open('${sheetUrl}', '_blank')">${sheetLinkLabel}</span>`;
             if (hasUnresolvedPending) {
                 bottomRightHtml = `<button type="button" class="pending-detail-btn" title="ペンディング項目の詳細を見る"
-                    onclick="viewAssemblyRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')">⚠ ペンディング ${unresolvedPendingCount}件 →</button>`;
+                    onclick="viewAssemblyRequestDetail('${activeReq.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">⚠ ペンディング ${unresolvedPendingCount}件 →</button>`;
             }
 
             const myStep = (activeReq.approval_steps || []).find(s =>
@@ -3529,8 +3529,8 @@ function buildMachineUnitRowsHtml(opts) {
             const machineLabel = (unit && unit !== '-') ? `${machine}${unit}` : machine;
             approvalHtml = myStep ? `
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
-                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}', '${esc(machine)}')">承認する</button>
+                    <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showAssemblyRejectPrompt('${activeReq.id}', '${myStep.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">却下する</button>
+                    <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveAssemblyRequestFromList('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(projectNum)}, ${jsArg(machineLabel)}, ${jsArg(machine)})">承認する</button>
                 </div>` : '';
         } else if (myDraft) {
             // 一時保存（sheet_saved_at）前は中身が空の可能性が高いため、申請・削除ボタンは
@@ -3540,10 +3540,10 @@ function buildMachineUnitRowsHtml(opts) {
             const reopenLinkLabel = savedOnce ? '続きを入力する →' : '申請する →';
             linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${reopenFnName}('${myDraft.id}')">${reopenLinkLabel}</span>`;
             const submitBtn = (savedOnce && hasItem)
-                ? `<button class="btn-apply-xs" onclick="${submitFnName}('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>`
+                ? `<button class="btn-apply-xs" onclick="${submitFnName}('${myDraft.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">申請する</button>`
                 : '';
             const deleteBtn = savedOnce
-                ? `<button class="btn-delete-xs" title="削除" onclick="${deleteFnName}('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                ? `<button class="btn-delete-xs" title="削除" onclick="${deleteFnName}('${myDraft.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>`
                 : '';
@@ -3554,7 +3554,7 @@ function buildMachineUnitRowsHtml(opts) {
                     ${toggleHtml}
                 </div>`;
         } else if (canApply && !isNotRequired) {
-            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${startUnitFnName}('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">申請する →</span>`;
+            linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${startUnitFnName}(${jsArg(projectNum)}, ${jsArg(machine)}, ${jsArg(unit)})">申請する →</span>`;
         }
 
         let readinessHtml = '';
@@ -3565,7 +3565,7 @@ function buildMachineUnitRowsHtml(opts) {
             readinessHtml = `
             <label style="display:flex; align-items:center; gap:6px; font-size:14px; font-family:inherit; font-weight:600; color:#3d4a5d; margin-top:8px; ${canEditReadiness ? 'cursor:pointer;' : 'opacity:.55;'}">
                 <input type="checkbox" ${ready ? 'checked' : ''} ${canEditReadiness ? '' : 'disabled'} style="width:15px;height:15px;"
-                    onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${readinessKind}', this.checked)">
+                    onchange="toggleTestRunReadiness(${jsArg(projectNum)}, ${jsArg(machine)}, ${jsArg(unit)}, '${readinessKind}', this.checked)">
                 試運転準備: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '完了' : '未完了'}</span>
             </label>`;
         }
@@ -3642,7 +3642,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
 
     const freeUnitFnName = isElec ? 'startNewElectricalFreeUnitSheetFromDetail' : 'startNewAssemblyFreeUnitSheetFromDetail';
     const addNewUnitHtml = canApply
-        ? `<button class="btn-add-new" onclick="${freeUnitFnName}('${esc(projectNum)}', '${esc(machine)}')">＋ 一覧にないユニットを申請する</button>`
+        ? `<button class="btn-add-new" onclick="${freeUnitFnName}(${jsArg(projectNum)}, ${jsArg(machine)})">＋ 一覧にないユニットを申請する</button>`
         : '';
     const kindLabel = isElec ? '電装' : '組立';
 
@@ -3781,7 +3781,7 @@ function showAssemblyRejectPrompt(requestId, stepId, projectNum, machine = null)
                 style="width:100%;min-height:80px;font-size:14px;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
                 <button class="btn btn-secondary" onclick="document.getElementById('assembly_reject_prompt').remove()">キャンセル</button>
-                <button class="btn btn-danger" onclick="confirmAssemblyReject('${requestId}', '${stepId}', '${esc(projectNum)}', '${machine ? esc(machine) : ''}')">却下する</button>
+                <button class="btn btn-danger" onclick="confirmAssemblyReject('${requestId}', '${stepId}', ${jsArg(projectNum)}, '${machine ? esc(machine) : ''}')">却下する</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -3884,7 +3884,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
 
     const unappliedRowsHtml = unappliedMachines.map(m => {
         const linkHtml = canApply
-            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail('${esc(projectNum)}', '${esc(m)}')">申請する →</span>`
+            ? `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail(${jsArg(projectNum)}, ${jsArg(m)})">申請する →</span>`
             : '';
         return `<div class="unit-list-row">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -3908,8 +3908,8 @@ async function renderTestRunFlowDetailBody(projectNum) {
             const savedOnce = isSavedDraft(req);
             const reopenLinkLabel = savedOnce ? '続きを入力する →' : '申請する →';
             const actionBtnsHtml = savedOnce ? `
-                        <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${req.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">申請する</button>
-                        <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${req.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">
+                        <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${req.id}', ${jsArg(projectNum)}, ${jsArg(machineLabel)})">申請する</button>
+                        <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${req.id}', ${jsArg(projectNum)}, ${jsArg(machineLabel)})">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>` : '';
             return `<div class="unit-list-row">
@@ -3936,15 +3936,15 @@ async function renderTestRunFlowDetailBody(projectNum) {
         const sheetLinkLabel = hasUnresolvedPending ? `⚠ 申し送り事項あり(${unresolvedPendingCount}件) →`
             : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
         const sheetLinkOnclick = hasUnresolvedPending
-            ? `viewTestRunRequestDetail('${req.id}', '${esc(projectNum)}')`
+            ? `viewTestRunRequestDetail('${req.id}', ${jsArg(projectNum)})`
             : `window.open('${sheetUrl}', '_blank')`;
 
         const myStep = (req.approval_steps || []).find(s =>
             (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && req.status === 'submitted');
         const approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${req.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machineLabel)}')">却下する</button>
-                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${req.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machineLabel)}')">承認する</button>
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${req.id}', '${myStep.id}', ${jsArg(projectNum)}, ${jsArg(machineLabel)})">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${req.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(projectNum)}, ${jsArg(machineLabel)})">承認する</button>
             </div>` : '';
 
         return `<div class="unit-list-row">
@@ -4037,7 +4037,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         const sheetLinkLabel = hasUnresolvedPending ? `⚠ 申し送り事項あり(${unresolvedPendingCount}件) →`
             : isApproved ? '完了報告書を見る →' : (canEditRejected ? 'チェックシートを修正する →' : 'チェックシートを見る →');
         const sheetLinkOnclick = hasUnresolvedPending
-            ? `viewTestRunRequestDetail('${activeReq.id}', '${esc(projectNum)}', '${esc(machine)}')`
+            ? `viewTestRunRequestDetail('${activeReq.id}', ${jsArg(projectNum)}, ${jsArg(machine)})`
             : `window.open('${sheetUrl}', '_blank')`;
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="${sheetLinkOnclick}">${sheetLinkLabel}</span>`;
 
@@ -4045,8 +4045,8 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
             (s.approver_role === myRole || isSuperAdmin()) && s.status === 'pending' && activeReq.status === 'submitted');
         approvalHtml = myStep ? `
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', '${esc(projectNum)}', '${esc(machine)}')">却下する</button>
-                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, '${esc(projectNum)}', '${esc(machine)}')">承認する</button>
+                <button class="btn btn-danger"  style="font-size:13px;padding:5px 14px;" onclick="showTestRunRejectPrompt('${activeReq.id}', '${myStep.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">却下する</button>
+                <button class="btn btn-success" style="font-size:13px;padding:5px 14px;" onclick="approveTestRunRequestFromDetail('${activeReq.id}', '${myStep.id}', ${myStep.step_order}, ${jsArg(projectNum)}, ${jsArg(machine)})">承認する</button>
             </div>` : '';
     } else if (myDraft) {
         const savedOnce = isSavedDraft(myDraft);
@@ -4054,13 +4054,13 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="reopenTestRunSheetFromDetail('${myDraft.id}')">${reopenLinkLabel}</span>`;
         bottomRightHtml = savedOnce ? `
             <div style="display:flex;gap:8px;align-items:center;">
-                <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">申請する</button>
-                <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${myDraft.id}', '${esc(projectNum)}', '${esc(machine)}')">
+                <button class="btn-apply-xs" onclick="submitTestRunDraftFromDetail('${myDraft.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">申請する</button>
+                <button class="btn-delete-xs" title="削除" onclick="deleteTestRunDraftFromDetail('${myDraft.id}', ${jsArg(projectNum)}, ${jsArg(machine)})">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
             </div>` : '';
     } else if (canApply) {
-        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail('${esc(projectNum)}', '${esc(machine)}')">申請する →</span>`;
+        linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail(${jsArg(projectNum)}, ${jsArg(machine)})">申請する →</span>`;
     }
 
     document.getElementById('detail_title').textContent = `試運転フロー（${esc(machine)}）`;
@@ -4260,7 +4260,7 @@ function showTestRunRejectPrompt(requestId, stepId, projectNum, machine, unit = 
                 style="width:100%;min-height:80px;font-size:14px;padding:8px;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
                 <button class="btn btn-secondary" onclick="document.getElementById('assembly_reject_prompt').remove()">キャンセル</button>
-                <button class="btn btn-danger" onclick="confirmTestRunReject('${requestId}', '${stepId}', '${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}')">却下する</button>
+                <button class="btn btn-danger" onclick="confirmTestRunReject('${requestId}', '${stepId}', ${jsArg(projectNum)}, ${jsArg(machine)}, ${jsArg(unit)})">却下する</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -4321,7 +4321,7 @@ function renderAssemblyNavPanel(nums) {
 
     panel.innerHTML = nums.map(num => {
         const isActive = assemblyNavActiveNum === num;
-        return `<button class="prefix-btn${isActive ? ' active' : ''}" onclick="jumpToAssemblyProject(this, '${esc(num)}')">${esc(num)}</button>`;
+        return `<button class="prefix-btn${isActive ? ' active' : ''}" onclick="jumpToAssemblyProject(this, ${jsArg(num)})">${esc(num)}</button>`;
     }).join('');
 }
 
@@ -5373,7 +5373,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                     </div>
                     <div style="display:flex;flex-direction:column;">
                         <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真</span>
-                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">` : ''}
+                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(item.photo_path))})">` : ''}
                         <div class="photo-dropzone">
                             <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}" style="display:none;">
                             <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
@@ -5394,7 +5394,7 @@ function buildPendingSectionInner(req, isMyRequest) {
             <div class="pending-detail-row ${!isTestRun && item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
                 ${item.photo_path
-                    ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox('${esc(pendingPhotoUrl(item.photo_path))}')">`
+                    ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(item.photo_path))})">`
                     : `<div class="pending-detail-photo-placeholder"></div>`}
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}${isTestRun ? '' : (item.completed ? ' <span style="font-size:12px;color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:1px 6px;">完了</span>' : (pendingDueSoon(item.due) ? ' <span style="font-size:12px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : ''))}${!isTestRun && item.ship_after ? ' <span class="badge-ship-after" style="font-size:12px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
@@ -7610,7 +7610,7 @@ async function renderExistingRecipients(requestId) {
             <span class="recipient-name">${esc(name)}</span>
             <span class="recipient-email">${esc(email)}</span>
             <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
-                <input type="checkbox" ${recipientOptionalKeys.reschedule.has(key) ? '' : 'checked'} onchange="toggleRecipientOptional('reschedule', '${esc(key)}', !this.checked)">
+                <input type="checkbox" ${recipientOptionalKeys.reschedule.has(key) ? '' : 'checked'} onchange="toggleRecipientOptional('reschedule', ${jsArg(key)}, !this.checked)">
                 必須
             </label>
         </div>`;
@@ -8870,7 +8870,7 @@ async function renderRecipientsList(prefix, recipients) {
     // このプレビュー画面はデフォルト「任意」・チェックで「必須」に切り替える仕様（recipientOptionalKeysは「必須指定された宛先」を保持する）
     const optionalToggle = (key) => `
         <label class="recipient-optional-toggle" onclick="event.stopPropagation();">
-            <input type="checkbox" ${optionalKeys.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('${prefix}', '${esc(key)}', this.checked)">
+            <input type="checkbox" ${optionalKeys.has(key) ? 'checked' : ''} onchange="toggleRecipientOptional('${prefix}', ${jsArg(key)}, this.checked)">
             必須
         </label>`;
 
@@ -9840,7 +9840,7 @@ function buildTestRunReadinessSectionHtml(projectNum, machine, unit, asmReady, e
     const rowHtml = (kind, label, ready, canEdit) => `
         <label style="display:flex; align-items:center; gap:8px; font-size:15px; font-family:inherit; ${canEdit ? 'cursor:pointer;' : 'opacity:.55;'}">
             <input type="checkbox" ${ready ? 'checked' : ''} ${canEdit ? '' : 'disabled'} style="width:16px;height:16px;"
-                onchange="toggleTestRunReadiness('${esc(projectNum)}', '${esc(machine)}', '${esc(unit)}', '${kind}', this.checked)">
+                onchange="toggleTestRunReadiness(${jsArg(projectNum)}, ${jsArg(machine)}, ${jsArg(unit)}, '${kind}', this.checked)">
             <span class="status-badge" style="font-size:13px;padding:3px 10px;${ASSEMBLY_ELEC_BADGE_COLORS[kind]}">${label}</span>
             試運転準備: <span style="font-weight:bold; color:${ready ? '#1c8f4d' : '#999'};">${ready ? '完了' : '未完了'}</span>
         </label>`;
@@ -10323,6 +10323,13 @@ function esc(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+// onclick="fn(...)" などのクリック処理に、DB の値を JS の文字列として渡すときに使う。
+// esc() だけでは ' を含む値で文字列の外に抜け出せてしまうため、JSON 形式の文字列にしてから属性用に無害化する
+// （空・null は esc() と同じく空文字として渡す）
+function jsArg(str) {
+    return esc(JSON.stringify(str ? String(str) : '')).replace(/'/g, '&#39;');
 }
 
 // ペンディング項目一覧の通し番号表示（①②③...、21件目以降は「21.」のようにフォールバック）
