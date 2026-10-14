@@ -416,6 +416,7 @@ const MANUAL_CHECKS = [
   'Supabase ダッシュボードの Advisors → Security Advisor に新しい警告が出ていないか',
   'Supabase の Authentication → Attack Protection で「漏洩パスワード保護」が ON か、OTP の有効期限が1時間以内か',
   'Microsoft 365 のアプリ登録（メール送信用）のクライアントシークレットの有効期限が近づいていないか',
+  'cron-job.org に登録している GitHub トークンが、対象リポジトリの Actions 実行だけに権限を絞ったもの（fine-grained）になっているか、有効期限が近づいていないか',
   '退職・異動した人のアカウントや、使わなくなった外注先アカウントが残っていないか',
 ];
 
