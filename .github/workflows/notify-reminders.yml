@@ -23,6 +23,10 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
+# リポジトリへの書き込みは不要（メール送信のみ）なので読み取り権限だけにする
+permissions:
+  contents: read
+
 jobs:
   notify:
     runs-on: ubuntu-latest

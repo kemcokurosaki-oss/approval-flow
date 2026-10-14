@@ -3,6 +3,10 @@ name: アカウント作成（一時使用）
 on:
   workflow_dispatch:
 
+# リポジトリへの書き込みは不要（Supabase のアカウント作成のみ）なので読み取り権限だけにする
+permissions:
+  contents: read
+
 jobs:
   create-accounts:
     runs-on: ubuntu-latest
