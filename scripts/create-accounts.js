@@ -27,8 +27,11 @@ const USERS = [
   { email: 'n-ohshige@kusakabe.com',   name: '大重' },
 ];
 
+// 推測されにくいよう暗号用の乱数で作る（Math.random は予測できるため使わない）
 function generateTempPassword() {
-  return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '1!';
+  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('') + '1!';
 }
 
 async function main() {

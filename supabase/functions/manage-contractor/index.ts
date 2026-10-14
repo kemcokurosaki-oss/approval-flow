@@ -33,8 +33,11 @@ function json(body: unknown, status = 200) {
     });
 }
 
+// 推測されにくいよう暗号用の乱数で作る（Math.random は予測できるため使わない）
 function generateTempPassword() {
-    return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + "1!";
+    const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, (b) => chars[b % chars.length]).join("") + "1!";
 }
 
 Deno.serve(async (req) => {
@@ -65,6 +68,12 @@ Deno.serve(async (req) => {
             }
             const normalizedEmail = String(email).trim().toLowerCase();
 
+            // 社員のアカウントを外注先にしてしまうと、その社員が全データを見られなくなり、
+            // パスワード再設定リンクも管理者に返ってしまうため、社内アドレスは受け付けない
+            if (normalizedEmail.endsWith("@kusakabe.com")) {
+                return json({ error: "社内のメールアドレスは外注先として登録できません" }, 400);
+            }
+
             // contractor_accounts に email 列は無い(authのemailを使う)ため、
             // まずauth.usersを作成/検索してからidを確定し、それを元にupsertする。
             let userId: string;
@@ -87,6 +96,13 @@ Deno.serve(async (req) => {
                     if (pageData.users.length < 200) break;
                 }
                 if (!found) return json({ error: "既存Authアカウントが見つかりませんでした" }, 404);
+
+                // 社内アドレス以外でも、社員として登録済み（profiles にある）アカウントは外注先にしない
+                const { data: employee, error: profileErr } = await admin
+                    .from("profiles").select("id").eq("id", found.id).maybeSingle();
+                if (profileErr) throw profileErr;
+                if (employee) return json({ error: "社員として登録済みのアカウントは外注先にできません" }, 409);
+
                 userId = found.id;
             } else {
                 userId = created.user.id;
