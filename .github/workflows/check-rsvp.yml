@@ -30,7 +30,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           # graph にすると、予定表で作成した会議の出欠も読み取る（Gmail の返信の読み取りは、旧方式の会議のために続ける）
-          MAIL_PROVIDER: gmail
+          MAIL_PROVIDER: graph
           M365_TENANT_ID: ${{ secrets.M365_TENANT_ID }}
           M365_CLIENT_ID: ${{ secrets.M365_CLIENT_ID }}
           M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}

@@ -168,7 +168,7 @@ function buildShippingPrepCompletedEmail(req, qualityNames, salesOwnerName) {
     );
   }
   return {
-    from: formatFrom('工事工程 通知'),
+    from: formatFrom('承認フロー通知'),
     subject: `【出荷準備完了通知】${pStr}`,
     text:
       (greeting.length > 0 ? `${greeting.join('\n')}\n\n` : '') +
@@ -300,7 +300,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
   const isQaFlow   = QA_MEETING_FLOWS.includes(req?.flow_type);
   const itemLabel  = isQaFlow ? 'タスク' : 'ペンディング項目';
   const detailLine = extra?.detail ? `\n${itemLabel}内容: ${extra.detail}` : '';
-  const from       = formatFrom('工事工程 通知');
+  const from       = formatFrom('承認フロー通知');
   const greeting   = extra?.greeting || `${recipientName} 様`; // 開催案内を複数人にまとめて送るときは「関係者各位」
   const parallelNote = req?.flow_type === 'assembly'
     ? '\n\n※組立課長・部長どちらかが承認すれば完了になります。先に承認された場合、もう一方の承認は不要です。'
