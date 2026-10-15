@@ -628,6 +628,34 @@ async function doLogin() {
     await bootApp(data.session);
 }
 
+// Microsoft 365 アカウントでログインする（Microsoft のログイン画面へ移動し、ログイン後このページに戻ってくる）。
+// 戻ってきたときの #access_token=... はページロード時の処理で受け取る
+async function doMicrosoftLogin() {
+    const { error } = await db.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+            scopes: 'email',
+            redirectTo: window.location.origin + window.location.pathname
+        }
+    });
+    if (error) {
+        document.getElementById('login_error').textContent = 'Microsoftでのログインを開始できませんでした。';
+    }
+}
+
+// Microsoft でのログインに失敗して戻ってきたとき（#error=... または ?error=...）の理由
+function parseAuthError() {
+    const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search.slice(1));
+    const error = params.get('error');
+    if (!error) return null;
+    const desc = params.get('error_description') || '';
+    // サインアップを止めているため、アプリに未登録のアカウントはここで弾かれる
+    if (/signups? not allowed/i.test(desc)) {
+        return 'このMicrosoftアカウントは、まだアプリに登録されていません。管理者にお問い合わせください。';
+    }
+    return `Microsoftでのログインに失敗しました（${desc || error}）。`;
+}
+
 async function doLogout() {
     if (!confirm('ログアウトしますか？')) return;
     localStorage.removeItem('ap_access_token');
@@ -10426,6 +10454,12 @@ window.addEventListener('storage', (e) => {
     revalidateSession();
 });
 
+// 「Microsoftでサインイン」は動作確認が済むまで、URL に ?ms=1 を付けて開いたときだけ表示する
+if (new URLSearchParams(window.location.search).has('ms')) {
+    document.getElementById('login_ms_btn').style.display     = 'flex';
+    document.getElementById('login_ms_divider').style.display = 'flex';
+}
+
 // ===== ページロード時にセッションを復元 =====
 (async () => {
     // 招待・パスワードリセットのメールリンクから来た場合は、通常ログインより先に判定する
@@ -10441,6 +10475,31 @@ window.addEventListener('storage', (e) => {
             showSetPasswordScreen(data.session);
             return;
         }
+    }
+
+    // 「Microsoftでサインイン」から戻ってきた場合（#access_token=...）
+    if (hashAuth) {
+        const { data, error } = await db.auth.setSession({
+            access_token:  hashAuth.accessToken,
+            refresh_token: hashAuth.refreshToken
+        });
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (!error && data.session) {
+            localStorage.setItem('ap_access_token',  data.session.access_token);
+            localStorage.setItem('ap_refresh_token', data.session.refresh_token);
+            await bootApp(data.session);
+            return;
+        }
+    }
+
+    // Microsoft でのログインに失敗して戻ってきた場合は、閲覧のみで起動したうえでログイン画面に理由を表示する
+    const oauthError = parseAuthError();
+    if (oauthError) {
+        history.replaceState(null, '', window.location.pathname);
+        await bootGuest();
+        showLoginOverlay();
+        document.getElementById('login_error').textContent = oauthError;
+        return;
     }
 
     const session = await restoreSessionFromStorage();
