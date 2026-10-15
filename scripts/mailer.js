@@ -81,7 +81,9 @@ async function graphRequest(method, path, body = null, contentType = 'applicatio
     const res = await fetch(url, { method, headers, body: payload });
     if (res.ok) {
       const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      if (!text) return null;
+      // メールの原文（/$value）など JSON 以外の応答は文字列のまま返す
+      return (res.headers.get('content-type') || '').includes('json') ? JSON.parse(text) : text;
     }
     // 送信数の制限(429)や一時的な障害(5xx)は、少し待って2回まで再試行する
     if ((res.status === 429 || res.status >= 500) && attempt < 3) {

@@ -76,12 +76,24 @@ async function updateMeeting(eventId, { req, subject, text, people, roomEmail })
     buildEventBody({ req, subject, text, people, roomEmail }));
 }
 
-// 後から追加した参加者にだけ招待を届ける（主催者からの転送。既存の参加者には通知しない）
+// 後から追加した参加者にだけ招待を届ける（主催者からの転送。既存の参加者には通知しない）。
+// 転送で加わった人は「任意」になるので、必須の人はその後で出席者一覧の種別だけ書き換える
+// （種別の書き換えだけなら、誰にも更新通知は届かない。2026-10-15 実機で確認）
 async function forwardMeeting(eventId, people, comment) {
   await graphRequest('POST', `/events/${encodeURIComponent(eventId)}/forward`, {
     toRecipients: people.map((p) => ({ emailAddress: { address: p.email, name: p.name || p.email } })),
     comment,
   });
+  const required = new Set(people.filter((p) => !p.optional).map((p) => p.email.toLowerCase()));
+  if (required.size === 0) return;
+  const event = await graphRequest('GET', `/events/${encodeURIComponent(eventId)}?$select=attendees`);
+  const attendees = (event.attendees || []).map((a) => ({
+    emailAddress: a.emailAddress,
+    type: required.has(String(a.emailAddress?.address || '').toLowerCase()) ? 'required' : a.type,
+  }));
+  if (attendees.some((a, i) => a.type !== event.attendees[i].type)) {
+    await graphRequest('PATCH', `/events/${encodeURIComponent(eventId)}`, { attendees });
+  }
 }
 
 // キャンセル（出席者全員と会議室にキャンセルが届く）
@@ -89,10 +101,11 @@ async function cancelMeeting(eventId, comment) {
   await graphRequest('POST', `/events/${encodeURIComponent(eventId)}/cancel`, { comment });
 }
 
-// 出席者ごとの回答。会議室（resource）は除く
-async function getAttendeeResponses(eventId) {
-  const event = await graphRequest('GET', `/events/${encodeURIComponent(eventId)}?$select=attendees`);
-  return (event.attendees || [])
+// 予定の iCalUId（出欠の返信メールの UID と同じ値）と、出席者ごとの回答。会議室（resource）は除く。
+// 注意: Outlook の「フォロー」は、予定の回答では tentativelyAccepted（仮承諾）として記録される
+async function getEventResponses(eventId) {
+  const event = await graphRequest('GET', `/events/${encodeURIComponent(eventId)}?$select=iCalUId,attendees`);
+  const attendees = (event.attendees || [])
     .filter((a) => a.type !== 'resource')
     .map((a) => ({
       email:    String(a.emailAddress?.address || '').toLowerCase(),
@@ -100,6 +113,11 @@ async function getAttendeeResponses(eventId) {
       response: a.status?.response || 'none', // none / accepted / tentativelyAccepted / declined / notResponded / organizer
       time:     a.status?.time || null,
     }));
+  return { iCalUId: event.iCalUId, attendees };
 }
 
-module.exports = { createMeeting, updateMeeting, forwardMeeting, cancelMeeting, getAttendeeResponses };
+async function getAttendeeResponses(eventId) {
+  return (await getEventResponses(eventId)).attendees;
+}
+
+module.exports = { createMeeting, updateMeeting, forwardMeeting, cancelMeeting, getEventResponses, getAttendeeResponses };

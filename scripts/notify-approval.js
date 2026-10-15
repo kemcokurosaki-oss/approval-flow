@@ -1023,7 +1023,7 @@ async function main() {
           console.log(`✓ 予定更新: ${label} / 出席者${allPeople.length}名`);
         } else if (toMap.size > 0) {
           // 後から追加した参加者: 主催者から転送して、追加した人にだけ招待を届ける
-          const added = [...toMap.values()];
+          const added = [...toMap.values()].map(r => roster.get(norm(r.email)) || r); // 必須/任意を含める
           const mail = buildEmail(type, req, added[0].name || '担当者', { greeting: added.length > 1 ? '関係者各位' : null });
           await calendar.forwardMeeting(req.calendar_event_id,
             TEST_MODE ? people : added, (TEST_MODE ? testNote(added) : '') + mail.text);
