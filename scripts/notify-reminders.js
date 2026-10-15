@@ -223,7 +223,7 @@ async function sendEmail(toEmail, toName, subject, body, ccEmails = []) {
   const actualTo = TEST_MODE ? TEST_EMAIL : toEmail;
   const actualCc = TEST_MODE ? [] : ccEmails.filter(Boolean);
   const mailOptions = {
-    from:    formatFrom('工事工程 通知'),
+    from:    formatFrom('承認フロー通知'),
     to:      actualTo,
     subject: TEST_MODE ? `[TEST] ${subject}` : subject,
     text:    TEST_MODE
