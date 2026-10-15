@@ -14,11 +14,13 @@
 
 ## 出欠状況（RSVP）の記録
 
-簡易検査・外観検査・出荷品確認検査・出荷確認会議の開催案内は、宛先ごとに「必須/任意」を選択して送信できる（宛先プレビュー画面のチェックボックス）。ICSのATTENDEEにはROLE=REQ-PARTICIPANT/OPT-PARTICIPANTとして反映され、Outlook上でも任意出席者として表示される。
+簡易検査・外観検査・出荷品確認検査・出荷確認会議の開催案内は、宛先ごとに「必須/任意」を選択して送信できる（宛先プレビュー画面のチェックボックス）。予定の出席者の種別（必須/任意）として反映され、Outlook上でも任意出席者として表示される。後から追加した参加者は主催者からの転送で招待し、必須の人は転送後に種別を書き換える。
 
-Outlook/Teams本体の出欠確認パネルは、予定の主催者（自動送信専用のGmailアカウント）のメールボックスでしか集計されないため使えない。代わりに、参加者がOutlookで承諾/辞退/仮の予定を選ぶと自動送信されるiTIP返信メール（METHOD:REPLY）を、[scripts/check-rsvp.js](../scripts/check-rsvp.js)（GitHub Actions [.github/workflows/check-rsvp.yml](../.github/workflows/check-rsvp.yml)、現状は手動実行のみ）がIMAPで受信・解析し、Supabaseの`invitation_rsvp`テーブルに記録する。承認フローアプリの申請詳細画面に「出欠状況」として一覧表示される。
+開催案内は、共有メールボックス（koutei-notify@kusakabe.com）の予定表に会議を作成して送る（2026-10-15〜、[scripts/calendar.js](../scripts/calendar.js)）。出席者に会議室を入れるので、会議室の予約・変更・解除も自動で行われる。
 
-前提: GMAIL_USERアカウントでIMAPアクセスが有効になっている必要がある（Gmail設定 → メール転送とPOP/IMAP → IMAPを有効にする）。
+出欠は [scripts/check-rsvp.js](../scripts/check-rsvp.js)（GitHub Actions [.github/workflows/check-rsvp.yml](../.github/workflows/check-rsvp.yml)、cron-job から定期実行）が、予定の出席者ごとの回答（承諾/辞退/仮承諾）を読み取り、Supabaseの`invitation_rsvp`テーブルに記録する。Outlookの「フォロー」は予定の回答では仮承諾として記録されるため、共有メールボックスに届く返信メールの `X-MICROSOFT-ATTENDANCE:FOLLOW` で見分けて「フォロー」として記録する。承認フローアプリの申請詳細画面に「出欠状況」として一覧表示される。
+
+注意: 共有メールボックスの受信トレイにある出欠の返信メールは、フォローの判定に使うので移動・削除しない（既読にするのは問題ない）。
 
 ## 備考
 

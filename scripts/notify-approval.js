@@ -1,4 +1,4 @@
-const { MAIL_PROVIDER, IS_GRAPH, SENDER_ADDRESS, GMAIL_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
+const { MAIL_PROVIDER, IS_GRAPH, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
 const calendar = require('./calendar');
 
 const SUPABASE_URL  = process.env.SUPABASE_URL;
@@ -6,10 +6,10 @@ const SUPABASE_KEY  = process.env.SUPABASE_SECRET_KEY;
 const TEST_MODE     = process.env.TEST_MODE === 'true';
 const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
-// 旧方式（.ics 添付メール）で案内済みの会議の変更・キャンセルは、案内したときと同じ送信元から送る
-// （主催者が変わると、受信者の Outlook が元の予定と結び付けられないため）。graph 切り替え後は Gmail
-const LEGACY_PROVIDER = IS_GRAPH ? 'gmail' : MAIL_PROVIDER;
-const LEGACY_ADDRESS  = IS_GRAPH ? GMAIL_ADDRESS : SENDER_ADDRESS;
+// 予定表に作成していない会議（Gmail 時代に .ics 添付メールで案内した会議）の変更・キャンセルは .ics 添付メールで送る。
+// 2026-10-15 の切り替え時点で対象は0件、その後 Gmail は撤去したため、万一の場合も共有メールボックスから送る
+const LEGACY_PROVIDER = MAIL_PROVIDER;
+const LEGACY_ADDRESS  = SENDER_ADDRESS;
 
 const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
 

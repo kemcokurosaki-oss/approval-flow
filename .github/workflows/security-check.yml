@@ -47,10 +47,6 @@ jobs:
           # anon キーはアプリの画面にも載っている公開用のもの
           SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnZWtqemtyeWJyc3dzeGxjYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODQ3MjIsImV4cCI6MjA4NDQ2MDcyMn0.BsEj53lV3p76yE9fMPTaLn7ocKTNzYPTqIAnBafYItU
           SECURITY_MONITOR_DB_URL: ${{ secrets.SECURITY_MONITOR_DB_URL }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          # gmail または graph（Microsoft 365 の共有メールボックスから送る）
-          MAIL_PROVIDER: graph
           M365_TENANT_ID: ${{ secrets.M365_TENANT_ID }}
           M365_CLIENT_ID: ${{ secrets.M365_CLIENT_ID }}
           M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}
