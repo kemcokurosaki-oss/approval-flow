@@ -758,38 +758,19 @@ async function bootApp(session) {
         refresh_token: session.refresh_token
     });
 
-    // アクセストークンを直接使ってprofiles全件取得（デバッグ用）
-    const resAll = await fetch(
-        `${S_URL}/rest/v1/profiles?select=id,name,email,role,department`,
-        {
-            headers: {
-                'apikey':        S_KEY,
-                'Authorization': `Bearer ${session.access_token}`,
-                'Accept':        'application/json'
-            }
-        }
-    );
-    const allRows = await resAll.json();
-    console.log('全profiles:', JSON.stringify(allRows));
-    console.log('ログイン中のUID:', currentUser.id);
-    allProfiles = Array.isArray(allRows) ? allRows : [];
+    // 全profiles（担当者の上長判定などに使う）
+    const { data: allRows } = await db.from('profiles').select('id, name, email, role, department');
+    allProfiles = allRows || [];
 
     // 設計担当者の上長メール判定用にmembersテーブルを取得
     const { data: memberRows } = await db.from('members').select('name, email, supervisor_email1, supervisor_email_2');
     allMembers = memberRows || [];
 
-    // UID一致で検索
-    const profile = Array.isArray(allRows)
-        ? allRows.find(r => r.id === currentUser.id) || null
-        : null;
+    const profile = allProfiles.find(r => r.id === currentUser.id) || null;
 
-    document.getElementById('login_error').textContent =
-        `[DEBUG] 全${Array.isArray(allRows) ? allRows.length : 0}件 / UID:${currentUser.id} / 一致:${profile ? profile.name : 'なし'}`;
-
+    // profiles に未登録の人（Microsoft でのログインで自動作成された社員など）は閲覧のみで起動する
     if (!profile) {
-        document.getElementById('login_error').textContent =
-            `プロフィールが未登録です。(uid: ${currentUser.id})`;
-        await db.auth.signOut();
+        await bootViewer(session);
         return;
     }
 
@@ -849,6 +830,17 @@ async function bootGuest() {
     applyRoleLayout('');
 
     ui.send('READY');
+}
+
+// ログインしているが profiles に未登録の人: 画面は未ログインと同じ閲覧のみで、ユーザーメニュー（ログアウト）だけ出す。
+// 書き込みは DB 側でも登録済みの社員に限っている（is_registered_user）
+async function bootViewer(session) {
+    await bootGuest();
+    const meta = session.user.user_metadata || {};
+    document.getElementById('user_menu_btn').style.display   = '';
+    document.getElementById('guest_login_btn').style.display = 'none';
+    document.getElementById('user_name_display').textContent = `${meta.full_name || meta.name || session.user.email}（閲覧のみ）`;
+    document.getElementById('user_menu_email').textContent   = session.user.email;
 }
 
 // ===== Projects =====
