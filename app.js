@@ -10423,7 +10423,7 @@ async function revalidateSession() {
             currentUser    = null;
             currentProfile = null;
             showToast('ログインの有効期限が切れました。再度ログインしてください', 'error');
-            await bootGuest();
+            await startUnauthenticated();
         }
     } finally {
         _revalidatingSession = false;
@@ -10446,10 +10446,25 @@ window.addEventListener('storage', (e) => {
     revalidateSession();
 });
 
-// 「Microsoftでサインイン」は動作確認が済むまで、URL に ?ms=1 を付けて開いたときだけ表示する
-if (new URLSearchParams(window.location.search).has('ms')) {
-    document.getElementById('login_ms_btn').style.display     = 'flex';
-    document.getElementById('login_ms_divider').style.display = 'flex';
+// ===== Microsoft 365 ログインの完全移行スイッチ =====
+// true にすると、ログインしないと閲覧できず（閲覧のみの起動をしない）、ログイン画面は「Microsoftでサインイン」だけになる
+// （パスワード欄は非常用に URL へ ?pw=1 を付けたときだけ表示）。false の間は ?ms=1 のときだけボタンを出す（動作確認用）
+const M365_ONLY = false;
+{
+    const qs = new URLSearchParams(window.location.search);
+    const showMs = M365_ONLY || qs.has('ms');
+    const showPw = !M365_ONLY || qs.has('pw');
+    document.getElementById('login_ms_btn').style.display        = showMs ? 'flex' : 'none';
+    document.getElementById('login_ms_divider').style.display    = showMs && showPw ? 'flex' : 'none';
+    document.getElementById('login_password_area').style.display = showPw ? '' : 'none';
+}
+
+// 未ログインでの起動。完全移行後は閲覧のみで起動せず、閉じられないログイン画面を出す
+async function startUnauthenticated() {
+    if (!M365_ONLY) { await bootGuest(); return; }
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login_close_btn').style.display = 'none';
+    showLoginOverlay();
 }
 
 // ===== ページロード時にセッションを復元 =====
@@ -10488,14 +10503,14 @@ if (new URLSearchParams(window.location.search).has('ms')) {
     const oauthError = parseAuthError();
     if (oauthError) {
         history.replaceState(null, '', window.location.pathname);
-        await bootGuest();
+        await startUnauthenticated();
         showLoginOverlay();
         document.getElementById('login_error').textContent = oauthError;
         return;
     }
 
     const session = await restoreSessionFromStorage();
-    if (!session) { await bootGuest(); return; } // 未ログイン・失効 → 閲覧のみで起動
+    if (!session) { await startUnauthenticated(); return; } // 未ログイン・失効 → 閲覧のみで起動（完全移行後はログイン画面）
     await bootApp(session);
 })();
 
