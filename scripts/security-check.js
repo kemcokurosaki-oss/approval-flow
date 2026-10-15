@@ -73,9 +73,20 @@ async function checkAuthSettings() {
   if (!res.ok) throw new Error(`auth/v1/settings の取得に失敗 [${res.status}]`);
   const s = await res.json();
   const out = [];
+  // 2026-10-15〜: M365 アカウントの自動作成のためサインアップは ON にし、Before User Created フック
+  // （hook_before_user_created）で azure かつ @kusakabe.com と許可リスト以外を拒否している。
+  // ON であること自体は問題にせず、メールアドレスでの登録が実際に拒否されるかを試す
   if (s.disable_signup === false) {
-    out.push({ key: 'signup-open', severity: '高', title: '公開サインアップが有効',
-      detail: '誰でも自分のメールアドレスでアカウントを作り、ログイン済み社員と同じ権限を得られます。Supabase の Authentication → Sign In / Providers →「Allow new users to sign up」を OFF にしてください。' });
+    const probe = `security-probe-${Date.now()}@example.com`;
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: probe, password: crypto.randomBytes(18).toString('base64') + 'aA1!' }),
+    });
+    if (r.ok) {
+      out.push({ key: 'signup-not-restricted', severity: '高', title: 'メールアドレスでの新規登録が拒否されない',
+        detail: `新規登録を制限するフックが効いていません（試験用アドレス ${probe} のアカウントが作られた可能性があります。Authentication → Users で確認し、削除してください）。Authentication → Hooks で「Before User Created」が有効か確認してください。` });
+    }
   }
   if (s.mailer_autoconfirm === true) {
     out.push({ key: 'mailer-autoconfirm', severity: '高', title: 'メール確認なしでアカウントが有効になる設定',
@@ -86,7 +97,8 @@ async function checkAuthSettings() {
       detail: '匿名ユーザーも authenticated ロールになります。不要なら OFF にしてください。' });
   }
   for (const [provider, enabled] of Object.entries(s.external || {})) {
-    if (enabled && !['email', 'anonymous_users'].includes(provider)) {
+    // azure は M365 ログイン（日下部電機のテナント限定）として想定どおり
+    if (enabled && !['email', 'anonymous_users', 'azure'].includes(provider)) {
       out.push({ key: `provider-${provider}`, severity: '中', title: `外部ログイン（${provider}）が有効`,
         detail: '想定外であれば OFF にしてください。' });
     }
