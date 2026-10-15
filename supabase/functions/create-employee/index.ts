@@ -62,6 +62,11 @@ Deno.serve(async (req) => {
         let userId: string;
         let alreadyHadAuthAccount = false;
 
+        // 新規登録はフック（hook_before_user_created）で制限しているため、管理者が作るアドレスは先に許可リストへ入れる
+        const { error: allowErr } = await admin
+            .from("signup_allowlist").upsert({ email: normalizedEmail, reason: "create-employee" });
+        if (allowErr) throw allowErr;
+
         const { data: created, error: createErr } = await admin.auth.admin.createUser({
             email: normalizedEmail,
             password: crypto.randomUUID(),

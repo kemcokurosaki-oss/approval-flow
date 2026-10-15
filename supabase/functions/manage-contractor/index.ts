@@ -77,6 +77,11 @@ Deno.serve(async (req) => {
             // contractor_accounts に email 列は無い(authのemailを使う)ため、
             // まずauth.usersを作成/検索してからidを確定し、それを元にupsertする。
             let userId: string;
+            // 新規登録はフック（hook_before_user_created）で制限しているため、管理者が作るアドレスは先に許可リストへ入れる
+            const { error: allowErr } = await admin
+                .from("signup_allowlist").upsert({ email: normalizedEmail, reason: "manage-contractor" });
+            if (allowErr) throw allowErr;
+
             const { data: created, error: createErr } = await admin.auth.admin.createUser({
                 email: normalizedEmail,
                 password: generateTempPassword(),
