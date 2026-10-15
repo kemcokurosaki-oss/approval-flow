@@ -5,6 +5,8 @@ const { graphRequest } = require('./mailer');
 
 const TIME_ZONE = 'Tokyo Standard Time';
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -86,10 +88,25 @@ async function forwardMeeting(eventId, people, comment) {
   });
   const required = new Set(people.filter((p) => !p.optional).map((p) => p.email.toLowerCase()));
   if (required.size === 0) return;
-  const event = await graphRequest('GET', `/events/${encodeURIComponent(eventId)}?$select=attendees`);
-  const attendees = (event.attendees || []).map((a) => ({
+
+  // 転送先が出席者一覧に加わるまで数秒かかるので、全員が現れるまで5秒おきに最大1分待つ
+  // （転送の直後に書き換えようとすると、まだ一覧にいないため空振りする。2026-10-15 実機で確認）
+  const addrOf = (a) => String(a.emailAddress?.address || '').toLowerCase();
+  let event = null;
+  for (let i = 0; i < 12; i++) {
+    await sleep(5000);
+    event = await graphRequest('GET', `/events/${encodeURIComponent(eventId)}?$select=attendees`);
+    const present = new Set((event.attendees || []).map(addrOf));
+    if ([...required].every((e) => present.has(e))) break;
+    event = null;
+  }
+  if (!event) {
+    console.warn(`  ⚠ 転送した参加者が1分以内に出席者一覧に現れなかったため、必須への書き換えをしませんでした: ${[...required].join(', ')}`);
+    return;
+  }
+  const attendees = event.attendees.map((a) => ({
     emailAddress: a.emailAddress,
-    type: required.has(String(a.emailAddress?.address || '').toLowerCase()) ? 'required' : a.type,
+    type: required.has(addrOf(a)) ? 'required' : a.type,
   }));
   if (attendees.some((a, i) => a.type !== event.attendees[i].type)) {
     await graphRequest('PATCH', `/events/${encodeURIComponent(eventId)}`, { attendees });
