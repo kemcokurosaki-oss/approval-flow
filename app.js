@@ -853,9 +853,13 @@ function setUserMenu(name, email, canEdit) {
     document.getElementById('user_name_display').textContent = name;
     document.getElementById('user_menu_name').textContent    = name;
     document.getElementById('user_menu_email').textContent   = email || '';
+    // 権限: 鉛筆マーク＋「編集」（閲覧のみは斜線入りの鉛筆）。他の工程表アプリ（m365-login.js）と同じ表示
+    const pencil   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+    const noPencil = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
     const role = document.getElementById('user_menu_role');
-    role.textContent = canEdit ? '編集できます' : '閲覧のみ';
-    role.className   = 'user-menu-role ' + (canEdit ? 'edit' : 'view');
+    role.innerHTML = (canEdit ? pencil : noPencil) + '<span>編集</span>';
+    role.title     = canEdit ? '編集できます' : '閲覧のみ（申請・承認はできません）';
+    role.className = 'user-menu-role ' + (canEdit ? 'edit' : 'view');
 }
 
 // ログインしているが profiles に未登録の人: 画面は未ログインと同じ閲覧のみで、ユーザーメニュー（ログアウト）だけ出す。

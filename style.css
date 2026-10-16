@@ -1397,9 +1397,9 @@
         .user-menu-email { padding: 12px 14px; font-size: 13px; color: #666; word-break: break-all; }
         .user-menu-name + .user-menu-email { padding-top: 2px; font-size: 12px; }
         .user-menu-role-wrap { padding: 0 14px 10px; }
-        .user-menu-role { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 10px; }
+        .user-menu-role { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 1px 8px 1px 6px; border-radius: 10px; }
         .user-menu-role.edit { background: #e8f5e9; color: #2e7d32; }
-        .user-menu-role.view { background: #eef2f7; color: #5a6578; }
+        .user-menu-role.view { background: #eef2f7; color: #8a94a6; }
         .user-menu-divider { border-top: 1px solid #eee; }
         .user-menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-size: 14px; color: #333; cursor: pointer; }
         .user-menu-item:hover { background: #f5f8fb; }
