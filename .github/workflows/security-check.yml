@@ -1,8 +1,8 @@
 name: セキュリティ定期チェック
 
 on:
-  # 毎日 8:00 JST に cron-job.org から起動する（GitHub の schedule は遅れやすいため 2026-10-16 に切り替え）。
-  # scope=auto なら、月曜は週次、毎月1日は月次まとめとして実行（scripts/security-check.js）
+  # 平日 7:30 JST に cron-job.org から起動する（GitHub の schedule は遅れやすいため 2026-10-16 に切り替え）。
+  # scope=auto なら、月曜は週次、その月の最初の平日は月次まとめとして実行（scripts/security-check.js）
   workflow_dispatch:
     inputs:
       scope:

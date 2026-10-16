@@ -1,7 +1,7 @@
 /**
  * セキュリティ定期チェック
  *
- * CHECK_SCOPE ごとに実行する項目を変える（GitHub Actions の schedule から起動）
+ * CHECK_SCOPE ごとに実行する項目を変える（cron-job.org から平日の朝に GitHub Actions を起動）
  *   daily  : Supabase の設定（サインアップ・RLS・ポリシー・関数・Storage・ユーザー）、
  *            全リポジトリの直近コミットの秘密情報、公開リポジトリに置かれた業務ファイル・電話番号
  *   weekly : daily ＋ 全履歴の秘密情報スキャン、履歴に残った業務ファイル、npm の脆弱性、CDN 読み込みの改ざん対策
@@ -24,12 +24,16 @@ const { execFileSync } = require('child_process');
 const { Client } = require('pg');
 const { requireMailEnv, formatFrom, sendMail } = require('./mailer');
 
-// auto: 日本時間で毎月1日なら monthly、月曜なら weekly、それ以外は daily
+// auto: 日本時間で、その月の最初の平日なら monthly、月曜なら weekly、それ以外は daily。
+// 平日の朝だけ起動する（cron-job.org）ため、1日が土日の月は次の月曜を「最初の平日」として月次まとめにする
 function resolveScope(scope) {
   if (scope && scope !== 'auto') return scope;
   const jst = new Date(Date.now() + 9 * 3600 * 1000);
-  if (jst.getUTCDate() === 1) return 'monthly';
-  if (jst.getUTCDay() === 1) return 'weekly';
+  const date = jst.getUTCDate();
+  const day = jst.getUTCDay(); // 0=日 … 6=土
+  const isFirstWeekday = (day >= 1 && day <= 5) && (date === 1 || (day === 1 && date <= 3));
+  if (isFirstWeekday) return 'monthly';
+  if (day === 1) return 'weekly';
   return 'daily';
 }
 const SCOPE         = resolveScope((process.env.CHECK_SCOPE || 'auto').trim());
