@@ -51,6 +51,16 @@ const _memStorage = {
     removeItem: key       => { delete _memStore[key]; }
 };
 
+// Microsoft でのログイン後、新規作成のときは Supabase が別のアプリ（Site URL）に戻してしまうことがある。
+// ログインを始めたページを m365_return_to に覚えておき、違うページに戻ってきたらトークンごと元のページへ送る
+(function () {
+    const ret = localStorage.getItem('m365_return_to');
+    if (!ret) return;
+    const fromLogin = /access_token=|error=/.test(location.hash) || /[?&](code|error)=/.test(location.search);
+    if (!fromLogin) return;
+    localStorage.removeItem('m365_return_to');
+    if (ret !== location.origin + location.pathname) location.replace(ret + location.search + location.hash);
+})();
 const db = supabase.createClient(S_URL, S_KEY, {
     auth: {
         flowType:      'implicit',
@@ -631,10 +641,11 @@ async function doLogin() {
 // Microsoft 365 アカウントでログインする（Microsoft のログイン画面へ移動し、ログイン後このページに戻ってくる）。
 // 戻ってきたときの #access_token=... はページロード時の処理で受け取る
 async function doMicrosoftLogin() {
+    localStorage.setItem('m365_return_to', window.location.origin + window.location.pathname);
     const { error } = await db.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-            scopes: 'email',
+            scopes: 'openid profile email',
             redirectTo: window.location.origin + window.location.pathname
         }
     });
@@ -839,7 +850,9 @@ async function bootViewer(session) {
     const meta = session.user.user_metadata || {};
     document.getElementById('user_menu_btn').style.display   = '';
     document.getElementById('guest_login_btn').style.display = 'none';
-    document.getElementById('user_name_display').textContent = `${meta.full_name || meta.name || session.user.email}（閲覧のみ）`;
+    // Microsoft から名前が届かないときは、メールアドレスの @ より前だけを出して欄に収める
+    const displayName = meta.full_name || meta.name || String(session.user.email || '').split('@')[0];
+    document.getElementById('user_name_display').textContent = `${displayName}（閲覧のみ）`;
     document.getElementById('user_menu_email').textContent   = session.user.email;
 }
 
