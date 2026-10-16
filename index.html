@@ -6,7 +6,7 @@
     <title>承認フロー</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f9ddb'/><stop offset='1' stop-color='%232f6fb0'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M6 25V16M13 25V9M20 25V18M26 25V12' stroke='white' stroke-width='3.4' stroke-linecap='round'/></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
 
@@ -137,7 +137,9 @@
                             <span class="rail-user-name">ログイン</span>
                         </button>
                         <div id="user_menu_dropdown" class="user-menu-dropdown">
+                            <div class="user-menu-name" id="user_menu_name"></div>
                             <div class="user-menu-email" id="user_menu_email"></div>
+                            <div class="user-menu-role-wrap"><span class="user-menu-role" id="user_menu_role"></span></div>
                             <div class="user-menu-divider"></div>
                             <div class="user-menu-item" onclick="closeUserMenu(); doLogout();">
                                 <span class="user-menu-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span>ログアウト</span>
@@ -961,7 +963,7 @@
 </div>
 
 <script src="assembly_unit_master.js"></script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <script>
 // スマホ幅：左レール（ハンバーガーメニュー）の開閉
 function toggleMobileNav() {
@@ -1005,9 +1007,9 @@ function syncAppBar() {
     const shown = Array.from(cards).filter(c => c.style.display !== 'none').length;
     const sub = document.getElementById('page_subtitle');
     if (sub) sub.textContent = cards.length ? shown + '件表示' : '';
-    const name = document.getElementById('user_name_display')?.textContent?.trim() || '';
+    // アバターは人のアイコン（名前の1文字目ではなく）
     const avatar = document.getElementById('rail_avatar');
-    if (avatar) avatar.textContent = name ? name.charAt(0) : '';
+    if (avatar && !avatar.querySelector('svg')) avatar.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
 }
 document.addEventListener('DOMContentLoaded', () => {
     const target = document.getElementById('tab_content_progress');

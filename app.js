@@ -792,9 +792,8 @@ async function bootApp(session) {
     document.getElementById('user_menu_btn').style.display   = '';
     document.getElementById('guest_login_btn').style.display = 'none';
     document.getElementById('rail_mypage').style.display      = '';
-    document.getElementById('user_name_display').textContent =
-        profile.department ? `${profile.name}（${profile.department}）` : profile.name;
-    document.getElementById('user_menu_email').textContent   = currentUser.email;
+    // 表示名は Microsoft 365 のフルネーム（届かないときは登録名）。通知や担当者の照合には profile.name を使う
+    setUserMenu(m365DisplayName(currentUser) || profile.name, currentUser.email, true);
 
     // 製管2名+常務のみユーザーメニューの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
@@ -843,6 +842,22 @@ async function bootGuest() {
     ui.send('READY');
 }
 
+// Microsoft 365 の表示名（フルネーム）。パスワードでログインした人や、名前が届いていない人は空
+function m365DisplayName(user) {
+    const meta = user?.user_metadata || {};
+    return meta.full_name || meta.name || '';
+}
+
+// 左下のユーザー表示（フルネーム）と、押したときのメニュー（フルネーム・アドレス・権限）
+function setUserMenu(name, email, canEdit) {
+    document.getElementById('user_name_display').textContent = name;
+    document.getElementById('user_menu_name').textContent    = name;
+    document.getElementById('user_menu_email').textContent   = email || '';
+    const role = document.getElementById('user_menu_role');
+    role.textContent = canEdit ? '編集できます' : '閲覧のみ';
+    role.className   = 'user-menu-role ' + (canEdit ? 'edit' : 'view');
+}
+
 // ログインしているが profiles に未登録の人: 画面は未ログインと同じ閲覧のみで、ユーザーメニュー（ログアウト）だけ出す。
 // 書き込みは DB 側でも登録済みの社員に限っている（is_registered_user）
 async function bootViewer(session) {
@@ -850,10 +865,8 @@ async function bootViewer(session) {
     const meta = session.user.user_metadata || {};
     document.getElementById('user_menu_btn').style.display   = '';
     document.getElementById('guest_login_btn').style.display = 'none';
-    // Microsoft から名前が届かないときは、メールアドレスの @ より前だけを出して欄に収める
-    const displayName = meta.full_name || meta.name || String(session.user.email || '').split('@')[0];
-    document.getElementById('user_name_display').textContent = `${displayName}（閲覧のみ）`;
-    document.getElementById('user_menu_email').textContent   = session.user.email;
+    // Microsoft から名前が届かないときは、メールアドレスの @ より前だけを出す
+    setUserMenu(m365DisplayName(session.user) || String(session.user.email || '').split('@')[0], session.user.email, false);
 }
 
 // ===== Projects =====
