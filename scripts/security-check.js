@@ -264,7 +264,8 @@ const SECRET_PATTERNS = [
   { name: 'GitHub トークン', re: /\b(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{50,})\b/g },
   { name: '秘密鍵', re: /-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----/g },
   { name: 'Azure / M365 のクライアントシークレット', re: /\b[A-Za-z0-9_~.-]{3}8Q~[A-Za-z0-9_~.-]{31,34}\b/g },
-  { name: 'Postgres 接続文字列（パスワード付き）', re: /postgres(ql)?:\/\/[^:\s'"]+:[^@\s'"]{6,}@[^\s'"]+/g },
+  // <パスワード>・[YOUR-PASSWORD]・${VAR} のような見本の書き方は対象外
+  { name: 'Postgres 接続文字列（パスワード付き）', re: /postgres(ql)?:\/\/[^:\s'"]+:(?![<[]|\$\{)[^@\s'"<>[\]]{6,}@[^\s'"]+/g },
   { name: 'Gmail アプリパスワードらしき文字列', re: /(GMAIL_APP_PASSWORD|app_?password)\s*[:=]\s*['"][a-z]{4} ?[a-z]{4} ?[a-z]{4} ?[a-z]{4}['"]/gi },
 ];
 const JWT_RE = /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g;
