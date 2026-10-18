@@ -10479,7 +10479,7 @@ window.addEventListener('storage', (e) => {
 // ===== Microsoft 365 ログインの完全移行スイッチ =====
 // true にすると、ログインしないと閲覧できず（閲覧のみの起動をしない）、ログイン画面は「Microsoftでサインイン」だけになる
 // （パスワード欄は非常用に URL へ ?pw=1 を付けたときだけ表示）。false の間は ?ms=1 のときだけボタンを出す（動作確認用）
-const M365_ONLY = false;
+const M365_ONLY = true;
 {
     const qs = new URLSearchParams(window.location.search);
     const showMs = M365_ONLY || qs.has('ms');
