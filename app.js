@@ -641,6 +641,8 @@ async function doLogin() {
 // Microsoft 365 アカウントでログインする（Microsoft のログイン画面へ移動し、ログイン後このページに戻ってくる）。
 // 戻ってきたときの #access_token=... はページロード時の処理で受け取る
 async function doMicrosoftLogin() {
+    // PCのファイルを直接開いた状態（file://）では、ログイン後に戻ってくる先が無いため使えない
+    if (location.protocol === 'file:') { document.getElementById('login_error').textContent = 'このページはPCのファイルを直接開いているため、Microsoftでログインできません。GitHubのURL（https://kemcokurosaki-oss.github.io/…）から開いてください。'; return; }
     localStorage.setItem('m365_return_to', window.location.origin + window.location.pathname);
     const { error } = await db.auth.signInWithOAuth({
         provider: 'azure',
