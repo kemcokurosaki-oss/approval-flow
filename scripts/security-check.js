@@ -476,6 +476,27 @@ async function sendReport(newFindings, baselineFindings, allFindings, errors) {
   await sendMail({ from: formatFrom('セキュリティ監視'), to: REPORT_TO, subject, html });
 }
 
+// 重要度「高」の問題は、いつものまとめとは別に「至急対応」のメールで知らせる（重要度: 高）。
+// 新しく見つかったときに1回、直るまでは週次・月次のたびに再通知する
+async function sendUrgentAlert(highFindings, isReminder) {
+  const subject = isReminder
+    ? `【至急対応・未解決】セキュリティの修正が必要な問題が ${highFindings.length}件 残っています`
+    : `【至急対応】セキュリティの修正が必要な問題が ${highFindings.length}件 見つかりました`;
+  const html = `<div style="font-family:sans-serif;font-size:14px">
+    <p style="font-size:16px;color:#c0392b"><b>${isReminder ? '前回お知らせした、優先度「高」の問題がまだ直っていません。' : '優先度「高」の問題が見つかりました。早めの修正が必要です。'}</b></p>
+    <p>このメールの内容をそのまま Claude Code に貼り付けて、「セキュリティの修正をお願いします」と依頼してください。</p>
+    ${table(findingRows(highFindings))}
+    <p style="color:#555">直ると、次回以降のチェックでこのメールは届かなくなります。</p>
+  </div>`;
+
+  if (process.env.DRY_RUN_OUT) {
+    fs.writeFileSync(process.env.DRY_RUN_OUT.replace(/(\.html)?$/, '-urgent.html'), `<!-- ${subject} -->\n${html}`);
+    return;
+  }
+  requireMailEnv();
+  await sendMail({ from: formatFrom('セキュリティ監視'), to: REPORT_TO, subject, html, priority: 'high' });
+}
+
 // ===== メイン =====
 (async () => {
   console.log(`セキュリティチェック開始（${SCOPE}）`);
@@ -523,6 +544,17 @@ async function sendReport(newFindings, baselineFindings, allFindings, errors) {
     console.log(process.env.DRY_RUN_OUT ? '結果をファイルに書き出しました' : '結果をメールで送信しました');
   } else {
     console.log('新しい問題はありません（メール送信なし）');
+  }
+
+  const isHigh = (f) => f.severity === '高';
+  const newHigh = [...newFindings, ...baselineFindings].filter(isHigh);
+  const allHigh = allFindings.filter(isHigh);
+  if (newHigh.length > 0) {
+    await sendUrgentAlert(newHigh, false);
+    console.log('至急対応のメールを送信しました');
+  } else if (weeklyOrMore && allHigh.length > 0) {
+    await sendUrgentAlert(allHigh, true);
+    console.log('至急対応（未解決）のメールを送信しました');
   }
   saveState(state);
 })().catch((e) => {
