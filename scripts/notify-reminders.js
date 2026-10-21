@@ -210,6 +210,20 @@ async function supabaseInsert(table, body) {
   if (!res.ok) throw new Error(`Supabase insert error [${res.status}]: ${await res.text()}`);
 }
 
+async function supabasePatch(path, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=minimal',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Supabase patch error [${res.status}]: ${await res.text()}`);
+}
+
 // 完了済み工番セット（main()でロード）
 let completedProjectsSet = new Set();
 
@@ -1248,6 +1262,76 @@ async function runSalesShippingDateReminders() {
   console.log(`確定出荷日 未入力催促: ${count}件送信`);
 }
 
+// ===== 確定出荷日 催促停止の終了前日のお知らせ =====
+// 停止期限の前日（土日にあたる場合は直前の金曜）から期限日までの間に1回、停止を設定した本人へメールする。
+// app.js の sdrNoticeStartDate（設定画面・左メニューのバッジ）と同じ判定。送信済みはエントリの notified_until で管理する
+function sdrNoticeStartDate(until) {
+  const [y, m, d] = until.split('-').map(Number);
+  const dt  = new Date(Date.UTC(y, m - 1, d - 1));
+  const dow = dt.getUTCDay();
+  if (dow === 6) dt.setUTCDate(dt.getUTCDate() - 1);
+  if (dow === 0) dt.setUTCDate(dt.getUTCDate() - 2);
+  return dt.toISOString().slice(0, 10);
+}
+
+async function runShippingDateReminderPauseEndingNotices() {
+  console.log('\n--- 確定出荷日 催促停止の終了前お知らせ ---');
+  const rows = await supabaseFetch(`reminder_settings?key=eq.shipping_date_reminder_pause&select=value`);
+  const pauseMap = rows?.[0]?.value || {};
+  const todayStr = tokyoDateStr();
+
+  const targets = Object.entries(pauseMap).filter(([, e]) =>
+    e?.until && !e.hidden && e.notified_until !== e.until && todayStr >= sdrNoticeStartDate(e.until) && todayStr <= e.until);
+  if (targets.length === 0) {
+    console.log('催促停止の終了前お知らせ: 対象なし');
+    return;
+  }
+
+  // 設定した本人ごとに1通にまとめる（by_email が無い古いエントリは名前で profiles を引く）
+  const byPerson = {};
+  for (const [pNum, e] of targets) {
+    let email = e.by_email, name = e.by;
+    if (!email && e.by) {
+      const prof = await supabaseFetch(`profiles?name=eq.${encodeURIComponent(e.by)}&select=name,email`);
+      email = prof?.[0]?.email;
+    }
+    if (!email) { console.log(`  - ${pNum}: 設定者のメールアドレスが分からないため送信しません`); continue; }
+    if (!byPerson[email]) byPerson[email] = { name: name || email, items: [] };
+    byPerson[email].items.push({ pNum, until: e.until });
+  }
+
+  const fmt = s => {
+    const [y, m, d] = s.split('-').map(Number);
+    return `${y}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}（${'日月火水木金土'[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]}）`;
+  };
+  const notified = [];
+  for (const [email, p] of Object.entries(byPerson)) {
+    const lines = p.items.map(i => `・${i.pNum}：${fmt(i.until)} まで停止（${fmt(jstDatePlusDays(`${i.until}T00:00:00+09:00`, 1))} から催促を再開）`);
+    const subject = `【確定出荷日 催促停止 まもなく終了】${p.items.map(i => i.pNum).join('、')}`;
+    const text =
+      `${p.name} 様\n\n` +
+      `設定された確定出荷日 未入力催促メールの一時停止が、まもなく終了します。\n\n` +
+      `${lines.join('\n')}\n\n` +
+      `再開日に1通、その後は7日ごとに営業担当者・上長へ催促メールが届きます。\n` +
+      `停止を延長する場合は、設定画面の「確定出荷日 催促メールの一時停止」から新しい期限で停止し直してください。\n\n` +
+      `▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+    try {
+      await sendEmail(email, p.name, subject, text);
+      notified.push(...p.items);
+    } catch (e) {
+      console.error(`✗ 送信エラー: ${email}`, e.message);
+    }
+  }
+
+  if (notified.length && !TEST_MODE) {
+    // 送信中に設定画面で変更された場合に備え、最新の値を読み直してから送信済みを記録する
+    const latest = (await supabaseFetch(`reminder_settings?key=eq.shipping_date_reminder_pause&select=value`))?.[0]?.value || {};
+    notified.forEach(i => { if (latest[i.pNum]?.until === i.until) latest[i.pNum].notified_until = i.until; });
+    await supabasePatch(`reminder_settings?key=eq.shipping_date_reminder_pause`, { value: latest });
+  }
+  console.log(`催促停止の終了前お知らせ: ${notified.length}件送信`);
+}
+
 async function main() {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_KEY);
@@ -1268,6 +1352,7 @@ async function main() {
   await runQaFinalizeReminders();
   await runTestRunReadinessReminders();
   await runSalesShippingDateReminders();
+  await runShippingDateReminderPauseEndingNotices();
 
   console.log('\n====== 完了 ======');
 }

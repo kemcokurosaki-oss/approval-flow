@@ -800,6 +800,7 @@ async function bootApp(session) {
     // 製管2名+常務のみユーザーメニューの「設定」項目を表示
     if (ADMIN_EMAILS.includes(currentUser.email)) {
         document.getElementById('nav_settings_item').style.display = '';
+        refreshSdrEndingBadges();
         // 運用ガイドの「設定画面」の章は管理者のみ閲覧可能にする
         document.getElementById('rail_guide').href = 'guide.html?admin=1';
     }
@@ -6178,7 +6179,7 @@ const SETTINGS_CATEGORIES = [
             { label: '部署ごとの名簿管理', desc: 'ログインアカウントの有無に関わらず、部署単位で担当者を一覧管理する（追加・編集・役職変更）', fn: 'showRosterScreen' },
             { label: '通知の宛先設定', desc: '名簿の中から、フローごとに実際に通知する人・部署を選ぶ', fn: 'showRecipientsListScreen' },
             { label: 'リマインダー通知のCC設定', desc: '催促メールのうち、ロールでは決まらず個人を固定しているCC宛先を選ぶ', fn: 'showReminderCcSettingsScreen' },
-            { label: '確定出荷日 催促メールの一時停止', desc: '出荷日が先延ばしになった工番の、工場出荷確定日 未入力催促メールを期限付きで止める', fn: 'showShippingDateReminderPauseScreen' }
+            { label: '確定出荷日 催促メールの一時停止', desc: '出荷日が先延ばしになった工番の、工場出荷確定日 未入力催促メールを期限付きで止める', fn: 'showShippingDateReminderPauseScreen', badgeId: 'settings_badge_sdr' }
         ]
     },
     {
@@ -6208,6 +6209,7 @@ async function openSettingsModal() {
     document.getElementById('settings_modal').classList.add('open');
     await loadFlowSettings();
     await loadReminderCcSettings();
+    await refreshSdrEndingBadges();
     showSettingsMenu();
 }
 
@@ -6233,6 +6235,7 @@ function showSettingsMenu() {
                             <button class="settings-menu-item" onclick="${item.fn}()">
                                 <div class="settings-menu-item-title">${esc(item.label)}</div>
                                 <div class="settings-menu-item-desc">${esc(item.desc)}</div>
+                                ${item.badgeId ? `<span id="${item.badgeId}" class="badge settings-menu-item-badge" style="${sdrEndingSoonCount > 0 ? '' : 'display:none;'}">${sdrEndingSoonCount}</span>` : ''}
                             </button>
                         `).join('')}
                     </div>
@@ -6517,6 +6520,44 @@ async function saveReminderCcDetail(itemKey) {
 }
 
 // ----- 確定出荷日 未入力催促の一時停止（工番単位・期限付き） -----
+// 停止期限の前日（土日にあたる場合は直前の金曜）から期限日までを「まもなく終了」とし、設定した本人にだけバッジを出す。
+// scripts/notify-reminders.js の sdrNoticeStartDate（本人へのお知らせメール）と同じ判定
+function sdrNoticeStartDate(until) {
+    const [y, m, d] = until.split('-').map(Number);
+    const dt  = new Date(Date.UTC(y, m - 1, d - 1));
+    const dow = dt.getUTCDay();
+    if (dow === 6) dt.setUTCDate(dt.getUTCDate() - 1);
+    if (dow === 0) dt.setUTCDate(dt.getUTCDate() - 2);
+    return dt.toISOString().slice(0, 10);
+}
+function isSdrEndingSoon(e, today) {
+    return !!e?.until && !e.hidden && today >= sdrNoticeStartDate(e.until) && today <= e.until;
+}
+function isMySdrEntry(e) {
+    if (e?.by_email) return e.by_email === currentUser?.email;
+    return !!currentProfile?.name && e?.by === currentProfile.name;
+}
+let sdrEndingSoonCount = 0;
+function applySdrEndingBadges(pauseMap) {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    sdrEndingSoonCount = Object.values(pauseMap || {}).filter(e => isSdrEndingSoon(e, today) && isMySdrEntry(e)).length;
+    const railBadge = document.getElementById('rail_badge_settings');
+    if (railBadge) {
+        railBadge.textContent   = sdrEndingSoonCount;
+        railBadge.style.display = sdrEndingSoonCount > 0 ? '' : 'none';
+    }
+    const menuBadge = document.getElementById('settings_badge_sdr');
+    if (menuBadge) {
+        menuBadge.textContent   = sdrEndingSoonCount;
+        menuBadge.style.display = sdrEndingSoonCount > 0 ? '' : 'none';
+    }
+}
+async function refreshSdrEndingBadges() {
+    if (!isSuperAdmin()) return;
+    const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
+    applySdrEndingBadges(data?.value || {});
+}
+
 // reminder_settings（key: shipping_date_reminder_pause）に { 工番: { until, by, at } } で保存し、
 // scripts/notify-reminders.js が期限日まで催促メールを送らない（マイページ「入力」の表示はそのまま）
 async function showShippingDateReminderPauseScreen() {
@@ -6543,6 +6584,7 @@ async function showShippingDateReminderPauseScreen() {
     };
     const daysLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
 
+    applySdrEndingBadges(pauseMap);
     const entries = Object.keys(pauseMap).filter(p => !pauseMap[p]?.hidden).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
     const active  = entries.filter(e => e.until && e.until >= today).sort((a, b) => a.until.localeCompare(b.until));
     const expired = entries.filter(e => !e.until || e.until < today).sort((a, b) => String(b.until).localeCompare(String(a.until)));
@@ -6550,7 +6592,7 @@ async function showShippingDateReminderPauseScreen() {
     const renderRow = (e, isExpired) => `
         <div class="sdr-row${isExpired ? ' is-expired' : ''}">
             <div class="sdr-pnum">${esc(e.pNum)}</div>
-            <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${isExpired ? '' : `<span class="sdr-remain">あと${daysLeft(e.until)}日</span>`}</div>
+            <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${isExpired ? '' : `<span class="sdr-remain${isSdrEndingSoon(e, today) ? ' is-soon' : ''}">${daysLeft(e.until) === 0 ? '今日まで' : `あと${daysLeft(e.until)}日`}</span>`}</div>
             <div class="sdr-by">
                 <span class="sdr-by-name">${esc(e.by || '')}</span>
                 ${e.at ? `<span class="sdr-by-at">${esc(fmtShort(e.at))} 設定</span>` : ''}
@@ -6628,7 +6670,7 @@ async function saveShippingDateReminderPause() {
     showLoading('保存中...');
     try {
         await _updateShippingDateReminderPause(v => {
-            v[pNum] = { until, by: currentProfile?.name || currentUser.email, at: new Date().toISOString() };
+            v[pNum] = { until, by: currentProfile?.name || currentUser.email, by_email: currentUser.email, at: new Date().toISOString() };
         });
         await logSettingsChange('shipping_date_reminder_pause', `${pNum} の確定出荷日催促を ${until} まで停止`);
         showToast(`${pNum} の催促メールを ${until} まで停止しました。`, 'success');

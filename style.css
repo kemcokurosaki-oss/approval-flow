@@ -3015,3 +3015,9 @@
 .sdr-row.is-expired .btn-xs { background: #fff; color: #7c8798; }
 
 .sdr-empty { padding: 12px 14px; font-size: 13px; color: #8a94a6; border-bottom: 1px solid #f4f6fa; }
+
+/* 停止期限が近い工番（期限の前日〜当日）の残り日数・設定メニューのバッジ */
+.sdr-remain.is-soon { color: #fff; background: #e5484d; }
+.settings-menu-item { position: relative; padding-right: 44px; }
+.settings-menu-item-badge { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
+.app-rail #nav_settings_item .badge { margin-left: auto; }
