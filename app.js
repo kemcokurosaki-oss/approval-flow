@@ -6532,43 +6532,78 @@ async function showShippingDateReminderPauseScreen() {
     const candidates = [...new Set((reqRows || []).map(r => String(r.project_number).trim()))].sort();
 
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
-    const pNums = Object.keys(pauseMap).sort();
-    const rowsHtml = pNums.length ? pNums.map(p => {
-        const e = pauseMap[p] || {};
-        const expired = !e.until || e.until < today;
-        return `
-            <tr>
-                <td style="padding:6px 8px;font-weight:600;">${esc(p)}</td>
-                <td style="padding:6px 8px;">${esc(e.until || '')}まで${expired ? ' <span style="color:#999;">（期限切れ・催促再開済み）</span>' : ''}</td>
-                <td style="padding:6px 8px;color:#666;">${esc(e.by || '')}</td>
-                <td style="padding:6px 8px;text-align:right;">
-                    ${expired ? '' : `<button class="btn btn-sm btn-secondary" onclick="removeShippingDateReminderPause('${esc(p)}')">停止を解除</button>`}
-                </td>
-            </tr>`;
-    }).join('') : `<tr><td colspan="4" style="padding:10px 8px;color:#999;">停止中の工番はありません。</td></tr>`;
+    const fmtDate = d => {
+        const dt = new Date(d + 'T00:00:00');
+        return `${dt.getFullYear()}/${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')}（${'日月火水木金土'[dt.getDay()]}）`;
+    };
+    const fmtShort = iso => {
+        if (!iso) return '';
+        const d = new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' }).split('-');
+        return `${+d[1]}/${+d[2]}`;
+    };
+    const daysLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
+
+    const entries = Object.keys(pauseMap).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
+    const active  = entries.filter(e => e.until && e.until >= today).sort((a, b) => a.until.localeCompare(b.until));
+    const expired = entries.filter(e => !e.until || e.until < today).sort((a, b) => String(b.until).localeCompare(String(a.until)));
+
+    const renderRow = (e, isExpired) => `
+        <div class="sdr-row${isExpired ? ' is-expired' : ''}">
+            <div class="sdr-pnum">${esc(e.pNum)}</div>
+            <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${isExpired ? '' : `<span class="sdr-remain">あと${daysLeft(e.until)}日</span>`}</div>
+            <div class="sdr-by">
+                <span class="sdr-by-name">${esc(e.by || '')}</span>
+                ${e.at ? `<span class="sdr-by-at">${esc(fmtShort(e.at))} 設定</span>` : ''}
+            </div>
+            <div class="sdr-actions">
+                <button class="btn-xs" onclick="removeShippingDateReminderPause('${esc(e.pNum)}')">${isExpired ? '削除' : '解除'}</button>
+            </div>
+        </div>`;
 
     body.innerHTML = `
         <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
         <div class="section-title" style="margin-top:10px;">確定出荷日 催促メールの一時停止</div>
-        <p style="font-size:13px;color:#555;margin:6px 0 12px;">
-            出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。
-            期限日の翌日（途中で解除した場合は解除した日）を再開日として、その日に1通、以降7日ごとに催促します。マイページ「入力」の表示は止まりません。
-        </p>
-        <div class="audit-filter">
-            <span class="audit-filter-label">工番</span>
-            <input type="text" id="sdr_pause_pnum" list="sdr_pause_pnum_list" placeholder="例: 2816" style="width:110px;">
-            <datalist id="sdr_pause_pnum_list">${candidates.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
-            <span class="audit-filter-label">停止期限</span>
-            <input type="date" id="sdr_pause_until" min="${today}">
-            <span class="audit-filter-sep">まで</span>
-            <button class="btn btn-sm btn-primary" onclick="saveShippingDateReminderPause()">停止する</button>
+
+        <div class="sdr-note">
+            <div>出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。</div>
+            <div class="sdr-note-points">
+                <span>・期限日の翌日から自動で再開します</span>
+                <span>・マイページ「入力」の表示は止まりません</span>
+            </div>
         </div>
-        <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;">
-            <thead><tr style="border-bottom:1px solid #ddd;text-align:left;color:#666;">
-                <th style="padding:6px 8px;">工番</th><th style="padding:6px 8px;">停止期限</th><th style="padding:6px 8px;">設定者</th><th></th>
-            </tr></thead>
-            <tbody>${rowsHtml}</tbody>
-        </table>
+
+        <div class="sdr-add">
+            <div class="sdr-add-field">
+                <span class="audit-filter-label">工番</span>
+                <input type="text" id="sdr_pause_pnum" list="sdr_pause_pnum_list" placeholder="例: 2816" class="sdr-input sdr-input-pnum">
+                <datalist id="sdr_pause_pnum_list">${candidates.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+            </div>
+            <div class="sdr-add-field">
+                <span class="audit-filter-label">停止期限</span>
+                <div class="sdr-add-inline">
+                    <input type="date" id="sdr_pause_until" min="${today}" class="sdr-input sdr-input-date">
+                    <span class="audit-filter-sep">まで</span>
+                </div>
+            </div>
+            <button class="btn btn-primary sdr-add-btn" onclick="saveShippingDateReminderPause()">停止する</button>
+        </div>
+
+        <div class="sdr-list">
+            <div class="sdr-head"><div>工番</div><div>停止期限</div><div>設定者</div><div></div></div>
+            <div class="sdr-group-header">
+                <span class="sdr-dot is-active"></span>
+                <span class="sdr-group-title">停止中</span>
+                <span class="audit-day-count">${active.length}</span>
+            </div>
+            ${active.length ? active.map(e => renderRow(e, false)).join('') : '<div class="sdr-empty">停止中の工番はありません。</div>'}
+            ${expired.length ? `
+                <div class="sdr-group-header">
+                    <span class="sdr-dot"></span>
+                    <span class="sdr-group-title is-muted">期限切れ（催促再開済み）</span>
+                    <span class="audit-day-count">${expired.length}</span>
+                </div>
+                ${expired.map(e => renderRow(e, true)).join('')}` : ''}
+        </div>
     `;
 }
 

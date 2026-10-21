@@ -2946,3 +2946,72 @@
 @media (max-width: 600px) {
     .p2k-group-tiles { grid-template-columns: minmax(0,1fr); }
 }
+
+/* =========================================================
+   確定出荷日 催促メールの一時停止（案1b・style.css の末尾に追記）
+   ========================================================= */
+
+/* 説明（注意枠） */
+.sdr-note {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 14px; margin-bottom: 14px;
+    border: 1px solid #f3e6b8; border-radius: 10px; background: #fffbea;
+    font-size: 12px; color: #6b7588; line-height: 1.6;
+}
+.sdr-note-points { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+
+/* 追加バー */
+.sdr-add {
+    display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+    padding: 12px 14px; margin-bottom: 14px;
+    border: 1px solid #e5e9f1; border-radius: 10px; background: #fbfcfe;
+}
+.sdr-add-field { display: flex; flex-direction: column; gap: 4px; }
+.sdr-add-inline { display: flex; align-items: center; gap: 8px; }
+.sdr-input {
+    height: 32px; padding: 0 10px; box-sizing: border-box;
+    border: 1px solid #e0e6ef; border-radius: 8px; background: #fff;
+    color: #16233a; font-size: 14px; font-family: inherit; outline: none;
+}
+.sdr-input:focus { border-color: #2f6fb0; box-shadow: 0 0 0 3px rgba(47,111,176,.12); }
+.sdr-input-pnum { width: 130px; }
+.sdr-input-date { width: 150px; }
+.btn.sdr-add-btn { height: 32px; padding: 0 16px; font-size: 13px; }
+
+/* 一覧 */
+.sdr-list { border: 1px solid #e5e9f1; border-radius: 10px; overflow: hidden; }
+.sdr-head, .sdr-row {
+    display: grid; grid-template-columns: 80px minmax(0, 1fr) 150px 76px;
+    column-gap: 10px; align-items: center;
+}
+.sdr-head {
+    padding: 8px 14px; background: #fbfcfe; border-bottom: 1px solid #eef1f6;
+    font-size: 12px; font-weight: 700; color: #9aa5b6; letter-spacing: .04em;
+}
+.sdr-group-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px; background: #f6f8fb; border-bottom: 1px solid #eef1f6;
+}
+.sdr-dot { width: 6px; height: 6px; border-radius: 50%; background: #98a3b4; flex-shrink: 0; }
+.sdr-dot.is-active { background: #f0a020; }
+.sdr-group-title { font-size: 13px; font-weight: 700; color: #16233a; }
+.sdr-group-title.is-muted { color: #5b6b80; }
+
+.sdr-row { padding: 9px 14px; border-bottom: 1px solid #f4f6fa; }
+.sdr-row:last-child { border-bottom: none; }
+.sdr-row:hover { background: #f9fbfe; }
+.sdr-pnum  { font-size: 14px; font-weight: 700; color: #16233a; }
+.sdr-until { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #3d4a5d; }
+.sdr-remain { font-size: 12px; font-weight: 700; color: #8a6d00; background: #fdf6e3; border-radius: 6px; padding: 1px 7px; }
+.sdr-by { display: flex; flex-direction: column; line-height: 1.4; min-width: 0; }
+.sdr-by-name { font-size: 13px; color: #16233a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sdr-by-at   { font-size: 11px; color: #9aa5b6; }
+.sdr-actions { text-align: right; }
+
+.sdr-row.is-expired .sdr-pnum,
+.sdr-row.is-expired .sdr-until,
+.sdr-row.is-expired .sdr-by-name { color: #9aa5b6; }
+.sdr-row.is-expired .sdr-by-at { color: #b6c1d2; }
+.sdr-row.is-expired .btn-xs { background: #fff; color: #7c8798; }
+
+.sdr-empty { padding: 12px 14px; font-size: 13px; color: #8a94a6; border-bottom: 1px solid #f4f6fa; }
