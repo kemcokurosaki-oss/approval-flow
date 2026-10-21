@@ -6177,7 +6177,8 @@ const SETTINGS_CATEGORIES = [
         items: [
             { label: '部署ごとの名簿管理', desc: 'ログインアカウントの有無に関わらず、部署単位で担当者を一覧管理する（追加・編集・役職変更）', fn: 'showRosterScreen' },
             { label: '通知の宛先設定', desc: '名簿の中から、フローごとに実際に通知する人・部署を選ぶ', fn: 'showRecipientsListScreen' },
-            { label: 'リマインダー通知のCC設定', desc: '催促メールのうち、ロールでは決まらず個人を固定しているCC宛先を選ぶ', fn: 'showReminderCcSettingsScreen' }
+            { label: 'リマインダー通知のCC設定', desc: '催促メールのうち、ロールでは決まらず個人を固定しているCC宛先を選ぶ', fn: 'showReminderCcSettingsScreen' },
+            { label: '確定出荷日 催促メールの一時停止', desc: '出荷日が先延ばしになった工番の、工場出荷確定日 未入力催促メールを期限付きで止める', fn: 'showShippingDateReminderPauseScreen' }
         ]
     },
     {
@@ -6508,6 +6509,111 @@ async function saveReminderCcDetail(itemKey) {
         await logSettingsChange('reminder_cc_recipients', `${item.label}を変更（CC: ${names.join('、') || 'なし'}）`);
         showToast('CC設定を保存しました。', 'success');
         showReminderCcSettingsScreen();
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ----- 確定出荷日 未入力催促の一時停止（工番単位・期限付き） -----
+// reminder_settings（key: shipping_date_reminder_pause）に { 工番: { until, by, at } } で保存し、
+// scripts/notify-reminders.js が期限日まで催促メールを送らない（マイページ「入力」の表示はそのまま）
+async function showShippingDateReminderPauseScreen() {
+    settingsView = 'shipping_date_reminder_pause';
+    const body = document.getElementById('settings_body');
+    body.innerHTML = `<div class="loading-indicator">読み込み中...</div>`;
+
+    const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
+    const pauseMap = data?.value || {};
+    // 入力候補: 確定出荷日が未入力の出荷フローの工番
+    const { data: reqRows } = await db.from('approval_requests').select('project_number')
+        .eq('flow_type', 'shipping').neq('status', 'cancelled').is('confirmed_shipping_date', null);
+    const candidates = [...new Set((reqRows || []).map(r => String(r.project_number).trim()))].sort();
+
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    const pNums = Object.keys(pauseMap).sort();
+    const rowsHtml = pNums.length ? pNums.map(p => {
+        const e = pauseMap[p] || {};
+        const expired = !e.until || e.until < today;
+        return `
+            <tr>
+                <td style="padding:6px 8px;font-weight:600;">${esc(p)}</td>
+                <td style="padding:6px 8px;">${esc(e.until || '')}まで${expired ? ' <span style="color:#999;">（期限切れ・催促再開済み）</span>' : ''}</td>
+                <td style="padding:6px 8px;color:#666;">${esc(e.by || '')}</td>
+                <td style="padding:6px 8px;text-align:right;">
+                    <button class="btn btn-sm btn-secondary" onclick="removeShippingDateReminderPause('${esc(p)}')">停止を解除</button>
+                </td>
+            </tr>`;
+    }).join('') : `<tr><td colspan="4" style="padding:10px 8px;color:#999;">停止中の工番はありません。</td></tr>`;
+
+    body.innerHTML = `
+        <div class="settings-sticky-header"><button class="btn btn-sm btn-secondary" onclick="showSettingsMenu()">← 戻る</button></div>
+        <div class="section-title" style="margin-top:10px;">確定出荷日 催促メールの一時停止</div>
+        <p style="font-size:13px;color:#555;margin:6px 0 12px;">
+            出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。
+            期限日の翌日から自動で再開します。マイページ「入力」の表示は止まりません。
+        </p>
+        <div class="audit-filter">
+            <span class="audit-filter-label">工番</span>
+            <input type="text" id="sdr_pause_pnum" list="sdr_pause_pnum_list" placeholder="例: 2816" style="width:110px;">
+            <datalist id="sdr_pause_pnum_list">${candidates.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+            <span class="audit-filter-label">停止期限</span>
+            <input type="date" id="sdr_pause_until" min="${today}">
+            <span class="audit-filter-sep">まで</span>
+            <button class="btn btn-sm btn-primary" onclick="saveShippingDateReminderPause()">停止する</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;">
+            <thead><tr style="border-bottom:1px solid #ddd;text-align:left;color:#666;">
+                <th style="padding:6px 8px;">工番</th><th style="padding:6px 8px;">停止期限</th><th style="padding:6px 8px;">設定者</th><th></th>
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+        </table>
+    `;
+}
+
+async function _updateShippingDateReminderPause(mutate) {
+    const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
+    const value = data?.value || {};
+    mutate(value);
+    const { error } = await db.from('reminder_settings')
+        .upsert({ key: 'shipping_date_reminder_pause', value, updated_at: new Date().toISOString(), updated_by: currentUser.email }, { onConflict: 'key' });
+    if (error) throw error;
+}
+
+async function saveShippingDateReminderPause() {
+    if (requireLogin()) return;
+    const pNum  = (document.getElementById('sdr_pause_pnum').value || '').trim();
+    const until = document.getElementById('sdr_pause_until').value;
+    if (!pNum)  { showToast('工番を入力してください。', 'error'); return; }
+    if (!until) { showToast('停止期限を入力してください。', 'error'); return; }
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    if (until < today) { showToast('停止期限は今日以降の日付にしてください。', 'error'); return; }
+
+    showLoading('保存中...');
+    try {
+        await _updateShippingDateReminderPause(v => {
+            v[pNum] = { until, by: currentProfile?.name || currentUser.email, at: new Date().toISOString() };
+        });
+        await logSettingsChange('shipping_date_reminder_pause', `${pNum} の確定出荷日催促を ${until} まで停止`);
+        showToast(`${pNum} の催促メールを ${until} まで停止しました。`, 'success');
+        await showShippingDateReminderPauseScreen();
+    } catch (e) {
+        showToast('保存に失敗しました: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function removeShippingDateReminderPause(pNum) {
+    if (requireLogin()) return;
+    if (!confirm(`${pNum} の催促停止を解除しますか？（次回の実行から催促メールが再開されます）`)) return;
+    showLoading('保存中...');
+    try {
+        await _updateShippingDateReminderPause(v => { delete v[pNum]; });
+        await logSettingsChange('shipping_date_reminder_pause', `${pNum} の確定出荷日催促の停止を解除`);
+        showToast(`${pNum} の催促停止を解除しました。`, 'success');
+        await showShippingDateReminderPauseScreen();
     } catch (e) {
         showToast('保存に失敗しました: ' + e.message, 'error');
     } finally {
@@ -7014,7 +7120,8 @@ async function deleteNonLoginRosterMember(recipientId) {
 // ----- 変更履歴 -----
 const AUDIT_CATEGORY_LABELS = {
     flow_toggle: 'フローON/OFF', fixed_recipients: '通知の宛先',
-    recipient_master: '宛先候補', roster_edit: '名簿編集', room_email: '会議室'
+    recipient_master: '宛先候補', roster_edit: '名簿編集', room_email: '会議室',
+    shipping_date_reminder_pause: '出荷日催促停止'
 };
 let auditLogFilter = { category: '', dateFrom: '', dateTo: '' };
 
@@ -7031,6 +7138,7 @@ async function showAuditLogScreen() {
                 <option value="">項目：すべて</option>
                 <option value="roster_edit">名簿編集</option>
                 <option value="fixed_recipients">通知の宛先</option>
+                <option value="shipping_date_reminder_pause">出荷日催促停止</option>
             </select>
             <input type="date" id="audit_filter_from" onchange="applyAuditLogFilter()">
             <span class="audit-filter-sep">〜</span>

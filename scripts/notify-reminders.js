@@ -1132,6 +1132,7 @@ async function runTestRunReadinessReminders() {
 // 出荷準備完了時に営業担当者へ入力依頼（出荷準備完了通知に同梱、notify-approval.js側）を送った後、
 // 出荷準備完了から7日後・14日後・21日後…（7日ごと）にまだ未入力なら、営業担当者＋上長（課長＋専務）へ催促する。
 // 出荷準備が未完了の間は対象外（工程表に出荷準備タスクが無い工番は、従来どおり出荷フローの起票日から数える）。
+// 管理者が設定画面で工番ごとに期限付きで一時停止できる（メールのみ停止。マイページ「入力」の表示はそのまま）。
 // app.js の loadInputSide（マイページ「入力」）と同じ判定。
 // 実行が抜けた日があっても取りこぼさないよう、「直近の催促期日以降にまだ送っていなければ送る」で判定する
 async function runSalesShippingDateReminders() {
@@ -1167,6 +1168,11 @@ async function runSalesShippingDateReminders() {
   const salesMapRows  = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
   const salesPersonMap = salesMapRows?.[0]?.value ? JSON.parse(salesMapRows[0].value) : {};
 
+  // 管理者が設定画面で催促を一時停止した工番（{ 工番: { until: 'YYYY-MM-DD', ... } }）。期限日まで停止し、翌日から再開する
+  const pauseRows = await supabaseFetch(`reminder_settings?key=eq.shipping_date_reminder_pause&select=value`);
+  const pauseMap  = pauseRows?.[0]?.value || {};
+  const todayStr  = tokyoDateStr();
+
   // 申請ごとの直近の催促送信日（JST）
   const pastReminders = await supabaseFetch(
     `approval_notifications?notification_type=eq.sales_shipping_date_reminder` +
@@ -1183,6 +1189,11 @@ async function runSalesShippingDateReminders() {
     if (is5or7Series(req.project_number)) continue;
     if (completedProjectsSet.has(String(req.project_number).trim())) continue;
     if (TEST_MODE && TEST_PROJECT && String(req.project_number) !== TEST_PROJECT) continue;
+    const pauseUntil = pauseMap[String(req.project_number).trim()]?.until;
+    if (pauseUntil && pauseUntil >= todayStr) {
+      console.log(`  - ${req.project_number} ${req.machine_name || ''}: 催促停止中（${pauseUntil}まで）`);
+      continue;
+    }
     const requestedAt = requestedAtOf(req);
     if (!requestedAt) continue;
     const missingName = '工場出荷確定日';
