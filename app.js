@@ -6565,10 +6565,10 @@ async function showShippingDateReminderPauseScreen() {
         <div class="section-title" style="margin-top:10px;">確定出荷日 催促メールの一時停止</div>
 
         <div class="sdr-note">
-            <div>出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。</div>
+            <div>工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。</div>
             <div class="sdr-note-points">
                 <span>・期限日の翌日（途中で解除した場合は解除した日）に1通送り、以降7日ごとに催促を再開します</span>
-                <span>・マイページ「入力」の表示は止まりません</span>
+                <span>・マイページ「入力」の表示は消えません</span>
             </div>
         </div>
 
