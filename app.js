@@ -6543,7 +6543,7 @@ async function showShippingDateReminderPauseScreen() {
     };
     const daysLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
 
-    const entries = Object.keys(pauseMap).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
+    const entries = Object.keys(pauseMap).filter(p => !pauseMap[p]?.hidden).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
     const active  = entries.filter(e => e.until && e.until >= today).sort((a, b) => a.until.localeCompare(b.until));
     const expired = entries.filter(e => !e.until || e.until < today).sort((a, b) => String(b.until).localeCompare(String(a.until)));
 
@@ -6567,7 +6567,7 @@ async function showShippingDateReminderPauseScreen() {
         <div class="sdr-note">
             <div>出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。</div>
             <div class="sdr-note-points">
-                <span>・期限日の翌日から自動で再開します</span>
+                <span>・期限日の翌日（途中で解除した場合は解除した日）に1通送り、以降7日ごとに催促を再開します</span>
                 <span>・マイページ「入力」の表示は止まりません</span>
             </div>
         </div>
@@ -6642,6 +6642,25 @@ async function saveShippingDateReminderPause() {
 
 async function removeShippingDateReminderPause(pNum) {
     if (requireLogin()) return;
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+    const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
+    const cur = data?.value?.[pNum];
+    // 期限切れの「削除」は一覧から隠すだけ。期限（＝再開日の起点）は残し、催促の周期を変えない
+    if (!cur?.until || cur.until < today) {
+        if (!confirm(`${pNum} を一覧から削除しますか？（催促メールの周期には影響しません）`)) return;
+        showLoading('保存中...');
+        try {
+            await _updateShippingDateReminderPause(v => { if (v[pNum]) v[pNum] = { ...v[pNum], hidden: true }; });
+            await logSettingsChange('shipping_date_reminder_pause', `${pNum} の期限切れの停止設定を一覧から削除`);
+            showToast(`${pNum} を一覧から削除しました。`, 'success');
+            await showShippingDateReminderPauseScreen();
+        } catch (e) {
+            showToast('保存に失敗しました: ' + e.message, 'error');
+        } finally {
+            hideLoading();
+        }
+        return;
+    }
     if (!confirm(`${pNum} の催促停止を解除しますか？（今日を再開日として、次回の実行で1通、以降7日ごとに催促メールが届きます）`)) return;
     showLoading('保存中...');
     try {
