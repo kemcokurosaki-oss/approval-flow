@@ -6542,7 +6542,7 @@ async function showShippingDateReminderPauseScreen() {
                 <td style="padding:6px 8px;">${esc(e.until || '')}まで${expired ? ' <span style="color:#999;">（期限切れ・催促再開済み）</span>' : ''}</td>
                 <td style="padding:6px 8px;color:#666;">${esc(e.by || '')}</td>
                 <td style="padding:6px 8px;text-align:right;">
-                    <button class="btn btn-sm btn-secondary" onclick="removeShippingDateReminderPause('${esc(p)}')">停止を解除</button>
+                    ${expired ? '' : `<button class="btn btn-sm btn-secondary" onclick="removeShippingDateReminderPause('${esc(p)}')">停止を解除</button>`}
                 </td>
             </tr>`;
     }).join('') : `<tr><td colspan="4" style="padding:10px 8px;color:#999;">停止中の工番はありません。</td></tr>`;
@@ -6552,7 +6552,7 @@ async function showShippingDateReminderPauseScreen() {
         <div class="section-title" style="margin-top:10px;">確定出荷日 催促メールの一時停止</div>
         <p style="font-size:13px;color:#555;margin:6px 0 12px;">
             出荷日が大きく先延ばしになった工番について、工場出荷確定日の未入力催促メール（7日ごと）を指定した日まで止めます。
-            期限日の翌日から自動で再開します。マイページ「入力」の表示は止まりません。
+            期限日の翌日（途中で解除した場合は解除した日）を再開日として、その日に1通、以降7日ごとに催促します。マイページ「入力」の表示は止まりません。
         </p>
         <div class="audit-filter">
             <span class="audit-filter-label">工番</span>
@@ -6607,10 +6607,13 @@ async function saveShippingDateReminderPause() {
 
 async function removeShippingDateReminderPause(pNum) {
     if (requireLogin()) return;
-    if (!confirm(`${pNum} の催促停止を解除しますか？（次回の実行から催促メールが再開されます）`)) return;
+    if (!confirm(`${pNum} の催促停止を解除しますか？（今日を再開日として、次回の実行で1通、以降7日ごとに催促メールが届きます）`)) return;
     showLoading('保存中...');
     try {
-        await _updateShippingDateReminderPause(v => { delete v[pNum]; });
+        // 再開日を起点に周期を数え直すため、エントリは消さずに期限を前日に縮める
+        const [y, m, d] = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' }).split('-').map(Number);
+        const yesterday = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+        await _updateShippingDateReminderPause(v => { v[pNum] = { ...v[pNum], until: yesterday, at: new Date().toISOString() }; });
         await logSettingsChange('shipping_date_reminder_pause', `${pNum} の確定出荷日催促の停止を解除`);
         showToast(`${pNum} の催促停止を解除しました。`, 'success');
         await showShippingDateReminderPauseScreen();

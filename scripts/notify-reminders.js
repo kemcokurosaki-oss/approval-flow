@@ -1168,7 +1168,8 @@ async function runSalesShippingDateReminders() {
   const salesMapRows  = await supabaseFetch(`app_settings?key=eq.sales_person_map&select=value`);
   const salesPersonMap = salesMapRows?.[0]?.value ? JSON.parse(salesMapRows[0].value) : {};
 
-  // 管理者が設定画面で催促を一時停止した工番（{ 工番: { until: 'YYYY-MM-DD', ... } }）。期限日まで停止し、翌日から再開する
+  // 管理者が設定画面で催促を一時停止した工番（{ 工番: { until: 'YYYY-MM-DD', ... } }）。期限日まで停止し、翌日から再開する。
+  // 期限切れのエントリも再開日の起点として使うため、設定画面からは削除しない（停止の解除は期限を前日に縮める）
   const pauseRows = await supabaseFetch(`reminder_settings?key=eq.shipping_date_reminder_pause&select=value`);
   const pauseMap  = pauseRows?.[0]?.value || {};
   const todayStr  = tokyoDateStr();
@@ -1199,9 +1200,13 @@ async function runSalesShippingDateReminders() {
     const missingName = '工場出荷確定日';
 
     const elapsedDays = calendarDaysElapsedSinceJST(requestedAt);
-    const cycle = Math.floor(elapsedDays / SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
-    if (cycle < 1) continue;
-    const dueDateStr = jstDatePlusDays(requestedAt, cycle * SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
+    // 一時停止が明けた工番は、再開日（停止期限の翌日）を起点にする: 再開日に1通、以降7日ごと
+    const resumeIso = pauseUntil ? `${jstDatePlusDays(`${pauseUntil}T00:00:00+09:00`, 1)}T00:00:00+09:00` : null;
+    const resumed   = resumeIso && new Date(resumeIso) > new Date(requestedAt);
+    const anchorAt  = resumed ? resumeIso : requestedAt;
+    const cycle = Math.floor(calendarDaysElapsedSinceJST(anchorAt) / SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
+    if (cycle < (resumed ? 0 : 1)) continue;
+    const dueDateStr = jstDatePlusDays(anchorAt, cycle * SHIPPING_DATE_REMINDER_INTERVAL_DAYS);
     if (lastSentMap[req.id] && lastSentMap[req.id] >= dueDateStr) continue;
 
     const salesOwner = salesPersonMap[String(req.project_number).trim()];
