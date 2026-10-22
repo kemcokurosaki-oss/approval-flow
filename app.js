@@ -6537,10 +6537,26 @@ function isMySdrEntry(e) {
     if (e?.by_email) return e.by_email === currentUser?.email;
     return !!currentProfile?.name && e?.by === currentProfile.name;
 }
+// 停止中の工番のうち、工場出荷確定日が入力済みの工番（出荷フローが1件以上あり、未入力が残っていない）。
+// 入力済みの工番には終了前のお知らせ（メール・バッジ）を出さない（notify-reminders.js も同じ判定）
+async function loadSdrEnteredSet(pauseMap) {
+    const pNums = Object.keys(pauseMap || {});
+    if (!pNums.length) return new Set();
+    const { data } = await db.from('approval_requests').select('project_number, confirmed_shipping_date')
+        .eq('flow_type', 'shipping').neq('status', 'cancelled').in('project_number', pNums);
+    const hasReq = new Set(), hasMissing = new Set();
+    (data || []).forEach(r => {
+        const p = String(r.project_number).trim();
+        hasReq.add(p);
+        if (!r.confirmed_shipping_date) hasMissing.add(p);
+    });
+    return new Set([...hasReq].filter(p => !hasMissing.has(p)));
+}
 let sdrEndingSoonCount = 0;
-function applySdrEndingBadges(pauseMap) {
+function applySdrEndingBadges(pauseMap, enteredSet) {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
-    sdrEndingSoonCount = Object.values(pauseMap || {}).filter(e => isSdrEndingSoon(e, today) && isMySdrEntry(e)).length;
+    sdrEndingSoonCount = Object.entries(pauseMap || {})
+        .filter(([p, e]) => isSdrEndingSoon(e, today) && isMySdrEntry(e) && !enteredSet.has(p)).length;
     const railBadge = document.getElementById('rail_badge_settings');
     if (railBadge) {
         railBadge.textContent   = sdrEndingSoonCount;
@@ -6555,7 +6571,8 @@ function applySdrEndingBadges(pauseMap) {
 async function refreshSdrEndingBadges() {
     if (!isSuperAdmin()) return;
     const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
-    applySdrEndingBadges(data?.value || {});
+    const pauseMap = data?.value || {};
+    applySdrEndingBadges(pauseMap, await loadSdrEnteredSet(pauseMap));
 }
 
 // reminder_settings（key: shipping_date_reminder_pause）に { 工番: { until, by, at } } で保存し、
@@ -6584,7 +6601,8 @@ async function showShippingDateReminderPauseScreen() {
     };
     const daysLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
 
-    applySdrEndingBadges(pauseMap);
+    const enteredSet = await loadSdrEnteredSet(pauseMap);
+    applySdrEndingBadges(pauseMap, enteredSet);
     const entries = Object.keys(pauseMap).filter(p => !pauseMap[p]?.hidden).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
     const active  = entries.filter(e => e.until && e.until >= today).sort((a, b) => a.until.localeCompare(b.until));
     const expired = entries.filter(e => !e.until || e.until < today).sort((a, b) => String(b.until).localeCompare(String(a.until)));
@@ -6592,7 +6610,9 @@ async function showShippingDateReminderPauseScreen() {
     const renderRow = (e, isExpired) => `
         <div class="sdr-row${isExpired ? ' is-expired' : ''}">
             <div class="sdr-pnum">${esc(e.pNum)}</div>
-            <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${isExpired ? '' : `<span class="sdr-remain${isSdrEndingSoon(e, today) ? ' is-soon' : ''}">${daysLeft(e.until) === 0 ? '今日まで' : `あと${daysLeft(e.until)}日`}</span>`}</div>
+            <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${enteredSet.has(e.pNum)
+                ? '<span class="sdr-remain is-entered">入力済み</span>'
+                : (isExpired ? '' : `<span class="sdr-remain${isSdrEndingSoon(e, today) ? ' is-soon' : ''}">${daysLeft(e.until) === 0 ? '今日まで' : `あと${daysLeft(e.until)}日`}</span>`)}</div>
             <div class="sdr-by">
                 <span class="sdr-by-name">${esc(e.by || '')}</span>
                 ${e.at ? `<span class="sdr-by-at">${esc(fmtShort(e.at))} 設定</span>` : ''}
@@ -6611,6 +6631,7 @@ async function showShippingDateReminderPauseScreen() {
             <div class="sdr-note-points">
                 <span>・期限日の翌日（途中で解除した場合は解除した日）に1通送り、以降7日ごとに催促を再開します</span>
                 <span>・マイページ「入力」の表示は消えません</span>
+                <span>・停止中に工場出荷確定日が入力された工番は「入力済み」と表示し、終了前のお知らせは届きません</span>
             </div>
         </div>
 

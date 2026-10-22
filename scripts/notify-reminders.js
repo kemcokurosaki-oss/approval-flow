@@ -1280,8 +1280,28 @@ async function runShippingDateReminderPauseEndingNotices() {
   const pauseMap = rows?.[0]?.value || {};
   const todayStr = tokyoDateStr();
 
-  const targets = Object.entries(pauseMap).filter(([, e]) =>
+  let targets = Object.entries(pauseMap).filter(([, e]) =>
     e?.until && !e.hidden && e.notified_until !== e.until && todayStr >= sdrNoticeStartDate(e.until) && todayStr <= e.until);
+
+  // 停止中に工場出荷確定日が入力済みになった工番（出荷フローが1件以上あり、未入力が残っていない）はお知らせ不要。
+  // app.js の loadSdrEnteredSet（設定画面の「入力済み」表示・バッジ）と同じ判定
+  if (targets.length) {
+    const reqs = await supabaseFetch(
+      `approval_requests?flow_type=eq.shipping&status=neq.cancelled` +
+      `&project_number=in.(${targets.map(([p]) => `"${p}"`).join(',')})&select=project_number,confirmed_shipping_date`
+    );
+    const hasReq = new Set(), hasMissing = new Set();
+    (reqs || []).forEach(r => {
+      const p = String(r.project_number).trim();
+      hasReq.add(p);
+      if (!r.confirmed_shipping_date) hasMissing.add(p);
+    });
+    targets = targets.filter(([p]) => {
+      const entered = hasReq.has(p) && !hasMissing.has(p);
+      if (entered) console.log(`  - ${p}: 工場出荷確定日が入力済みのためお知らせしません`);
+      return !entered;
+    });
+  }
   if (targets.length === 0) {
     console.log('催促停止の終了前お知らせ: 対象なし');
     return;
