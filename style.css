@@ -3022,3 +3022,4 @@
 .settings-menu-item-badge { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
 .app-rail #nav_settings_item .badge { margin-left: auto; }
 .sdr-remain.is-entered { color: #1f7a4d; background: #e3f5eb; }
+.sdr-remain.is-completed { color: #5b6b80; background: #eef1f6; }

@@ -1283,6 +1283,13 @@ async function runShippingDateReminderPauseEndingNotices() {
   let targets = Object.entries(pauseMap).filter(([, e]) =>
     e?.until && !e.hidden && e.notified_until !== e.until && todayStr >= sdrNoticeStartDate(e.until) && todayStr <= e.until);
 
+  // 完了済みの工番は催促自体が止まっているためお知らせ不要（app.js の loadSdrCompletedSet と同じ）
+  targets = targets.filter(([p]) => {
+    const done = completedProjectsSet.has(String(p).trim());
+    if (done) console.log(`  - ${p}: 完了済みの工番のためお知らせしません`);
+    return !done;
+  });
+
   // 停止中に工場出荷確定日が入力済みになった工番（出荷フローが1件以上あり、未入力が残っていない）はお知らせ不要。
   // app.js の loadSdrEnteredSet（設定画面の「入力済み」表示・バッジ）と同じ判定
   if (targets.length) {

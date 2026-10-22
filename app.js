@@ -6552,11 +6552,18 @@ async function loadSdrEnteredSet(pauseMap) {
     });
     return new Set([...hasReq].filter(p => !hasMissing.has(p)));
 }
+// 停止中の工番のうち、完了済みの工番。完了済みの工番にも終了前のお知らせを出さない（notify-reminders.js も同じ）
+async function loadSdrCompletedSet(pauseMap) {
+    const pNums = Object.keys(pauseMap || {});
+    if (!pNums.length) return new Set();
+    const { data } = await db.from('completed_projects').select('project_number').in('project_number', pNums);
+    return new Set((data || []).map(c => String(c.project_number).trim()));
+}
 let sdrEndingSoonCount = 0;
-function applySdrEndingBadges(pauseMap, enteredSet) {
+function applySdrEndingBadges(pauseMap, enteredSet, completedSet) {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
     sdrEndingSoonCount = Object.entries(pauseMap || {})
-        .filter(([p, e]) => isSdrEndingSoon(e, today) && isMySdrEntry(e) && !enteredSet.has(p)).length;
+        .filter(([p, e]) => isSdrEndingSoon(e, today) && isMySdrEntry(e) && !enteredSet.has(p) && !completedSet.has(p)).length;
     const railBadge = document.getElementById('rail_badge_settings');
     if (railBadge) {
         railBadge.textContent   = sdrEndingSoonCount;
@@ -6572,7 +6579,7 @@ async function refreshSdrEndingBadges() {
     if (!isSuperAdmin()) return;
     const { data } = await db.from('reminder_settings').select('value').eq('key', 'shipping_date_reminder_pause').maybeSingle();
     const pauseMap = data?.value || {};
-    applySdrEndingBadges(pauseMap, await loadSdrEnteredSet(pauseMap));
+    applySdrEndingBadges(pauseMap, await loadSdrEnteredSet(pauseMap), await loadSdrCompletedSet(pauseMap));
 }
 
 // reminder_settings（key: shipping_date_reminder_pause）に { 工番: { until, by, at } } で保存し、
@@ -6601,8 +6608,9 @@ async function showShippingDateReminderPauseScreen() {
     };
     const daysLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
 
-    const enteredSet = await loadSdrEnteredSet(pauseMap);
-    applySdrEndingBadges(pauseMap, enteredSet);
+    const enteredSet   = await loadSdrEnteredSet(pauseMap);
+    const completedSet = await loadSdrCompletedSet(pauseMap);
+    applySdrEndingBadges(pauseMap, enteredSet, completedSet);
     const entries = Object.keys(pauseMap).filter(p => !pauseMap[p]?.hidden).map(p => ({ pNum: p, ...(pauseMap[p] || {}) }));
     const active  = entries.filter(e => e.until && e.until >= today).sort((a, b) => a.until.localeCompare(b.until));
     const expired = entries.filter(e => !e.until || e.until < today).sort((a, b) => String(b.until).localeCompare(String(a.until)));
@@ -6612,6 +6620,8 @@ async function showShippingDateReminderPauseScreen() {
             <div class="sdr-pnum">${esc(e.pNum)}</div>
             <div class="sdr-until">${e.until ? esc(fmtDate(e.until)) + ' まで' : '—'}${enteredSet.has(e.pNum)
                 ? '<span class="sdr-remain is-entered">入力済み</span>'
+                : completedSet.has(e.pNum)
+                ? '<span class="sdr-remain is-completed">工番完了</span>'
                 : (isExpired ? '' : `<span class="sdr-remain${isSdrEndingSoon(e, today) ? ' is-soon' : ''}">${daysLeft(e.until) === 0 ? '今日まで' : `あと${daysLeft(e.until)}日`}</span>`)}</div>
             <div class="sdr-by">
                 <span class="sdr-by-name">${esc(e.by || '')}</span>
