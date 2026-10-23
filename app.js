@@ -2975,16 +2975,18 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         await renderAssembly2000FlowDetailBody(projectNum);
         return;
     }
-    const { data: reqs } = await db.from('approval_requests')
+    const { data: rawReqs } = await db.from('approval_requests')
         .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'assembly')
         .order('created_at', { ascending: true });
+    const reqs = excludeOthersUnsavedDrafts(rawReqs);
 
     // 電気艤装タスクがある機械は、この画面内に「電装」セクションも合わせて表示する
-    const { data: elecReqs } = await db.from('approval_requests')
+    const { data: rawElecReqs } = await db.from('approval_requests')
         .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'electrical')
         .order('created_at', { ascending: true });
+    const elecReqs = excludeOthersUnsavedDrafts(rawElecReqs);
 
     // 工程表(tasks)からその工番の機械・ユニット一覧を取得し、まだ申請されていない組み合わせを「未申請」として表示する
     const { data: taskRows } = await db.from('tasks')
