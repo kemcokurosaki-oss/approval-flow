@@ -476,7 +476,7 @@
     <div class="doc-title" id="doc_title_top" data-i18n="doc_title">機械組立完了チェックシート</div>
     <div class="print-only-header" id="print_only_header"></div>
     <div class="sheet-legend" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-        <span data-i18n="legend_main">○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　</span><strong data-i18n="legend_autosave">入力内容は自動保存されます</strong>
+        <span data-i18n="legend_main">○: 確認済み　×: NG　―: 対象外　　備考欄は任意　　</span><strong data-i18n="legend_autosave">「一時保存して閉じる」を押すまで入力内容は保存されません</strong>
     </div>
     <div class="sheet-meta-box">
         <div class="sheet-meta-item">
@@ -622,7 +622,7 @@ const REQUIRED_ITEM_IDS = ['1','2','3','4','5','6','7','8','9','10','11','12','1
 const I18N = {
     doc_title:          { en: 'Machine Assembly Completion Checklist' },
     legend_main:        { en: '○: Confirmed   ×: NG   ―: N/A    Remarks are optional    ' },
-    legend_autosave:    { en: 'Input is saved automatically' },
+    legend_autosave:    { en: 'Input is not saved until you press "Save and Close"' },
     meta_project_num:   { en: 'Project No.' },
     meta_author:        { en: 'Person in Charge' },
     meta_completion_date:{ en: 'Assembly Completion Date' },
