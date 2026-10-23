@@ -1752,6 +1752,11 @@ function isSavedDraft(req) {
 function isUnsavedDraft(req) {
     return !!req && req.status === 'draft' && !req.sheet_saved_at;
 }
+// 他人の未保存draftは中身が空（sheet_dataがNULL）で、「チェックシートを見る」を押しても開けないうえ、
+// その機械・ユニットの「申請する」も隠してしまうため、工番レベルの申請状況一覧では存在しないものとして扱う
+function excludeOthersUnsavedDrafts(reqs) {
+    return (reqs || []).filter(r => !(isUnsavedDraft(r) && r.requester_id !== currentUser.id));
+}
 
 // sheet_data.pending_items のうち内容が入力済み(content or machine)かつ未完了(!completed)の件数を数える
 // 試運転は完了操作自体を廃止したため「未解決」という概念が無く、常に0件（承認済みならそのまま完了扱い）
