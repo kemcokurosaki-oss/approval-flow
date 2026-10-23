@@ -3916,10 +3916,11 @@ async function renderTestRunFlowDetailBody(projectNum) {
         await renderTestRun2000FlowDetailBody(projectNum);
         return;
     }
-    const { data: reqs } = await db.from('approval_requests')
+    const { data: rawReqs } = await db.from('approval_requests')
         .select('*, approval_steps(id, step_order, approver_role, approver_id, status, decided_at)')
         .eq('project_number', projectNum).eq('flow_type', 'test_run')
         .order('created_at', { ascending: true });
+    const reqs = excludeOthersUnsavedDrafts(rawReqs);
 
     // 試運転タスクがある機械の一覧（未申請の機械を洗い出すため）
     const { data: taskRows } = await db.from('tasks')
