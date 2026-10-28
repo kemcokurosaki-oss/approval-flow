@@ -2828,7 +2828,7 @@ async function renderAssembly2000FlowDetailBody(projectNum) {
             : build2000AssemblyProjectAggRowHtml(projectNum, reqsByProject);
 
     const pInfo = projectsMap[projectNum] || {};
-    document.getElementById('detail_title').textContent = isElec ? '電装フロー' : '組立フロー';
+    document.getElementById('detail_title').textContent = isElec ? '電装' : '組立';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
@@ -2910,7 +2910,7 @@ async function renderTestRun2000FlowDetailBody(projectNum) {
     }).join('') || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転タスクが工程表にありません</div>';
 
     const pInfo = projectsMap[projectNum] || {};
-    document.getElementById('detail_title').textContent = '試運転フロー';
+    document.getElementById('detail_title').textContent = '試運転';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
@@ -3277,7 +3277,7 @@ async function renderAssemblyFlowDetailBody(projectNum) {
         testRunReadinessHtml = buildTestRunReadinessSectionHtml(projectNum, '', '', asmReady, elecReady, hasElecTask, canEditAssembly, canEditElectrical);
     }
 
-    document.getElementById('detail_title').textContent = '組立フロー';
+    document.getElementById('detail_title').textContent = '組立';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
@@ -3719,7 +3719,7 @@ async function renderAssemblyMachineDetailBody(projectNum, machine) {
         : '';
     const kindLabel = isElec ? '電装' : '組立';
 
-    document.getElementById('detail_title').textContent = `${kindLabel}フロー`;
+    document.getElementById('detail_title').textContent = kindLabel;
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
@@ -4040,7 +4040,7 @@ async function renderTestRunFlowDetailBody(projectNum) {
 
     const rowsHtml = unappliedRowsHtml + existingRowsHtml || '<div style="padding:8px 0;color:#999;font-size:14px;">試運転の申請はまだありません</div>';
 
-    document.getElementById('detail_title').textContent = '試運転フロー';
+    document.getElementById('detail_title').textContent = '試運転';
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
@@ -4137,7 +4137,7 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
         linkHtml = `<span class="unit-list-link" style="cursor:pointer;" onclick="startNewTestRunSheetFromDetail(${jsArg(projectNum)}, ${jsArg(machine)})">申請する →</span>`;
     }
 
-    document.getElementById('detail_title').textContent = `試運転フロー（${esc(machine)}）`;
+    document.getElementById('detail_title').textContent = `試運転（${esc(machine)}）`;
     document.getElementById('detail_body').innerHTML = `
         <div style="font-size:18px;font-weight:bold;color:#1e3a5f;">${esc(projectNum)}【${esc(machine)}】　${esc(pInfo.customer_name || '')}</div>
         ${pInfo.project_details ? `<div style="font-size:15px;color:#666;margin-top:3px;">${esc(pInfo.project_details)}</div>` : ''}
