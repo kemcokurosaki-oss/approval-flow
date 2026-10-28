@@ -513,6 +513,19 @@ const FLOW_LABELS = {
     shipping:            '出荷確定申請'
 };
 
+// 申請画面の「申請・承認状況」用（メインのステップ表示と同じく「完了申請」「開催案内」等を省いた表記）
+const FLOW_STEP_LABELS = {
+    assembly:            '組立',
+    electrical:          '電装',
+    test_run:            '試運転',
+    simple_inspection:   '簡易検査',
+    inspection:          '外観検査',
+    shipping_check_inspection: '出荷品確認検査',
+    shipping_meeting:    '出荷確認会議',
+    shipping_prep:       '出荷準備',
+    shipping:            '出荷'
+};
+
 // 出荷確定申請の残件警告で使う呼称（組立・電装は「ペンディング」、検査系開催案内は「タスク」）
 const PENDING_ITEM_NOUN = {
     assembly:            'ペンディング',
@@ -1030,8 +1043,8 @@ async function onMachineChange() {
         const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly');
 
         document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
-            _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[currentFlowType] || '完了通知'}（今回）`, `${machines.length}機械を一括申請`) +
-            upcomingFlows.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)).join('') +
+            _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_STEP_LABELS[currentFlowType] || '完了通知'}（今回）`, `${machines.length}機械を一括申請`) +
+            upcomingFlows.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)).join('') +
             `</div>`;
         flowEl.style.display = 'block';
         if (currentFlowType === 'shipping_prep') {
@@ -1056,10 +1069,10 @@ async function onMachineChange() {
 
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
         displayChain.map(t => t === currentFlowType
-            ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_LABELS[t] || '完了通知'}（今回）`)
+            ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_STEP_LABELS[t] || '完了通知'}（今回）`)
             : approvedRaw.has(t)
-                ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')
-                : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)
+                ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
+                : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
         ).join('') +
         `</div>`;
     flowEl.style.display = 'block';
@@ -8645,8 +8658,8 @@ const FS_CUR_ICON  = '<span class="fc-play-icon">▶</span>', FS_CUR_SC = 'sc-pe
 function _renderFlowStatusList(steps, doneFlows, currentLabel) {
     return `<div class="steps-list">` +
         steps.map(t => doneFlows.has(t)
-            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_LABELS[t] || t, '承認済み')
-            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_LABELS[t] || t)
+            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
+            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
         ).join('') +
         _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${currentLabel}（今回）`) +
         `</div>`;
@@ -9879,13 +9892,13 @@ async function onShippingMachineChange() {
         document.getElementById('shipping_approver_box').style.display = 'block';
     }
 
-    const rows = [...required].map(t => ({ type: t, label: FLOW_LABELS[t] || t }));
+    const rows = [...required].map(t => ({ type: t, label: FLOW_STEP_LABELS[t] || t }));
     document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
         rows.map(f => doneFlows.has(f.type)
             ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, f.label, '承認済み')
             : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label)
         ).join('') +
-        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷確定申請（今回）') +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷（今回）') +
         `</div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
 
