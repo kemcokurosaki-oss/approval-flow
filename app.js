@@ -4687,9 +4687,7 @@ function openSubmitModal(flowType = 'assembly') {
 
     // モーダルタイトルをフロー種別で切り替え
     document.getElementById('submit_modal_title').textContent =
-        flowType === 'test_run'      ? '試運転完了通知 — 申請' :
-        flowType === 'electrical'    ? '電装完了通知 — 申請' :
-        flowType === 'shipping_prep' ? '出荷準備完了 — 申請' : '組立完了通知 — 申請';
+        FLOW_STEP_LABELS[flowType] || '組立';
 
     // 承認者選択グループは非表示（assembly は課長・部長両方に通知するため選択不要）
     document.getElementById('submit_approver_group').style.display = 'none';
@@ -4953,8 +4951,7 @@ async function openDraftInSubmitModal(draftId) {
             || (Array.isArray(draft.assembly_items) && draft.assembly_items.length > 0);
         _updateSubmitUnitDisplay();
 
-        const titleMap = { assembly: '組立完了通知 — 申請', electrical: '電装完了通知 — 申請', test_run: '試運転完了通知 — 申請' };
-        document.getElementById('submit_modal_title').textContent = titleMap[draft.flow_type] || '申請';
+        document.getElementById('submit_modal_title').textContent = FLOW_STEP_LABELS[draft.flow_type] || '申請';
         document.getElementById('submit_approver_group').style.display = 'none';
 
         const p = projectsMap[draft.project_number] || {};
@@ -5850,7 +5847,7 @@ async function openDetailModal(requestId, returnTo = null) {
 
     document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
         ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
-        : (FLOW_LABELS[req.flow_type] || req.flow_type);
+        : (FLOW_STEP_LABELS[req.flow_type] || req.flow_type);
     // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
     let statusNote = '';
     const isShippingAwaitingSubmit = req.flow_type === 'shipping'
@@ -5874,9 +5871,9 @@ async function openDetailModal(requestId, returnTo = null) {
         shippingConfirmMissingFlows = [...requiredFlows].filter(t => !doneFlows.has(t));
     }
     const shippingConfirmMissingWarningHtml = shippingConfirmMissingFlows.length > 0 ? `
-        <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ 前フロー（${shippingConfirmMissingFlows.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません</div>` : '';
+        <div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ 前フロー（${shippingConfirmMissingFlows.map(t => FLOW_STEP_LABELS[t] || t).join('・')}）が未完了のため申請できません</div>` : '';
     const shippingConfirmPendingWarningHtml = shippingConfirmPendingBlockers.map(b =>
-        `<div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${FLOW_LABELS[b.flowType] || b.flowType}に未完了の${PENDING_ITEM_NOUN[b.flowType] || 'ペンディング'}が残っているため申請できません</div>`
+        `<div style="color:#c0392b;font-weight:bold;font-size:14px;padding:6px 0;">⚠ ${FLOW_STEP_LABELS[b.flowType] || b.flowType}に未完了の${PENDING_ITEM_NOUN[b.flowType] || 'ペンディング'}が残っているため申請できません</div>`
     ).join('');
 
     // ステップ表示の先頭に「申請」ステップを追加する（誰が・いつ申請したか）
@@ -10093,12 +10090,12 @@ async function confirmAndSubmitShipping(requestId) {
             ]);
             const missing = [...required].filter(t => !doneFlows.has(t));
             if (missing.length > 0) {
-                showToast(`前フロー（${missing.map(t => FLOW_LABELS[t] || t).join('・')}）が未完了のため申請できません`, 'error');
+                showToast(`前フロー（${missing.map(t => FLOW_STEP_LABELS[t] || t).join('・')}）が未完了のため申請できません`, 'error');
                 return;
             }
             const pendingBlockers = await _getShippingPendingBlockers(checkReq.project_number, checkReq.machine_name);
             if (pendingBlockers.length > 0) {
-                const labels = pendingBlockers.map(t => FLOW_LABELS[t.flowType] || t.flowType).join('・');
+                const labels = pendingBlockers.map(t => FLOW_STEP_LABELS[t.flowType] || t.flowType).join('・');
                 showToast(`${labels}に未完了のペンディング項目が残っているため申請できません`, 'error');
                 return;
             }
