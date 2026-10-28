@@ -5847,7 +5847,7 @@ async function openDetailModal(requestId, returnTo = null) {
 
     document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
         ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
-        : `${FLOW_STEP_LABELS[req.flow_type] || req.flow_type} — 詳細`;
+        : (FLOW_STEP_LABELS[req.flow_type] || req.flow_type);
     // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
     let statusNote = '';
     const isShippingAwaitingSubmit = req.flow_type === 'shipping'
