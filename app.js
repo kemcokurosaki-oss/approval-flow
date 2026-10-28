@@ -1043,7 +1043,7 @@ async function onMachineChange() {
         const upcomingFlows = chain.filter(t => t !== currentFlowType && t !== 'assembly');
 
         document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
-            _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_STEP_LABELS[currentFlowType] || '完了通知'}（今回）`, `${machines.length}機械を一括申請`) +
+            _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, FLOW_STEP_LABELS[currentFlowType] || '完了通知', `${machines.length}機械を一括申請`) +
             upcomingFlows.map(t => _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)).join('') +
             `</div>`;
         flowEl.style.display = 'block';
@@ -1069,7 +1069,7 @@ async function onMachineChange() {
 
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
         displayChain.map(t => t === currentFlowType
-            ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${FLOW_STEP_LABELS[t] || '完了通知'}（今回）`)
+            ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, FLOW_STEP_LABELS[t] || '完了通知')
             : approvedRaw.has(t)
                 ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
                 : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
@@ -8661,7 +8661,7 @@ function _renderFlowStatusList(steps, doneFlows, currentLabel) {
             ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
             : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
         ).join('') +
-        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, `${currentLabel}（今回）`) +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, currentLabel) +
         `</div>`;
 }
 
@@ -9898,7 +9898,7 @@ async function onShippingMachineChange() {
             ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, f.label, '承認済み')
             : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label)
         ).join('') +
-        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷（今回）') +
+        _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷') +
         `</div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
 
