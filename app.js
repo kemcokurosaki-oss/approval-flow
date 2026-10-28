@@ -8655,12 +8655,12 @@ const FS_DONE_ICON = '✓', FS_DONE_SC = 'sc-approved';
 const FS_WAIT_ICON = '○', FS_WAIT_SC = 'sc-waiting';
 const FS_CUR_ICON  = '<span class="fc-play-icon">▶</span>', FS_CUR_SC = 'sc-pending';
 
-// 申請画面の「申請・承認状況」の1行（今回以外のフロー）。検査・会議は「開催済み」、承認フローは承認待ちならオレンジ▶で「承認待ち」
+// 申請画面の「申請・承認状況」の1行（今回以外のフロー）。検査・会議は「開催済み」／開催案内送付後はオレンジ▶「開催待ち」、承認フローは承認待ちならオレンジ▶「承認待ち」
 function _flowStepStatusHtml(t, approved, waiting) {
     const label = FLOW_STEP_LABELS[t] || t;
     const isMeeting = QA_MEETING_FLOWS.includes(t);
     if (approved.has(t)) return _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, label, isMeeting ? '開催済み' : '承認済み');
-    if (!isMeeting && waiting && waiting.has(t)) return _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, label, '承認待ち');
+    if (waiting && waiting.has(t)) return _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, label, isMeeting ? '開催待ち' : '承認待ち');
     return _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, label);
 }
 
