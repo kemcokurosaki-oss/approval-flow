@@ -4687,7 +4687,7 @@ function openSubmitModal(flowType = 'assembly') {
 
     // モーダルタイトルをフロー種別で切り替え
     document.getElementById('submit_modal_title').textContent =
-        FLOW_STEP_LABELS[flowType] || '組立';
+        `${FLOW_STEP_LABELS[flowType] || '組立'} — 申請`;
 
     // 承認者選択グループは非表示（assembly は課長・部長両方に通知するため選択不要）
     document.getElementById('submit_approver_group').style.display = 'none';
@@ -4951,7 +4951,7 @@ async function openDraftInSubmitModal(draftId) {
             || (Array.isArray(draft.assembly_items) && draft.assembly_items.length > 0);
         _updateSubmitUnitDisplay();
 
-        document.getElementById('submit_modal_title').textContent = FLOW_STEP_LABELS[draft.flow_type] || '申請';
+        document.getElementById('submit_modal_title').textContent = `${FLOW_STEP_LABELS[draft.flow_type] || '組立'} — 申請`;
         document.getElementById('submit_approver_group').style.display = 'none';
 
         const p = projectsMap[draft.project_number] || {};
@@ -5847,7 +5847,7 @@ async function openDetailModal(requestId, returnTo = null) {
 
     document.getElementById('detail_title').textContent = QA_MEETING_FLOWS.includes(req.flow_type)
         ? (QA_DETAIL_TITLE_LABELS[req.flow_type] || req.flow_type)
-        : (FLOW_STEP_LABELS[req.flow_type] || req.flow_type);
+        : `${FLOW_STEP_LABELS[req.flow_type] || req.flow_type} — 詳細`;
     // 状態欄の補足説明（誰が何をすべきか一目でわかるように）
     let statusNote = '';
     const isShippingAwaitingSubmit = req.flow_type === 'shipping'
@@ -7826,7 +7826,7 @@ async function openRescheduleModal(requestId) {
 
     rescheduleModalReqId = requestId;
     document.getElementById('reschedule_modal_title').textContent =
-        `詳細変更－${QA_DETAIL_TITLE_LABELS[req.flow_type] || ''}`;
+        `${QA_DETAIL_TITLE_LABELS[req.flow_type] || ''} — 詳細変更`;
     document.getElementById('reschedule_date_input').value = req.inspection_date || '';
     document.getElementById('reschedule_time_hour').value  = req.inspection_time ? req.inspection_time.split(':')[0] : '';
     document.getElementById('reschedule_time_min').value   = req.inspection_time ? req.inspection_time.split(':')[1] : '';
