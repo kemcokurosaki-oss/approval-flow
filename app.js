@@ -1057,7 +1057,7 @@ async function onMachineChange() {
     // 1台選択: 工程表の実タスクに基づく詳細フロー検出
     const machine = machines[0];
     const chain = await _getMachineFlowChain(num, machine);
-    const { approved: approvedRaw, electricalRequired } = await _getRawFlowStatus(num, machine);
+    const { approved: approvedRaw, waiting, electricalRequired } = await _getRawFlowStatus(num, machine);
 
     // 電気艤装タスクがある機械は、組立の直後に電装を挿入して常に両方の状況を表示する
     // （組立・電装は並行フローのため、どちらから見ても組立→電装→出荷の順・各自の実際の状況で見せる）
@@ -1070,9 +1070,7 @@ async function onMachineChange() {
     document.getElementById('flow_detect_list').innerHTML = `<div class="steps-list">` +
         displayChain.map(t => t === currentFlowType
             ? _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, FLOW_STEP_LABELS[t] || '完了通知')
-            : approvedRaw.has(t)
-                ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
-                : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
+            : _flowStepStatusHtml(t, approvedRaw, waiting)
         ).join('') +
         `</div>`;
     flowEl.style.display = 'block';
@@ -8551,21 +8549,27 @@ function toggleAllMachines(listId, btn) {
 // 組立(assembly)は1申請に複数機械をまとめられるため、machine_nameの完全一致ではなく
 // assembly_itemsのJSON配列内にその機械が含まれる承認済み申請があるかで判定する
 async function _getRawFlowStatus(projectNum, machine) {
-    const [{ data: approvedRows }, { data: elecTaskRows }, { data: assemblyApprovedRows }] = await Promise.all([
-        db.from('approval_requests').select('flow_type')
-            .eq('project_number', projectNum).eq('machine_name', machine).eq('status', 'approved')
+    const [{ data: reqRows }, { data: elecTaskRows }, { data: assemblyRows }] = await Promise.all([
+        db.from('approval_requests').select('flow_type, status')
+            .eq('project_number', projectNum).eq('machine_name', machine).in('status', ['approved', 'submitted', 'in_review'])
             .neq('flow_type', 'assembly'),
         db.from('tasks').select('id')
             .eq('project_number', projectNum).eq('machine', machine).eq('text', '電気艤装').limit(1),
-        db.from('approval_requests').select('assembly_items, machine_name, unit_name')
-            .eq('project_number', projectNum).eq('flow_type', 'assembly').eq('status', 'approved')
+        db.from('approval_requests').select('assembly_items, machine_name, unit_name, status')
+            .eq('project_number', projectNum).eq('flow_type', 'assembly').in('status', ['approved', 'submitted', 'in_review'])
     ]);
-    const approved = new Set((approvedRows || []).map(r => r.flow_type));
-    const assemblyApproved = (assemblyApprovedRows || [])
-        .some(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
-    if (assemblyApproved) approved.add('assembly');
+    const approved = new Set((reqRows || []).filter(r => r.status === 'approved').map(r => r.flow_type));
+    const myAssemblyRows = (assemblyRows || [])
+        .filter(req => getAssemblyItemsForReq(req).some(it => it && it.machine === machine));
+    if (myAssemblyRows.some(r => r.status === 'approved')) approved.add('assembly');
+    // 承認待ち（申請済み・未承認）のフロー。承認済みのものは承認済み表示を優先する
+    const waiting = new Set([
+        ...(reqRows || []).filter(r => r.status !== 'approved').map(r => r.flow_type),
+        ...(myAssemblyRows.some(r => r.status !== 'approved') ? ['assembly'] : [])
+    ].filter(t => !approved.has(t)));
     return {
         approved,
+        waiting,
         electricalRequired: (elecTaskRows || []).length > 0
     };
 }
@@ -8651,13 +8655,19 @@ const FS_DONE_ICON = '✓', FS_DONE_SC = 'sc-approved';
 const FS_WAIT_ICON = '○', FS_WAIT_SC = 'sc-waiting';
 const FS_CUR_ICON  = '<span class="fc-play-icon">▶</span>', FS_CUR_SC = 'sc-pending';
 
+// 申請画面の「申請・承認状況」の1行（今回以外のフロー）。検査・会議は「開催済み」、承認フローは承認待ちならオレンジ▶で「承認待ち」
+function _flowStepStatusHtml(t, approved, waiting) {
+    const label = FLOW_STEP_LABELS[t] || t;
+    const isMeeting = QA_MEETING_FLOWS.includes(t);
+    if (approved.has(t)) return _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, label, isMeeting ? '開催済み' : '承認済み');
+    if (!isMeeting && waiting && waiting.has(t)) return _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, label, '承認待ち');
+    return _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, label);
+}
+
 // フロー状況チェックリストのHTMLを生成（承認済み/未完了 + 今回のフロー）
 function _renderFlowStatusList(steps, doneFlows, currentLabel) {
     return `<div class="steps-list">` +
-        steps.map(t => doneFlows.has(t)
-            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, FLOW_STEP_LABELS[t] || t, '承認済み')
-            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, FLOW_STEP_LABELS[t] || t)
-        ).join('') +
+        steps.map(t => _flowStepStatusHtml(t, doneFlows)).join('') +
         _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, currentLabel) +
         `</div>`;
 }
@@ -9846,6 +9856,7 @@ async function onShippingMachineChange() {
     try {
     // フロー状況（外観検査or簡易検査＋あれば出荷確認会議＋出荷準備を動的判定し、未完了があれば申請不可にする）
     const doneFlows = await _getMachineDoneFlows(num, machine);
+    const { waiting } = await _getRawFlowStatus(num, machine);
     const required  = await _getShippingIssueRequiredFlows(num, machine);
 
     // 担当者確認欄は検査フロー（簡易検査/外観検査/出荷品確認検査のいずれか）が承認済みになってから表示する。
@@ -9889,12 +9900,8 @@ async function onShippingMachineChange() {
         document.getElementById('shipping_approver_box').style.display = 'block';
     }
 
-    const rows = [...required].map(t => ({ type: t, label: FLOW_STEP_LABELS[t] || t }));
     document.getElementById('shipping_flow_list').innerHTML = `<div class="steps-list">` +
-        rows.map(f => doneFlows.has(f.type)
-            ? _flowStepHtml(FS_DONE_SC, FS_DONE_ICON, f.label, '承認済み')
-            : _flowStepHtml(FS_WAIT_SC, FS_WAIT_ICON, f.label)
-        ).join('') +
+        [...required].map(t => _flowStepStatusHtml(t, doneFlows, waiting)).join('') +
         _flowStepHtml(FS_CUR_SC, FS_CUR_ICON, '出荷') +
         `</div>`;
     document.getElementById('shipping_flow_box').style.display = 'block';
