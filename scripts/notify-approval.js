@@ -71,6 +71,19 @@ function photoUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
 }
 
+// タスク（ペンディング項目）の写真一覧（kind: 'before'=修正前 / 'after'=修正後）。旧形式の photo_path は修正前として扱う
+function pendingPhotos(item, kind) {
+  if (kind === 'after') return item?.photos_after || [];
+  return item?.photos_before || (item?.photo_path ? [item.photo_path] : []);
+}
+
+// 写真をメール本文用の<img>に並べる（写真なしは空文字）
+function pendingPhotoImgsHtml(paths) {
+  return (paths || []).map(p =>
+    `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border-radius:4px;vertical-align:middle;">`
+  ).join('');
+}
+
 // ===== 出荷準備フロー: 完了通知メールの追加CC（組立/操業/設計/現地工事担当者） =====
 // app.js の splitOwnerNames / isBusinessTripTaskRow / isTripTaskExpired / tripTaskDurationDays と同じ判定をここでも再現する
 function splitOwnerNames(ownerStr) {
@@ -456,17 +469,32 @@ function buildEmail(type, req, recipientName, extra = {}) {
           `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
       };
 
-    case 'pending_item_completed':
+    case 'pending_item_completed': {
+      const body =
+        `${recipientName} 様\n\n` +
+        `${pStr}（${flow}）の${itemLabel}が完了になりました。` +
+        detailLine +
+        `\n承認フロー管理システムで内容をご確認ください。` +
+        note;
+      const text = `${body}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+      // 完了したタスクに修正後の写真があれば、写真を載せたHTML版も付ける（内容が同じタスクは後ろの方を優先）
+      const doneItem = [...(req?.sheet_data?.pending_items || [])].reverse()
+        .find(it => it.content === extra?.detail);
+      const afterImgs = pendingPhotoImgsHtml(pendingPhotos(doneItem, 'after'));
+      const html = afterImgs ? `
+        <div>
+          <p>${esc(body).replace(/\n/g, '<br>')}</p>
+          <p>修正後の写真<br>${afterImgs}</p>
+          <p>▼ 承認フローを開く<br><a href="${APP_URL}">${APP_URL}</a></p>
+          <p>※このメールは自動送信です。</p>
+        </div>` : undefined;
       return {
         from,
         subject: `【${itemLabel}完了】${pStr}`,
-        text:
-          `${recipientName} 様\n\n` +
-          `${pStr}（${flow}）の${itemLabel}が完了になりました。` +
-          detailLine +
-          `\n承認フロー管理システムで内容をご確認ください。` +
-          `${note}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
+        text,
+        html,
       };
+    }
 
     case 'pending_item_uncompleted':
       return {
@@ -672,20 +700,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'fix_card_sent': {
       const items = (req?.sheet_data?.pending_items || []).filter(it => it.content);
       const flowLabelShort = FLOW_SHORT_LABEL[req?.flow_type] || '検査';
-      // 写真は「修正前 → 修正後」で並べる（旧形式の photo_path は修正前として扱う）
-      const photoCellHtml = (it) => {
-        const before = it.photos_before || (it.photo_path ? [it.photo_path] : []);
-        const after  = it.photos_after || [];
-        if (!before.length && !after.length) return '—';
-        const imgs = (paths) => paths.length
-          ? paths.map(p => `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border-radius:4px;vertical-align:middle;">`).join('')
-          : '（未登録）';
-        return `<b>修正前</b><br>${imgs(before)}` +
-          (after.length ? `<br>↓<br><b>修正後</b><br>${imgs(after)}` : '');
-      };
+      // タスクリストは指摘箇所を伝えるものなので、修正前の写真だけを載せる
       const rowsHtml = items.map(it => `
         <tr>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${photoCellHtml(it)}</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${pendingPhotoImgsHtml(pendingPhotos(it, 'before')) || '—'}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || '—')}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || '—')}</td>

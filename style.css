@@ -1774,6 +1774,34 @@
             color: #999;
         }
         .pending-photo-compare-edit .photo-dropzone { margin-top: 6px; background: #fff; }
+        /* 選択中（未保存）の写真: サムネイル＋×で選択取り消し */
+        .photo-picked { display: flex; flex-wrap: wrap; gap: 6px; }
+        .photo-picked:not(:empty) { margin-top: 6px; }
+        .photo-picked-item { position: relative; }
+        .photo-picked-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: block;
+        }
+        .photo-picked-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid #c0392b;
+            background: #fff;
+            color: #c0392b;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .photo-picked-remove:hover { background: #c0392b; color: #fff; }
         .photo-lightbox {
             background: rgba(0,0,0,0.8);
             cursor: zoom-out;

@@ -10653,23 +10653,53 @@ document.addEventListener('click', (e) => {
 
 // ペンディング項目の写真選択欄（.photo-dropzone）: クリック・ドラッグ＆ドロップの両方に対応
 // 動的に再描画されるHTMLのため、個別要素へのバインドではなくdocument委譲で処理する
-function _photoDropzoneLabel(zone) {
+// 選択した写真は追加していく方式で、選択欄の下にサムネイルと×（選択取り消し）を並べる
+function _photoDropzoneAdd(zone, newFiles) {
     const input = zone.querySelector('input[type="file"]');
-    const label = zone.querySelector('.photo-dropzone-label');
-    if (!label) return;
-    if (!label.dataset.defaultText) label.dataset.defaultText = label.textContent;
-    const files = [...(input?.files || [])];
-    label.textContent = files.length > 1
-        ? `${files.length}枚選択: ${files.map(f => f.name).join(', ')}`
-        : (files[0]?.name || label.dataset.defaultText);
+    if (!input) return;
+    zone._files = [...(zone._files || []), ...[...newFiles].filter(f => f.type.startsWith('image/'))];
+    _photoDropzoneSync(zone);
+}
+function _photoDropzoneSync(zone) {
+    const input = zone.querySelector('input[type="file"]');
+    const dt = new DataTransfer();
+    (zone._files || []).forEach(f => dt.items.add(f));
+    input.files = dt.files;
+
+    let picked = zone.nextElementSibling;
+    if (!picked?.classList.contains('photo-picked')) {
+        picked = document.createElement('div');
+        picked.className = 'photo-picked';
+        zone.after(picked);
+    }
+    picked.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+    picked.innerHTML = '';
+    (zone._files || []).forEach((f, i) => {
+        const item = document.createElement('div');
+        item.className = 'photo-picked-item';
+        item.title = f.name;
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'photo-picked-remove';
+        btn.title = '選択を取り消す';
+        btn.textContent = '×';
+        btn.onclick = () => { zone._files.splice(i, 1); _photoDropzoneSync(zone); };
+        item.append(img, btn);
+        picked.append(item);
+    });
 }
 document.addEventListener('click', (e) => {
     const zone = e.target.closest('.photo-dropzone');
-    if (zone) zone.querySelector('input[type="file"]')?.click();
+    if (zone && !e.target.matches('input[type="file"]')) zone.querySelector('input[type="file"]')?.click();
 });
 document.addEventListener('change', (e) => {
     const zone = e.target.closest('.photo-dropzone');
-    if (zone && e.target.matches('input[type="file"]')) _photoDropzoneLabel(zone);
+    if (!zone || !e.target.matches('input[type="file"]')) return;
+    // ファイル選択ダイアログは選び直すたびに input.files を置き換えるので、前回までの選択に足す
+    const chosen = [...e.target.files].filter(f => !(zone._files || []).includes(f));
+    _photoDropzoneAdd(zone, chosen);
 });
 document.addEventListener('dragover', (e) => {
     const zone = e.target.closest('.photo-dropzone');
@@ -10684,11 +10714,7 @@ document.addEventListener('drop', (e) => {
     if (!zone) return;
     e.preventDefault();
     zone.classList.remove('drag-over');
-    const input = zone.querySelector('input[type="file"]');
-    if (input && e.dataTransfer.files.length > 0) {
-        input.files = e.dataTransfer.files;
-        _photoDropzoneLabel(zone);
-    }
+    if (e.dataTransfer.files.length > 0) _photoDropzoneAdd(zone, e.dataTransfer.files);
 });
 
 function fmtDate(iso) {
