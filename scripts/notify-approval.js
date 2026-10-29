@@ -693,8 +693,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
           <p>${esc(greeting)}</p>
           <p>${requestLines.map(esc).join('<br>')}</p>
-          <h2 style="margin-bottom:4px;">${esc(flowLabelShort)} タスクリスト</h2>
-          <p style="margin-top:0;color:#666;">
+          <p style="color:#666;">
             工事番号: ${esc(pNum)} ／
             機械: ${esc(machineName || '—')} ／
             検査日: ${esc(req?.inspection_date || '—')}
