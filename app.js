@@ -7765,7 +7765,7 @@ async function deleteQaPendingItem(requestId, idx) {
 }
 
 async function sendFixCard(requestId) {
-    if (!confirm('タスクリストをメールで送信します（数分以内に届きます）。\n宛先はこの検査の開催案内と同じです。よろしいですか？')) return;
+    if (!confirm('タスクリストをメールで送信します（数分以内に届きます）。\n宛先はこの検査の開催案内と同じです（必須参加者はTo、任意参加者はCCで1通にまとめて送ります）。よろしいですか？')) return;
     showLoading('送信予約中...');
     try {
         const { data, error } = await db.functions.invoke('send-fix-card', { body: { requestId } });
@@ -7777,7 +7777,7 @@ async function sendFixCard(requestId) {
             } catch (_) { /* ignore parse failure, fall back to error.message */ }
             throw new Error(msg);
         }
-        showToast(`タスクリストの送信を予約しました（${data?.queued ?? 0}件・数分以内に届きます）${data?.testMode ? ' ※テストモード' : ''}`, 'success');
+        showToast(`タスクリストの送信を予約しました（関係者${data?.queued ?? 0}名に1通で・数分以内に届きます）${data?.testMode ? ' ※テストモード' : ''}`, 'success');
     } catch (e) {
         showToast('送信予約に失敗しました: ' + e.message, 'error');
     } finally {
