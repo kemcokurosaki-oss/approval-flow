@@ -1718,12 +1718,62 @@
             box-shadow: 0 0 0 2px #1e3a5f;
             transform: scale(1.03);
         }
-        /* 写真未添付の項目でも、添付ありの項目と内容テキストの先頭位置が揃うよう同じ大きさの空枠を確保する */
-        .pending-detail-photo-placeholder {
+        /* 修正前 → 修正後 の写真比較 */
+        .pending-photo-compare {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .pending-photo-group {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .pending-photo-group.before { background: #fdf3f2; border-color: #f2d4d0; }
+        .pending-photo-group.after  { background: #eefaf2; border-color: #cbead6; }
+        .pending-photo-group-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .pending-photo-group.before .pending-photo-group-label { color: #c0392b; }
+        .pending-photo-group.after  .pending-photo-group-label { color: #1c8f4d; }
+        .pending-photo-thumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .pending-photo-empty {
             width: 64px;
             height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .pending-photo-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #888;
             flex-shrink: 0;
         }
+        .pending-photo-edit-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 12px;
+            color: #999;
+        }
+        .pending-photo-compare-edit .photo-dropzone { margin-top: 6px; background: #fff; }
         .photo-lightbox {
             background: rgba(0,0,0,0.8);
             cursor: zoom-out;

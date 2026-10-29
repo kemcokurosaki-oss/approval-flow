@@ -672,13 +672,20 @@ function buildEmail(type, req, recipientName, extra = {}) {
     case 'fix_card_sent': {
       const items = (req?.sheet_data?.pending_items || []).filter(it => it.content);
       const flowLabelShort = FLOW_SHORT_LABEL[req?.flow_type] || '検査';
+      // 写真は「修正前 → 修正後」で並べる（旧形式の photo_path は修正前として扱う）
+      const photoCellHtml = (it) => {
+        const before = it.photos_before || (it.photo_path ? [it.photo_path] : []);
+        const after  = it.photos_after || [];
+        if (!before.length && !after.length) return '—';
+        const imgs = (paths) => paths.length
+          ? paths.map(p => `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border-radius:4px;vertical-align:middle;">`).join('')
+          : '（未登録）';
+        return `<b>修正前</b><br>${imgs(before)}` +
+          (after.length ? `<br>↓<br><b>修正後</b><br>${imgs(after)}` : '');
+      };
       const rowsHtml = items.map(it => `
         <tr>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${
-            it.photo_path
-              ? `<img src="${esc(photoUrl(it.photo_path))}" width="100" style="display:block;border-radius:4px;">`
-              : '—'
-          }</td>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${photoCellHtml(it)}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || '—')}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || '—')}</td>

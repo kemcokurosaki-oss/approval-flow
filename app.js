@@ -5442,15 +5442,11 @@ function buildPendingSectionInner(req, isMyRequest) {
                     </div>
                     <div style="display:flex;flex-direction:column;">
                         <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真</span>
-                        ${item.photo_path ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(item.photo_path))})">` : ''}
-                        <div class="photo-dropzone">
-                            <input type="file" accept="image/*" capture="environment" id="qa_edit_photo_${idx}" style="display:none;">
-                            <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                        <div class="pending-photo-compare pending-photo-compare-edit">
+                            ${_pendingPhotoEditGroupHtml(item, 'before', idx)}
+                            <div class="pending-photo-arrow">→</div>
+                            ${_pendingPhotoEditGroupHtml(item, 'after', idx)}
                         </div>
-                        ${item.photo_path ? `
-                        <label style="font-size:13px;color:#999;display:flex;align-items:center;gap:2px;">
-                            <input type="checkbox" id="qa_edit_photo_remove_${idx}"> 写真を削除
-                        </label>` : ''}
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
@@ -5462,15 +5458,13 @@ function buildPendingSectionInner(req, isMyRequest) {
             return `
             <div class="pending-detail-row ${!isTestRun && item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
-                ${item.photo_path
-                    ? `<img src="${esc(pendingPhotoUrl(item.photo_path))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(item.photo_path))})">`
-                    : `<div class="pending-detail-photo-placeholder"></div>`}
                 <div class="pending-detail-content">
                     <div class="pending-detail-text">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}${isTestRun ? '' : (item.completed ? ' <span style="font-size:12px;color:#1c8f4d;background:#eafaf0;border-radius:4px;padding:1px 6px;">完了</span>' : (pendingDueSoon(item.due) ? ' <span style="font-size:12px;color:#c0392b;background:#fde8e8;border-radius:4px;padding:1px 6px;">期日間近</span>' : ''))}${!isTestRun && item.ship_after ? ' <span class="badge-ship-after" style="font-size:12px;color:#a06a00;background:#fff3d6;border-radius:4px;padding:1px 6px;">出荷後対応</span>' : ''}</div>
                     ${item.location ? `<div class="pending-detail-owner">場所: ${esc(item.location)}</div>` : ''}
                     ${item.owner ? `<div class="pending-detail-owner">担当: ${esc(item.owner)}</div>` : ''}
                     ${!isTestRun && item.due && !item.completed ? `<div class="pending-detail-due">期日: ${esc(item.due)}</div>` : ''}
                     ${!isTestRun && item.completed ? `<div class="pending-detail-date">完了: ${esc(item.completed_date || '')}</div>` : ''}
+                    ${_pendingPhotoCompareHtml(item)}
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     ${itemCanComplete ? (item.completed
@@ -5545,10 +5539,23 @@ function buildQaResultSectionInner(req, isMyRequest) {
                         </label>
                     </div>
                     <div style="display:flex;flex-direction:column;">
-                        <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真（任意）</span>
-                        <div class="photo-dropzone">
-                            <input type="file" accept="image/*" capture="environment" id="qa_pending_photo" style="display:none;">
-                            <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                        <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真（任意・複数可）</span>
+                        <div class="pending-photo-compare pending-photo-compare-edit">
+                            <div class="pending-photo-group before">
+                                <div class="pending-photo-group-label">修正前</div>
+                                <div class="photo-dropzone">
+                                    <input type="file" accept="image/*" multiple id="qa_pending_photo_before" style="display:none;">
+                                    <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                                </div>
+                            </div>
+                            <div class="pending-photo-arrow">→</div>
+                            <div class="pending-photo-group after">
+                                <div class="pending-photo-group-label">修正後</div>
+                                <div class="photo-dropzone">
+                                    <input type="file" accept="image/*" multiple id="qa_pending_photo_after" style="display:none;">
+                                    <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex;justify-content:flex-end;">
@@ -7563,19 +7570,72 @@ function _applyPendingUpdate(requestId, newSheetData, toastMsg, opts = {}) {
 
 const PENDING_PHOTO_BUCKET = 'pending-item-photos';
 
-// ペンディング項目の修正箇所写真をアップロードし、Storage内のパスを返す
-async function _uploadPendingPhoto(requestId, itemId, file) {
-    const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${requestId}/${itemId}.${ext}`;
-    const { error } = await db.storage.from(PENDING_PHOTO_BUCKET).upload(path, file, { upsert: true });
-    if (error) throw error;
-    return path;
+// ペンディング項目の写真一覧（kind: 'before'=修正前 / 'after'=修正後）
+// 旧形式（photo_path 1枚のみ）の写真は修正前として扱う
+function _pendingPhotos(item, kind) {
+    if (kind === 'after') return item.photos_after || [];
+    return item.photos_before || (item.photo_path ? [item.photo_path] : []);
+}
+
+// ペンディング項目の写真（複数枚）をアップロードし、Storage内のパスの配列を返す
+async function _uploadPendingPhotos(requestId, itemId, kind, files) {
+    const paths = [];
+    const stamp = Date.now();
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${requestId}/${itemId}_${kind}_${stamp}_${i}.${ext}`;
+        const { error } = await db.storage.from(PENDING_PHOTO_BUCKET).upload(path, file, { upsert: true });
+        if (error) throw error;
+        paths.push(path);
+    }
+    return paths;
 }
 
 // ペンディング項目の写真をStorageから削除
-async function _deletePendingPhoto(photoPath) {
-    if (!photoPath) return;
-    await db.storage.from(PENDING_PHOTO_BUCKET).remove([photoPath]);
+async function _deletePendingPhotos(photoPaths) {
+    const paths = (photoPaths || []).filter(Boolean);
+    if (!paths.length) return;
+    await db.storage.from(PENDING_PHOTO_BUCKET).remove(paths);
+}
+
+// 修正前 → 修正後 の写真比較表示（どちらも無ければ空文字）
+function _pendingPhotoCompareHtml(item) {
+    const before = _pendingPhotos(item, 'before');
+    const after  = _pendingPhotos(item, 'after');
+    if (!before.length && !after.length) return '';
+    const group = (label, paths, cls) => `
+        <div class="pending-photo-group ${cls}">
+            <div class="pending-photo-group-label">${label}</div>
+            <div class="pending-photo-thumbs">${paths.length
+                ? paths.map(p => `<img src="${esc(pendingPhotoUrl(p))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(p))})">`).join('')
+                : '<div class="pending-photo-empty">未登録</div>'}</div>
+        </div>`;
+    return `
+        <div class="pending-photo-compare">
+            ${group('修正前', before, 'before')}
+            <div class="pending-photo-arrow">→</div>
+            ${group('修正後', after, 'after')}
+        </div>`;
+}
+
+// 編集フォーム用: 登録済み写真（削除チェック付き）＋追加選択欄
+function _pendingPhotoEditGroupHtml(item, kind, idx) {
+    const label = kind === 'after' ? '修正後' : '修正前';
+    const paths = _pendingPhotos(item, kind);
+    return `
+        <div class="pending-photo-group ${kind}">
+            <div class="pending-photo-group-label">${label}</div>
+            ${paths.length ? `<div class="pending-photo-thumbs">${paths.map(p => `
+                <label class="pending-photo-edit-item">
+                    <img src="${esc(pendingPhotoUrl(p))}" class="pending-detail-photo-thumb" title="クリックで拡大表示" onclick="event.preventDefault();openPhotoLightbox(${jsArg(pendingPhotoUrl(p))})">
+                    <span><input type="checkbox" class="qa-photo-remove" data-kind="${kind}" data-path="${esc(p)}"> 削除</span>
+                </label>`).join('')}</div>` : ''}
+            <div class="photo-dropzone">
+                <input type="file" accept="image/*" multiple id="qa_edit_photo_${kind}_${idx}" style="display:none;">
+                <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を追加（複数可）</span>
+            </div>
+        </div>`;
 }
 
 function pendingPhotoUrl(photoPath) {
@@ -7619,25 +7679,25 @@ async function addQaPendingItem(requestId) {
     const ownerEl      = document.getElementById('qa_pending_owner');
     const dueEl        = document.getElementById('qa_pending_due');
     const shipAfterEl  = document.getElementById('qa_pending_ship_after');
-    const photoEl      = document.getElementById('qa_pending_photo');
+    const beforeFiles  = [...(document.getElementById('qa_pending_photo_before')?.files || [])];
+    const afterFiles   = [...(document.getElementById('qa_pending_photo_after')?.files || [])];
     const content      = contentEl ? contentEl.value.trim() : '';
     const location     = locationEl ? locationEl.value.trim() : '';
     const owner        = ownerEl ? ownerEl.value.trim() : '';
     const due          = dueEl ? dueEl.value : '';
     const shipAfter    = shipAfterEl ? shipAfterEl.checked : false;
-    const photoFile    = photoEl?.files?.[0] || null;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('追加中...');
     try {
         const id = crypto.randomUUID();
-        let photoPath = null;
-        if (photoFile) photoPath = await _uploadPendingPhoto(requestId, id, photoFile);
+        const photosBefore = await _uploadPendingPhotos(requestId, id, 'before', beforeFiles);
+        const photosAfter  = await _uploadPendingPhotos(requestId, id, 'after', afterFiles);
 
         const { data: req } = await db.from('approval_requests')
             .select('sheet_data').eq('id', requestId).single();
         const items = req?.sheet_data?.pending_items || [];
-        items.push({ id, content, location: location || null, due, owner: owner || null, completed: false, completed_date: null, ship_after: shipAfter, photo_path: photoPath });
+        items.push({ id, content, location: location || null, due, owner: owner || null, completed: false, completed_date: null, ship_after: shipAfter, photos_before: photosBefore, photos_after: photosAfter });
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
@@ -7677,12 +7737,18 @@ async function saveEditQaPendingItem(requestId, idx) {
     const ownerEl       = document.getElementById(`qa_edit_owner_${idx}`);
     const dueEl         = document.getElementById(`qa_edit_due_${idx}`);
     const shipAfterEl   = document.getElementById(`qa_edit_ship_after_${idx}`);
-    const photoEl       = document.getElementById(`qa_edit_photo_${idx}`);
-    const photoRemoveEl = document.getElementById(`qa_edit_photo_remove_${idx}`);
+    const newFiles      = {
+        before: [...(document.getElementById(`qa_edit_photo_before_${idx}`)?.files || [])],
+        after:  [...(document.getElementById(`qa_edit_photo_after_${idx}`)?.files || [])],
+    };
+    // 削除チェックされた登録済み写真
+    const removePaths   = { before: [], after: [] };
+    document.querySelectorAll('.pending-detail-editing .qa-photo-remove:checked').forEach(cb => {
+        removePaths[cb.dataset.kind]?.push(cb.dataset.path);
+    });
     const content       = contentEl ? contentEl.value.trim() : '';
     const location      = locationEl ? locationEl.value.trim() : '';
     const due           = dueEl ? dueEl.value : '';
-    const photoFile     = photoEl?.files?.[0] || null;
     if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     showLoading('更新中...');
@@ -7697,18 +7763,18 @@ async function saveEditQaPendingItem(requestId, idx) {
         // 試運転は完了予定日・出荷後対応を廃止したため、編集フォームに欄が無ければ常にクリアする
         const shipAfter   = shipAfterEl ? shipAfterEl.checked : (req?.flow_type === 'test_run' ? false : !!items[idx].ship_after);
 
-        let photoPath = items[idx].photo_path || null;
-        if (photoFile) {
-            const itemId = items[idx].id || crypto.randomUUID();
-            photoPath = await _uploadPendingPhoto(requestId, itemId, photoFile);
-            if (items[idx].photo_path && items[idx].photo_path !== photoPath) await _deletePendingPhoto(items[idx].photo_path);
-            items[idx] = { ...items[idx], id: itemId };
-        } else if (photoRemoveEl?.checked && photoPath) {
-            await _deletePendingPhoto(photoPath);
-            photoPath = null;
+        const itemId = items[idx].id || crypto.randomUUID();
+        const photos = {};
+        for (const kind of ['before', 'after']) {
+            const kept    = _pendingPhotos(items[idx], kind).filter(p => !removePaths[kind].includes(p));
+            const added   = await _uploadPendingPhotos(requestId, itemId, kind, newFiles[kind]);
+            photos[kind]  = [...kept, ...added];
         }
+        await _deletePendingPhotos([...removePaths.before, ...removePaths.after]);
 
-        items[idx] = { ...items[idx], content, location: location || null, due, ship_after: shipAfter, photo_path: photoPath, ...(ownerEl ? { owner: newOwner || null } : {}) };
+        // 旧形式の photo_path は photos_before に移したため取り除く
+        const { photo_path: _legacyPhoto, ...prevItem } = items[idx];
+        items[idx] = { ...prevItem, id: itemId, content, location: location || null, due, ship_after: shipAfter, photos_before: photos.before, photos_after: photos.after, ...(ownerEl ? { owner: newOwner || null } : {}) };
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
 
@@ -7744,7 +7810,7 @@ async function deleteQaPendingItem(requestId, idx) {
         const [removed] = items.splice(idx, 1);
         const newSheetData = { ...(req?.sheet_data || {}), pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
-        if (removed?.photo_path) await _deletePendingPhoto(removed.photo_path);
+        if (removed) await _deletePendingPhotos([..._pendingPhotos(removed, 'before'), ..._pendingPhotos(removed, 'after')]);
 
         // 削除した項目宛の未送信の割り当て通知が残っていれば取り消す（誤って追加してすぐ削除した場合に誤送信を防ぐ）
         if (removed?.content) {
@@ -10590,7 +10656,12 @@ document.addEventListener('click', (e) => {
 function _photoDropzoneLabel(zone) {
     const input = zone.querySelector('input[type="file"]');
     const label = zone.querySelector('.photo-dropzone-label');
-    if (label) label.textContent = input?.files?.[0]?.name || 'クリックまたはドラッグ＆ドロップで写真を選択';
+    if (!label) return;
+    if (!label.dataset.defaultText) label.dataset.defaultText = label.textContent;
+    const files = [...(input?.files || [])];
+    label.textContent = files.length > 1
+        ? `${files.length}枚選択: ${files.map(f => f.name).join(', ')}`
+        : (files[0]?.name || label.dataset.defaultText);
 }
 document.addEventListener('click', (e) => {
     const zone = e.target.closest('.photo-dropzone');
