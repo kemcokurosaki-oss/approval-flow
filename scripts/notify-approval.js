@@ -684,9 +684,15 @@ function buildEmail(type, req, recipientName, extra = {}) {
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || '—')}</td>
           <td style="padding:8px;border:1px solid #ddd;">${statusCellHtml(it)}</td>
         </tr>`).join('');
+      // 冒頭の依頼文（テキスト版・HTML版で共通）
+      const requestLines = [
+        `${flowLabelShort}で確認されたタスクをお送りします。`,
+        '担当者の方は期日までに対応をお願いします。対応が終わったタスクは、承認フロー管理システムで完了にしてください。',
+      ];
       const html = `
         <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
           <p>${esc(greeting)}</p>
+          <p>${requestLines.map(esc).join('<br>')}</p>
           <h2 style="margin-bottom:4px;">${esc(flowLabelShort)} タスクリスト</h2>
           <p style="margin-top:0;color:#666;">
             工事番号: ${esc(pNum)} ／
@@ -705,14 +711,14 @@ function buildEmail(type, req, recipientName, extra = {}) {
             </thead>
             <tbody>${rowsHtml}</tbody>
           </table>
-          <p style="margin-top:16px;"><a href="${APP_URL}">▼ 承認フローを開く</a></p>
+          <p style="margin-top:16px;">▼ 承認フローを開く<br><a href="${APP_URL}">${APP_URL}</a></p>
           <p style="color:#999;font-size:12px;">※このメールは自動送信です。</p>
         </div>`;
       return {
         from,
-        subject: `【${pStr}】 ${flowLabelShort} タスクリスト`,
+        subject: `【${flowLabelShort} タスクリスト】${pStr}`,
         text:
-          `${greeting}\n\n${pStr} の${flowLabelShort}タスクリストです。承認フロー管理システムでご確認ください。` +
+          `${greeting}\n\n${requestLines.join('\n')}\n\n${pStr} の${flowLabelShort}タスクリストです。承認フロー管理システムでご確認ください。` +
           `\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`,
         html,
       };
