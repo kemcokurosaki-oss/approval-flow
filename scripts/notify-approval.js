@@ -77,6 +77,23 @@ function pendingPhotos(item, kind) {
   return item?.photos_before || (item?.photo_path ? [item.photo_path] : []);
 }
 
+// タスク番号（アプリ画面と同じ①②…。内容か機械名がある項目だけを上から数える）
+function circledNum(n) {
+  return n >= 1 && n <= 20 ? String.fromCharCode(0x2460 + n - 1) : `(${n})`;
+}
+function pendingItemNumbers(req) {
+  const map = new Map();
+  (req?.sheet_data?.pending_items || []).filter(it => it.content || it.machine)
+    .forEach((it, i) => map.set(it, circledNum(i + 1)));
+  return map;
+}
+// 通知の対象タスクを探す（タスクIDで特定。IDの無い古い通知は内容の文章で探す）
+function findNotifiedItem(req, extra) {
+  const items = req?.sheet_data?.pending_items || [];
+  if (extra?.itemId) return items.find(it => it.id === extra.itemId) || null;
+  return [...items].reverse().find(it => it.content === extra?.detail) || null;
+}
+
 // 写真をメール本文用の<img>に並べる（写真なしは空文字）
 function pendingPhotoImgsHtml(paths) {
   return (paths || []).map(p =>
@@ -312,7 +329,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
   const note       = req?.note ? `\nコメント: ${req.note}` : '';
   const isQaFlow   = QA_MEETING_FLOWS.includes(req?.flow_type);
   const itemLabel  = isQaFlow ? 'タスク' : 'ペンディング項目';
-  const detailLine = extra?.detail ? `\n${itemLabel}内容: ${extra.detail}` : '';
+  const notifiedItem = findNotifiedItem(req, extra);
+  const notifiedNo   = notifiedItem ? pendingItemNumbers(req).get(notifiedItem) : null;
+  const detailLine = (notifiedNo ? `\n${itemLabel}番号: ${notifiedNo}` : '') +
+    (extra?.detail ? `\n${itemLabel}内容: ${extra.detail}` : '');
   const from       = formatFrom('承認フロー通知');
   const greeting   = extra?.greeting || `${recipientName} 様`; // 開催案内を複数人にまとめて送るときは「関係者各位」
   const parallelNote = req?.flow_type === 'assembly'
@@ -477,10 +497,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
         `\n承認フロー管理システムで内容をご確認ください。` +
         note;
       const text = `${body}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
-      // 完了したタスクに修正後の写真があれば、写真を載せたHTML版も付ける（内容が同じタスクは後ろの方を優先）
-      const doneItem = [...(req?.sheet_data?.pending_items || [])].reverse()
-        .find(it => it.content === extra?.detail);
-      const afterImgs = pendingPhotoImgsHtml(pendingPhotos(doneItem, 'after'));
+      // 完了したタスクに修正後の写真があれば、写真を載せたHTML版も付ける
+      const afterImgs = pendingPhotoImgsHtml(pendingPhotos(notifiedItem, 'after'));
       const html = afterImgs ? `
         <div>
           <p>${esc(body).replace(/\n/g, '<br>')}</p>
@@ -701,8 +719,10 @@ function buildEmail(type, req, recipientName, extra = {}) {
       const items = (req?.sheet_data?.pending_items || []).filter(it => it.content);
       const flowLabelShort = FLOW_SHORT_LABEL[req?.flow_type] || '検査';
       // タスクリストは指摘箇所を伝えるものなので、修正前の写真だけを載せる
+      const itemNos = pendingItemNumbers(req);
       const rowsHtml = items.map(it => `
         <tr>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;white-space:nowrap;">${itemNos.get(it) || '—'}</td>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;">${pendingPhotoImgsHtml(pendingPhotos(it, 'before')) || '—'}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || '—')}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
@@ -727,6 +747,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
           <table style="border-collapse:collapse;width:100%;">
             <thead>
               <tr style="background:#f5f5f5;">
+                <th style="padding:8px;border:1px solid #ddd;">No.</th>
                 <th style="padding:8px;border:1px solid #ddd;">写真</th>
                 <th style="padding:8px;border:1px solid #ddd;">場所</th>
                 <th style="padding:8px;border:1px solid #ddd;">内容</th>
@@ -769,7 +790,7 @@ async function main() {
 
   // 未送信の通知を取得
   const notifications = await supabaseFetch(
-    'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type,detail,optional'
+    'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type,detail,optional,item_id'
   );
   console.log(`未送信通知: ${notifications.length}件`);
 
@@ -1255,6 +1276,7 @@ async function main() {
         approverName:  shippingApproverNameMap[notif.request_id],
         requesterName: req?.requester_id ? (profileMap[req.requester_id]?.name || null) : null,
         detail:        notif.detail,
+        itemId:        notif.item_id,
       };
       const mail = buildEmail(notif.notification_type, req, toName, extra);
 

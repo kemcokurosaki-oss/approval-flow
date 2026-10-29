@@ -7432,8 +7432,10 @@ async function completePendingItem(requestId, idx, opts = {}) {
         if (!items[idx]) return;
 
         const d = new Date();
+        // 完了・完了取消の通知はタスクIDで特定するため、IDの無い古い項目にはここで付ける
         items[idx] = {
             ...items[idx],
+            id: items[idx].id || crypto.randomUUID(),
             completed: true,
             completed_date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
         };
@@ -7446,14 +7448,14 @@ async function completePendingItem(requestId, idx, opts = {}) {
             .delete()
             .eq('request_id', requestId)
             .eq('notification_type', 'pending_item_uncompleted')
-            .eq('detail', items[idx].content)
+            .eq('item_id', items[idx].id)
             .is('emailed_at', null);
 
         // ペンディング項目が完了したら通知（検査・会議フローは開催案内の宛先、組立/試運転は品証・製管全員）
         const { ids: notifIds, emails: notifEmails } = await _resolvePendingItemNotifyRecipients(req.flow_type, requestId);
         const inserts = [
-            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content })),
-            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_completed', detail: items[idx].content })),
+            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_completed', detail: items[idx].content, item_id: items[idx].id })),
+            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_completed', detail: items[idx].content, item_id: items[idx].id })),
         ];
         if (inserts.length > 0) {
             await db.from('approval_notifications').insert(inserts);
@@ -7478,7 +7480,7 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
         const items = req.sheet_data.pending_items || [];
         if (!items[idx]) return;
 
-        items[idx] = { ...items[idx], completed: false, completed_date: null };
+        items[idx] = { ...items[idx], id: items[idx].id || crypto.randomUUID(), completed: false, completed_date: null };
 
         const newSheetData = { ...req.sheet_data, pending_items: items };
         await db.from('approval_requests').update({ sheet_data: newSheetData }).eq('id', requestId);
@@ -7488,14 +7490,14 @@ async function uncompletePendingItem(requestId, idx, opts = {}) {
             .delete()
             .eq('request_id', requestId)
             .eq('notification_type', 'pending_item_completed')
-            .eq('detail', items[idx].content)
+            .eq('item_id', items[idx].id)
             .is('emailed_at', null);
 
         // ペンディング項目の完了が取り消されたら通知（検査・会議フローは開催案内の宛先、組立/試運転は品証・製管全員）
         const { ids: notifIds, emails: notifEmails } = await _resolvePendingItemNotifyRecipients(req.flow_type, requestId);
         const inserts = [
-            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content })),
-            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_uncompleted', detail: items[idx].content })),
+            ...notifIds.map(id => ({ request_id: requestId, recipient_id: id, notification_type: 'pending_item_uncompleted', detail: items[idx].content, item_id: items[idx].id })),
+            ...notifEmails.map(email => ({ request_id: requestId, recipient_email: email, notification_type: 'pending_item_uncompleted', detail: items[idx].content, item_id: items[idx].id })),
         ];
         if (inserts.length > 0) {
             await db.from('approval_notifications').insert(inserts);
