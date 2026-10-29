@@ -689,16 +689,17 @@ function buildEmail(type, req, recipientName, extra = {}) {
         `${flowLabelShort}で確認されたタスクをお送りします。`,
         '担当者の方は期日までに対応をお願いします。対応が終わったタスクは、承認フロー管理システムで完了にしてください。',
       ];
+      // フォント・文字色・文字サイズは指定せず、他の通知（テキストメール）と同じくメールソフトの標準表示にそろえる
       const html = `
-        <div style="font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;color:#333;">
+        <div>
           <p>${esc(greeting)}</p>
           <p>${requestLines.map(esc).join('<br>')}</p>
-          <p style="color:#666;">
+          <p>
             工事番号: ${esc(pNum)} ／
             機械: ${esc(machineName || '—')} ／
             検査日: ${esc(req?.inspection_date || '—')}
           </p>
-          <table style="border-collapse:collapse;width:100%;font-size:14px;">
+          <table style="border-collapse:collapse;width:100%;">
             <thead>
               <tr style="background:#f5f5f5;">
                 <th style="padding:8px;border:1px solid #ddd;">写真</th>
@@ -710,8 +711,8 @@ function buildEmail(type, req, recipientName, extra = {}) {
             </thead>
             <tbody>${rowsHtml}</tbody>
           </table>
-          <p style="margin-top:16px;">▼ 承認フローを開く<br><a href="${APP_URL}">${APP_URL}</a></p>
-          <p style="color:#999;font-size:12px;">※このメールは自動送信です。</p>
+          <p>▼ 承認フローを開く<br><a href="${APP_URL}">${APP_URL}</a></p>
+          <p>※このメールは自動送信です。</p>
         </div>`;
       return {
         from,
