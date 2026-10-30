@@ -3,7 +3,10 @@ const calendar = require('./calendar');
 
 const SUPABASE_URL  = process.env.SUPABASE_URL;
 const SUPABASE_KEY  = process.env.SUPABASE_SECRET_KEY;
-const TEST_MODE     = process.env.TEST_MODE === 'true';
+// 再送テスト: 指定した通知ID（カンマ区切り）だけを、送信済みでも黒崎宛てに送り直す。DBは書き換えない
+const RESEND_IDS    = String(process.env.RESEND_IDS || '').split(',').map(s => s.trim())
+  .filter(s => /^[0-9a-f-]{36}$/i.test(s));
+const TEST_MODE     = process.env.TEST_MODE === 'true' || RESEND_IDS.length > 0;
 const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 
 // 予定表に作成していない会議（Gmail 時代に .ics 添付メールで案内した会議）の変更・キャンセルは .ics 添付メールで送る。
@@ -66,10 +69,6 @@ function esc(s) {
   );
 }
 
-function photoUrl(path) {
-  if (!path) return null;
-  return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`;
-}
 
 // タスク（ペンディング項目）の写真一覧（kind: 'before'=修正前 / 'after'=修正後）。旧形式の photo_path は修正前として扱う
 function pendingPhotos(item, kind) {
@@ -95,10 +94,16 @@ function findNotifiedItem(req, extra) {
 }
 
 // 写真をメール本文用の<img>に並べる（写真なしは空文字）。クリックで元の大きさの写真をブラウザで開ける
+// メール用に縮小した写真のURL（Supabaseの画像変換）。元の写真は数MBあり、Outlookで表示されないため
+function photoRenderUrl(path, width) {
+  if (!path) return null;
+  return `${SUPABASE_URL}/storage/v1/render/image/public/${PHOTO_BUCKET}/${path}?width=${width}&resize=contain&quality=80`;
+}
+
 function pendingPhotoImgsHtml(paths) {
   return (paths || []).map(p =>
-    `<a href="${esc(photoUrl(p))}" title="クリックで元の大きさの写真を開く">` +
-    `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border:0;border-radius:4px;vertical-align:middle;"></a>`
+    `<a href="${esc(photoRenderUrl(p, 1600))}" title="クリックで大きな写真を開く">` +
+    `<img src="${esc(photoRenderUrl(p, 300))}" width="100" style="display:inline-block;margin:2px;border:0;border-radius:4px;vertical-align:middle;"></a>`
   ).join('');
 }
 
@@ -299,6 +304,11 @@ const FLOW_LABELS_REQUEST = {
 
 // ===== Supabase REST API =====
 async function supabaseFetch(path, options = {}) {
+  // 再送テストではDBを書き換えない（送信済みマーク等を付けない）
+  if (RESEND_IDS.length > 0 && options.method && options.method !== 'GET') {
+    console.log(`（再送テストのため書き込みを省略: ${options.method} ${path.split('?')[0]}）`);
+    return null;
+  }
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
@@ -847,9 +857,11 @@ async function main() {
   console.log(`テストモード: ${TEST_MODE}`);
   console.log(`送信元: ${SENDER_ADDRESS}（${MAIL_PROVIDER}）`);
 
-  // 未送信の通知を取得
-  const notifications = await supabaseFetch(
-    'approval_notifications?emailed_at=is.null&select=id,request_id,recipient_id,recipient_email,notification_type,detail,optional,item_id'
+  // 未送信の通知を取得（再送テストでは指定した通知だけを、送信済みでも取得する）
+  const notifSelect = 'select=id,request_id,recipient_id,recipient_email,notification_type,detail,optional,item_id';
+  const notifications = await supabaseFetch(RESEND_IDS.length > 0
+    ? `approval_notifications?id=in.(${RESEND_IDS.join(',')})&${notifSelect}`
+    : `approval_notifications?emailed_at=is.null&${notifSelect}`
   );
   console.log(`未送信通知: ${notifications.length}件`);
 

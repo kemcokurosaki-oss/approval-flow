@@ -7573,12 +7573,37 @@ function _pendingPhotos(item, kind) {
     return item.photos_before || (item.photo_path ? [item.photo_path] : []);
 }
 
+// 写真を長辺1600pxまでに縮小してJPEGにする（スマホ写真は数MBあり、通知メールで画像が表示されないため）
+// 小さい写真や縮小できない形式はそのまま返す
+const PENDING_PHOTO_MAX_SIDE = 1600;
+async function _shrinkPendingPhoto(file) {
+    if (!file.type.startsWith('image/') || file.size <= 400 * 1024) return file;
+    try {
+        const bmp   = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const scale = Math.min(1, PENDING_PHOTO_MAX_SIDE / Math.max(bmp.width, bmp.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(bmp.width * scale);
+        canvas.height = Math.round(bmp.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+        bmp.close();
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+        if (!blob || blob.size >= file.size) return file;
+        return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+    } catch (e) {
+        console.warn('写真の縮小に失敗したため元のままアップロードします', e);
+        return file;
+    }
+}
+
 // ペンディング項目の写真（複数枚）をアップロードし、Storage内のパスの配列を返す
 async function _uploadPendingPhotos(requestId, itemId, kind, files) {
     const paths = [];
     const stamp = Date.now();
     for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const file = await _shrinkPendingPhoto(files[i]);
         const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
         const path = `${requestId}/${itemId}_${kind}_${stamp}_${i}.${ext}`;
         const { error } = await db.storage.from(PENDING_PHOTO_BUCKET).upload(path, file, { upsert: true });

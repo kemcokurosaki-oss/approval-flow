@@ -13,6 +13,10 @@ on:
         options:
           - 'true'
           - 'false'
+      resend_ids:
+        description: '再送テスト（通知IDをカンマ区切りで指定。送信済みでも黒崎のみに送り直し、DBは書き換えない）'
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}
@@ -41,4 +45,5 @@ jobs:
           M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}
           M365_SENDER: ${{ secrets.M365_SENDER }}
           TEST_MODE: ${{ github.event_name == 'schedule' && 'false' || (github.event.inputs.test_mode || 'true') }}
+          RESEND_IDS: ${{ github.event.inputs.resend_ids || '' }}
         run: node scripts/notify-approval.js
