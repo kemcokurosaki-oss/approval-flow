@@ -5399,9 +5399,13 @@ function buildPendingSectionInner(req, isMyRequest) {
     const editLbl = `<span style="display:block;font-size:11px;line-height:1.4;color:#999;">完了予定日</span>`;
     // 試運転フローは「ペンディング項目」ではなく「申し送り事項」と呼ぶ
     const sectionLabel = isQaFlow ? 'タスクリスト' : (isTestRun ? '申し送り事項' : 'ペンディング項目');
+    const qaDoneCount = items.filter(({ item }) => item.completed).length;
+    const qaNoteHtml = isQaFlow ? `<div class="qa-task-note"><span>※</span><span>処置が完了したら品証に連絡してください（不在時は製造管理に連絡してください）</span></div>` : '';
     return `
         <hr class="section-divider">
-        <div class="section-title">${sectionLabel}</div>
+        <div class="section-title">${sectionLabel}${isQaFlow ? ` <span class="qa-task-summary">${qaDoneCount} / ${items.length} 完了</span>` : ''}</div>
+        ${qaNoteHtml}
+        <div class="${isQaFlow ? 'qa-task-list' : ''}">
         ${items.map(({ item, idx }, pos) => {
             // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
             // QAフローのタスクリストはさらに、担当者の上長（組立課長/部長・操業課長/部長）も完了操作できる
@@ -5455,6 +5459,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                 </div>
             </div>`;
             }
+            if (isQaFlow) return _qaTaskCardHtml(req, item, idx, pos, itemCanComplete, canManage);
             return `
             <div class="pending-detail-row ${!isTestRun && item.completed ? 'pending-done' : ''}">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
@@ -5476,7 +5481,8 @@ function buildPendingSectionInner(req, isMyRequest) {
                     ` : ''}
                 </div>
             </div>`;
-        }).join('')}`;
+        }).join('')}
+        </div>`;
 }
 
 // QA開催案内（簡易検査・外観検査・出荷確認会議）の開催日が過ぎているか
@@ -5511,55 +5517,42 @@ function buildQaResultSectionInner(req, isMyRequest) {
             </div>
         ` : '';
         const addFormHtml = canManage ? `
-            <div class="qa-pending-add-box">
-                <div class="qa-pending-add-label">タスクを追加</div>
-                <div class="pending-row qa-pending-row" style="flex-direction:column;align-items:stretch;gap:8px;">
-                    <div style="display:flex;gap:6px;">
-                        <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">場所（任意）</span>
-                            <input type="text" id="qa_pending_location" class="pending-content" placeholder="場所">
-                        </div>
-                        <div style="display:flex;flex-direction:column;flex:1;">
-                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">担当者（任意）</span>
-                            <input type="text" id="qa_pending_owner" class="pending-content" placeholder="担当者名">
-                        </div>
+            <div class="qa-pending-add-box qa-add-card">
+                <div class="qa-add-head">タスクを追加</div>
+                <div class="qa-add-body">
+                    <div class="qa-add-grid2">
+                        <label class="qa-field"><span class="qa-field-label">場所（任意）</span><input type="text" id="qa_pending_location" class="qa-input" placeholder="場所"></label>
+                        <label class="qa-field"><span class="qa-field-label">担当者（任意）</span><input type="text" id="qa_pending_owner" class="qa-input" placeholder="担当者名"></label>
                     </div>
-                    <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;">
-                        <div style="display:flex;flex-direction:column;flex:1;min-width:120px;">
-                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">内容</span>
-                            <input type="text" id="qa_pending_content" class="pending-content" placeholder="内容">
-                        </div>
-                        <div style="display:flex;flex-direction:column;flex-shrink:0;">
-                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">完了予定日</span>
-                            <input type="date" id="qa_pending_due" class="pending-due">
-                        </div>
-                        <label style="display:flex;flex-direction:column;flex-shrink:0;gap:4px;">
-                            <span style="display:block;font-size:14px;line-height:1.4;color:#999;">出荷後対応</span>
-                            <input type="checkbox" id="qa_pending_ship_after" style="margin-top:2px;">
-                        </label>
+                    <label class="qa-field"><span class="qa-field-label">内容</span><input type="text" id="qa_pending_content" class="qa-input" placeholder="内容"></label>
+                    <div class="qa-add-inline">
+                        <label class="qa-field"><span class="qa-field-label">完了予定日</span><input type="date" id="qa_pending_due" class="qa-input qa-input-date"></label>
+                        <label class="qa-check"><input type="checkbox" id="qa_pending_ship_after">出荷後対応</label>
                     </div>
-                    <div style="display:flex;flex-direction:column;">
-                        <span style="display:block;font-size:14px;line-height:1.4;color:#999;">写真（任意・複数可）</span>
-                        <div class="pending-photo-compare pending-photo-compare-edit">
-                            <div class="pending-photo-group before">
-                                <div class="pending-photo-group-label">修正前</div>
-                                <div class="photo-dropzone">
+                    <div class="qa-field">
+                        <span class="qa-field-label">写真（任意・複数可）</span>
+                        <div class="qa-photo-drop-row">
+                            <div class="qa-photo-drop-group">
+                                <div class="photo-dropzone qa-photo-drop">
                                     <input type="file" accept="image/*" multiple id="qa_pending_photo_before" style="display:none;">
-                                    <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                                    <span class="qa-photo-pill"><span class="qa-photo-dot before"></span>修正前</span>
+                                    <span class="qa-photo-drop-main">＋ 写真を選ぶ</span>
+                                    <span class="qa-photo-drop-sub">ファイルをここに置いても追加できます</span>
                                 </div>
                             </div>
-                            <div class="pending-photo-arrow">→</div>
-                            <div class="pending-photo-group after">
-                                <div class="pending-photo-group-label">修正後</div>
-                                <div class="photo-dropzone">
+                            <div class="qa-photo-arrow"><span>→</span></div>
+                            <div class="qa-photo-drop-group">
+                                <div class="photo-dropzone qa-photo-drop">
                                     <input type="file" accept="image/*" multiple id="qa_pending_photo_after" style="display:none;">
-                                    <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を選択</span>
+                                    <span class="qa-photo-pill"><span class="qa-photo-dot after"></span>修正後</span>
+                                    <span class="qa-photo-drop-main">＋ 写真を選ぶ</span>
+                                    <span class="qa-photo-drop-sub">ファイルをここに置いても追加できます</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div style="display:flex;justify-content:flex-end;">
-                        <button type="button" class="btn-xs" onclick="addQaPendingItem('${req.id}')">保存</button>
+                    <div class="qa-add-foot">
+                        <button type="button" class="btn btn-primary qa-add-save" onclick="addQaPendingItem('${req.id}')">保存</button>
                     </div>
                 </div>
             </div>
@@ -5567,7 +5560,7 @@ function buildQaResultSectionInner(req, isMyRequest) {
         const pendingNoteHtml = pendingHtml
             ? `<div style="font-size:13px;color:#c0392b;font-weight:700;padding:6px 0;">※処置が完了したら品証に連絡してください（不在時は製造管理に連絡してください）</div>` : '';
         body = (pendingHtml || addFormHtml)
-            ? `<div id="pending_detail_section">${pendingHtml}</div>${pendingNoteHtml}${addFormHtml}${sendCardBtnHtml}`
+            ? `<div id="pending_detail_section">${pendingHtml}</div>${addFormHtml}${sendCardBtnHtml}`
             : `<div style="color:#888; font-size:15px; padding:4px 0;">タスクなし${req.status === 'approved' ? '・確認完了' : ''}</div>`;
     }
 
@@ -7621,6 +7614,64 @@ function _pendingPhotoCompareHtml(item) {
         </div>`;
 }
 
+// ===== 検査・会議フロー: タスクリストのカード表示 =====
+function _qaTaskCardHtml(req, item, idx, pos, itemCanComplete, canManage) {
+    const badge = (cls, label) => ` <span class="qa-task-badge ${cls}">${label}</span>`;
+    const badges = (item.completed ? badge('is-done', '完了') : (pendingDueSoon(item.due) ? badge('is-due', '期日間近') : ''))
+        + (item.ship_after ? badge('is-ship', '出荷後対応') : '');
+    const meta = (k, v) => `<div class="qa-task-meta-row"><span class="qa-task-meta-key">${k}</span>${esc(v)}</div>`;
+    return `
+            <div class="qa-task-card ${item.completed ? 'is-done' : ''}">
+                <div class="qa-task-head">
+                    <div class="qa-task-num">${pos + 1}</div>
+                    <div class="qa-task-main">
+                        <div class="qa-task-title-row"><span class="qa-task-title">${item.machine ? `<span class="pending-detail-machine">${esc(item.machine)}</span> ` : ''}${esc(item.content || '—')}</span>${badges}</div>
+                        <div class="qa-task-meta">
+                            ${item.location ? meta('場所', item.location) : ''}
+                            ${item.owner ? meta('担当', item.owner) : ''}
+                            ${item.due && !item.completed ? meta('期日', item.due) : ''}
+                            ${item.completed ? meta('完了', item.completed_date || '') : ''}
+                        </div>
+                    </div>
+                    <div class="qa-task-actions">
+                        ${itemCanComplete ? (item.completed
+                            ? `<button class="btn-undo-xs" onclick="uncompletePendingItem('${req.id}', ${idx})">取り消す</button>`
+                            : `<button class="btn-primary-xs" onclick="completePendingItem('${req.id}', ${idx}, {isQaFlow: true})">完了にする</button>`) : ''}
+                        ${canManage && !item.completed ? `
+                            <button class="btn-icon-xs" title="編集" onclick="startEditQaPendingItem(${idx})">✎</button>
+                            <button class="btn-icon-xs btn-icon-danger" title="削除" onclick="deleteQaPendingItem('${req.id}', ${idx})">🗑</button>
+                        ` : ''}
+                    </div>
+                </div>
+                ${_qaTaskPhotoCompareHtml(item, idx, canManage)}
+            </div>`;
+}
+
+// 修正前 → 修正後 の写真比較（カード表示用・大きめサムネイル）
+function _qaTaskPhotoCompareHtml(item, idx, canManage) {
+    const before = _pendingPhotos(item, 'before');
+    const after  = _pendingPhotos(item, 'after');
+    if (!before.length && !after.length) return '';
+    const panel = (label, paths, kind) => {
+        const empty = (kind === 'after' && canManage && !item.completed)
+            ? `<button type="button" class="qa-photo-empty is-add" onclick="startEditQaPendingItem(${idx})"><span class="qa-photo-empty-main">＋ 修正後の写真を追加</span><span class="qa-photo-empty-sub">処置後に撮影して登録</span></button>`
+            : '<div class="qa-photo-empty">未登録</div>';
+        return `
+        <div class="qa-photo-panel">
+            <div class="qa-photo-panel-head"><span class="qa-photo-label"><span class="qa-photo-dot ${kind}"></span>${label}</span><span class="qa-photo-count">${paths.length ? paths.length + '枚' : '未登録'}</span></div>
+            <div class="qa-photo-grid">${paths.length
+                ? paths.map(p => `<img src="${esc(pendingPhotoUrl(p))}" class="qa-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(p))})">`).join('')
+                : empty}</div>
+        </div>`;
+    };
+    return `
+        <div class="qa-photo-compare">
+            ${panel('修正前', before, 'before')}
+            <div class="qa-photo-arrow"><span>→</span></div>
+            ${panel('修正後', after, 'after')}
+        </div>`;
+}
+
 // 編集フォーム用: 登録済み写真（削除チェック付き）＋追加選択欄
 function _pendingPhotoEditGroupHtml(item, kind, idx) {
     const label = kind === 'after' ? '修正後' : '修正前';
@@ -7635,7 +7686,7 @@ function _pendingPhotoEditGroupHtml(item, kind, idx) {
                 </label>`).join('')}</div>` : ''}
             <div class="photo-dropzone">
                 <input type="file" accept="image/*" multiple id="qa_edit_photo_${kind}_${idx}" style="display:none;">
-                <span class="photo-dropzone-label">クリックまたはドラッグ＆ドロップで写真を追加（複数可）</span>
+                <span class="photo-dropzone-label">＋ 写真を選ぶ（ファイルをここに置いても追加できます）</span>
             </div>
         </div>`;
 }

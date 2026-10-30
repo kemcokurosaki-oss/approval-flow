@@ -3101,3 +3101,132 @@
 .app-rail #nav_settings_item .badge { margin-left: auto; }
 .sdr-remain.is-entered { color: #1f7a4d; background: #e3f5eb; }
 .sdr-remain.is-completed { color: #5b6b80; background: #eef1f6; }
+
+
+/* ===== 検査・会議フロー: タスクリスト（カード表示・写真比較） ===== */
+.qa-task-summary { font-size: 13px; font-weight: normal; color: #8a94a6; margin-left: 4px; }
+.qa-task-note {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 9px 12px; margin-bottom: 12px;
+    background: #fdf3f2; border: 1px solid #f2d4d0; border-radius: 9px;
+    font-size: 13px; font-weight: 700; color: #c0392b; line-height: 1.6;
+}
+.qa-task-list { display: flex; flex-direction: column; gap: 12px; }
+.qa-task-card { border: 1px solid #e5e9f1; border-radius: 10px; background: #fff; }
+.qa-task-card.is-done { background: #fafbfd; }
+.qa-task-card.is-done .qa-task-title { color: #7c8798; }
+.qa-task-card.is-done .qa-photo-thumb { filter: grayscale(0.7); }
+.qa-task-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 12px; }
+.qa-task-num {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    background: #eef2f8; color: #16233a; font-size: 13px; font-weight: 700;
+}
+.qa-task-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.qa-task-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.qa-task-title { font-size: 16px; font-weight: 700; color: #16233a; text-wrap: pretty; }
+.qa-task-badge { font-size: 12px; font-weight: 700; border-radius: 20px; padding: 1px 9px; }
+.qa-task-badge.is-due  { color: #c0392b; background: #fde8e8; }
+.qa-task-badge.is-done { color: #1c8f4d; background: #eafaf0; }
+.qa-task-badge.is-ship { color: #a06a00; background: #fff3d6; }
+.qa-task-meta { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: #5b6b80; }
+.qa-task-meta-key { color: #8a94a6; margin-right: 1em; }
+.qa-task-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.qa-task-list .btn-primary-xs {
+    height: 30px; padding: 0 14px; font-size: 13px; font-weight: 700; font-family: inherit;
+    border: 1px solid #cdd8e8; color: #2f6fb0; border-radius: 8px;
+}
+.qa-task-list .btn-primary-xs:hover { background: #2f6fb0; border-color: #2f6fb0; color: #fff; }
+.qa-task-list .btn-undo-xs {
+    height: 30px; padding: 0 14px; font-size: 13px; font-weight: 700; font-family: inherit;
+    border: 1px solid #e0e6ef; color: #7c8798; border-radius: 8px;
+}
+.qa-task-list .btn-undo-xs:hover { background: #eef1f6; color: #16233a; }
+.qa-task-list .btn-icon-xs { width: 30px; height: 30px; font-size: 15px; border: none; border-radius: 7px; background: #eef1f5; color: #5b6472; }
+.qa-task-list .btn-icon-xs:hover { background: #e2e6ec; }
+.qa-task-list .btn-icon-xs.btn-icon-danger { font-size: 13px; border: none; background: #eef1f5; color: #5b6472; }
+.qa-task-list .btn-icon-xs.btn-icon-danger:hover { background: #fde8e8; color: #c0392b; }
+
+/* 写真比較 */
+.qa-photo-compare {
+    display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr);
+    gap: 10px; align-items: stretch; padding: 0 14px 14px 52px;
+}
+.qa-photo-panel { border: 1px solid #e5e9f1; border-radius: 9px; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+.qa-photo-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: #f6f8fb; border-bottom: 1px solid #eef1f6;
+}
+.qa-photo-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #16233a; }
+.qa-photo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.qa-photo-dot.before { background: #d4443b; }
+.qa-photo-dot.after  { background: #1c8f4d; }
+.qa-photo-count { font-size: 12px; color: #8a94a6; }
+.qa-photo-grid { padding: 10px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; flex: 1; }
+.qa-photo-thumb {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block;
+    border-radius: 6px; cursor: zoom-in; transition: box-shadow .15s;
+}
+.qa-photo-thumb:hover { box-shadow: 0 0 0 2px #2f6fb0; }
+.qa-photo-empty {
+    grid-column: 1 / -1; min-height: 96px;
+    display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;
+    border: 1px dashed #d5dbe5; border-radius: 6px; background: #f6f8fb;
+    font-size: 13px; color: #98a3b4; font-family: inherit;
+}
+.qa-photo-empty.is-add { cursor: pointer; }
+.qa-photo-empty.is-add:hover { border-color: #2f6fb0; background: #eef3f8; }
+.qa-photo-empty-main { font-weight: 700; color: #2f6fb0; }
+.qa-photo-empty-sub { font-size: 12px; }
+.qa-photo-arrow { display: flex; align-items: center; justify-content: center; }
+.qa-photo-arrow span {
+    width: 28px; height: 28px; border-radius: 50%; background: #eef2f8; color: #5b6b80;
+    display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700;
+}
+
+/* 編集中のタスク（カード内） */
+.qa-task-list .pending-detail-editing { border: 1px solid #cdd8e8; border-radius: 10px; padding: 14px; background: #fff; }
+.qa-task-list .pending-photo-group { background: #fff; border-color: #e5e9f1; border-radius: 9px; }
+.qa-task-list .pending-photo-group .pending-photo-group-label { display: flex; align-items: center; gap: 6px; color: #16233a; }
+.qa-task-list .pending-photo-group .pending-photo-group-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+.qa-task-list .pending-photo-group.before .pending-photo-group-label::before { background: #d4443b; }
+.qa-task-list .pending-photo-group.after  .pending-photo-group-label::before { background: #1c8f4d; }
+.qa-task-list .pending-photo-arrow span, .qa-task-list .pending-photo-arrow { color: #5b6b80; }
+
+/* タスクを追加 */
+.qa-add-card { margin-top: 12px; padding: 0; background: #f6f8fb; border: 1px solid #e5e9f1; border-radius: 10px; }
+.qa-add-head { padding: 11px 14px; border-bottom: 1px solid #e5e9f1; font-size: 14px; font-weight: 700; color: #16233a; }
+.qa-add-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.qa-add-grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+.qa-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qa-field-label { font-size: 13px; color: #8a94a6; }
+.qa-input {
+    font-size: 15px; padding: 8px 10px; border: 1px solid #e0e6ef; border-radius: 9px;
+    background: #fff; color: #16233a; font-family: inherit;
+}
+.qa-input:focus { outline: none; border-color: #2f6fb0; box-shadow: 0 0 0 3px rgba(47,111,176,.12); }
+.qa-input-date { width: 170px; padding: 7px 10px; }
+.qa-add-inline { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.qa-check {
+    display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; box-sizing: border-box;
+    border: 1px solid #e0e6ef; border-radius: 9px; background: #fff; font-size: 14px; color: #3d4a5d; cursor: pointer;
+}
+.qa-check input { width: 16px; height: 16px; margin: 0; }
+.qa-photo-drop-row { display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1fr); gap: 10px; align-items: start; }
+.qa-photo-drop-row .qa-photo-arrow { height: 84px; }
+.qa-photo-drop-group { min-width: 0; }
+.photo-dropzone.qa-photo-drop {
+    min-height: 84px; box-sizing: border-box; padding: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    border: 1px dashed #d5dbe5; border-radius: 9px; background: #fff;
+}
+.photo-dropzone.qa-photo-drop:hover { border-color: #2f6fb0; background: #eef3f8; color: inherit; }
+.photo-dropzone.qa-photo-drop.drag-over { border: 2px solid #2f6fb0; background: #eef3f8; }
+.qa-photo-pill {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+    color: #16233a; background: #eef2f8; border-radius: 20px; padding: 1px 9px;
+}
+.qa-photo-drop-main { font-size: 13px; font-weight: 700; color: #3d4a5d; }
+.qa-photo-drop-sub  { font-size: 12px; color: #98a3b4; }
+.qa-add-foot { display: flex; justify-content: flex-end; }
+.btn.qa-add-save { padding: 8px 22px; font-size: 14px; }
