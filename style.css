@@ -3231,3 +3231,47 @@
 .qa-photo-drop-sub  { font-size: 12px; color: #98a3b4; }
 .qa-add-foot { display: flex; justify-content: flex-end; }
 .btn.qa-add-save { padding: 8px 22px; font-size: 14px; }
+
+
+/* ===== 検査・会議フロー: タスク編集カード ===== */
+.qa-task-card.qa-task-edit { border-color: #2f6fb0; box-shadow: 0 0 0 3px rgba(47,111,176,.10); padding: 0; }
+.qa-edit-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #eef1f6; }
+.qa-edit-head .qa-task-num { margin-top: 0; }
+.qa-edit-title { flex: 1; font-size: 14px; font-weight: 700; color: #2f6fb0; }
+.qa-edit-actions { display: flex; gap: 6px; }
+.qa-btn-cancel, .qa-btn-save {
+    height: 32px; padding: 0 16px; font-size: 13px; font-weight: 700; font-family: inherit;
+    border: none; border-radius: 8px; cursor: pointer;
+}
+.qa-btn-cancel { background: #eef1f6; color: #5b6b80; }
+.qa-btn-cancel:hover { background: #e2e6ec; }
+.qa-btn-save { background: #2f6fb0; color: #fff; padding: 0 18px; }
+.qa-btn-save:hover { background: #255d97; }
+.qa-edit-body { padding: 14px 14px 16px 52px; display: flex; flex-direction: column; gap: 12px; }
+.qa-photo-compare.qa-photo-compare-edit { padding: 0; }
+.qa-photo-edit-item { position: relative; aspect-ratio: 4 / 3; }
+.qa-photo-edit-item .qa-photo-thumb { height: 100%; }
+.qa-photo-del {
+    position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; padding: 0;
+    border-radius: 50%; border: none; background: rgba(22,35,58,.72); color: #fff;
+    font-size: 13px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.qa-photo-del:hover { background: #c0392b; }
+.qa-photo-removed {
+    display: none; position: absolute; inset: 0; border-radius: 6px; background: #f6f8fb;
+    flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.qa-photo-removed span { font-size: 12px; font-weight: 700; color: #c0392b; }
+.qa-photo-removed button {
+    height: 24px; padding: 0 10px; font-size: 12px; font-weight: 700; font-family: inherit;
+    border: 1px solid #e0e6ef; background: #fff; color: #5b6b80; border-radius: 6px; cursor: pointer;
+}
+.qa-photo-removed button:hover { background: #eef1f6; }
+.qa-photo-edit-item.is-removed .qa-photo-removed { display: flex; }
+.qa-photo-edit-item.is-removed .qa-photo-del { display: none; }
+.photo-dropzone.qa-photo-drop.qa-photo-drop-inline {
+    grid-column: 1 / -1; min-height: 64px; padding: 8px; gap: 2px;
+    border-radius: 6px; background: #f6f8fb;
+}
+.qa-photo-grid > .qa-photo-drop-inline:only-child { min-height: 96px; }

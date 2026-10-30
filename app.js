@@ -5415,6 +5415,7 @@ function buildPendingSectionInner(req, isMyRequest) {
                     ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner) || isSupervisorOfOwner(item.owner)))
                     : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner)));
             if (canManage && qaEditingPendingIdx === idx) {
+                if (isQaFlow) return _qaTaskEditCardHtml(req, item, idx, pos);
                 return `
             <div class="pending-detail-row pending-detail-editing">
                 <div class="pending-detail-num">${circledNum(pos + 1)}</div>
@@ -7670,6 +7671,74 @@ function _qaTaskPhotoCompareHtml(item, idx, canManage) {
             <div class="qa-photo-arrow"><span>→</span></div>
             ${panel('修正後', after, 'after')}
         </div>`;
+}
+
+// ===== 検査・会議フロー: タスク編集カード =====
+function _qaTaskEditCardHtml(req, item, idx, pos) {
+    return `
+            <div class="qa-task-card qa-task-edit pending-detail-editing">
+                <div class="qa-edit-head">
+                    <div class="qa-task-num">${pos + 1}</div>
+                    <div class="qa-edit-title">タスクを編集</div>
+                    <div class="qa-edit-actions">
+                        <button type="button" class="qa-btn-cancel" onclick="cancelEditQaPendingItem()">キャンセル</button>
+                        <button type="button" class="qa-btn-save" onclick="saveEditQaPendingItem('${req.id}', ${idx})">保存</button>
+                    </div>
+                </div>
+                <div class="qa-edit-body">
+                    <div class="qa-add-grid2">
+                        <label class="qa-field"><span class="qa-field-label">場所</span><input type="text" id="qa_edit_location_${idx}" class="qa-input" placeholder="場所" value="${esc(item.location || '')}"></label>
+                        <label class="qa-field"><span class="qa-field-label">担当者</span><input type="text" id="qa_edit_owner_${idx}" class="qa-input" placeholder="担当者名" value="${esc(item.owner || '')}"></label>
+                    </div>
+                    <label class="qa-field"><span class="qa-field-label">内容</span><input type="text" id="qa_edit_content_${idx}" class="qa-input" placeholder="内容" value="${esc(item.content || '')}"></label>
+                    <div class="qa-add-inline">
+                        <label class="qa-field"><span class="qa-field-label">完了予定日</span><input type="date" id="qa_edit_due_${idx}" class="qa-input qa-input-date" value="${esc(item.due || '')}"></label>
+                        <label class="qa-check"><input type="checkbox" id="qa_edit_ship_after_${idx}" ${item.ship_after ? 'checked' : ''}>出荷後対応</label>
+                    </div>
+                    <div class="qa-field">
+                        <span class="qa-field-label">写真</span>
+                        <div class="qa-photo-compare qa-photo-compare-edit">
+                            ${_qaPhotoEditPanelHtml(item, 'before', idx)}
+                            <div class="qa-photo-arrow"><span>→</span></div>
+                            ${_qaPhotoEditPanelHtml(item, 'after', idx)}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+}
+
+// 編集カード用の写真パネル（× で削除予定 → 保存時に削除）
+function _qaPhotoEditPanelHtml(item, kind, idx) {
+    const label = kind === 'after' ? '修正後' : '修正前';
+    const paths = _pendingPhotos(item, kind);
+    return `
+        <div class="qa-photo-panel">
+            <div class="qa-photo-panel-head"><span class="qa-photo-label"><span class="qa-photo-dot ${kind}"></span>${label}</span><span class="qa-photo-count">${paths.length ? paths.length + '枚' : '未登録'}</span></div>
+            <div class="qa-photo-grid">
+                ${paths.map(p => `
+                <div class="qa-photo-edit-item">
+                    <input type="checkbox" class="qa-photo-remove" data-kind="${kind}" data-path="${esc(p)}" hidden>
+                    <img src="${esc(pendingPhotoUrl(p))}" class="qa-photo-thumb" title="クリックで拡大表示" onclick="openPhotoLightbox(${jsArg(pendingPhotoUrl(p))})">
+                    <button type="button" class="qa-photo-del" title="削除" onclick="_qaTogglePhotoRemove(this, true)">×</button>
+                    <div class="qa-photo-removed">
+                        <span>削除予定</span>
+                        <button type="button" onclick="_qaTogglePhotoRemove(this, false)">元に戻す</button>
+                    </div>
+                </div>`).join('')}
+                <div class="photo-dropzone qa-photo-drop qa-photo-drop-inline">
+                    <input type="file" accept="image/*" multiple id="qa_edit_photo_${kind}_${idx}" style="display:none;">
+                    <span class="qa-photo-drop-main">＋ 写真を選ぶ</span>
+                    <span class="qa-photo-drop-sub">ファイルをここに置いても追加できます</span>
+                </div>
+            </div>
+        </div>`;
+}
+
+function _qaTogglePhotoRemove(btn, remove) {
+    const wrap = btn.closest('.qa-photo-edit-item');
+    if (!wrap) return;
+    wrap.querySelector('.qa-photo-remove').checked = remove;
+    wrap.classList.toggle('is-removed', remove);
 }
 
 // 編集フォーム用: 登録済み写真（削除チェック付き）＋追加選択欄
