@@ -3105,7 +3105,7 @@
 
 /* ===== 検査・会議フロー: タスクリスト（カード表示・写真比較） ===== */
 .section-title.qa-task-section-title { color: #16233a; }
-.qa-task-summary { font-size: 13px; font-weight: normal; color: #8a94a6; margin-left: 4px; }
+.qa-task-summary { font-size: 14px; font-weight: 500; color: #8a94a6; margin-left: 4px; }
 .qa-task-note {
     display: flex; align-items: flex-start; gap: 8px;
     padding: 9px 12px; margin-bottom: 12px;
