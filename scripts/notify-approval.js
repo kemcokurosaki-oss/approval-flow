@@ -94,11 +94,70 @@ function findNotifiedItem(req, extra) {
   return [...items].reverse().find(it => it.content === extra?.detail) || null;
 }
 
-// 写真をメール本文用の<img>に並べる（写真なしは空文字）
+// 写真をメール本文用の<img>に並べる（写真なしは空文字）。クリックで元の大きさの写真をブラウザで開ける
 function pendingPhotoImgsHtml(paths) {
   return (paths || []).map(p =>
-    `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border-radius:4px;vertical-align:middle;">`
+    `<a href="${esc(photoUrl(p))}" title="クリックで元の大きさの写真を開く">` +
+    `<img src="${esc(photoUrl(p))}" width="100" style="display:inline-block;margin:2px;border:0;border-radius:4px;vertical-align:middle;"></a>`
   ).join('');
+}
+
+// タスク完了・完了取消の通知を、タスクリスト送信メールへの返信として送るときの本文
+// 対象タスクの情報＋（完了時は修正後の写真）＋現在のタスクリスト（対象行に色付け）
+function buildPendingReplyEmail(type, req, item, greeting, fixCardSubject) {
+  const isDone   = type === 'pending_item_completed';
+  const nos      = pendingItemNumbers(req);
+  const no       = nos.get(item) || '';
+  const items    = (req?.sheet_data?.pending_items || []).filter(it => it.content);
+  const doneCnt  = items.filter(it => it.completed).length;
+  const headline = isDone ? `タスク ${no} が完了になりました。` : `タスク ${no} の完了が取り消されました。`;
+  const infoLines = [
+    `タスク番号: ${no || '—'}`,
+    `内容: ${item.content || '—'}`,
+    `担当者: ${item.owner || '—'}`,
+    ...(isDone ? [`完了日: ${item.completed_date || '—'}`] : []),
+  ];
+  const afterImgs = isDone ? pendingPhotoImgsHtml(pendingPhotos(item, 'after')) : '';
+  const td = 'padding:8px;border:1px solid #ddd;';
+  const rowsHtml = items.map(it => {
+    const hit = it === item;
+    return `
+        <tr${hit ? ' style="background:#fff6d6;"' : ''}>
+          <td style="${td}text-align:center;white-space:nowrap;${hit ? 'font-weight:bold;' : ''}">${nos.get(it) || '—'}</td>
+          <td style="${td}">${esc(it.location || '—')}</td>
+          <td style="${td}">${hit ? `<b>${esc(it.content)}</b> <span style="color:#a06a00;font-size:12px;">← 今回${isDone ? '完了' : '完了取消'}</span>` : esc(it.content)}</td>
+          <td style="${td}">${esc(it.owner || '—')}</td>
+          <td style="${td}">${statusCellHtml(it)}</td>
+        </tr>`;
+  }).join('');
+  const html = `
+        <div>
+          <p>${esc(greeting)}</p>
+          <p>${isDone ? `タスク <b>${esc(no)}</b> が完了になりました。` : `タスク <b>${esc(no)}</b> の完了が取り消されました。`}</p>
+          <p>${infoLines.map(esc).join('<br>')}</p>
+          ${afterImgs ? `<p>修正後の写真（クリックで拡大）<br>${afterImgs}</p>` : ''}
+          <p style="margin-top:18px;">現在のタスクリスト（今回${isDone ? '完了' : '完了取消'}したタスクに色を付けています）</p>
+          <table style="border-collapse:collapse;width:100%;">
+            <thead>
+              <tr style="background:#f5f5f5;">
+                <th style="${td}">No.</th>
+                <th style="${td}">場所</th>
+                <th style="${td}">内容</th>
+                <th style="${td}">担当者</th>
+                <th style="${td}">状態</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+          <p>完了 ${doneCnt}件 ／ 残り ${items.length - doneCnt}件</p>
+          <p>▼ 承認フローを開く<br><a href="${APP_URL}">${APP_URL}</a></p>
+          <p>※このメールは自動送信です。</p>
+        </div>`;
+  const text =
+    `${greeting}\n\n${headline}\n\n${infoLines.join('\n')}\n\n` +
+    `完了 ${doneCnt}件 ／ 残り ${items.length - doneCnt}件\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
+  const baseSubject = String(fixCardSubject || '').replace(/^(RE:\s*)+/i, '');
+  return { from: formatFrom('承認フロー通知'), subject: `RE: ${baseSubject}`, text, html };
 }
 
 // ===== 出荷準備フロー: 完了通知メールの追加CC（組立/操業/設計/現地工事担当者） =====
@@ -723,7 +782,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
       const rowsHtml = items.map(it => `
         <tr>
           <td style="padding:8px;border:1px solid #ddd;text-align:center;white-space:nowrap;">${itemNos.get(it) || '—'}</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${pendingPhotoImgsHtml(pendingPhotos(it, 'before')) || '—'}</td>
+          <td width="216" style="padding:8px;border:1px solid #ddd;text-align:center;width:216px;">${pendingPhotoImgsHtml(pendingPhotos(it, 'before')) || '—'}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.location || '—')}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.content)}</td>
           <td style="padding:8px;border:1px solid #ddd;">${esc(it.owner || '—')}</td>
@@ -748,7 +807,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
             <thead>
               <tr style="background:#f5f5f5;">
                 <th style="padding:8px;border:1px solid #ddd;">No.</th>
-                <th style="padding:8px;border:1px solid #ddd;">写真</th>
+                <th style="padding:8px;border:1px solid #ddd;width:216px;">写真</th>
                 <th style="padding:8px;border:1px solid #ddd;">場所</th>
                 <th style="padding:8px;border:1px solid #ddd;">内容</th>
                 <th style="padding:8px;border:1px solid #ddd;">担当者</th>
@@ -980,48 +1039,64 @@ async function main() {
 
   // ===== タスクリスト送信: 申請ごとに1通にまとめ、開催案内の必須参加者をTo、任意参加者をCCにして送る =====
   // 必須/任意は開催案内（参加者追加・日程変更を含む）の通知レコードから判定する。会議室は宛先から除く
+  // タスク完了・完了取消の返信（下記）も同じ宛先で送るため、To/CCの決め方は fixCardRecipients にまとめている
+  const fixNorm = e => String(e || '').trim().toLowerCase();
+  const fixRowEmail = n => n.recipient_email || (n.recipient_id ? profileMap[n.recipient_id]?.email : null) || null;
+  const fixRowName  = n => n.recipient_email
+    ? (recipientEmailNameMap[n.recipient_email] || null)
+    : (n.recipient_id ? profileMap[n.recipient_id]?.name || null : null);
+  const fixInviteRowsCache = {};
+  async function fixCardRecipients(reqId, rows) {
+    if (!fixInviteRowsCache[reqId]) {
+      fixInviteRowsCache[reqId] = await supabaseFetch(
+        `approval_notifications?request_id=eq.${reqId}` +
+        `&notification_type=in.(${[...MEETING_INVITE_TYPES].join(',')})` +
+        `&select=request_id,recipient_id,recipient_email,optional`
+      ) || [];
+    }
+    // 返信（完了通知）では過去に送ったタスクリストの宛先を使うため、未取得の人のメールアドレス・名前をここで補う
+    const missingIds = [...new Set([...fixInviteRowsCache[reqId], ...rows]
+      .map(n => n.recipient_id).filter(id => id && !profileMap[id]))];
+    if (missingIds.length > 0) {
+      const prs = await supabaseFetch(`profiles?id=in.(${missingIds.join(',')})&select=id,name,email,role`);
+      (prs || []).forEach(p => { profileMap[p.id] = p; });
+    }
+    // 同じ人の案内が複数ある場合は、1つでも必須なら必須として扱う（メールアドレスで突き合わせる）
+    const requiredSet = new Set();
+    const optionalSet = new Set();
+    for (const n of fixInviteRowsCache[reqId]) {
+      const e = fixNorm(fixRowEmail(n));
+      if (!e) continue;
+      (n.optional ? optionalSet : requiredSet).add(e);
+    }
+    const toMap = new Map();
+    const ccMap = new Map();
+    for (const n of rows) {
+      const email = fixRowEmail(n);
+      if (!email || roomEmailsSet.has(email)) continue;
+      const key = fixNorm(email);
+      const isOptional = optionalSet.has(key) && !requiredSet.has(key);
+      (isOptional ? ccMap : toMap).set(key, { name: fixRowName(n) || '', address: email });
+    }
+    toMap.forEach((_, k) => ccMap.delete(k));
+    // 必須参加者がいない場合は、任意参加者をToにして送る
+    if (toMap.size === 0) { ccMap.forEach((v, k) => toMap.set(k, v)); ccMap.clear(); }
+    return { toMap, ccMap };
+  }
+
   if (fixCardNotifs.length > 0) {
     const fixReqIds = [...new Set(fixCardNotifs.map(n => n.request_id))];
-    const inviteRows = await supabaseFetch(
-      `approval_notifications?request_id=in.(${fixReqIds.join(',')})` +
-      `&notification_type=in.(${[...MEETING_INVITE_TYPES].join(',')})` +
-      `&select=request_id,recipient_id,recipient_email,optional`
-    );
-    const norm = e => String(e || '').trim().toLowerCase();
-    const rowEmail = n => n.recipient_email || (n.recipient_id ? profileMap[n.recipient_id]?.email : null) || null;
-    const rowName  = n => n.recipient_email
-      ? (recipientEmailNameMap[n.recipient_email] || null)
-      : (n.recipient_id ? profileMap[n.recipient_id]?.name || null : null);
-
     for (const reqId of fixReqIds) {
       const req  = reqMap[reqId];
       const rows = fixCardNotifs.filter(n => n.request_id === reqId);
-      const markSent = () => supabaseFetch(`approval_notifications?id=in.(${rows.map(n => n.id).join(',')})`, {
+      // 完了通知をこのメールへの返信にするため、送ったメールのMessage-IDを通知レコードに残す
+      const messageId = `<fixcard-${reqId}-${Date.now()}@kusakabe.com>`;
+      const markSent = (withMessageId = false) => supabaseFetch(`approval_notifications?id=in.(${rows.map(n => n.id).join(',')})`, {
         method:  'PATCH',
-        body:    JSON.stringify({ emailed_at: new Date().toISOString() }),
+        body:    JSON.stringify({ emailed_at: new Date().toISOString(), ...(withMessageId ? { message_id: messageId } : {}) }),
       });
       try {
-        // 同じ人の案内が複数ある場合は、1つでも必須なら必須として扱う（メールアドレスで突き合わせる）
-        const requiredSet = new Set();
-        const optionalSet = new Set();
-        for (const n of (inviteRows || []).filter(r => r.request_id === reqId)) {
-          const e = norm(rowEmail(n));
-          if (!e) continue;
-          (n.optional ? optionalSet : requiredSet).add(e);
-        }
-
-        const toMap = new Map();
-        const ccMap = new Map();
-        for (const n of rows) {
-          const email = rowEmail(n);
-          if (!email || roomEmailsSet.has(email)) continue;
-          const key = norm(email);
-          const isOptional = optionalSet.has(key) && !requiredSet.has(key);
-          (isOptional ? ccMap : toMap).set(key, { name: rowName(n) || '', address: email });
-        }
-        toMap.forEach((_, k) => ccMap.delete(k));
-        // 必須参加者がいない場合は、任意参加者をToにして送る
-        if (toMap.size === 0) { ccMap.forEach((v, k) => toMap.set(k, v)); ccMap.clear(); }
+        const { toMap, ccMap } = await fixCardRecipients(reqId, rows);
         if (toMap.size === 0) {
           // 送れる宛先がないまま残すと毎回再処理されるため、処理済みにする
           console.log(`スキップ: タスクリスト 申請${reqId}（宛先なし）`);
@@ -1044,15 +1119,79 @@ async function main() {
             ? `【テスト送信】本来の宛先 To: ${label(toList)} / CC: ${label(ccList) || 'なし'}\n\n${mail.text}`
             : mail.text,
           html:    mail.html,
+          messageId,
         });
         console.log(`✓ 送信完了: タスクリスト To: ${label(toList)}${ccList.length ? ` CC: ${label(ccList)}` : ''} (工番${req.project_number})`);
 
-        await markSent();
+        await markSent(true);
         successCount++;
       } catch (err) {
         console.error(`✗ 送信エラー: タスクリスト 申請${reqId}`, err.message);
         errorCount++;
       }
+    }
+  }
+
+  // ===== タスク完了・完了取消（検査・会議フロー）: タスクリスト送信メールへの返信として、同じ宛先に1通で送る =====
+  // タスクリストを未送信の検査や、対象タスク・宛先が見つからない場合は、下の通常ループで従来どおり送る
+  const pendingReplyNotifIds = new Set();
+  const pendingReplyNotifs = notifications.filter(n =>
+    ['pending_item_completed', 'pending_item_uncompleted'].includes(n.notification_type) &&
+    QA_MEETING_FLOWS.includes(reqMap[n.request_id]?.flow_type));
+  const pendingReplyGroups = new Map();
+  for (const n of pendingReplyNotifs) {
+    const key = `${n.request_id}|${n.notification_type}|${n.item_id || n.detail || ''}`;
+    if (!pendingReplyGroups.has(key)) pendingReplyGroups.set(key, []);
+    pendingReplyGroups.get(key).push(n);
+  }
+  for (const rows of pendingReplyGroups.values()) {
+    const { request_id: reqId, notification_type: type, item_id: itemId, detail } = rows[0];
+    const req = reqMap[reqId];
+    try {
+      const item = findNotifiedItem(req, { itemId, detail });
+      if (!item) continue;
+      // 一番新しく送ったタスクリストのメール（同じMessage-IDの通知レコード＝そのときの宛先）
+      const sentRows = await supabaseFetch(
+        `approval_notifications?request_id=eq.${reqId}&notification_type=eq.fix_card_sent` +
+        `&emailed_at=not.is.null&message_id=not.is.null` +
+        `&select=id,recipient_id,recipient_email,message_id,emailed_at&order=emailed_at.desc`
+      ) || [];
+      if (sentRows.length === 0) continue;
+      const parentId = sentRows[0].message_id;
+      const { toMap, ccMap } = await fixCardRecipients(reqId, sentRows.filter(r => r.message_id === parentId));
+      if (toMap.size === 0) continue;
+
+      const toList = [...toMap.values()];
+      const ccList = [...ccMap.values()];
+      const single = toList.length + ccList.length === 1;
+      const greeting = single ? `${toList[0].name || '担当者'} 様` : '関係者各位';
+      const fixSubject = buildEmail('fix_card_sent', req, '関係者').subject;
+      const mail = buildPendingReplyEmail(type, req, item, greeting, TEST_MODE ? `[TEST] ${fixSubject}` : fixSubject);
+      const label = list => list.map(r => r.address).join(', ');
+      await sendMail({
+        from:       mail.from,
+        to:         TEST_MODE ? TEST_EMAIL : toList,
+        cc:         !TEST_MODE && ccList.length > 0 ? ccList : undefined,
+        subject:    mail.subject,
+        text:       TEST_MODE
+          ? `【テスト送信】本来の宛先 To: ${label(toList)} / CC: ${label(ccList) || 'なし'}\n\n${mail.text}`
+          : mail.text,
+        html:       mail.html,
+        inReplyTo:  parentId,
+        references: [parentId],
+      });
+      console.log(`✓ 送信完了: ${type}（タスクリストへの返信） To: ${label(toList)}${ccList.length ? ` CC: ${label(ccList)}` : ''} (工番${req.project_number})`);
+      await supabaseFetch(`approval_notifications?id=in.(${rows.map(n => n.id).join(',')})`, {
+        method: 'PATCH',
+        body:   JSON.stringify({ emailed_at: new Date().toISOString() }),
+      });
+      rows.forEach(n => pendingReplyNotifIds.add(n.id));
+      successCount++;
+    } catch (err) {
+      // 送信に失敗した通知は通常ループでも送らず、次回の実行で返信として再試行する
+      rows.forEach(n => pendingReplyNotifIds.add(n.id));
+      console.error(`✗ 送信エラー: ${type}（タスクリストへの返信） 申請${reqId}`, err.message);
+      errorCount++;
     }
   }
 
@@ -1235,6 +1374,7 @@ async function main() {
   for (const notif of notifications) {
     if (shippingPrepNotifIds.has(notif.id)) continue;
     if (fixCardNotifIds.has(notif.id)) continue;
+    if (pendingReplyNotifIds.has(notif.id)) continue;
     if (meetingNotifIds.has(notif.id)) continue;
     const req = reqMap[notif.request_id];
 
