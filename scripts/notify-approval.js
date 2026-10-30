@@ -100,10 +100,13 @@ function photoRenderUrl(path, width) {
   return `${SUPABASE_URL}/storage/v1/render/image/public/${PHOTO_BUCKET}/${path}?width=${width}&resize=contain&quality=80`;
 }
 
-function pendingPhotoImgsHtml(paths) {
+// width: メール上の表示幅(px)。タスクリスト表の写真列は2枚分の幅に固定しているため既定は100
+// 画像は表示幅の2倍で取得する（高解像度の画面でもぼやけないように）
+const COMPLETED_PHOTO_WIDTH = 280; // タスク完了通知の修正後の写真
+function pendingPhotoImgsHtml(paths, width = 100) {
   return (paths || []).map(p =>
     `<a href="${esc(photoRenderUrl(p, 1600))}" title="クリックで大きな写真を開く">` +
-    `<img src="${esc(photoRenderUrl(p, 300))}" width="100" style="display:inline-block;margin:2px;border:0;border-radius:4px;vertical-align:middle;"></a>`
+    `<img src="${esc(photoRenderUrl(p, width * 2))}" width="${width}" style="display:inline-block;margin:2px;border:0;border-radius:4px;vertical-align:middle;"></a>`
   ).join('');
 }
 
@@ -122,7 +125,7 @@ function buildPendingReplyEmail(type, req, item, greeting, fixCardSubject) {
     `担当者: ${item.owner || '—'}`,
     ...(isDone ? [`完了日: ${item.completed_date || '—'}`] : []),
   ];
-  const afterImgs = isDone ? pendingPhotoImgsHtml(pendingPhotos(item, 'after')) : '';
+  const afterImgs = isDone ? pendingPhotoImgsHtml(pendingPhotos(item, 'after'), COMPLETED_PHOTO_WIDTH) : '';
   const td = 'padding:8px;border:1px solid #ddd;';
   const rowsHtml = items.map(it => {
     const hit = it === item;
@@ -567,7 +570,7 @@ function buildEmail(type, req, recipientName, extra = {}) {
         note;
       const text = `${body}\n\n▼ 承認フローを開く\n${APP_URL}\n\n※このメールは自動送信です。`;
       // 完了したタスクに修正後の写真があれば、写真を載せたHTML版も付ける
-      const afterImgs = pendingPhotoImgsHtml(pendingPhotos(notifiedItem, 'after'));
+      const afterImgs = pendingPhotoImgsHtml(pendingPhotos(notifiedItem, 'after'), COMPLETED_PHOTO_WIDTH);
       const html = afterImgs ? `
         <div>
           <p>${esc(body).replace(/\n/g, '<br>')}</p>
