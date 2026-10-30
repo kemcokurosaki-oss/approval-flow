@@ -5403,7 +5403,7 @@ function buildPendingSectionInner(req, isMyRequest) {
     const qaNoteHtml = isQaFlow ? `<div class="qa-task-note"><span>※</span><span>処置が完了したら品証に連絡してください（不在時は製造管理に連絡してください）</span></div>` : '';
     return `
         <hr class="section-divider">
-        <div class="section-title">${sectionLabel}${isQaFlow ? ` <span class="qa-task-summary">${qaDoneCount} / ${items.length} 完了</span>` : ''}</div>
+        <div class="section-title${isQaFlow ? ' qa-task-section-title' : ''}">${sectionLabel}${isQaFlow ? ` <span class="qa-task-summary">${qaDoneCount} / ${items.length} 完了</span>` : ''}</div>
         ${qaNoteHtml}
         <div class="${isQaFlow ? 'qa-task-list' : ''}">
         ${items.map(({ item, idx }, pos) => {
