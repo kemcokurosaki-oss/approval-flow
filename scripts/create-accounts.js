@@ -2,7 +2,7 @@
 // - Supabase Admin API でアカウントの箱だけを作る（email_confirm: true でメール確認不要にする）
 // - パスワードはランダムな仮値を設定するのみで、招待メールは送信しない
 //   （招待メール送信・パスワード設定は別途手動ツールで行う運用のため）
-const SUPABASE_URL        = process.env.SUPABASE_URL;
+const SUPABASE_URL        = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 const USERS = [

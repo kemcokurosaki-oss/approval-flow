@@ -22,7 +22,7 @@
 
 const { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 const TEST_MODE    = process.env.TEST_MODE === 'true';
 const APP_URL      = 'https://kemcokurosaki-oss.github.io/approval-flow/';

@@ -37,7 +37,7 @@ function resolveScope(scope) {
   return 'daily';
 }
 const SCOPE         = resolveScope((process.env.CHECK_SCOPE || 'auto').trim());
-const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_URL  = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const ANON_KEY      = process.env.SUPABASE_ANON_KEY;
 const DB_URL        = process.env.SECURITY_MONITOR_DB_URL;
 const STATE_FILE    = process.env.STATE_FILE || path.join(process.cwd(), '.security-state', 'state.json');

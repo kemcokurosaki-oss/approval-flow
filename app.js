@@ -248,12 +248,6 @@ let isQualityOrSeikan = false; // 品証・製管フラグ（openDetailModal か
 function getEffectiveRole() { return currentProfile?.role || ''; }
 function getEffectiveDept() { return currentProfile?.department || ''; }
 
-// 部署 → その部署の上長ロール（課長・部長）一覧。品証・製管は課長/部長ロールがprofilesに存在しないため対象外
-const DEPT_SUPERVISOR_ROLES = {
-    '組立': ['assembly_manager', 'assembly_director'],
-    '操業': ['operations_manager', 'operations_director']
-};
-
 // 組立・試運転フロー → 申請全体のペンディングを完了操作できる上長ロール（担当者未設定の項目でも操作可）
 const FLOW_SUPERVISOR_ROLES = {
     assembly:   ['assembly_manager', 'assembly_director'],
@@ -267,23 +261,6 @@ const FLOW_DEPARTMENTS = {
     test_run:   '操業',
     electrical: '電装'
 };
-
-// タスク担当者名（item.owner）の上長に、ログイン中ユーザーが該当するか
-function isSupervisorOfOwner(ownerName) {
-    if (!ownerName) return false;
-    // 設計担当者はprofiles未登録の場合があるため、membersテーブルを先に確認する
-    const memberRow = allMembers.find(m => m.name === ownerName);
-    if (memberRow) {
-        const supervisorEmails = [memberRow.supervisor_email1, memberRow.supervisor_email_2].filter(Boolean);
-        return supervisorEmails.includes(currentUser?.email);
-    }
-    // 組立・操業はprofilesのロール（課長/部長）で判定する
-    const ownerProfile = allProfiles.find(p => p.name === ownerName);
-    if (!ownerProfile) return false;
-    const supervisorRoles = DEPT_SUPERVISOR_ROLES[ownerProfile.department];
-    if (!supervisorRoles) return false;
-    return supervisorRoles.includes(getEffectiveRole()) || isSuperAdmin();
-}
 
 function canApplyFlow(flowType) {
     if (isSuperAdmin()) return true;
@@ -4491,12 +4468,16 @@ function _canCompletePendingItem(req, item) {
         ? ['submitted', 'approved'].includes(req.status)
         : ['submitted', 'in_review', 'approved'].includes(req.status);
     if (!statusOk) return false;
+    if (isQaFlow) return canOperateQaTask();
     const isOwner      = !!(item.owner && currentProfile?.name === item.owner);
-    const isSupervisor = isQaFlow
-        ? isSupervisorOfOwner(item.owner)
-        : (FLOW_SUPERVISOR_ROLES[req.flow_type] || []).includes(getEffectiveRole());
+    const isSupervisor = (FLOW_SUPERVISOR_ROLES[req.flow_type] || []).includes(getEffectiveRole());
     const isMyRequest  = req.requester_id === currentUser.id;
-    return isQualityOrSeikan || isOwner || isSupervisor || (!isQaFlow && isMyRequest);
+    return isQualityOrSeikan || isOwner || isSupervisor || isMyRequest;
+}
+
+// 検査・会議フローのタスクを「完了にする／取り消す」ことができるのは品証・製管・常務（組立部長）のみ（担当者本人・上長は不可）
+function canOperateQaTask() {
+    return isQualityOrSeikan || getEffectiveRole() === 'assembly_director';
 }
 
 // ===== Tab Switch（廃止済み・後方互換用スタブ） =====
@@ -5407,12 +5388,12 @@ function buildPendingSectionInner(req, isMyRequest) {
         ${qaNoteHtml}
         <div class="${isQaFlow ? 'qa-task-list' : ''}">
         ${items.map(({ item, idx }, pos) => {
-            // QAフロー・組立フローともに「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
-            // QAフローのタスクリストはさらに、担当者の上長（組立課長/部長・操業課長/部長）も完了操作できる
+            // 組立フローは「品証」または「担当者本人（項目に担当者が設定されている場合）」も完了操作できる
+            // QAフローのタスクリストは品証・製管・常務のみ（canOperateQaTask）
             const itemCanComplete = isTestRun
                 ? false
                 : (isQaFlow
-                    ? (['submitted', 'approved'].includes(req.status) && (isQualityOrSeikan || (item.owner && currentProfile?.name === item.owner) || isSupervisorOfOwner(item.owner)))
+                    ? (['submitted', 'approved'].includes(req.status) && canOperateQaTask())
                     : (canComplete || (statusOkForNonQa && item.owner && currentProfile?.name === item.owner)));
             if (canManage && qaEditingPendingIdx === idx) {
                 if (isQaFlow) return _qaTaskEditCardHtml(req, item, idx, pos);

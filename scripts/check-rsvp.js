@@ -3,7 +3,7 @@ const ical = require('node-ical');
 const { requireMailEnv, graphRequest } = require('./mailer');
 const calendar = require('./calendar');
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 
 const PARTSTAT_TO_STATUS = {

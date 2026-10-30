@@ -1,7 +1,7 @@
 const { MAIL_PROVIDER, IS_GRAPH, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = require('./mailer');
 const calendar = require('./calendar');
 
-const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_URL  = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const SUPABASE_KEY  = process.env.SUPABASE_SECRET_KEY;
 // 再送テスト: 指定した通知ID（カンマ区切り）だけを、送信済みでも黒崎宛てに送り直す。DBは書き換えない
 const RESEND_IDS    = String(process.env.RESEND_IDS || '').split(',').map(s => s.trim())
