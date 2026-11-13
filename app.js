@@ -2153,7 +2153,7 @@ function renderProgressCards() {
                     });
                     const assemblyPendingCount = sumUnresolvedPendingItems(relevantAssemblyReqsAll);
                     const assemblyPendingBadge = assemblyPendingCount > 0
-                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${assemblyPendingCount}件</div>`
+                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>ペンディング ${assemblyPendingCount}件</div>`
                         : '';
 
                     const connector = i < fullChain.length - 1
@@ -2218,7 +2218,7 @@ function renderProgressCards() {
                         : (electricalReq && electricalReq.status !== 'draft' ? [electricalReq] : []);
                     const electricalPendingCount = sumUnresolvedPendingItems(relevantElecReqsAllForPending);
                     const electricalPendingBadge = electricalPendingCount > 0
-                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${electricalPendingCount}件</div>`
+                        ? `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>ペンディング ${electricalPendingCount}件</div>`
                         : '';
 
                     return `<div class="flow-node${clickable}" onclick="event.stopPropagation(); ${clickHandler}"
@@ -2317,7 +2317,7 @@ function renderProgressCards() {
                 if (req && req.status !== 'draft' && (f.type === 'test_run' || QA_MEETING_FLOWS.includes(f.type))) {
                     const unresolvedCount = countUnresolvedPendingItems(req);
                     if (unresolvedCount > 0) {
-                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${unresolvedCount}件</div>`;
+                        pendingBadge = `<div class="flow-pending-badge"><span class="si-badge si-orange" style="background:#8e44ad;">⚠</span>${PENDING_ITEM_NOUN[f.type] || '申し送り事項'} ${unresolvedCount}件</div>`;
                     }
                 }
 
