@@ -25,7 +25,7 @@ const { MAIL_PROVIDER, SENDER_ADDRESS, requireMailEnv, formatFrom, sendMail } = 
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim(); // Secretの末尾に改行が入っているとメール内のURLが壊れるため
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 const TEST_MODE    = process.env.TEST_MODE === 'true';
-const APP_URL      = 'https://kemcokurosaki-oss.github.io/approval-flow/';
+const APP_URL      = 'https://app-approval-flow-5rsre7hedq-an.a.run.app/';
 const TEST_EMAIL   = 'e-kurosaki@kusakabe.com';
 const TEST_PROJECT = (process.env.TEST_PROJECT || '').trim();
 

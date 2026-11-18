@@ -36,7 +36,7 @@ const ROOM_EMAILS = {
 const fakeReq = (date, time, location) => ({ inspection_date: date, inspection_time: time || null, inspection_location: location || 'テスト' });
 const text = (what) =>
   `関係者各位\n\n9999 テスト機 の${what}です（M365接続テスト）。\n\n` +
-  `▼ 承認フローを開く\nhttps://kemcokurosaki-oss.github.io/approval-flow/\n\n※このメールは自動送信です。`;
+  `▼ 承認フローを開く\nhttps://app-approval-flow-5rsre7hedq-an.a.run.app/\n\n※このメールは自動送信です。`;
 
 function needRoom(location) {
   if (!location) return null;

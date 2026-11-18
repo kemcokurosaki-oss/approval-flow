@@ -14,7 +14,7 @@ const TEST_EMAIL    = 'e-kurosaki@kusakabe.com';
 const LEGACY_PROVIDER = MAIL_PROVIDER;
 const LEGACY_ADDRESS  = SENDER_ADDRESS;
 
-const APP_URL = 'https://kemcokurosaki-oss.github.io/approval-flow/';
+const APP_URL = 'https://app-approval-flow-5rsre7hedq-an.a.run.app/';
 
 // 検査・会議の開催案内・日程変更に添える注意書き（予定表の出欠返信は送信者にしか届かないため、他の参加者の状況はアプリで確認してもらう）。
 // 「▼ 承認フローを開く」リンクの直前に入れる
