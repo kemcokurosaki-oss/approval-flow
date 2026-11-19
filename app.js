@@ -3274,9 +3274,43 @@ async function renderAssemblyFlowDetailBody(projectNum) {
 //   'fixed' … 固定ユニットリストの「申請する→」から開始。機械・ユニットとも変更不可、1件のみ
 //   'free'  … 「一覧にないユニットを申請する」から開始。機械は固定、ユニットは自由入力・複数追加可
 //   null    … 従来通り（非2000番、または旧仕様の下書き）。全項目編集可
+// 「申請する →」を押すと即座に下書きを作るため、チェックシートを一時保存せずに閉じると中身が空の下書きが残り、
+// 次に押したときにまた新しい下書きができて一覧に同じ機械・ユニットが重複表示されていた（3C55 MCHE で発生）。
+// 本人・同じ工番・同じフローの未保存（sheet_saved_at が NULL＝何も書き込まれていない）下書きのうち、
+// 機械・ユニット・入力モードが一致するものがあれば、新規作成せずにそれを使い回す。
+// チェックシート側は一時保存時にだけ書き込み、必ず sheet_saved_at を付けるので、未保存の下書きを使い回しても入力内容は失われない
+function normalizeDraftItemsKey(items) {
+    if (!Array.isArray(items) || items.length === 0) return '';
+    return JSON.stringify(items.map(it => [(it?.machine || '').trim(), (it?.unit || '').trim()]));
+}
+async function findReusableEmptyDraft(projectNum, flowType, isMatch) {
+    const { data, error } = await db.from('approval_requests')
+        .select('id, machine_name, unit_name, assembly_items, sheet_data')
+        .eq('project_number', projectNum).eq('flow_type', flowType)
+        .eq('status', 'draft').eq('requester_id', currentUser.id)
+        .is('sheet_saved_at', null)
+        .order('created_at', { ascending: false });
+    if (error) return null; // 探せなかったときは従来どおり新規作成する
+    return (data || []).find(isMatch) || null;
+}
+// 組立・電装（assembly_items で機械・ユニットを持つもの）の一致判定
+function isSameItemsDraft(d, presetItems, mode, machine) {
+    const meta = d.sheet_data?.meta || {};
+    return normalizeDraftItemsKey(d.assembly_items) === normalizeDraftItemsKey(presetItems)
+        && (meta.assembly_mode || null) === (mode || null)
+        && (mode ? (meta.assembly_locked_machine || null) === (machine || null) : true);
+}
+
 async function startNewAssemblySheetFromDetail(projectNum, presetItems = null, machine = null, assemblyMode = null) {
     // 同じ工番・同じ申請者でも、複数の下書きを同時に保持できる（機械・ユニットをまとめて申請したい場合と、
-    // 別々に分けて申請したい場合の両方に対応するため、押すたびに新しい下書きを作成する）
+    // 別々に分けて申請したい場合の両方に対応するため、押すたびに新しい下書きを作成する）。
+    // ただし同じ機械・ユニットの空の下書き（未保存）があれば、それを開き直す
+    const reusable = await findReusableEmptyDraft(projectNum, 'assembly',
+        d => isSameItemsDraft(d, presetItems, assemblyMode, machine));
+    if (reusable) {
+        window.open(`sheet.html?draft_id=${reusable.id}`, '_blank');
+        return;
+    }
     const insertPayload = {
         project_number: projectNum,
         flow_type:      'assembly',
@@ -3405,6 +3439,13 @@ async function deleteAssemblyDraftFromDetail(draftId, projectNum, machine = null
 // ===== 組立フロー詳細モーダル内の電装セクション：新規下書き作成〜申請確定〜削除 =====
 // 電装(electrical)は組立と違いユニット概念が無く機械単位1申請のため、assembly版より単純な構成にしている
 async function startNewElectricalSheetFromDetail(projectNum, machine) {
+    // 同じ機械の空の下書き（未保存）があれば新規作成せずに開き直す（findReusableEmptyDraft 参照）
+    const reusable = await findReusableEmptyDraft(projectNum, 'electrical',
+        d => (d.machine_name || '').trim() === (machine || '').trim() && normalizeDraftItemsKey(d.assembly_items) === '');
+    if (reusable) {
+        window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${reusable.id}`, '_blank');
+        return;
+    }
     const { data: newDraft, error } = await db.from('approval_requests').insert({
         project_number: projectNum,
         machine_name:   machine,
@@ -3425,6 +3466,13 @@ function reopenElectricalSheetFromDetail(requestId) {
 // 2000番台：機械詳細モーダルの電装ユニット申請（組立のstartNewAssemblySheetFromDetailと同型）。
 // electricalMode: 'fixed'（固定ユニット、機械・ユニットとも変更不可、1件のみ）| 'free'（ユニット自由入力・複数追加可）
 async function startNewElectricalUnitSheetFromDetailCore(projectNum, presetItems, machine, electricalMode) {
+    // 同じ機械・ユニットの空の下書き（未保存）があれば新規作成せずに開き直す（findReusableEmptyDraft 参照）
+    const reusable = await findReusableEmptyDraft(projectNum, 'electrical',
+        d => isSameItemsDraft(d, presetItems, electricalMode, machine));
+    if (reusable) {
+        window.open(`${SHEET_FLOW_META.electrical.file}?draft_id=${reusable.id}`, '_blank');
+        return;
+    }
     const insertPayload = {
         project_number: projectNum,
         flow_type:      'electrical',
@@ -4140,6 +4188,15 @@ async function renderTestRunMachineDetailBody(projectNum, machine) {
 }
 
 async function startNewTestRunSheetFromDetail(projectNum, machine, unit = '') {
+    // 同じ機械・ユニットの空の下書き（未保存）があれば新規作成せずに開き直す（findReusableEmptyDraft 参照）。
+    // unit_name は null（旧・機械単位）と空文字（ALL行）で意味が違うため、null の旧下書きは使い回さない
+    const reusable = await findReusableEmptyDraft(projectNum, 'test_run',
+        d => (d.machine_name || '').trim() === (machine || '').trim()
+            && d.unit_name !== null && (d.unit_name || '').trim() === (unit || '').trim());
+    if (reusable) {
+        window.open(`test_run_sheet.html?draft_id=${reusable.id}`, '_blank');
+        return;
+    }
     const { data: newDraft, error } = await db.from('approval_requests').insert({
         project_number: projectNum,
         machine_name:   machine,
